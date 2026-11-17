@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "check": "node --check public/game.js && node --check public/selection-scene.js && node --check server.js && node --check server/world.js && node --check server/database.js && node --check public/combat-visuals.js && node --check public/parallax.js && node --check public/hud-fx.js && node --check public/combat-fx.js && node --check public/creature-fx.js && node --check public/sprite-sets.js && node --check shared/motion.js && node --check public/town-npcs.js && node --check shared/rpg.js && node --check public/rpg-ui.js && node --check public/world-details.js",
+    "check": "node --check public/game.js && node --check public/selection-scene.js && node --check server.js && node --check server/world.js && node --check server/database.js && node --check public/combat-visuals.js && node --check public/parallax.js && node --check public/hud-fx.js && node --check public/combat-fx.js && node --check public/creature-fx.js && node --check public/sprite-sets.js && node --check shared/motion.js && node --check public/town-npcs.js && node --check shared/rpg.js && node --check public/rpg-ui.js && node --check public/world-details.js && node --check public/sound.js",
     "test": "node --test tests/*.test.mjs",
     "backup": "node server/backup.js"
   },

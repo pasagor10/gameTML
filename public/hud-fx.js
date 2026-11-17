@@ -2,6 +2,7 @@
 // low-HP warning, cooldown sweeps, gold count-up, level-up banner, area intro.
 import { ACTIONS } from "/shared/motion.js";
 import { FLOORS } from "/shared/config.js";
+import { sfx } from "/sound.js?v=1";
 
 const $ = (s) => document.querySelector(s);
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -95,8 +96,14 @@ export function updateHudFx(state) {
 
   if (prev && prev.id === p.id) {
     if (p.hp < prev.hp - 0.5) pulse(screen, "hud-hit", 340);
-    if (p.level > prev.level) levelUp(p.level);
-    if (p.gold > prev.gold) pulse($(".gold-display"), "gain", 520);
+    if (p.level > prev.level) {
+      levelUp(p.level);
+      sfx("levelUp", null, 0);
+    }
+    if (p.gold > prev.gold) {
+      pulse($(".gold-display"), "gain", 520);
+      sfx("coin", null, 0.12);
+    }
     if (p.gold !== prev.gold) countGold(p.gold);
   } else {
     goldShown = p.gold;

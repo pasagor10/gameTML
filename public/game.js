@@ -1,3 +1,11 @@
+import {
+  sfx,
+  music,
+  setSound,
+  soundOn,
+  setMusic,
+  musicOn,
+} from "/sound.js?v=1";
 import { TOWN_ANIMS, TOWN_LAYOUT, TOWN_PROPS } from "/shared/town-layout.js";
 import { createWorldDetails } from "/world-details.js?v=3";
 import { rpgPanel, bindRpgPanel, gearShop } from "/rpg-ui.js?v=1";
@@ -27,7 +35,7 @@ import {
   combatStats,
 } from "/shared/config.js";
 import { createParallax } from "/parallax.js?v=0.7.0";
-import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.0";
+import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.1";
 import { createCombatFx } from "/combat-fx.js?v=0.5.1";
 import {
   animateHeroBody,
@@ -60,7 +68,9 @@ let job = "swordsman",
   toastTimer,
   storyIndex = 0,
   chatChannel = "world",
-  muted = true,
+  muted = !soundOn(),
+  wasCleared = false,
+  wasAlive = true,
   audio,
   seq = 0,
   keys = new Set(),
@@ -95,58 +105,30 @@ function toast(text, error = false) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => $("#toast").classList.remove("visible"), 3500);
 }
-function tone(f = 440, d = 0.18, type = "sine", volume = 0.035, delay = 0) {
-  if (muted) return;
-  try {
-    audio ??= new (window.AudioContext || window.webkitAudioContext)();
-    audio.resume();
-    const o = audio.createOscillator(),
-      g = audio.createGain(),
-      at = audio.currentTime + delay;
-    o.type = type;
-    o.frequency.setValueAtTime(f, at);
-    o.frequency.exponentialRampToValueAtTime(f * 0.72, at + d);
-    g.gain.setValueAtTime(volume, at);
-    g.gain.exponentialRampToValueAtTime(0.001, at + d);
-    o.connect(g).connect(audio.destination);
-    o.start(at);
-    o.stop(at + d);
-  } catch {}
+// Legacy UI cue (lobby, story pages): a soft wooden click from sound.js.
+function tone() {
+  sfx("click");
 }
+const CUES = {
+  equip: "equip",
+  loot: "loot",
+  "enhance-success": "forgeOk",
+  "enhance-fail": "forgeFail",
+  material: "material",
+  buy: "buy",
+};
 function soundCue(name, rarity = "common") {
-  if (name === "equip") {
-    [392, 523, 659].forEach((f, i) =>
-      tone(f, 0.16, "triangle", 0.035, i * 0.07),
-    );
-  } else if (name === "loot") {
-    const notes =
-      rarity === "legendary"
-        ? [392, 523, 659, 784, 1047]
-        : rarity === "epic"
-          ? [392, 523, 659, 784]
-          : [440, 554, 659];
-    notes.forEach((f, i) =>
-      tone(f, 0.3, i % 2 ? "sine" : "triangle", 0.045, i * 0.09),
-    );
-  } else if (name === "enhance-success") {
-    [330, 494, 659, 988].forEach((f, i) =>
-      tone(f, 0.22, "triangle", 0.045, i * 0.08),
-    );
-  } else if (name === "enhance-fail") {
-    tone(180, 0.45, "sawtooth", 0.025);
-    tone(125, 0.5, "sine", 0.03, 0.12);
-  } else if (name === "material") {
-    tone(520, 0.12, "square", 0.018);
-    tone(690, 0.18, "triangle", 0.025, 0.07);
-  } else if (name === "buy") {
-    tone(740, 0.09, "square", 0.018);
-    tone(980, 0.13, "triangle", 0.025, 0.07);
-  }
+  sfx(CUES[name] || "click", rarity, 0);
 }
-$("#sound").onclick = () => {
-  muted = !muted;
+function syncSoundButton() {
+  muted = !soundOn();
   $("#sound").textContent = muted ? "♫ เปิดเสียง" : "♫ ปิดเสียง";
-  tone(392, 0.7);
+}
+syncSoundButton();
+$("#sound").onclick = () => {
+  setSound(!soundOn());
+  syncSoundButton();
+  sfx("click");
 };
 async function api(url, body) {
   const r = await fetch("/api/" + url, {
@@ -358,6 +340,7 @@ $("#start").onclick = async () => {
   }
 };
 function modal(title, html, panel) {
+  if ($("#modal").classList.contains("hidden")) sfx("open");
   activePanel = panel || "modal";
   keys.clear();
   touchDirection = 0;
@@ -372,6 +355,8 @@ function modal(title, html, panel) {
     socket.emit("player:input", { direction: 0, seq: ++seq, jump: false });
 }
 function closeModal() {
+  if (activePanel !== null || !$("#modal").classList.contains("hidden"))
+    sfx("close");
   activePanel = null;
   $("#modal").classList.add("hidden");
   keys.clear();
@@ -649,6 +634,12 @@ function updateHUD() {
   $("#next-stage").textContent =
     d?.stage === 3 ? "รับชัยชนะ · กลับเมือง ➜" : "เข้าสู่ด่านต่อไป ➜";
   $("#death").classList.toggle("hidden", p.hp > 0);
+  // Stage clear and defeat stingers, once per change.
+  const cleared = !!(d?.clear && !d.training);
+  if (cleared && !wasCleared) sfx("clear", null, 0);
+  if (p.hp <= 0 && wasAlive) sfx("death", null, 0);
+  wasCleared = cleared;
+  wasAlive = p.hp > 0;
   for (let i = 1; i <= 3; i++) {
     const button = $(`[data-action="skill${i}"] i`),
       remaining = ACTIONS[i].cooldown - (state.time - (p.cooldowns[i] || 0));
@@ -702,14 +693,18 @@ function interact() {
   if (!n) return toast("เข้าใกล้ NPC หรือประตู แล้วกด F");
   if (n.id === "next") emit("dungeon:next");
   else if (n.id === "portal") showPanel("dungeon");
-  else showPanel(n.id);
+  else {
+    sfx("talk");
+    showPanel(n.id);
+  }
 }
 function action(name) {
   if (!state || activePanel) return;
   if (name === "attack") emit("player:attack", { skill: 0 });
   else if (name.startsWith("skill"))
     emit("player:attack", { skill: Number(name.slice(-1)) });
-  else if (name === "hp") emit("player:potion", { type: "hp" });
+  else if (name === "hp")
+    emit("player:potion", { type: "hp" }).then((r) => r && sfx("potion"));
   else if (name === "auto") emit("player:auto", { enabled: !state.self.auto });
 }
 $$("[data-action]").forEach(
@@ -933,11 +928,17 @@ function showPanel(panel) {
   } else if (panel === "settings") {
     modal(
       "บันทึกการเดินทาง",
-      `<p>เกมบันทึกตัวละคร เงิน อุปกรณ์ และดันเจียนบนเซิร์ฟเวอร์อัตโนมัติ<br>บัญชีผู้มาเยือนผูกกับคุกกี้ในเบราว์เซอร์นี้</p><button id="toggle-sound" class="primary-button">${muted ? "เปิดเสียงเอฟเฟกต์" : "ปิดเสียงเอฟเฟกต์"}</button><button id="back-selection" class="text-button">กลับหน้าเลือกตัวละคร</button><p class="hint">Demo v0.3 · นักดาบหญิงและสไลม์มีเฟรมแอนิเมชันชุดแรก · ตัวอื่นยังใช้ภาพ idle · เป้าหมาย 20–30 คนต่อห้องยังไม่ได้ยืนยันด้วย load test</p>`,
+      `<p>เกมบันทึกตัวละคร เงิน อุปกรณ์ และดันเจียนบนเซิร์ฟเวอร์อัตโนมัติ<br>บัญชีผู้มาเยือนผูกกับคุกกี้ในเบราว์เซอร์นี้</p><button id="toggle-sound" class="primary-button">${muted ? "เปิดเสียงทั้งหมด" : "ปิดเสียงทั้งหมด"}</button><button id="toggle-music" class="primary-button">${musicOn() ? "ปิดเพลงประกอบ" : "เปิดเพลงประกอบ"}</button><button id="back-selection" class="text-button">กลับหน้าเลือกตัวละคร</button><p class="hint">Demo v0.3 · นักดาบหญิงและสไลม์มีเฟรมแอนิเมชันชุดแรก · ตัวอื่นยังใช้ภาพ idle · เป้าหมาย 20–30 คนต่อห้องยังไม่ได้ยืนยันด้วย load test</p>`,
     );
     $("#toggle-sound").onclick = () => {
-      muted = !muted;
-      tone(440, 0.3);
+      setSound(!soundOn());
+      syncSoundButton();
+      sfx("click");
+      closeModal();
+    };
+    $("#toggle-music").onclick = () => {
+      setMusic(!musicOn());
+      sfx("click");
       closeModal();
     };
     $("#back-selection").onclick = () => {
@@ -1399,8 +1400,13 @@ class Adventure extends Phaser.Scene {
           s.dungeon.stage;
     const areaChanged = area !== this.lastArea;
     if (areaChanged) {
+      const fromTown = this.lastArea === "town";
       this.lastArea = area;
       const town = s.area === "town";
+      const bossStage = !town && s.dungeon?.stage === 3 && !s.dungeon?.training;
+      music(town ? "town" : bossStage ? "boss" : "dungeon");
+      if (fromTown && !town) sfx("portal");
+      if (bossStage) setTimeout(() => sfx("roar"), 600);
       this.cameras.main.setBounds(0, -100, areaWidth(s.area), 950);
       this.parallax.setArea(
         town ? "town" : "cave",
@@ -1482,7 +1488,10 @@ class Adventure extends Phaser.Scene {
     }
     for (const [id, m] of this.monsters)
       if (!eids.has(id)) {
-        if (!areaChanged) this.fx.death(m.image.x, m.image.y, m.target.boss);
+        if (!areaChanged) {
+          this.fx.death(m.image.x, m.image.y, m.target.boss);
+          sfx(m.target.boss ? "bossDown" : "kill", null, 0.06);
+        }
         if (areaChanged) m.image.destroy();
         else if (
           !playMonsterDeath(this, m.image, this.monsterSets.get(m.target.type))
@@ -1602,7 +1611,13 @@ class Adventure extends Phaser.Scene {
     const source =
       this.actors.get(e.actorId)?.image || this.monsters.get(e.actorId)?.image;
     if (e.kind === "damage") {
-      tone(e.amount < 0 ? 105 : e.crit ? 980 : 720, 0.055, "triangle", 0.012);
+      // Your own hits and hurts are loud; other players' are thinned out.
+      const mine =
+        e.actorId === state?.self.id || e.targetId === state?.self.id;
+      if (e.amount < 0) {
+        if (e.targetId === state?.self.id) sfx("hurt", null, 0.08);
+        else sfx("hit", null, 0.12);
+      } else sfx(e.crit ? "crit" : "hit", null, mine ? 0.04 : 0.12);
       const monster = this.monsters.get(e.targetId),
         actor = this.actors.get(e.targetId);
       this.fx.hit(
@@ -1612,7 +1627,17 @@ class Adventure extends Phaser.Scene {
         e.targetId === state?.self.id,
       );
     } else {
-      tone(e.skill ? 220 : 480, 0.13);
+      const cls = e.class || this.actors.get(e.actorId)?.target.class,
+        kind = {
+          swordsman: ["swing", "slash"],
+          archer: ["arrow", "volley"],
+          mage: ["cast", "spell"],
+        }[cls] || ["swing", "slash"];
+      sfx(
+        kind[e.skill ? 1 : 0],
+        null,
+        e.actorId === state?.self.id ? 0.02 : 0.1,
+      );
       this.fx.attack(e);
     }
   }
@@ -1755,7 +1780,7 @@ class Adventure extends Phaser.Scene {
       if (p.grounded && !a.wasGrounded && p.hp > 0) {
         this.dust(a.image.x, p.y);
         a.landAt = time;
-        if (id === state.self.id) tone(100, 0.07, "triangle", 0.009);
+        if (id === state.self.id) sfx("land");
       }
       if (
         id === state.self.id &&
@@ -1765,8 +1790,10 @@ class Adventure extends Phaser.Scene {
       ) {
         a.footstepAt = serverTime;
         this.dust(a.image.x - p.direction * 12, p.y, 3);
-        tone(75, 0.035, "triangle", 0.006);
+        sfx("step", null, 0.1);
       }
+      if (id === state.self.id && a.wasGrounded && !p.grounded && p.vy < -200)
+        sfx("jump");
       a.wasGrounded = p.grounded;
       if (p.action && serverTime < p.action.impactAt) {
         const progress =
