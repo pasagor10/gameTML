@@ -21,11 +21,11 @@ button:focus-visible {
   background: none;
   color: #f0d8a5;
   padding: 0;
-  font-size: 9px;
+  font-size: 11px;
 }
 .profile-meta small {
   color: #a2bdcc;
-  font-size: 8px;
+  font-size: 11px;
 }
 #top-menu button {
   transition:
@@ -68,7 +68,7 @@ button:focus-visible {
   top: 358px;
   z-index: 7;
   max-width: 260px;
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1.9;
   color: #c1dad8;
   text-shadow: 0 1px 3px #001015;
@@ -97,7 +97,7 @@ button:focus-visible {
   position: absolute;
   bottom: 5px;
   right: 6px;
-  font-size: 8px;
+  font-size: 11px;
   color: #c1e3ef;
   font-style: normal;
   text-shadow: 0 1px #00101c;
@@ -158,7 +158,7 @@ button:focus-visible {
 }
 .rpg-summary small {
   display: block;
-  font-size: 9px;
+  font-size: 11px;
   color: #b5a17a;
   letter-spacing: 1px;
 }
@@ -209,7 +209,7 @@ kbd {
   border: 1px solid #acb7a54d;
   border-radius: 3px;
   padding: 1px 5px;
-  font-size: 9px;
+  font-size: 11px;
   color: #deceaa;
 }
 .rpg-tabs kbd {
@@ -249,7 +249,7 @@ kbd {
   z-index: 1;
 }
 .paper-hero > small {
-  font-size: 9px;
+  font-size: 11px;
   color: #b5c6c7;
   z-index: 1;
 }
@@ -265,7 +265,7 @@ kbd {
 }
 .power-score small {
   color: #b6a06f;
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.8px;
 }
 .power-score strong {
@@ -303,8 +303,8 @@ kbd {
   font-weight: 500;
 }
 .rpg-section-title span {
-  color: #7996a5;
-  font-size: 9px;
+  color: #8fabb8;
+  font-size: 11px;
   font-weight: 400;
 }
 .equipped-grid {
@@ -324,8 +324,8 @@ kbd {
   align-items: center;
 }
 .equipped-slot small {
-  font-size: 9px;
-  color: #7f9daa;
+  font-size: 11px;
+  color: #93b0bc;
 }
 .equipped-slot b {
   font-size: 27px;
@@ -333,7 +333,9 @@ kbd {
   line-height: 1.6;
 }
 .equipped-slot span {
-  font-size: 8px;
+  font-size: 11px;
+  color: var(--rarity, #b4c6cd);
+  text-align: center;
 }
 .rarity-common {
   --rarity: #b2c2bd;
@@ -347,9 +349,19 @@ kbd {
 .rarity-legendary {
   --rarity: #ffbd5b;
 }
+/* Every rarity reads at a glance: tinted glow behind the icon, stronger
+   frame and halo as rarity rises. */
+.gear-card.rarity-rare,
+.item-inspector.rarity-rare {
+  box-shadow: inset 0 0 18px #79c9de1c;
+}
+.gear-card.rarity-epic,
+.item-inspector.rarity-epic {
+  box-shadow: 0 0 14px #b07cf026, inset 0 0 20px #c8a2f426;
+}
 .gear-card.rarity-legendary,
 .item-inspector.rarity-legendary {
-  box-shadow: 0 0 20px #ffae3330, inset 0 0 18px #ffca6320;
+  box-shadow: 0 0 20px #ffae3340, inset 0 0 22px #ffca6330;
 }
 .bag-content {
   min-width: 0;
@@ -359,18 +371,23 @@ kbd {
 }
 .gear-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-  max-height: 270px;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 10px;
+  max-height: 300px;
   overflow: auto;
   padding: 2px;
 }
 #modal-body .gear-card {
-  min-height: 121px;
+  min-height: 132px;
   background:
-    radial-gradient(ellipse at 50% 35%, #344e5a66, transparent 70%), #101f2c;
-  border: 1px solid #5c74814f;
-  border-bottom: 2px solid var(--rarity);
+    radial-gradient(
+      ellipse at 50% 38%,
+      color-mix(in srgb, var(--rarity) 22%, transparent),
+      transparent 68%
+    ),
+    #101f2c;
+  border: 1px solid color-mix(in srgb, var(--rarity) 35%, #5c748140);
+  border-bottom: 3px solid var(--rarity);
   border-radius: 5px;
   padding: 7px;
   color: #d3e1e5;
@@ -391,21 +408,24 @@ kbd {
 .gear-card .gear-equipped {
   color: var(--rarity);
   align-self: flex-end;
-  font-size: 8px;
+  font-size: 11px;
+  font-weight: 600;
 }
 .gear-card > b {
-  font-size: 35px;
+  font-size: 38px;
   color: var(--rarity);
-  line-height: 1.65;
-  text-shadow: 0 0 20px #d9e6d730;
+  line-height: 1.5;
+  text-shadow: 0 0 16px color-mix(in srgb, var(--rarity) 60%, transparent);
 }
 .gear-card strong {
-  font-size: 9px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.3;
 }
 .gear-card > small {
-  color: #7f9aa8;
-  font-size: 8px;
+  color: #93acb8;
+  font-size: 11px;
 }
 .item-inspector {
   display: flex;
@@ -420,23 +440,24 @@ kbd {
 }
 .item-large-icon {
   color: var(--rarity);
-  font-size: 40px;
+  font-size: 48px;
+  text-shadow: 0 0 18px color-mix(in srgb, var(--rarity) 60%, transparent);
 }
 .item-inspector > div {
   flex: 1;
 }
 .item-inspector small {
-  font-size: 9px;
+  font-size: 12px;
   color: var(--rarity);
 }
 .item-inspector h3 {
   margin: 2px 0;
-  font-size: 15px;
+  font-size: 18px;
   color: #f1e5cd;
 }
 .item-inspector p {
   margin: 3px 0;
-  font-size: 10px;
+  font-size: 13px;
 }
 .item-inspector .item-lore {
   color: #93aab4;
@@ -446,7 +467,7 @@ kbd {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-  font-size: 9px;
+  font-size: 11px;
   color: #7f9aa7;
 }
 .item-deltas > span {
@@ -506,7 +527,7 @@ kbd {
 }
 .supply-row small {
   display: block;
-  font-size: 8px;
+  font-size: 11px;
   color: #7f9caa;
 }
 .class-intro {
@@ -529,7 +550,7 @@ kbd {
   font-size: 10px;
 }
 .class-intro small {
-  font-size: 9px;
+  font-size: 11px;
   color: #ac956e;
 }
 .class-intro > b {
@@ -607,11 +628,11 @@ kbd {
   margin: 0;
 }
 .skill-codex p {
-  font-size: 9px;
+  font-size: 11px;
   margin: 6px 0 !important;
 }
 .skill-codex small {
-  font-size: 9px;
+  font-size: 11px;
   color: #91b6c6;
 }
 .skill-codex kbd {
@@ -628,7 +649,7 @@ kbd {
   color: #e7c58b;
 }
 .shop-banner small {
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 2px;
   color: #b4a07b;
 }
@@ -665,7 +686,7 @@ kbd {
 }
 .shop-gear small {
   color: var(--rarity);
-  font-size: 8px;
+  font-size: 11px;
 }
 .shop-gear h4 {
   color: #e7d9c1;
@@ -673,7 +694,7 @@ kbd {
   margin: 3px 0;
 }
 .shop-gear p {
-  font-size: 9px;
+  font-size: 11px;
   margin: 0;
 }
 .preview-actions {
@@ -684,7 +705,7 @@ kbd {
   margin: 10px 0 12px;
 }
 .preview-actions > span {
-  font-size: 9px;
+  font-size: 11px;
   color: #aac4ce;
   margin-right: 8px;
 }
@@ -731,7 +752,7 @@ kbd {
   .rpg-summary h3 span {
     display: block;
     margin: 0;
-    font-size: 9px;
+    font-size: 11px;
   }
   .rpg-summary > strong {
     font-size: 14px;

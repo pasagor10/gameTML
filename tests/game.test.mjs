@@ -348,6 +348,25 @@ test("every town terrace is reachable from the ground or a connected lower terra
     world.players.delete(p.id);
   }
 });
+test("every dungeon floor spawns its monsters inside the arena", async () => {
+  const p = create("spawn-bounds"),
+    floors = (await import("../shared/config.js")).FLOORS.length;
+  p.unlocked = floors;
+  for (let floor = 1; floor <= floors; floor++) {
+    world.beginDungeon(p, floor);
+    const i = world.instances.get(p.instance);
+    assert.equal(i.enemies.length, 4 + floor);
+    for (const e of i.enemies)
+      assert.ok(
+        e.x >= 70 && e.x <= WORLD.width - 70,
+        `floor ${floor}: monster at x=${e.x}`,
+      );
+    world.instances.delete(p.instance);
+    p.area = "town";
+    p.instance = null;
+  }
+  world.players.delete(p.id);
+});
 test("dungeons retain their own reachable platforms", () => {
   const t = Date.now() / 1000 + 1000;
   for (const [n, platform] of WORLD.dungeonPlatforms.entries()) {

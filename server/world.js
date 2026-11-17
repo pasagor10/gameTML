@@ -104,8 +104,7 @@ export function buyEquipment(p, id, key) {
 }
 export function equip(p, slot, id) {
   ensureTown(p);
-  if (!Object.hasOwn(SLOTS, slot))
-    throw Error("ช่องอุปกรณ์ไม่ถูกต้อง");
+  if (!Object.hasOwn(SLOTS, slot)) throw Error("ช่องอุปกรณ์ไม่ถูกต้อง");
   const item = GEAR[id];
   if (
     id !== null &&
@@ -443,14 +442,16 @@ function spawnStage(i) {
   i.streakUntil = 0;
   i.defeated = 0;
   const boss = i.stage === 3,
-    count = boss ? 1 : 4 + i.floor;
+    count = boss ? 1 : 4 + i.floor,
+    // Spread the pack inside the arena: 230 px apart, closer on deep floors.
+    gap = Math.min(230, (WORLD.width - 850) / Math.max(1, count - 1));
   for (let n = 0; n < count; n++) {
     const max = boss
       ? 300 + i.floor * 220 + i.floor * i.floor * 55
       : 45 + i.floor * 18 + i.stage * 12;
     i.enemies.push({
       id: randomUUID(),
-      x: 700 + n * 230,
+      x: Math.round(700 + n * gap),
       y: 600,
       hp: max,
       maxHp: max,

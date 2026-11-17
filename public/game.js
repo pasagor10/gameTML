@@ -1348,7 +1348,8 @@ class Adventure extends Phaser.Scene {
         gearBadge = this.add
           .text(p.x + 48, p.y - 116, "", {
             fontFamily: "Noto Sans Thai",
-            fontSize: "14px",
+            fontSize: "12px",
+            fontStyle: "bold",
             color: "#d9e3df",
             stroke: "#07131e",
             strokeThickness: 4,
@@ -1717,7 +1718,6 @@ class Adventure extends Phaser.Scene {
         .map((itemId) => GEAR[itemId])
         .filter(Boolean);
       const weapon = visibleGear.find((item) => item.slot === "weapon"),
-        armor = visibleGear.find((item) => item.slot === "armor"),
         rarityRank = { common: 0, rare: 1, epic: 2, legendary: 3 },
         best = visibleGear.reduce(
           (top, item) =>
@@ -1732,22 +1732,16 @@ class Adventure extends Phaser.Scene {
           epic: "#d0a7ff",
           legendary: "#ffc35d",
         }[best?.rarity || "common"];
+      // Just the enhancement level, in the best item's rarity colour, beside
+      // the name: text glyphs for weapon/armour read as clutter in the field.
       a.gearBadge
-        .setText(
-          [
-            weapon?.icon,
-            p.upgrade && weapon ? `+${p.upgrade}` : "",
-            armor?.icon,
-          ]
-            .filter(Boolean)
-            .join(" "),
-        )
+        .setText(p.upgrade && weapon ? `+${p.upgrade}` : "")
         .setColor(gearColor)
         .setPosition(
-          a.image.x + 48,
-          a.image.y - (p.hp <= 0 ? 45 : headroom - 18),
+          a.image.x + a.label.width / 2 + 14,
+          a.image.y - (p.hp <= 0 ? 60 : headroom),
         )
-        .setVisible(p.hp > 0 && visibleGear.length > 0);
+        .setVisible(p.hp > 0 && !!weapon && p.upgrade > 0);
       a.marker
         ?.setPosition(
           a.image.x,
