@@ -12,7 +12,7 @@
       name="description"
       content="ผจญภัยในโลกแฟนตาซีดอยนางนอน เกม RPG 2D เล่นบนเว็บ เลือกผู้กล้า 3 อาชีพ เล่นร่วมกับเพื่อนและพิชิตดันเจียน"
     />
-    <link rel="stylesheet" href="/style.css?v=0.2.1" />
+    <link rel="stylesheet" href="/style.css?v=0.2.2" />
   </head>
   <body>
     <section id="landing">
@@ -47,7 +47,28 @@
               ><button data-gender="female" class="active">♀ หญิง</button>
             </div>
           </div>
-          <div id="class-cards"></div>
+          <div class="hero-showcase">
+            <div class="showcase-location">
+              <span>✦ DOI NANG NON SANCTUARY</span
+              ><small>วิหารผู้พิทักษ์ · ถ้ำหลวง</small>
+            </div>
+            <div id="hero-preview" aria-hidden="true"></div>
+            <div class="hero-fallback hero-art" aria-hidden="true"></div>
+            <div class="hero-caption">
+              <small id="selected-epithet">THE DAWNBLADE</small>
+              <h2 id="selected-class">นักดาบ</h2>
+              <p id="selected-lore"></p>
+            </div>
+            <aside
+              id="hero-stats"
+              aria-label="ค่าสถานะอาชีพ"
+              aria-live="polite"
+            ></aside>
+            <span class="showcase-level"
+              >LV.<b>01</b><small>เริ่มต้นตำนาน</small></span
+            >
+          </div>
+          <div id="class-cards" role="group" aria-label="เลือกอาชีพ"></div>
           <div class="identity-row">
             <label
               >ชื่อตัวละคร<input
@@ -222,6 +243,6 @@
     <div id="toast" role="status"></div>
     <script src="/vendor/phaser.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <script type="module" src="/game.js?v=0.2.1"></script>
+    <script type="module" src="/game.js?v=0.2.2"></script>
   </body>
 </html>

@@ -1,3 +1,4 @@
+import { createSelectionPreview } from "/selection-scene.js?v=0.2.2";
 import { CLASSES, ITEMS, FLOORS, WORLD } from "/shared/config.js";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
@@ -107,11 +108,60 @@ async function refreshAccount() {
       }),
   );
 }
+let selectionPreview;
+const heroDescriptions = {
+  swordsman: {
+    title: "THE DAWNBLADE",
+    role: "แนวหน้า · ระยะประชิด",
+    lore: "คมดาบแห่งรุ่งอรุณ ผู้ยืนหยัดปกป้องแสงสุดท้าย",
+    skill: "⚔ คลื่นดาบ · ฟันทะลวง · พลังจันทรา",
+  },
+  archer: {
+    title: "THE WINDWALKER",
+    role: "ว่องไว · โจมตีระยะไกล",
+    lore: "ลูกศรแห่งพงไพร ที่สายลมไม่อาจหยุดยั้ง",
+    skill: "➶ ศรสายลม · ยิงต่อเนื่อง · ฝนลูกศร",
+  },
+  mage: {
+    title: "THE STARWEAVER",
+    role: "พลังเวท · โจมตีเป็นพื้นที่",
+    lore: "ผู้ถักทอแสงดารา ปลุกเวทโบราณใต้ขุนเขา",
+    skill: "✦ ลูกพลัง · เวทระเบิด · พายุดารา",
+  },
+};
 function renderCards() {
+  const c = CLASSES[job],
+    detail = heroDescriptions[job];
+  $(".hero-showcase").style.setProperty(
+    "--hero-accent",
+    "#" + c.color.toString(16).padStart(6, "0"),
+  );
+  $("#selected-class").textContent = c.name;
+  $("#selected-epithet").textContent = detail.title;
+  $("#selected-lore").textContent = detail.lore;
+  $(".hero-fallback").style.cssText = heroStyle(job, gender);
+  $("#hero-stats").innerHTML =
+    `<div class="stats-heading"><span>พลังเริ่มต้น</span><small>BASE ATTRIBUTES</small></div><p class="class-role">${detail.role}</p>${[
+      ["HP", "พลังชีวิต", c.hp, 180],
+      ["MP", "พลังเวท", c.mp, 150],
+      ["ATK", "พลังโจมตี", c.atk, 35],
+      ["DEF", "พลังป้องกัน", c.def, 12],
+    ]
+      .map(
+        ([key, label, value, max]) =>
+          `<div class="attribute"><div><span>${key} <small>${label}</small></span><b>${value}</b></div><div class="attribute-track"><i style="width:${(value / max) * 100}%"></i></div></div>`,
+      )
+      .join(
+        "",
+      )}<div class="signature-skill"><small>ความสามารถอาชีพ</small><p>${detail.skill}</p></div>`;
   $("#class-cards").innerHTML = JOBS.map(
-    (c, i) =>
-      `<button class="hero-card ${c === job ? "active" : ""}" data-class="${c}"><span class="selected-mark">✦</span><div class="hero-art" style="${heroStyle(c, gender)}"></div><small>${eng[i]}</small><h3>${CLASSES[c].name}</h3><p>${["คมดาบปกป้องแสงสุดท้าย", "ลูกศรที่สายลมไม่อาจหยุด", "เวทมนตร์ปลุกประกายดารา"][i]}</p><div class="hero-stat"><span>HP <b>${CLASSES[c].hp}</b></span><span>ATK <b>${CLASSES[c].atk}</b></span></div></button>`,
+    (name, i) =>
+      `<button class="hero-card ${name === job ? "active" : ""}" data-class="${name}" aria-pressed="${name === job}" aria-label="เลือก${CLASSES[name].name}"><span class="hero-art" style="${heroStyle(name, gender)}" aria-hidden="true"></span><span class="class-card-copy"><small>${eng[i]}</small><strong>${CLASSES[name].name}</strong></span><span class="selected-mark" aria-hidden="true">◆</span></button>`,
   ).join("");
+  $$("[data-gender]").forEach((b) =>
+    b.setAttribute("aria-pressed", String(b.dataset.gender === gender)),
+  );
+  selectionPreview?.setHero(job, gender);
   $$("[data-class]").forEach(
     (b) =>
       (b.onclick = () => {
@@ -130,6 +180,11 @@ $$("[data-gender]").forEach(
     }),
 );
 renderCards();
+try {
+  selectionPreview = createSelectionPreview();
+} catch {
+  /* The full-body static art remains available if WebGL is unavailable. */
+}
 refreshAccount().catch(() => toast("เซิร์ฟเวอร์ยังไม่พร้อม กรุณาลองใหม่", true));
 $("#start").onclick = async () => {
   const b = $("#start");
