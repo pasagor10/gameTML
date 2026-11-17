@@ -1,0 +1,761 @@
+/* Game HUD skin. Loaded after style.css: it changes look and motion only,
+   so the layout and responsive sizing in style.css keep working. */
+:root {
+  --hud-gold-1: #fff0bf;
+  --hud-gold-2: #e2b764;
+  --hud-gold-3: #8a5f2a;
+  --hud-ink: #0a1626;
+  --hud-glass: linear-gradient(
+    160deg,
+    #1f3c5cf2 0%,
+    #12263ff5 55%,
+    #0b1a2ef7 100%
+  );
+  --hud-frame: linear-gradient(
+    135deg,
+    #fff0bf,
+    #c99a4f 30%,
+    #7b5426 55%,
+    #e9c27a 80%,
+    #8a5f2a
+  );
+}
+
+/* ---------- Frames ---------- */
+#game-screen .profile-panel {
+  position: relative;
+}
+#game-screen .ornate {
+  background:
+    radial-gradient(120% 60% at 50% 0%, #5c8cbf26, transparent 60%) padding-box,
+    var(--hud-glass) padding-box,
+    var(--hud-frame) border-box;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  box-shadow:
+    inset 0 0 0 1px #0a1626,
+    inset 0 0 0 2px #e6c27a33,
+    inset 0 18px 30px -18px #9fd3ff33,
+    0 8px 22px #020b16a6,
+    0 0 0 1px #00000066;
+  backdrop-filter: blur(3px);
+}
+#game-screen .ornate::before,
+#game-screen .ornate::after {
+  content: "";
+  position: absolute;
+  top: -6px;
+  width: 10px;
+  height: 10px;
+  transform: rotate(45deg);
+  background: radial-gradient(circle at 35% 35%, #c9fbff, #39b6e0 45%, #12507a);
+  border: 1.5px solid #f1cf86;
+  box-shadow: 0 0 8px #6fe3ff99;
+  pointer-events: none;
+  z-index: 2;
+}
+#game-screen .ornate::before {
+  left: 14px;
+}
+#game-screen .ornate::after {
+  right: 14px;
+}
+#chat.ornate::before,
+#chat.ornate::after {
+  top: 3px;
+}
+
+/* ---------- Profile ---------- */
+.profile-panel {
+  align-items: center;
+}
+#avatar {
+  position: relative;
+  border: 2px solid #f0cf88;
+  border-radius: 50%;
+  background-color: #1d3d5c;
+  box-shadow:
+    inset 0 0 0 2px #0a1626,
+    inset 0 -10px 16px #0a162699,
+    0 0 0 2px #6e4c22,
+    0 0 14px #ffd48655;
+}
+.profile-info strong {
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: #fff3cf;
+  text-shadow:
+    0 1px 0 #6b4a20,
+    0 0 8px #ffcf7a66;
+}
+.profile-info #player-level {
+  align-self: center;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-weight: 700;
+  color: #3a2508;
+  background: linear-gradient(#fff3c6, #e8b85e 55%, #b98235);
+  border: 1px solid #6e4c22;
+  box-shadow:
+    0 0 8px #ffd48688,
+    inset 0 1px 0 #fffbe8;
+}
+#game-screen.level-pop #player-level {
+  animation: hud-pop 0.7s cubic-bezier(0.3, 1.8, 0.5, 1);
+}
+
+/* ---------- Bars ---------- */
+.stat-bar {
+  background: linear-gradient(#030b15, #0b1b2d);
+  border: 1px solid #000;
+  box-shadow:
+    0 0 0 1px #c9a25c88,
+    inset 0 2px 4px #000c;
+  isolation: isolate;
+}
+.stat-bar i {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 0 #ffffff88,
+    inset 0 -3px 4px #00000044;
+}
+.stat-bar i::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 -40%;
+  width: 35%;
+  background: linear-gradient(100deg, transparent, #ffffff70, transparent);
+  animation: hud-shine 3.4s ease-in-out infinite;
+}
+.stat-bar .bar-trail {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 0;
+  width: 100%;
+  border-radius: 10px;
+  background: linear-gradient(#fff6d6, #ffcf74);
+  transition: width 0.55s ease-in 0.35s;
+}
+.stat-bar span {
+  z-index: 2;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-shadow:
+    0 0 2px #000,
+    0 1px 2px #000;
+}
+.hp i {
+  background:
+    linear-gradient(#ffffff44, transparent 50%),
+    linear-gradient(90deg, #a5122e, #ef4458 60%, #ff8a7a);
+}
+.mp i {
+  background:
+    linear-gradient(#ffffff44, transparent 50%),
+    linear-gradient(90deg, #174fb0, #2f9bf0 60%, #7fe6ff);
+}
+.stat-bar.hp.low {
+  animation: hud-danger 0.9s ease-in-out infinite;
+}
+.exp {
+  box-shadow: 0 0 0 1px #8a6a3388;
+}
+.exp i {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 calc(10% - 1px),
+      #0a1626aa calc(10% - 1px) 10%
+    ),
+    linear-gradient(90deg, #d79a2c, #ffe28a);
+  box-shadow: 0 0 8px #ffd36a88;
+}
+
+/* Hit feedback on the portrait and a red rim when HP is low. */
+#game-screen.hud-hit .profile-panel {
+  animation: hud-shake 0.32s linear;
+}
+#game-screen.hud-hit #avatar {
+  box-shadow:
+    inset 0 0 0 2px #0a1626,
+    inset 0 0 24px #ff3b3bcc,
+    0 0 0 2px #6e4c22,
+    0 0 18px #ff4d4d;
+}
+#game-screen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s;
+  box-shadow: inset 0 0 120px 20px #d1102ccc;
+}
+#game-screen.danger::after {
+  opacity: 1;
+  animation: hud-heartbeat 1.1s ease-in-out infinite;
+}
+
+/* ---------- Title banner ---------- */
+.world-title {
+  position: relative;
+  padding: 4px 34px 8px;
+}
+.world-title::before {
+  content: "";
+  position: absolute;
+  inset: 8px 0 14px;
+  z-index: -1;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #0b1c31d9 18%,
+    #0b1c31d9 82%,
+    transparent
+  );
+  border-top: 1px solid #e2b76488;
+  border-bottom: 1px solid #e2b76488;
+}
+.world-title h2 {
+  background: linear-gradient(#fffbe8, #ffe09a 45%, #d79a3a 55%, #fff0bf);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 2px 0 #4a2f0f) drop-shadow(0 0 10px #ffc96b66);
+}
+.world-title small {
+  color: #9fdcff;
+  text-shadow: 0 0 8px #4fc6ff;
+}
+.world-title > span {
+  border: 1px solid #e2b76466;
+  background: #0b1c31cc;
+}
+#game-screen.area-change .world-title {
+  animation: hud-title-in 1.1s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+/* ---------- Top menu ---------- */
+#top-menu button {
+  position: relative;
+  background:
+    radial-gradient(90% 70% at 50% 15%, #5b86b8, #1c3554 70%) padding-box,
+    var(--hud-frame) border-box;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  box-shadow:
+    inset 0 0 0 1px #0a1626,
+    inset 0 1px 0 #ffffff33,
+    0 4px 0 #071322,
+    0 6px 12px #0008;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s,
+    filter 0.15s;
+}
+#top-menu button:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 0 0 1px #0a1626,
+    inset 0 1px 0 #ffffff33,
+    0 6px 0 #071322,
+    0 0 16px #ffd48699;
+}
+#top-menu button:active {
+  transform: translateY(2px);
+  box-shadow:
+    inset 0 0 0 1px #0a1626,
+    0 1px 0 #071322;
+}
+#top-menu b {
+  filter: drop-shadow(0 2px 2px #000a);
+}
+#top-menu span {
+  font-weight: 600;
+  text-shadow: 0 1px 2px #000;
+}
+
+/* ---------- Quest & minimap ---------- */
+.panel-tabs b {
+  background: linear-gradient(#fff0bf, #e2b764);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  font-weight: 700;
+}
+#quests h3 {
+  font-weight: 700;
+  color: #ffe6a8;
+  text-shadow: 0 0 10px #ffc96b55;
+}
+.quest-progress {
+  height: 5px;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px #8a6a3366;
+}
+.quest-progress i {
+  background: linear-gradient(90deg, #c88b2f, #ffe28a);
+  box-shadow: 0 0 8px #ffd36a;
+  transition: width 0.6s ease;
+}
+#minimap svg {
+  margin: 6px 0;
+  border-radius: 6px;
+  background:
+    radial-gradient(circle at 80% 30%, #67ddf022, transparent 50%),
+    linear-gradient(#0b2036, #102a44);
+  box-shadow:
+    inset 0 0 0 1px #e2b76455,
+    inset 0 0 14px #000a;
+}
+#map-dot {
+  filter: drop-shadow(0 0 4px #ffe2a0);
+  animation: hud-blink 1.2s ease-in-out infinite;
+}
+#minimap #dungeon-open {
+  position: relative;
+  overflow: hidden;
+  border-radius: 7px;
+  background: linear-gradient(#ffe39c, #d9a24a 45%, #a86b26);
+  border: 1px solid #fff0bf;
+  color: #3a2508;
+  text-shadow: 0 1px 0 #ffe9b8;
+  box-shadow:
+    0 3px 0 #5d3c14,
+    0 0 14px #ffc96b66;
+}
+#minimap #dungeon-open::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 -50%;
+  width: 40%;
+  background: linear-gradient(100deg, transparent, #fffbe8cc, transparent);
+  animation: hud-shine 2.8s ease-in-out infinite;
+}
+
+/* ---------- Interaction hint ---------- */
+#context-hint {
+  background: linear-gradient(#183451f2, #0c1d33f2);
+  border: 1px solid #f0cf88;
+  border-radius: 999px;
+  box-shadow:
+    0 0 0 3px #0a162688,
+    0 0 18px #ffd48655;
+  animation: hud-hint 1.8s ease-in-out infinite;
+}
+#context-hint kbd {
+  background: linear-gradient(#fff3c6, #d9a24a);
+  color: #3a2508;
+  font-weight: 700;
+  border-color: #6e4c22;
+  box-shadow: 0 2px 0 #6e4c22;
+}
+
+/* ---------- Gold ---------- */
+.gold-display {
+  background:
+    linear-gradient(#183451f0, #0c1d33f0) padding-box,
+    var(--hud-frame) border-box;
+  border: 2px solid transparent;
+  box-shadow:
+    inset 0 0 0 1px #0a1626,
+    0 6px 14px #0009;
+  text-shadow: 0 0 10px #ffc96b;
+}
+.gold-display b {
+  font-weight: 700;
+  color: #fff0bf;
+  display: inline-block;
+}
+.gold-display.gain b {
+  animation: hud-pop 0.5s cubic-bezier(0.3, 1.8, 0.5, 1);
+  color: #fffbe8;
+}
+
+/* ---------- Skills ---------- */
+.skill {
+  border: 2px solid transparent;
+  border-radius: 14px;
+  background-clip: padding-box;
+  box-shadow:
+    0 0 0 2px #e2b764,
+    0 0 0 4px #2a1a08,
+    inset 0 0 0 1px #00000088,
+    inset 0 10px 14px -6px #ffffff55,
+    inset 0 -10px 14px -6px #00000088,
+    0 6px 10px #000a;
+  transition:
+    transform 0.12s,
+    box-shadow 0.2s,
+    filter 0.2s;
+}
+.skill:not([disabled]):hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 0 0 2px #fff0bf,
+    0 0 0 4px #2a1a08,
+    inset 0 0 0 1px #00000088,
+    inset 0 10px 14px -6px #ffffff77,
+    inset 0 -10px 14px -6px #00000088,
+    0 0 18px currentColor;
+}
+.skill:active {
+  transform: scale(0.92);
+}
+.skill b {
+  filter: drop-shadow(0 2px 0 #0008);
+}
+.skill > span {
+  top: -7px;
+  left: -7px;
+  min-width: 18px;
+  padding: 1px 4px;
+  border-radius: 5px;
+  font-weight: 700;
+  color: #3a2508;
+  background: linear-gradient(#fff3c6, #d9a24a);
+  border: 1px solid #6e4c22;
+  box-shadow: 0 2px 0 #6e4c22;
+  text-shadow: none;
+  z-index: 3;
+}
+.skill small {
+  font-weight: 600;
+  text-shadow: 0 1px 3px #000;
+}
+.skill i {
+  inset: 0;
+  border-radius: 12px;
+  background: conic-gradient(
+    #050f1ce6 calc(var(--cd, 0) * 360deg),
+    #050f1c40 0
+  );
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 0 6px #000;
+  z-index: 2;
+}
+.skill.ready::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 18px;
+  border: 2px solid #fff6c8;
+  pointer-events: none;
+  animation: hud-ready 0.6s ease-out forwards;
+}
+.skill.is-casting {
+  box-shadow:
+    0 0 0 2px #fff6c8,
+    0 0 0 4px #2a1a08,
+    inset 0 0 18px #ffffffaa,
+    0 0 22px currentColor;
+}
+.skill.basic {
+  background: radial-gradient(ellipse at 30% 20%, #9ccaf0, #1b3c66 70%)
+    padding-box;
+  color: #fff3cf;
+}
+.auto {
+  border-radius: 50%;
+}
+.auto.on {
+  animation: hud-auto 1.4s ease-in-out infinite;
+}
+
+/* ---------- Bottom actions & chat ---------- */
+.bottom-actions button {
+  background:
+    radial-gradient(90% 70% at 50% 15%, #45678f, #172d49 70%) padding-box,
+    var(--hud-frame) border-box;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  box-shadow:
+    inset 0 0 0 1px #0a1626,
+    0 4px 0 #071322;
+}
+.chat-tabs {
+  background: linear-gradient(#1b3858, #11263f);
+  border-bottom: 1px solid #e2b76444;
+}
+.chat-tabs .active {
+  background: linear-gradient(#fff3c6, #d9a24a);
+  color: #3a2508;
+  font-weight: 700;
+  box-shadow: 0 2px 0 #6e4c22;
+}
+.chat-tabs > span {
+  animation: hud-blink 2s ease-in-out infinite;
+}
+
+/* ---------- Banners ---------- */
+#stage-clear,
+#death {
+  animation: hud-banner 0.7s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+#stage-clear h2,
+#death h2 {
+  background: linear-gradient(#fffbe8, #ffe09a 45%, #d79a3a 55%, #fff0bf);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 2px 0 #4a2f0f);
+}
+#level-up {
+  position: absolute;
+  top: 28%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  text-align: center;
+  z-index: 20;
+  animation: hud-levelup 2.4s ease-out forwards;
+}
+#level-up strong {
+  display: block;
+  font: 46px "Chonburi";
+  letter-spacing: 2px;
+  background: linear-gradient(#fffbe8, #ffe09a 45%, #d79a3a 55%, #fff0bf);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 3px 0 #4a2f0f) drop-shadow(0 0 22px #ffc96b);
+}
+#level-up span {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 3px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff3cf;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #0b1c31e6 20%,
+    #0b1c31e6 80%,
+    transparent
+  );
+}
+#level-up::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 420px;
+  height: 420px;
+  z-index: -1;
+  transform: translate(-50%, -50%);
+  background: repeating-conic-gradient(
+    #ffd48633 0 8deg,
+    transparent 8deg 22deg
+  );
+  mask: radial-gradient(circle, #000 20%, transparent 65%);
+  -webkit-mask: radial-gradient(circle, #000 20%, transparent 65%);
+  animation: hud-spin 6s linear infinite;
+}
+
+/* ---------- Entry ---------- */
+#game-screen.hud-enter .hud-top > *,
+#game-screen.hud-enter #quests,
+#game-screen.hud-enter #minimap,
+#game-screen.hud-enter #chat,
+#game-screen.hud-enter .hud-bottom > * {
+  animation: hud-enter 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.1) backwards;
+}
+#game-screen.hud-enter .hud-top > :nth-child(2),
+#game-screen.hud-enter .hud-bottom > :nth-child(2) {
+  animation-delay: 0.12s;
+}
+#game-screen.hud-enter .hud-top > :nth-child(3),
+#game-screen.hud-enter #minimap,
+#game-screen.hud-enter .hud-bottom > :nth-child(3) {
+  animation-delay: 0.22s;
+}
+#game-screen.hud-enter #chat {
+  animation-delay: 0.3s;
+}
+
+/* ---------- Keyframes ---------- */
+@keyframes hud-shine {
+  0%,
+  55% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(420%);
+  }
+}
+@keyframes hud-danger {
+  50% {
+    box-shadow:
+      0 0 0 1px #ff6b6b,
+      0 0 12px #ff2b4b,
+      inset 0 2px 4px #000c;
+  }
+}
+@keyframes hud-heartbeat {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  15% {
+    opacity: 1;
+  }
+  30% {
+    opacity: 0.65;
+  }
+  45% {
+    opacity: 0.95;
+  }
+}
+@keyframes hud-shake {
+  20% {
+    transform: translate(-4px, 1px);
+  }
+  40% {
+    transform: translate(4px, -1px);
+  }
+  60% {
+    transform: translate(-3px, 0);
+  }
+  80% {
+    transform: translate(2px, 1px);
+  }
+}
+@keyframes hud-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.45);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes hud-blink {
+  50% {
+    opacity: 0.45;
+  }
+}
+@keyframes hud-hint {
+  50% {
+    transform: translate(-50%, calc(-50% - 4px));
+  }
+}
+@keyframes hud-ready {
+  from {
+    opacity: 1;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.25);
+  }
+}
+@keyframes hud-auto {
+  50% {
+    box-shadow:
+      0 0 0 2px #c3f7b0,
+      0 0 0 4px #2a1a08,
+      0 0 22px #83e7bd;
+  }
+}
+@keyframes hud-banner {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) scale(1.6);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+}
+@keyframes hud-levelup {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(2.2);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  18% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -60%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -75%) scale(1);
+  }
+}
+@keyframes hud-spin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+@keyframes hud-title-in {
+  from {
+    opacity: 0;
+    transform: translateY(-14px) scale(1.15);
+    letter-spacing: 6px;
+  }
+}
+@keyframes hud-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-18px) scale(0.96);
+  }
+}
+#game-screen.hud-enter .hud-bottom > *,
+#game-screen.hud-enter #chat {
+  animation-name: hud-enter-up;
+}
+@keyframes hud-enter-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+}
+
+@media (max-width: 700px) {
+  #game-screen .ornate::before,
+  #game-screen .ornate::after {
+    width: 7px;
+    height: 7px;
+    top: -4px;
+  }
+  .skill > span {
+    top: -5px;
+    left: -5px;
+    min-width: 14px;
+    padding: 0 3px;
+  }
+  #level-up strong {
+    font-size: 32px;
+  }
+  #level-up::before {
+    width: 280px;
+    height: 280px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #game-screen *,
+  #game-screen *::before,
+  #game-screen *::after,
+  #game-screen::after {
+    animation: none !important;
+  }
+}

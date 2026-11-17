@@ -13,6 +13,7 @@
       content="ผจญภัยในโลกแฟนตาซีดอยนางนอน เกม RPG 2D เล่นบนเว็บ เลือกผู้กล้า 3 อาชีพ เล่นร่วมกับเพื่อนและพิชิตดันเจียน"
     />
     <link rel="stylesheet" href="/style.css?v=0.3.1" />
+    <link rel="stylesheet" href="/hud.css?v=0.4.3" />
   </head>
   <body>
     <section id="landing">
@@ -117,10 +118,12 @@
               ><span id="player-level">Lv.1</span>
             </div>
             <div class="stat-bar hp">
-              <i id="hp-fill"></i><span id="hp-label"></span>
+              <b id="hp-trail" class="bar-trail"></b><i id="hp-fill"></i
+              ><span id="hp-label"></span>
             </div>
             <div class="stat-bar mp">
-              <i id="mp-fill"></i><span id="mp-label"></span>
+              <b id="mp-trail" class="bar-trail"></b><i id="mp-fill"></i
+              ><span id="mp-label"></span>
             </div>
             <div class="stat-bar exp"><i id="exp-fill"></i></div>
           </div>
@@ -244,6 +247,6 @@
     <div id="toast" role="status"></div>
     <script src="/vendor/phaser.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <script type="module" src="/game.js?v=0.3.1"></script>
+    <script type="module" src="/game.js?v=0.4.1"></script>
   </body>
 </html>

@@ -8,6 +8,8 @@ import {
 } from "/combat-visuals.js?v=0.3.1";
 import { createSelectionPreview } from "/selection-scene.js?v=0.2.2";
 import { CLASSES, ITEMS, FLOORS, WORLD } from "/shared/config.js";
+import { createParallax } from "/parallax.js?v=0.4.0";
+import { updateHudFx, enterHud } from "/hud-fx.js?v=0.4.1";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 let job = "swordsman",
@@ -323,6 +325,7 @@ function enterGame() {
   $("#prologue").classList.add("hidden");
   $("#landing").classList.add("hidden");
   $("#game-screen").classList.remove("hidden");
+  enterHud();
   $("#connection-state").classList.remove("hidden");
   closeModal();
   if (!phaser)
@@ -391,7 +394,6 @@ function updateHUD() {
   $("#hp-label").textContent = `HP ${Math.ceil(p.hp)} / ${p.maxHp}`;
   $("#mp-label").textContent = `MP ${Math.floor(p.mp)} / ${p.maxMp}`;
   $("#exp-fill").style.width = (p.exp / (p.level * 80)) * 100 + "%";
-  $("#gold").textContent = p.gold.toLocaleString();
   $("#hp-potions").textContent = d?.training
     ? "ยา HP ∞"
     : "ยา HP ×" + p.inventory.hp;
@@ -459,6 +461,7 @@ function updateHUD() {
     button.style.display = remaining > 0 ? "grid" : "none";
     button.textContent = remaining > 0 ? Math.ceil(remaining) : "";
   }
+  updateHudFx(state);
   const hash = state.trade ? JSON.stringify(state.trade) : "";
   if (hash !== lastTrade) {
     if (state.trade) {
@@ -917,11 +920,8 @@ class Adventure extends Phaser.Scene {
     this.telegraphs = this.add.graphics().setDepth(6);
     this.reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
     this.cameras.main.setBackgroundColor("#234b68");
-    this.back = this.add
-      .image(0, -180, "town")
-      .setOrigin(0)
-      .setDisplaySize(2400, 1000)
-      .setDepth(-20);
+    this.parallax = createParallax(this);
+    this.parallax.setArea("town");
     this.decor = this.add.graphics().setDepth(-5);
     this.effectLayer = this.add.graphics().setDepth(30);
     this.npcs = [];
@@ -985,6 +985,7 @@ class Adventure extends Phaser.Scene {
       zoom = w < 700 ? Math.max(0.6, h / 900) : Math.max(0.7, h / 800);
     this.cameras.main.setZoom(zoom);
     this.cameras.main.setBounds(0, -100, 2400, 950);
+    this.parallax?.resize();
   }
   makePlatforms() {
     this.decor.clear();
@@ -1069,10 +1070,11 @@ class Adventure extends Phaser.Scene {
     if (areaChanged) {
       this.lastArea = area;
       const town = s.area === "town";
-      this.back.setTexture(town ? "town" : "cave");
-      this.back.clearTint();
-      if (!town)
-        this.back.setTint([0xc1b9ff, 0x95dfff, 0x91d7ce][s.dungeon.floor - 1]);
+      this.parallax.setArea(
+        town ? "town" : "cave",
+        town ? null : [0xc1b9ff, 0x95dfff, 0x91d7ce][s.dungeon.floor - 1],
+      );
+      this.lookX = 0;
       this.npcs.forEach((n) => n.setVisible(town));
       this.portalLabel.setVisible(town);
       this.portal.setVisible(town);
@@ -1467,12 +1469,21 @@ class Adventure extends Phaser.Scene {
     const me = this.actors.get(state.self.id);
     if (me) {
       const c = this.cameras.main,
-        targetX = Phaser.Math.Clamp(
-          me.image.x,
+        lead = Phaser.Math.Clamp((me.target.vx || 0) * 0.35, -110, 110);
+      // Look ahead in the walking direction and lift the camera on jumps.
+      this.lookX = Phaser.Math.Linear(this.lookX || 0, lead, 0.04);
+      const targetX = Phaser.Math.Clamp(
+          me.image.x + this.lookX,
           c.width / c.zoom / 2,
           WORLD.width - c.width / c.zoom / 2,
-        );
-      c.centerOn(Phaser.Math.Linear(c.midPoint.x, targetX, 0.08), 340);
+        ),
+        targetY =
+          340 + Phaser.Math.Clamp((me.image.y - WORLD.ground) * 0.3, -50, 0);
+      c.centerOn(
+        Phaser.Math.Linear(c.midPoint.x, targetX, 0.08),
+        Phaser.Math.Linear(c.midPoint.y, targetY, 0.06),
+      );
     }
+    this.parallax.update(time);
   }
 }
