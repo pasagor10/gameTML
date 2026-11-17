@@ -71,7 +71,7 @@ function login(res, user) {
   );
 }
 app.get("/api/health", (req, res) =>
-  res.json({ ok: true, version: "0.2.0", online: world.players.size }),
+  res.json({ ok: true, version: "0.3.0", online: world.players.size }),
 );
 app.get("/api/me", (req, res) => {
   const user = sessions(req);
@@ -134,13 +134,9 @@ app.post("/api/auth/:action", async (req, res) => {
     login(res, user);
     res.json({ user });
   } catch (e) {
-    res
-      .status(400)
-      .json({
-        error: e.code?.startsWith("SQLITE_CONSTRAINT")
-          ? "ชื่อนี้ถูกใช้แล้ว"
-          : e.message,
-      });
+    res.status(400).json({
+      error: e.code?.startsWith("SQLITE_CONSTRAINT") ? "ชื่อนี้ถูกใช้แล้ว" : e.message,
+    });
   }
 });
 app.post("/api/characters", (req, res) => {
@@ -184,13 +180,11 @@ app.post("/api/characters", (req, res) => {
     );
     res.json({ id, ...state, name });
   } catch (e) {
-    res
-      .status(400)
-      .json({
-        error: e.code?.startsWith("SQLITE_CONSTRAINT")
-          ? "ชื่อตัวละครถูกใช้แล้ว"
-          : e.message,
-      });
+    res.status(400).json({
+      error: e.code?.startsWith("SQLITE_CONSTRAINT")
+        ? "ชื่อตัวละครถูกใช้แล้ว"
+        : e.message,
+    });
   }
 });
 app.use("/shared", express.static(path.resolve("shared")));
@@ -247,6 +241,7 @@ io.on("connection", (socket) => {
       p.lastSeq = d.seq;
       p.lastInput = Date.now() / 1000;
       p.input = d.direction;
+      p.running = d.running === true;
       p.jump = !!d.jump;
       if (d.direction || d.jump) p.auto = false;
     },
@@ -265,6 +260,7 @@ io.on("connection", (socket) => {
     p.mp = CLASSES[p.class].mp + (p.level - 1) * 5;
     return { message: "พักฟื้นพลังเต็มแล้ว" };
   });
+  execute("training:enter", (p) => world.beginTraining(p), 2);
   execute("dungeon:enter", (p, d) => world.beginDungeon(p, d.floor));
   execute("dungeon:next", (p) => world.nextStage(p));
   execute("dungeon:leave", (p) => world.returnTown(p));

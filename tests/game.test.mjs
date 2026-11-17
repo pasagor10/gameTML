@@ -41,10 +41,15 @@ test("damage is bounded, authoritative input ignores client gold and enforces co
   i.enemies.forEach((e) => {
     e.x = p.x + 30;
   });
-  world.attack(p);
+  const t = Date.now() / 1000;
+  const before = i.enemies[0].hp;
+  world.attack(p, 0, t);
+  assert.equal(i.enemies[0].hp, before, "windup must not damage immediately");
+  world.tick(0.05, t + 0.17);
   const hp = i.enemies[0].hp;
-  world.attack(p);
-  assert.equal(i.enemies[0].hp, hp);
+  world.attack(p, 0, t + 0.18);
+  world.tick(0.05, t + 0.2);
+  assert.equal(i.enemies[0].hp, hp, "recovery prevents an extra hit");
   assert.ok(hp < i.enemies[0].maxHp);
 });
 test("NPC purchases and enhancement are idempotent, stock sale atomic, no negative gold", () => {
@@ -133,13 +138,20 @@ test("all classes clear 9 configured stages, unlocks persist and duplicate rewar
         for (let n = 0; i.enemies.length && n < 20; n++) {
           p.cooldowns = {};
           p.mp = 999;
-          world.attack(p, 3);
+          const t = Date.now() / 1000 + 100 + n * 2;
+          p.action = null;
+          p.pending = null;
+          world.attack(p, 3, t);
+          world.tick(0.05, t + 0.43);
         }
         assert.equal(i.enemies.length, 0);
         assert.equal(i.clear, true);
         const gold = p.gold;
         p.cooldowns = {};
-        world.attack(p, 3);
+        p.action = null;
+        p.pending = null;
+        world.attack(p, 3, Date.now() / 1000 + 200);
+        world.tick(0.05, Date.now() / 1000 + 201);
         assert.equal(p.gold, gold);
         if (stage < 3) world.nextStage(p);
       }
@@ -176,6 +188,94 @@ test("party requires readiness, is capped at three, shares instances, movement a
   world.disconnect(b);
   assert.equal(b.auto, false);
   assert.equal(world.trades.size, 0);
+});
+test("training telegraphs can be dodged, hits can kill, and practice kills do not award currency", () => {
+  const p = create("training-motion");
+  world.beginTraining(p);
+  const i = world.instances.get(p.instance),
+    e = i.enemies[0],
+    t = Date.now() / 1000 + 10;
+  e.x = p.x + 50;
+  e.attackAt = 0;
+  world.tick(0.05, t);
+  assert.ok(e.action);
+  assert.equal(p.hp, 180);
+  p.x = 100;
+  world.tick(0.05, t + 0.43);
+  assert.equal(p.hp, 180, "leaving the telegraph avoids impact");
+  world.tick(0.05, t + 0.8);
+  p.x = e.x - 50;
+  world.tick(0.05, t + 2);
+  p.hp = 1;
+  world.tick(0.05, t + 2.43);
+  assert.equal(p.hp, 0);
+  assert.ok(p.diedAt);
+  assert.equal(p.pending, null);
+  world.returnTown(p);
+  world.beginTraining(p);
+  const practice = world.instances.get(p.instance),
+    slime = practice.enemies[0];
+  slime.x = p.x + 40;
+  slime.hp = 1;
+  const gold = p.gold,
+    experience = p.exp,
+    quest = p.quest;
+  world.attack(p, 0, t + 5);
+  world.tick(0.05, t + 5.17);
+  assert.equal(practice.clear, true);
+  assert.equal(p.gold, gold);
+  assert.equal(p.exp, experience);
+  assert.equal(p.quest, quest);
+  world.tick(0.05, t + 8);
+  assert.equal(practice.enemies.length, 1);
+  assert.equal(practice.enemies[0].hp, 180);
+  const packet = world.snapshot(p);
+  assert.equal(packet.dungeon.training, true);
+  assert.equal(typeof packet.self.grounded, "boolean");
+});
+test("animation state prioritizes death/hit and matches the shared impact timeline", async () => {
+  const { heroPose, slimePose } = await import("../shared/motion.js");
+  const p = {
+    hp: 100,
+    grounded: true,
+    moving: false,
+    action: { skill: 0, startedAt: 10, impactAt: 10.16, endsAt: 10.44 },
+  };
+  assert.equal(heroPose(p, 10.05).state, "attack");
+  assert.ok(heroPose(p, 10.17).frame >= 2);
+  assert.equal(
+    heroPose({ ...p, action: null, grounded: false, vy: -400 }, 11).state,
+    "jump",
+  );
+  assert.equal(heroPose({ ...p, hp: 0, diedAt: 10 }, 11).state, "death");
+  assert.equal(heroPose({ ...p, hitAt: 10.1 }, 10.2).state, "hit");
+  assert.equal(slimePose({ hp: 50, moving: true }, 10).state, "move");
+  assert.equal(slimePose({ hp: 0, diedAt: 10 }, 11).frame, 3);
+});
+test("jump clears and lands on a platform, with a bounded ledge grace period", () => {
+  const p = create("platform-motion"),
+    t = Date.now() / 1000 + 500;
+  p.x = 600;
+  p.jump = true;
+  for (let n = 0; n < 25; n++) world.tick(0.05, t + n * 0.05);
+  assert.equal(p.y, 460);
+  assert.equal(p.grounded, true);
+  p.x = 820;
+  p.y = 460;
+  p.grounded = false;
+  p.vy = 0;
+  p.lastGroundAt = t + 2;
+  p.jump = true;
+  world.tick(0.05, t + 2.08);
+  assert.ok(p.vy < 0, "short ledge grace should allow a jump");
+  p.x = 820;
+  p.y = 460;
+  p.grounded = false;
+  p.vy = 0;
+  p.lastGroundAt = t + 3;
+  p.jump = true;
+  world.tick(0.05, t + 3.2);
+  assert.ok(p.vy > 0, "expired ledge grace must not allow an air jump");
 });
 test("WAL-safe backup opens independently with intact character state", async () => {
   const Database = (await import("better-sqlite3")).default;

@@ -12,7 +12,7 @@
       name="description"
       content="ผจญภัยในโลกแฟนตาซีดอยนางนอน เกม RPG 2D เล่นบนเว็บ เลือกผู้กล้า 3 อาชีพ เล่นร่วมกับเพื่อนและพิชิตดันเจียน"
     />
-    <link rel="stylesheet" href="/style.css?v=0.2.2" />
+    <link rel="stylesheet" href="/style.css?v=0.3.0" />
   </head>
   <body>
     <section id="landing">
@@ -25,7 +25,7 @@
           </div></a
         >
         <div class="live-pill">
-          <i></i> ONLINE ADVENTURE <span>DEMO v0.2</span>
+          <i></i> ONLINE ADVENTURE <span>DEMO v0.3</span>
         </div>
         <button id="sound" class="glass-button">♫ เปิดเสียง</button>
       </header>
@@ -160,6 +160,7 @@
           <path d="M200 50V15" stroke="#67ddf0" stroke-width="4" />
           <circle id="map-dot" cx="32" cy="47" r="5" fill="#ffe2a0" /></svg
         ><button id="dungeon-open">♜ เลือกดันเจียน <span>➜</span></button>
+        <button id="training-open">⚔ สนามฝึก · ซ้อมกับสไลม์</button>
       </aside>
       <div id="context-hint" class="hidden"><kbd>F</kbd> <span></span></div>
       <div id="stage-clear" class="hidden">
@@ -212,8 +213,8 @@
         </div>
       </div>
       <div id="keyboard-help">
-        A D เดิน <span>·</span> SPACE กระโดด <span>·</span> F โต้ตอบ
-        <span>·</span> J โจมตี
+        A D เดิน <span>·</span> SHIFT วิ่ง <span>·</span> SPACE กระโดด
+        <span>·</span> F โต้ตอบ <span>·</span> J โจมตี
       </div>
       <div id="mobile-controls">
         <button data-direction="-1">◀</button
@@ -243,6 +244,6 @@
     <div id="toast" role="status"></div>
     <script src="/vendor/phaser.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <script type="module" src="/game.js?v=0.2.2"></script>
+    <script type="module" src="/game.js?v=0.3.0"></script>
   </body>
 </html>

@@ -1,3 +1,4 @@
+import { ACTIONS } from "../shared/motion.js";
 import { randomUUID } from "node:crypto";
 import { db, loadCharacter, persist, atomic, log } from "./database.js";
 import {
@@ -163,17 +164,18 @@ export function potion(p, type = "hp") {
     now() - (p.potionAt || 0) < 1
   )
     throw Error("ยังใช้ยาไม่ได้");
-  if (!p.inventory[type]) throw Error("ยาหมด");
+  const training = instances.get(p.instance)?.training;
+  if (!p.inventory[type] && !training) throw Error("ยาหมด");
   if (
     (type === "hp" && p.hp >= maxHp(p)) ||
     (type === "mp" && p.mp >= maxMp(p))
   )
     throw Error("พลังเต็มแล้ว");
-  p.inventory[type]--;
+  if (!training) p.inventory[type]--;
   p.potionAt = now();
   if (type === "hp") p.hp = Math.min(maxHp(p), p.hp + 90);
   else p.mp = Math.min(maxMp(p), p.mp + 80);
-  persist(p);
+  if (!training) persist(p);
 }
 export function makeRuntime(c, socket) {
   return {
@@ -182,6 +184,13 @@ export function makeRuntime(c, socket) {
     x: 480,
     y: WORLD.ground,
     vy: 0,
+    vx: 0,
+    running: false,
+    action: null,
+    pending: null,
+    hitAt: 0,
+    diedAt: 0,
+    reviveAt: 0,
     direction: 1,
     input: 0,
     jump: false,
@@ -252,9 +261,71 @@ export function beginDungeon(p, floor) {
     m.hp = maxHp(m);
     m.mp = maxMp(m);
     m.auto = false;
+    m.action = null;
+    m.pending = null;
+    m.diedAt = 0;
+    m.reviveAt = 0;
+    m.hitAt = 0;
+    m.grounded = true;
+    m.vx = 0;
   }
   if (party) party.ready.clear();
   return { message: "เข้าสู่ " + FLOORS[floor - 1].name };
+}
+export function beginTraining(p) {
+  ensureTown(p);
+  const id = randomUUID();
+  const i = {
+    id,
+    floor: 1,
+    stage: 1,
+    members: [p.id],
+    enemies: [],
+    clear: false,
+    completed: false,
+    training: true,
+    events: [],
+  };
+  instances.set(id, i);
+  spawnTraining(i);
+  p.area = "dungeon";
+  p.instance = id;
+  p.x = 460;
+  p.y = 600;
+  p.vx = 0;
+  p.vy = 0;
+  p.hp = maxHp(p);
+  p.mp = maxMp(p);
+  p.action = null;
+  p.pending = null;
+  p.auto = false;
+  p.diedAt = 0;
+  p.reviveAt = 0;
+  p.hitAt = 0;
+  p.grounded = true;
+  p.jump = false;
+  p.input = 0;
+  return { message: "สนามฝึก · สไลม์ไม่มีรางวัล ฝึกได้โดยไม่เสียความคืบหน้า" };
+}
+function spawnTraining(i) {
+  i.clear = false;
+  i.enemies = [
+    {
+      id: randomUUID(),
+      type: "slime",
+      x: 900,
+      y: 600,
+      hp: 180,
+      maxHp: 180,
+      boss: false,
+      direction: -1,
+      attackAt: now(),
+      action: null,
+      hitAt: 0,
+      spawnAt: now(),
+    },
+  ];
+  i.respawnAt = 0;
 }
 function spawnStage(i) {
   i.clear = false;
@@ -284,6 +355,10 @@ function spawnStage(i) {
 export function nextStage(p) {
   const i = instances.get(p.instance);
   if (!i || !i.clear) throw Error("กำจัดมอนสเตอร์ให้หมดก่อน");
+  if (i.training) {
+    spawnTraining(i);
+    return { message: "เริ่มฝึกรอบใหม่" };
+  }
   if (i.stage === 3) return returnTown(p);
   i.stage++;
   spawnStage(i);
@@ -292,6 +367,10 @@ export function nextStage(p) {
     if (m) {
       m.x = 180;
       m.y = 600;
+      m.vx = 0;
+      m.vy = 0;
+      m.pending = null;
+      m.action = null;
       m.hp = Math.min(maxHp(m), m.hp + 40);
       m.mp = Math.min(maxMp(m), m.mp + 35);
     }
@@ -310,6 +389,15 @@ export function returnTown(p) {
   p.instance = null;
   p.auto = false;
   p.x = 480;
+  p.action = null;
+  p.pending = null;
+  p.diedAt = 0;
+  p.reviveAt = now();
+  p.hitAt = 0;
+  p.grounded = true;
+  p.jump = false;
+  p.input = 0;
+  p.vx = 0;
   p.y = 600;
   p.hp = maxHp(p);
   p.mp = maxMp(p);
@@ -325,19 +413,68 @@ function exp(p, n) {
     p.mp = maxMp(p);
   }
 }
-export function attack(p, skill = 0) {
-  if (![0, 1, 2, 3].includes(skill) || p.area !== "dungeon" || p.hp <= 0)
+export function attack(p, skill = 0, t = now()) {
+  if (
+    !ACTIONS[skill] ||
+    p.area !== "dungeon" ||
+    p.hp <= 0 ||
+    t - (p.hitAt || 0) < 0.14 ||
+    p.pending ||
+    (p.action && t < p.action.endsAt)
+  )
     return;
-  const t = now(),
-    c = CLASSES[p.class],
-    cool = [0.45, 2, 4, 7][skill];
-  if (t - (p.cooldowns[skill] || 0) < cool || p.mp < skill * 8) return;
-  const i = instances.get(p.instance);
-  if (!i || i.clear) return;
+  const spec = ACTIONS[skill],
+    i = instances.get(p.instance);
+  if (
+    !i ||
+    i.clear ||
+    t - (p.cooldowns[skill] || 0) < spec.cooldown ||
+    p.mp < spec.mp
+  )
+    return;
   p.cooldowns[skill] = t;
+  p.mp -= spec.mp;
   p.attackAt = t;
-  p.mp -= skill * 8;
-  const range = c.range + (skill === 3 ? 160 : skill === 2 ? 80 : 0);
+  p.combo = skill
+    ? 0
+    : t - (p.lastSlash || 0) < 1.2
+      ? ((p.combo || 0) + 1) % 3
+      : 0;
+  p.lastSlash = t;
+  p.action = {
+    kind: skill ? "skill" : "attack",
+    skill,
+    combo: p.combo,
+    direction: p.direction,
+    startedAt: t,
+    impactAt: t + spec.windup,
+    endsAt: t + spec.windup + spec.recovery,
+  };
+  p.pending = { ...p.action };
+}
+function resolveAttack(p, t) {
+  const a = p.pending;
+  if (!a || t < a.impactAt) return;
+  p.pending = null;
+  const i = instances.get(p.instance),
+    c = CLASSES[p.class],
+    skill = a.skill;
+  if (!i || i.clear || p.hp <= 0) return;
+  i.events.push({
+    id: randomUUID(),
+    kind: "attack",
+    actorId: p.id,
+    x: p.x,
+    y: p.y - 50,
+    color: c.color,
+    direction: a.direction,
+    class: p.class,
+    skill,
+    range: c.range + ACTIONS[skill].rangeBonus,
+    combo: a.combo,
+    at: t,
+  });
+  const range = c.range + ACTIONS[skill].rangeBonus;
   i.events.push({
     id: randomUUID(),
     kind: "attack",
@@ -355,7 +492,7 @@ export function attack(p, skill = 0) {
       e.hp <= 0 ||
       Math.abs(e.x - p.x) > range ||
       Math.abs(e.y - p.y) > 130 ||
-      ((e.x - p.x) * p.direction < -35 && skill !== 3)
+      ((e.x - p.x) * a.direction < -35 && skill !== 3)
     )
       continue;
     if (p.class === "archer" && skill < 2 && hits > 0) continue;
@@ -367,17 +504,28 @@ export function attack(p, skill = 0) {
           [1, 1.6, 2, 2.5][skill],
         ) * (crit ? 1.5 : 1);
     e.hp -= Math.floor(amount);
+    e.hitAt = t;
+    e.hitDirection = a.direction;
+    e.x = Math.max(
+      70,
+      Math.min(
+        WORLD.width - 70,
+        e.x + a.direction * (e.boss ? 2 : skill ? 24 : 10),
+      ),
+    );
     hits++;
     i.events.push({
       id: randomUUID(),
       kind: "damage",
+      targetId: e.id,
+      actorId: p.id,
       x: e.x,
       y: e.y - 80,
       amount: Math.floor(amount),
       crit,
       at: t,
     });
-    if (e.hp <= 0) {
+    if (e.hp <= 0 && !i.training) {
       for (const id of i.members) {
         const m = live(id);
         if (m && m.hp > 0) {
@@ -392,7 +540,7 @@ export function attack(p, skill = 0) {
   i.enemies = i.enemies.filter((e) => e.hp > 0);
   if (!i.enemies.length) {
     i.clear = true;
-    if (i.stage === 3 && !i.completed) {
+    if (i.stage === 3 && !i.completed && !i.training) {
       i.completed = true;
       for (const id of i.members) {
         const m = live(id);
@@ -549,15 +697,28 @@ export function disconnect(p) {
   if (p.party) partyAction(p, { action: "leave" });
   for (const [id, t] of trades) if (t.members.includes(p.id)) trades.delete(id);
 }
-function physics(p, dt) {
+function physics(p, dt, t) {
   const previous = p.y;
-  p.x = Math.max(
-    45,
-    Math.min(WORLD.width - 45, p.x + p.input * CLASSES[p.class].speed * dt),
-  );
-  if (p.jump && p.grounded) {
-    p.vy = -490;
+  if (p.grounded) p.lastGroundAt = t;
+  if (p.jump) p.jumpBufferedAt = t;
+  const actionSlow = p.action && t < p.action.endsAt ? 0.36 : 1;
+  const target =
+    p.input * CLASSES[p.class].speed * (p.running ? 1.25 : 0.78) * actionSlow;
+  const acceleration = (p.grounded ? (p.input ? 1900 : 2400) : 900) * dt;
+  p.vx =
+    (p.vx || 0) +
+    Math.sign(target - (p.vx || 0)) *
+      Math.min(Math.abs(target - (p.vx || 0)), acceleration);
+  p.x = Math.max(45, Math.min(WORLD.width - 45, p.x + p.vx * dt));
+  if (
+    p.hp > 0 &&
+    t - (p.jumpBufferedAt || 0) < 0.13 &&
+    (p.grounded || t - (p.lastGroundAt || 0) < 0.1)
+  ) {
+    p.vy = -650;
     p.grounded = false;
+    p.lastGroundAt = -100;
+    p.jumpBufferedAt = -100;
   }
   p.jump = false;
   p.vy += 1150 * dt;
@@ -571,20 +732,25 @@ function physics(p, dt) {
         p.x <= platform.x + platform.w &&
         previous <= platform.y + 2 &&
         p.y >= platform.y
-      ) {
+      )
         floor = Math.min(floor, platform.y);
-      }
   if (p.y >= floor && p.vy >= 0) {
     p.y = floor;
     p.vy = 0;
     p.grounded = true;
   }
-  if (p.input) p.direction = Math.sign(p.input);
+  if (p.action && t < p.action.endsAt) p.direction = p.action.direction;
+  else if (p.input) p.direction = Math.sign(p.input);
 }
-export function tick(dt) {
-  const t = now();
+export function tick(dt, t = now()) {
   for (const p of players.values()) {
-    if (p.hp <= 0) continue;
+    if (p.hp <= 0) {
+      p.input = 0;
+      p.pending = null;
+      p.action = null;
+      physics(p, dt, t);
+      continue;
+    }
     if (t - p.lastInput > 0.3) p.input = 0;
     const i = instances.get(p.instance);
     if (p.auto && i) {
@@ -601,16 +767,17 @@ export function tick(dt) {
           p.input = Math.sign(dist);
           p.jump = false;
         }
-        attack(p, 3);
-        attack(p, 2);
-        attack(p, 1);
-        attack(p, 0);
-        if (p.hp < maxHp(p) * 0.4 && p.inventory.hp) {
+        p.running = true;
+        attack(p, 3, t);
+        attack(p, 2, t);
+        attack(p, 1, t);
+        attack(p, 0, t);
+        if (p.hp < maxHp(p) * 0.4 && (p.inventory.hp || i.training)) {
           try {
             potion(p);
           } catch {}
         }
-        if (p.mp < 20 && p.inventory.mp) {
+        if (p.mp < 20 && (p.inventory.mp || i.training)) {
           try {
             potion(p, "mp");
           } catch {}
@@ -620,46 +787,86 @@ export function tick(dt) {
         nextStage(p);
       }
     }
-    physics(p, dt);
+    resolveAttack(p, t);
+    physics(p, dt, t);
     p.mp = Math.min(maxMp(p), p.mp + dt * 2);
   }
   for (const i of instances.values()) {
     i.events = i.events.filter((e) => t - e.at < 1.2);
+    if (i.training && i.clear) {
+      if (!i.respawnAt) i.respawnAt = t + 2.5;
+      if (t >= i.respawnAt) spawnTraining(i);
+    }
     for (const e of i.enemies) {
-      const targets = i.members
-          .map(live)
-          .filter((p) => p && p.hp > 0)
-          .sort((a, b) => Math.abs(a.x - e.x) - Math.abs(b.x - e.x)),
-        p = targets[0];
-      if (!p) continue;
+      const p = i.members
+        .map(live)
+        .filter((p) => p && p.hp > 0)
+        .sort((a, b) => Math.abs(a.x - e.x) - Math.abs(b.x - e.x))[0];
+      e.moving = false;
+      if (!p) {
+        e.action = null;
+        continue;
+      }
       const distance = p.x - e.x;
+      if (e.action) {
+        const a = e.action;
+        if (!a.resolved && t >= a.impactAt) {
+          a.resolved = true;
+          if (
+            Math.abs(p.x - e.x) < (e.boss ? 130 : 100) &&
+            Math.abs(p.y - e.y) < 100
+          ) {
+            const amount = damage(
+              i.training ? 18 : e.boss ? 25 + i.floor * 5 : 13 + i.floor * 3,
+              CLASSES[p.class].def + (p.armor ? 15 : 0),
+            );
+            p.hp = Math.max(0, p.hp - amount);
+            p.hitAt = t;
+            p.hitDirection = a.direction;
+            p.pending = null;
+            p.action = null;
+            i.events.push({
+              id: randomUUID(),
+              kind: "damage",
+              targetId: p.id,
+              actorId: e.id,
+              x: p.x,
+              y: p.y - 85,
+              amount: -amount,
+              at: t,
+            });
+            if (!p.hp) {
+              p.diedAt = t;
+              p.pending = null;
+              p.action = null;
+              p.auto = false;
+              p.input = 0;
+              savePlayer(p);
+            }
+          }
+        }
+        if (t >= a.endsAt) e.action = null;
+        continue;
+      }
       e.direction = Math.sign(distance) || 1;
-      if (Math.abs(distance) > 70)
+      if (t - (e.hitAt || 0) < 0.14) continue;
+      if (Math.abs(distance) > 70) {
         e.x += Math.sign(distance) * (e.boss ? 75 : 90) * dt;
+        e.moving = true;
+      }
       if (
-        Math.abs(distance) < (e.boss ? 115 : 80) &&
+        Math.abs(distance) < (e.boss ? 115 : 82) &&
         Math.abs(p.y - e.y) < 110 &&
         t - e.attackAt > 1.4
       ) {
         e.attackAt = t;
-        const amount = damage(
-          e.boss ? 25 + i.floor * 5 : 13 + i.floor * 3,
-          CLASSES[p.class].def + (p.armor ? 15 : 0),
-        );
-        p.hp = Math.max(0, p.hp - amount);
-        i.events.push({
-          id: randomUUID(),
-          kind: "damage",
-          x: p.x,
-          y: p.y - 85,
-          amount: -amount,
-          at: t,
-        });
-        if (!p.hp) {
-          p.auto = false;
-          p.input = 0;
-          savePlayer(p);
-        }
+        e.action = {
+          kind: "attack",
+          direction: e.direction,
+          startedAt: t,
+          impactAt: t + 0.42,
+          endsAt: t + 0.72,
+        };
       }
     }
   }
@@ -677,7 +884,15 @@ export function snapshot(p) {
     x: m.x,
     y: m.y,
     direction: m.direction,
-    moving: !!m.input,
+    moving: Math.abs(m.vx || 0) > 8,
+    running: m.running,
+    grounded: m.grounded,
+    vy: m.vy,
+    action: m.action,
+    hitAt: m.hitAt,
+    hitDirection: m.hitDirection,
+    diedAt: m.diedAt,
+    reviveAt: m.reviveAt,
     hp: m.hp,
     maxHp: maxHp(m),
     level: m.level,
@@ -712,6 +927,8 @@ export function snapshot(p) {
           stage: i.stage,
           clear: i.clear,
           completed: i.completed,
+          training: !!i.training,
+          instanceId: i.id,
           enemies: i.enemies,
           events: i.events,
         }

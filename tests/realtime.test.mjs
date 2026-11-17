@@ -122,6 +122,20 @@ test("real HTTP + Socket.IO: auth, ownership, visibility, chat, concurrent last-
     state = await snap(a.s);
     assert.ok(state.self.x < 1000);
     assert.equal(state.self.gold, 140);
+    assert.equal((await command(winner.s, "training:enter")).ok, true);
+    assert.equal(
+      (await command(winner.s, "player:attack", { skill: 0 })).ok,
+      true,
+    );
+    const cast = await snap(winner.s);
+    assert.equal(cast.dungeon.training, true);
+    assert.ok(cast.self.action.impactAt > cast.self.action.startedAt);
+    assert.ok(cast.self.action.endsAt > cast.self.action.impactAt);
+    assert.equal(
+      (await snap(a.s)).players.some((p) => p.id === winner.c.id),
+      false,
+      "private training must not leak into town",
+    );
     const rejected = await fetch(base + "/api/characters", {
       method: "POST",
       headers: {

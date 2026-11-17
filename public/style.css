@@ -2332,3 +2332,35 @@ kbd {
     transition: none;
   }
 }
+#minimap #training-open {
+  margin-top: 6px;
+  background: linear-gradient(#30516c, #18344f);
+  border-color: #86b1c488;
+  color: #d4eafa;
+  font-size: 9px;
+  padding: 7px;
+}
+.skill[disabled] {
+  cursor: default;
+  filter: saturate(0.55);
+  opacity: 0.7;
+}
+.skill.is-casting {
+  border-color: #fff2b0;
+  box-shadow: 0 0 18px #bff3ff77;
+}
+.skill.basic {
+  touch-action: none;
+  user-select: none;
+}
+#mobile-jump {
+  touch-action: none;
+  user-select: none;
+}
+@media (max-width: 700px) {
+  #minimap #training-open {
+    font-size: 7px;
+    padding: 6px;
+    margin-top: 4px;
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "version": "0.3.0",
+  "knight-female": {"file":"knight-female.png","columns":4,"rows":8,"width":887,"height":1774,"states":["idle","walk","run","jump","attack","skill","hit","death"],"revive":"death reversed"},
+  "slime": {"file":"slime.png","columns":4,"rows":6,"width":1024,"height":1536,"states":["idle","move","attack","hit","death","spawn"]},
+  "notes":"Runtime uses rounded grid boundaries, preserving supplied image dimensions. This first art pass still needs hand-polished in-between frames and consistent weapon arcs before final production."
+}

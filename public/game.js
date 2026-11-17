@@ -1,3 +1,10 @@
+import { ACTIONS } from "/shared/motion.js";
+import {
+  registerMotionAtlas,
+  animateHero,
+  animateSlime,
+  monsterDeath,
+} from "/combat-visuals.js?v=0.3.0";
 import { createSelectionPreview } from "/selection-scene.js?v=0.2.2";
 import { CLASSES, ITEMS, FLOORS, WORLD } from "/shared/config.js";
 const $ = (s) => document.querySelector(s),
@@ -22,7 +29,9 @@ let job = "swordsman",
   touchDirection = 0,
   jumpQueued = false,
   seen = new Set(),
-  lastTrade = "";
+  lastTrade = "",
+  snapshotAt = 0,
+  touchAttack = false;
 const JOBS = ["swordsman", "archer", "mage"],
   eng = ["SWORDSMAN", "WIND RANGER", "ARCANE MAGE"];
 function frame(c, g) {
@@ -47,7 +56,7 @@ function toast(text, error = false) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => $("#toast").classList.remove("visible"), 3500);
 }
-function tone(f = 440, d = 0.18, type = "sine") {
+function tone(f = 440, d = 0.18, type = "sine", volume = 0.035) {
   if (muted) return;
   try {
     audio ??= new (window.AudioContext || window.webkitAudioContext)();
@@ -57,7 +66,7 @@ function tone(f = 440, d = 0.18, type = "sine") {
     o.type = type;
     o.frequency.setValueAtTime(f, audio.currentTime);
     o.frequency.exponentialRampToValueAtTime(f * 0.55, audio.currentTime + d);
-    g.gain.setValueAtTime(0.035, audio.currentTime);
+    g.gain.setValueAtTime(volume, audio.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + d);
     o.connect(g).connect(audio.destination);
     o.start();
@@ -329,6 +338,7 @@ function enterGame() {
       render: { antialias: true, pixelArt: false },
       audio: { noAudio: true },
     });
+  phaser.loop.wake();
   socket?.disconnect();
   socket = io({ transports: ["websocket", "polling"], reconnection: true });
   socket.on("connect", () => {
@@ -351,6 +361,7 @@ function enterGame() {
   });
   socket.on("world:snapshot", (packet) => {
     state = packet;
+    snapshotAt = performance.now();
     updateHUD();
     if (scene?.ready) scene.applySnapshot(packet);
   });
@@ -374,37 +385,70 @@ function updateHUD() {
   $("#mp-label").textContent = `MP ${Math.floor(p.mp)} / ${p.maxMp}`;
   $("#exp-fill").style.width = (p.exp / (p.level * 80)) * 100 + "%";
   $("#gold").textContent = p.gold.toLocaleString();
-  $("#hp-potions").textContent = "ยา HP ×" + p.inventory.hp;
-  $("#location-name").textContent = d
-    ? FLOORS[d.floor - 1].name
-    : "เมืองหน้าถ้ำหลวง";
-  $("#stage-label").textContent = d
-    ? `ชั้น ${d.floor} / 3 · ด่าน ${d.stage} / 3 · ${d.stage === 3 ? "BOSS STAGE" : d.stage === 2 ? "ELITE STAGE" : "MONSTER STAGE"}`
-    : "เมืองกลาง · CH.1 · เขตปลอดภัย";
-  $("#map-title").textContent = d ? "ถ้ำหลวง · ชั้น " + d.floor : "เมืองหน้าถ้ำหลวง";
+  $("#hp-potions").textContent = d?.training
+    ? "ยา HP ∞"
+    : "ยา HP ×" + p.inventory.hp;
+  $("#training-open").disabled = state.area !== "town";
+  $$(
+    [
+      "[data-action=attack]",
+      "[data-action=skill1]",
+      "[data-action=skill2]",
+      "[data-action=skill3]",
+    ].join(","),
+  ).forEach((b) =>
+    b.classList.toggle(
+      "is-casting",
+      !!p.action && state.time < p.action.endsAt,
+    ),
+  );
+  $("#location-name").textContent = d?.training
+    ? "ลานฝึกผู้พิทักษ์"
+    : d
+      ? FLOORS[d.floor - 1].name
+      : "เมืองหน้าถ้ำหลวง";
+  $("#stage-label").textContent = d?.training
+    ? "สนามฝึก · ไม่มีรางวัล · สไลม์เกิดใหม่อัตโนมัติ"
+    : d
+      ? `ชั้น ${d.floor} / 3 · ด่าน ${d.stage} / 3 · ${d.stage === 3 ? "BOSS STAGE" : d.stage === 2 ? "ELITE STAGE" : "MONSTER STAGE"}`
+      : "เมืองกลาง · CH.1 · เขตปลอดภัย";
+  $("#map-title").textContent = d?.training
+    ? "สนามฝึกผู้พิทักษ์"
+    : d
+      ? "ถ้ำหลวง · ชั้น " + d.floor
+      : "เมืองหน้าถ้ำหลวง";
   $("#online-count").textContent = "● " + state.online + " ออนไลน์";
   $("#map-dot").setAttribute("cx", String(8 + (p.x / WORLD.width) * 200));
   $("#auto-button").classList.toggle("on", p.auto);
   $("#auto-button small").textContent = p.auto ? "เปิด" : "ปิด";
-  $("#quest-description").textContent = d
-    ? d.clear
-      ? "เส้นทางเปิดแล้ว! เดินหน้าสู่ด่านต่อไป"
-      : `กำจัด${d.stage === 3 ? FLOORS[d.floor - 1].boss : "มอนสเตอร์ทั้งหมด"} · เหลือ ${d.enemies.length} ตัว`
-    : p.quest >= 3
-      ? "ตำนานบทแรกสำเร็จ! กลับไปท้าทายดันเจียนได้อีกครั้ง"
-      : "คุยกับผู้ใหญ่คำ แล้วเข้าสู่ประตูถ้ำหลวง";
+  $("#quest-description").textContent = d?.training
+    ? "ฝึกเดิน กระโดด ฟัน และ Q/W/E · หลบเมื่อสไลม์ขึ้นวงเตือน"
+    : d
+      ? d.clear
+        ? "เส้นทางเปิดแล้ว! เดินหน้าสู่ด่านต่อไป"
+        : `กำจัด${d.stage === 3 ? FLOORS[d.floor - 1].boss : "มอนสเตอร์ทั้งหมด"} · เหลือ ${d.enemies.length} ตัว`
+      : p.quest >= 3
+        ? "ตำนานบทแรกสำเร็จ! กลับไปท้าทายดันเจียนได้อีกครั้ง"
+        : "คุยกับผู้ใหญ่คำ แล้วเข้าสู่ประตูถ้ำหลวง";
   $("#quest-counter").textContent = `ดันเจียนที่พิชิต ${p.quest} / 3`;
   $("#quest-fill").style.width = (p.quest / 3) * 100 + "%";
   $("#stage-clear").classList.toggle(
     "hidden",
-    !d?.clear || p.hp <= 0 || p.auto,
+    !d?.clear || d?.training || p.hp <= 0 || p.auto,
   );
   $("#next-stage").textContent =
     d?.stage === 3 ? "รับชัยชนะ · กลับเมือง ➜" : "เข้าสู่ด่านต่อไป ➜";
   $("#death").classList.toggle("hidden", p.hp > 0);
   for (let i = 1; i <= 3; i++) {
     const button = $(`[data-action="skill${i}"] i`),
-      remaining = [0, 2, 4, 7][i] - (state.time - (p.cooldowns[i] || 0));
+      remaining = ACTIONS[i].cooldown - (state.time - (p.cooldowns[i] || 0));
+    const skillButton = button.parentElement;
+    skillButton.disabled =
+      p.hp <= 0 ||
+      state.area !== "dungeon" ||
+      p.mp < ACTIONS[i].mp ||
+      remaining > 0;
+    skillButton.title = p.mp < ACTIONS[i].mp ? "MP ไม่พอ" : "";
     button.style.display = remaining > 0 ? "grid" : "none";
     button.textContent = remaining > 0 ? Math.ceil(remaining) : "";
   }
@@ -452,7 +496,6 @@ function action(name) {
     emit("player:attack", { skill: Number(name.slice(-1)) });
   else if (name === "hp") emit("player:potion", { type: "hp" });
   else if (name === "auto") emit("player:auto", { enabled: !state.self.auto });
-  tone(name === "attack" ? 440 : 240, 0.12);
 }
 $$("[data-action]").forEach(
   (b) => (b.onclick = () => action(b.dataset.action)),
@@ -461,6 +504,10 @@ $$("[data-panel]").forEach(
   (b) => (b.onclick = () => showPanel(b.dataset.panel)),
 );
 $("#dungeon-open").onclick = () => showPanel("dungeon");
+$("#training-open").onclick = async () => {
+  const r = await emit("training:enter");
+  if (r) closeModal();
+};
 $("#next-stage").onclick = () => emit("dungeon:next");
 $("#revive").onclick = () => emit("dungeon:leave");
 $("#town-return").onclick = () => {
@@ -651,7 +698,7 @@ function showPanel(panel) {
   } else if (panel === "settings") {
     modal(
       "บันทึกการเดินทาง",
-      `<p>เกมบันทึกตัวละคร เงิน อุปกรณ์ และดันเจียนบนเซิร์ฟเวอร์อัตโนมัติ<br>บัญชีผู้มาเยือนผูกกับคุกกี้ในเบราว์เซอร์นี้</p><button id="toggle-sound" class="primary-button">${muted ? "เปิดเสียงเอฟเฟกต์" : "ปิดเสียงเอฟเฟกต์"}</button><button id="back-selection" class="text-button">กลับหน้าเลือกตัวละคร</button><p class="hint">Demo v0.2 · ภาพตัวละครแบบ idle พร้อมเอฟเฟกต์เคลื่อนไหว ยังไม่มี sprite animation ครบทุกท่า · เป้าหมาย 20–30 คนต่อห้องยังไม่ได้ยืนยันด้วย load test</p>`,
+      `<p>เกมบันทึกตัวละคร เงิน อุปกรณ์ และดันเจียนบนเซิร์ฟเวอร์อัตโนมัติ<br>บัญชีผู้มาเยือนผูกกับคุกกี้ในเบราว์เซอร์นี้</p><button id="toggle-sound" class="primary-button">${muted ? "เปิดเสียงเอฟเฟกต์" : "ปิดเสียงเอฟเฟกต์"}</button><button id="back-selection" class="text-button">กลับหน้าเลือกตัวละคร</button><p class="hint">Demo v0.3 · นักดาบหญิงและสไลม์มีเฟรมแอนิเมชันชุดแรก · ตัวอื่นยังใช้ภาพ idle · เป้าหมาย 20–30 คนต่อห้องยังไม่ได้ยืนยันด้วย load test</p>`,
     );
     $("#toggle-sound").onclick = () => {
       muted = !muted;
@@ -661,6 +708,7 @@ function showPanel(panel) {
     $("#back-selection").onclick = () => {
       socket.disconnect();
       state = null;
+      phaser?.loop.sleep();
       $("#game-screen").classList.add("hidden");
       $("#landing").classList.remove("hidden");
       closeModal();
@@ -778,16 +826,37 @@ addEventListener("keyup", (e) => keys.delete(e.code));
 addEventListener("blur", () => {
   keys.clear();
   touchDirection = 0;
+  touchAttack = false;
 });
+const touchMoves = new Map();
+const updateTouch = () => {
+  touchDirection = [...touchMoves.values()].at(-1) || 0;
+};
 $$("[data-direction]").forEach((b) => {
   b.onpointerdown = (e) => {
+    e.preventDefault();
     b.setPointerCapture(e.pointerId);
-    touchDirection = Number(b.dataset.direction);
+    touchMoves.set(e.pointerId, Number(b.dataset.direction));
+    updateTouch();
   };
   for (const n of ["pointerup", "pointercancel", "lostpointercapture"])
-    b.addEventListener(n, () => (touchDirection = 0));
+    b.addEventListener(n, (e) => {
+      touchMoves.delete(e.pointerId);
+      updateTouch();
+    });
 });
-$("#mobile-jump").onclick = () => (jumpQueued = true);
+const attackButton = $('[data-action="attack"]');
+attackButton.addEventListener("pointerdown", (e) => {
+  attackButton.setPointerCapture(e.pointerId);
+  touchAttack = true;
+  action("attack");
+});
+for (const n of ["pointerup", "pointercancel", "lostpointercapture"])
+  attackButton.addEventListener(n, () => (touchAttack = false));
+$("#mobile-jump").onpointerdown = (e) => {
+  e.preventDefault();
+  jumpQueued = true;
+};
 $("#mobile-interact").onclick = interact;
 setInterval(() => {
   if (!state || !socket?.connected) return;
@@ -804,9 +873,11 @@ setInterval(() => {
     direction,
     seq: ++seq,
     jump: jumpQueued && !activePanel,
+    running:
+      !!touchDirection || keys.has("ShiftLeft") || keys.has("ShiftRight"),
   });
   jumpQueued = false;
-  if (keys.has("KeyJ") && !activePanel && !focused)
+  if ((keys.has("KeyJ") || touchAttack) && !activePanel && !focused)
     socket.emit("player:attack", { skill: 0 });
 }, 80);
 class Adventure extends Phaser.Scene {
@@ -820,6 +891,8 @@ class Adventure extends Phaser.Scene {
   preload() {
     this.load.image("town", "/assets/town.png");
     this.load.image("cave", "/assets/cave.png");
+    this.load.image("knight-motion", "/assets/animations/knight-female.png");
+    this.load.image("slime-motion", "/assets/animations/slime.png");
     this.load.spritesheet("heroes", "/assets/heroes.png", {
       frameWidth: 512,
       frameHeight: 512,
@@ -832,6 +905,10 @@ class Adventure extends Phaser.Scene {
   create() {
     scene = this;
     this.ready = true;
+    this.knightAtlas = registerMotionAtlas(this, "knight-motion", 8);
+    this.slimeAtlas = registerMotionAtlas(this, "slime-motion", 6);
+    this.telegraphs = this.add.graphics().setDepth(6);
+    this.reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
     this.cameras.main.setBackgroundColor("#234b68");
     this.back = this.add
       .image(0, -180, "town")
@@ -955,15 +1032,31 @@ class Adventure extends Phaser.Scene {
           })
           .setOrigin(0.5)
           .setDepth(14);
-      a = { image, label, shadow, target: p };
+      a = {
+        image,
+        label,
+        shadow,
+        target: p,
+        wasGrounded: p.grounded,
+        footstepAt: 0,
+      };
       this.actors.set(p.id, a);
     }
     a.target = p;
     return a;
   }
   applySnapshot(s) {
-    const area = s.area === "town" ? "town" : "dungeon" + s.dungeon.floor;
-    if (area !== this.lastArea) {
+    const area =
+      s.area === "town"
+        ? "town"
+        : "dungeon" +
+          s.dungeon.instanceId +
+          ":" +
+          s.dungeon.floor +
+          ":" +
+          s.dungeon.stage;
+    const areaChanged = area !== this.lastArea;
+    if (areaChanged) {
       this.lastArea = area;
       const town = s.area === "town";
       this.back.setTexture(town ? "town" : "cave");
@@ -975,6 +1068,7 @@ class Adventure extends Phaser.Scene {
       this.portal.setVisible(town);
       this.portalGlow.setVisible(town);
       this.makePlatforms();
+      this.cameras.main.centerOn(s.self.x, 340);
       this.actors.forEach((a) => {
         a.image.x = s.self.x;
         a.image.y = s.self.y;
@@ -1033,8 +1127,9 @@ class Adventure extends Phaser.Scene {
     }
     for (const [id, m] of this.monsters)
       if (!eids.has(id)) {
-        this.burst(m.image.x, m.image.y - 40, 0xc3a6ff, 16);
-        m.image.destroy();
+        this.burst(m.image.x, m.image.y - 40, 0xc3a6ff, 8);
+        if (areaChanged) m.image.destroy();
+        else monsterDeath(this, m, this.slimeAtlas);
         m.label.destroy();
         m.bar.destroy();
         this.monsters.delete(id);
@@ -1091,6 +1186,13 @@ class Adventure extends Phaser.Scene {
   }
   effect(e) {
     if (e.kind === "damage") {
+      this.burst(
+        e.x,
+        e.y + 35,
+        e.amount < 0 ? 0xffa291 : 0xffe8a0,
+        e.crit ? 10 : 5,
+      );
+      tone(e.amount < 0 ? 105 : 720, 0.055, "triangle", 0.012);
       const label = this.add
         .text(e.x, e.y, (e.crit ? "CRIT " : "") + e.amount, {
           fontFamily: "Noto Sans Thai",
@@ -1143,56 +1245,163 @@ class Adventure extends Phaser.Scene {
           onComplete: () => g.destroy(),
         });
       } else {
-        g.beginPath();
-        g.arc(0, 0, radius, -1.3, 1.3);
-        g.strokePath();
         g.x = e.x;
         g.y = e.y;
         g.scaleX = e.direction;
-        this.tweens.add({
-          targets: g,
-          angle: e.direction * 30,
-          alpha: 0,
-          scaleY: 1.4,
-          duration: 300,
-          onComplete: () => g.destroy(),
-        });
+        const range = e.range || 130;
+        if (e.skill === 3) {
+          g.lineStyle(4, e.color, 0.8);
+          g.strokeEllipse(0, 35, range * 2, 110);
+          g.strokeEllipse(0, 35, range * 1.7, 80);
+          for (let n = -3; n <= 3; n++) {
+            g.fillStyle(n % 2 ? 0xfff4c4 : e.color, 0.65);
+            g.fillTriangle(
+              n * 70 - 10,
+              45,
+              n * 70,
+              -100 - Math.abs(n) * 8,
+              n * 70 + 10,
+              45,
+            );
+          }
+          this.tweens.add({
+            targets: g,
+            alpha: 0,
+            scaleY: 1.25,
+            duration: 420,
+            onComplete: () => g.destroy(),
+          });
+        } else if (e.skill === 2) {
+          g.lineStyle(6, 0xffe5a0, 0.9);
+          g.strokeEllipse(range * 0.45, 25, range, 110);
+          for (let n = 0; n < 7; n++) {
+            const x = 25 + n * 23;
+            g.lineBetween(x, 35, x + 25, -60 - Math.sin(n) * 25);
+          }
+          this.tweens.add({
+            targets: g,
+            alpha: 0,
+            scaleY: 1.3,
+            duration: 320,
+            onComplete: () => g.destroy(),
+          });
+        } else if (e.skill === 1) {
+          for (let n = 0; n < 3; n++) {
+            g.lineStyle(6 - n, e.color, 1 - n * 0.22);
+            g.beginPath();
+            g.arc(range * (0.25 + n * 0.25), 0, 65, -1.25, 1.25);
+            g.strokePath();
+          }
+          this.tweens.add({
+            targets: g,
+            x: e.x + e.direction * 20,
+            alpha: 0,
+            duration: 260,
+            onComplete: () => g.destroy(),
+          });
+        } else {
+          const flip = e.combo === 1 ? -1 : 1;
+          g.lineStyle(6, e.color, 0.9);
+          g.beginPath();
+          g.arc(0, 0, range * 0.9, -1.35, 1.35);
+          g.strokePath();
+          g.lineStyle(2, 0xfff8dc, 0.9);
+          g.beginPath();
+          g.arc(0, 0, range * 0.8, -1.2, 1.2);
+          g.strokePath();
+          g.angle = -e.direction * flip * 20;
+          this.tweens.add({
+            targets: g,
+            angle: e.direction * flip * 25,
+            alpha: 0,
+            duration: 230,
+            onComplete: () => g.destroy(),
+          });
+        }
       }
+
       if (e.skill) {
         this.burst(e.x + e.direction * 120, e.y, e.color, e.skill * 8);
-        if (e.skill === 3) this.cameras.main.shake(130, 0.003);
+        if (e.skill === 3 && !this.reducedMotion)
+          this.cameras.main.shake(100, 0.002);
       }
-      const p = this.actors.get(state.self.id);
-      if (p && Math.abs(p.image.x - e.x) < 20)
-        this.tweens.add({
-          targets: p.image,
-          angle: e.direction * 8,
-          duration: 90,
-          yoyo: true,
-        });
+    }
+  }
+  dust(x, y, count = 7) {
+    if (this.reducedMotion) return;
+    for (let n = 0; n < count; n++) {
+      const dot = this.add
+        .ellipse(x, y - 3, 3 + Math.random() * 4, 2, 0xc2d6c4, 0.45)
+        .setDepth(9);
+      this.tweens.add({
+        targets: dot,
+        x: x + (Math.random() - 0.5) * 40,
+        y: y - 10 - Math.random() * 10,
+        alpha: 0,
+        duration: 250,
+        onComplete: () => dot.destroy(),
+      });
     }
   }
   update(time, dt) {
     if (!state) return;
-    const lerp = Math.min(1, dt / 65);
+    const serverTime = state.time + (performance.now() - snapshotAt) / 1000,
+      lerp = Math.min(1, dt / 65);
+    this.telegraphs.clear();
     for (const [id, a] of this.actors) {
       const p = a.target,
-        bob = p.moving
-          ? Math.sin(time * 0.015) * 3
-          : Math.sin(time * 0.002) * 1;
+        pose = animateHero(a.image, p, serverTime, this.knightAtlas);
       a.image.x = Phaser.Math.Linear(a.image.x, p.x, lerp);
-      a.image.y = Phaser.Math.Linear(a.image.y, p.y + bob, lerp);
-      a.image.setFlipX(p.direction < 0);
-      a.image.setAlpha(p.hp <= 0 ? 0.4 : 1);
-      a.label.setPosition(a.image.x, a.image.y - 145);
-      a.shadow.setPosition(a.image.x, p.y - 3);
-      a.image.setAngle(p.moving ? Math.sin(time * 0.012) * 2 : 0);
+      a.image.y = Phaser.Math.Linear(a.image.y, p.y, lerp);
+      if (p.class !== "swordsman" || p.gender !== "female")
+        a.image.y +=
+          p.grounded && pose.state === "idle" ? Math.sin(time * 0.002) : 0;
+      a.label.setPosition(a.image.x, a.image.y - (p.hp <= 0 ? 60 : 158));
+      a.shadow
+        .setPosition(a.image.x, p.grounded ? p.y : 600)
+        .setAlpha(p.grounded ? 0.35 : 0.16)
+        .setScale(p.grounded ? 1 : 0.65);
+      if (p.grounded && !a.wasGrounded && p.hp > 0) {
+        this.dust(a.image.x, p.y);
+        if (id === state.self.id) tone(100, 0.07, "triangle", 0.009);
+      }
+      if (
+        id === state.self.id &&
+        p.moving &&
+        p.grounded &&
+        serverTime - a.footstepAt > (p.running ? 0.19 : 0.29)
+      ) {
+        a.footstepAt = serverTime;
+        this.dust(a.image.x - p.direction * 12, p.y, 3);
+        tone(75, 0.035, "triangle", 0.006);
+      }
+      a.wasGrounded = p.grounded;
+      if (p.action && serverTime < p.action.impactAt) {
+        const progress =
+          (serverTime - p.action.startedAt) /
+          (p.action.impactAt - p.action.startedAt);
+        this.telegraphs.lineStyle(
+          1,
+          p.action.skill ? 0xc4a3ff : 0xffd78d,
+          0.3 + progress * 0.5,
+        );
+        this.telegraphs.strokeEllipse(
+          a.image.x,
+          p.y - 8,
+          65 + progress * 20,
+          14,
+        );
+      }
     }
     for (const m of this.monsters.values()) {
       const e = m.target;
+      animateSlime(m.image, e, serverTime, this.slimeAtlas, m.size);
       m.image.x = Phaser.Math.Linear(m.image.x, e.x, lerp);
-      m.image.y = e.y + Math.sin(time * 0.004 + e.x) * 3;
-      m.image.setFlipX(e.direction > 0);
+      m.image.y = e.y;
+      if (e.type !== "slime")
+        m.image.y += e.moving
+          ? Math.sin(time * 0.009) * 3
+          : Math.sin(time * 0.003) * 1;
       m.label.setPosition(m.image.x, m.image.y - m.size - 14);
       m.bar.clear();
       m.bar.fillStyle(0x152540, 0.9);
@@ -1205,6 +1414,27 @@ class Adventure extends Phaser.Scene {
         5,
         2,
       );
+      if (e.action && serverTime < e.action.impactAt) {
+        const progress = Math.max(
+          0,
+          (serverTime - e.action.startedAt) /
+            (e.action.impactAt - e.action.startedAt),
+        );
+        this.telegraphs.fillStyle(0xff725b, 0.08 + progress * 0.25);
+        this.telegraphs.fillEllipse(
+          e.x + e.action.direction * 42,
+          e.y - 3,
+          e.boss ? 240 : 160,
+          30,
+        );
+        this.telegraphs.lineStyle(2, 0xff9474, 0.8);
+        this.telegraphs.strokeEllipse(
+          e.x + e.action.direction * 42,
+          e.y - 3,
+          e.boss ? 240 : 160,
+          30,
+        );
+      }
     }
     const me = this.actors.get(state.self.id);
     if (me) {

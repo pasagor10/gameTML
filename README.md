@@ -1,6 +1,6 @@
 # ตำนาน 3 อัศวิน — Tham Luang Dungeon
 
-Playable 2D side-scrolling multiplayer RPG demo. Public URL: https://game.pikad.online
+Playable 2D side-scrolling multiplayer RPG demo v0.3. Public URL: https://game.pikad.online
 
 ## Run locally
 
@@ -23,10 +23,12 @@ npm run backup
 
 Choose one of 6 heroes (male/female × swordsman/archer/mage), name the character, or resume an existing character. Guest play uses a persistent HttpOnly browser cookie. Register a normal account **before creating a hero** for access from another device. Guest-to-account migration is not implemented; switching accounts switches characters. Up to 3 characters per account.
 
-- A/D or arrows: walk. Space: jump. F: interact.
+- A/D or arrows: walk. Shift: run. Space: jump. F: interact.
 - J: normal attack. Q/W/E: skills. R: HP potion. T or Auto button: auto battle.
 - I: inventory. Touch controls and action buttons work on mobile.
 - Town includes quest elder/healing, potion seller, equipment seller and blacksmith.
+- Use the **สนามฝึก** button below the minimap for a private slime practice arena. Female swordsman uses the first full 32-frame motion sheet; slime uses 24 frames. Practice grants no gold/EXP/progression, potions are unlimited and slime respawns. Return to town to revive.
+- Attacks now have server-controlled windup/impact/recovery; moving away or jumping out of an enemy telegraph can avoid damage. Hit reactions interrupt a pending player attack. Three consecutive normal strikes alternate swing effects.
 - 3 dungeon floors × 3 stages, with six monster types and three bosses. Unlock later floors by beating the previous floor's boss.
 - Auto combat runs on the server while connected, uses skills/potions, advances stages and returns to town after a floor.
 - Party: create/join through menu, max 3. Non-leaders mark ready; leader selects a floor unlocked by everyone.
@@ -42,7 +44,7 @@ Shared definitions live in `shared/config.js`; schema automatically migrates/ini
 
 ## Current scope and limits
 
-This is the playable v0.2 foundation, **not every feature of the supplied full GDD/TDD**. Images are new game art based on the requested style. Hero sprites currently use idle atlas illustrations plus code-driven bob/swing/particles; full run/attack/hit/death sprite animation is still pending. NPCs temporarily reuse hero art. Town and cave use single painted background layers; true multi-layer parallax and Tiled maps/ladders are pending. Three skills share class-based effect types; individual skill tuning remains preliminary.
+This is the playable v0.2 foundation, **not every feature of the supplied full GDD/TDD**. Images are new game art based on the requested style. Female swordsman has a new 32-frame sheet (idle/walk/run/jump/attack/skill/hit/death, reverse death for revive), and slime has 24 frames (idle/move/attack/hit/death/spawn). The other five heroes and other monsters still use idle illustration art with code-driven effects; their full animation sheets remain pending. NPCs temporarily reuse hero art. Town and cave use single painted background layers; true multi-layer parallax and Tiled maps/ladders are pending. Three skills share class-based effect types; individual skill tuning remains preliminary.
 
 Inventory UI has 40 slots but current equipment is auto-equipped boolean weapon/armor + one upgrade level, not unique tradable equipment instances. Trading and shops currently support HP/MP potions and ore. World/party chat are supported; private messages, reports/mutes, multiple channels, guilds and advanced quest rewards remain pending. Parties use public join + readiness rather than invitations. No 20–30-player load capacity claim: tests exercise three real Socket.IO clients and competing purchases, not a sustained load test.
 
