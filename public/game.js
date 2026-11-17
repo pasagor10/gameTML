@@ -9,8 +9,14 @@ import {
 import { createSelectionPreview } from "/selection-scene.js?v=0.2.2";
 import { CLASSES, ITEMS, FLOORS, WORLD } from "/shared/config.js";
 import { createParallax } from "/parallax.js?v=0.4.0";
-import { updateHudFx, enterHud } from "/hud-fx.js?v=0.4.1";
+import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.0";
 import { createCombatFx } from "/combat-fx.js?v=0.5.1";
+import {
+  animateHeroBody,
+  animateMonsterBody,
+  createMonsterExtras,
+  destroyMonsterExtras,
+} from "/creature-fx.js?v=0.6.0";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 let job = "swordsman",
@@ -1042,10 +1048,24 @@ class Adventure extends Phaser.Scene {
           })
           .setOrigin(0.5)
           .setDepth(14);
+      const marker =
+        p.id === state.self.id
+          ? this.add
+              .text(p.x, p.y - 175, "▼", {
+                fontFamily: "Noto Sans Thai",
+                fontSize: "16px",
+                color: "#ffd86b",
+                stroke: "#5a3a0a",
+                strokeThickness: 4,
+              })
+              .setOrigin(0.5)
+              .setDepth(14)
+          : null;
       a = {
         image,
         label,
         shadow,
+        marker,
         target: p,
         wasGrounded: p.grounded,
         footstepAt: 0,
@@ -1135,6 +1155,7 @@ class Adventure extends Phaser.Scene {
           .setDepth(15);
         const bar = this.add.graphics().setDepth(14);
         m = { image, label, bar, target: e, size };
+        createMonsterExtras(this, m, e, true);
         this.monsters.set(e.id, m);
       }
       m.target = e;
@@ -1154,6 +1175,7 @@ class Adventure extends Phaser.Scene {
         else monsterDeath(this, m, this.slimeAtlas);
         m.label.destroy();
         m.bar.destroy();
+        destroyMonsterExtras(m);
         this.monsters.delete(id);
       }
     for (const e of s.dungeon?.events || []) {
@@ -1238,17 +1260,19 @@ class Adventure extends Phaser.Scene {
         serverTime - (id === state.self.id ? 0.05 : 0.08),
       );
       a.image.setPosition(point.x, point.y);
+      animateHeroBody(a, p, pose, serverTime, time);
       this.fx.applyKick(a, a.image);
-      if (p.class !== "swordsman" || p.gender !== "female")
-        a.image.y +=
-          p.grounded && pose.state === "idle" ? Math.sin(time * 0.002) : 0;
       a.label.setPosition(a.image.x, a.image.y - (p.hp <= 0 ? 60 : 158));
+      a.marker
+        ?.setPosition(a.image.x, a.image.y - 178 + Math.sin(time * 0.006) * 4)
+        .setVisible(p.hp > 0);
       a.shadow
         .setPosition(a.image.x, p.grounded ? p.y : 600)
         .setAlpha(p.grounded ? 0.35 : 0.16)
         .setScale(p.grounded ? 1 : 0.65);
       if (p.grounded && !a.wasGrounded && p.hp > 0) {
         this.dust(a.image.x, p.y);
+        a.landAt = time;
         if (id === state.self.id) tone(100, 0.07, "triangle", 0.009);
       }
       if (
@@ -1291,10 +1315,7 @@ class Adventure extends Phaser.Scene {
       animateSlime(m.image, e, serverTime, this.slimeAtlas, m.size);
       const point = sampleMotion(m.history, serverTime - 0.08);
       m.image.setPosition(point.x, point.y);
-      if (e.type !== "slime")
-        m.image.y += e.moving
-          ? Math.sin(time * 0.009) * 3
-          : Math.sin(time * 0.003) * 1;
+      animateMonsterBody(m, e, serverTime, time, this.slimeAtlas);
       this.fx.applyKick(m, m.image);
       m.label.setPosition(m.image.x, m.image.y - m.size - 14);
       m.bar.setPosition(m.image.x, m.image.y);

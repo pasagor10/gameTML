@@ -13,7 +13,7 @@
       content="ผจญภัยในโลกแฟนตาซีดอยนางนอน เกม RPG 2D เล่นบนเว็บ เลือกผู้กล้า 3 อาชีพ เล่นร่วมกับเพื่อนและพิชิตดันเจียน"
     />
     <link rel="stylesheet" href="/style.css?v=0.3.1" />
-    <link rel="stylesheet" href="/hud.css?v=0.4.3" />
+    <link rel="stylesheet" href="/hud.css?v=0.6.1" />
   </head>
   <body>
     <section id="landing">
@@ -141,6 +141,13 @@
           ><button data-panel="settings"><b>⚙</b><span>ตั้งค่า</span></button>
         </nav>
       </div>
+      <div id="boss-bar" class="hidden" aria-live="polite">
+        <div class="boss-name"><small>BOSS</small><b id="boss-name"></b></div>
+        <div class="boss-track">
+          <b id="boss-trail" class="bar-trail"></b><i id="boss-fill"></i
+          ><span id="boss-hp"></span>
+        </div>
+      </div>
       <aside id="quests" class="ornate">
         <div class="panel-tabs"><b>เควสหลัก</b><span>การผจญภัย</span></div>
         <h3>✦ เสียงเรียกจากขุนเขา</h3>
@@ -247,6 +254,6 @@
     <div id="toast" role="status"></div>
     <script src="/vendor/phaser.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <script type="module" src="/game.js?v=0.5.1"></script>
+    <script type="module" src="/game.js?v=0.6.0"></script>
   </body>
 </html>

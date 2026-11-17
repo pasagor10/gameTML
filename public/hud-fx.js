@@ -1,6 +1,7 @@
 // HUD feedback driven by each world snapshot: damage trails, hit shake,
 // low-HP warning, cooldown sweeps, gold count-up, level-up banner, area intro.
 import { ACTIONS } from "/shared/motion.js";
+import { FLOORS } from "/shared/config.js";
 
 const $ = (s) => document.querySelector(s);
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -69,6 +70,18 @@ export function updateHudFx(state) {
     btn.style.setProperty("--cd", cd.toFixed(3));
     if (btn._cooling && remaining <= 0) pulse(btn, "ready", 650);
     btn._cooling = remaining > 0;
+  }
+
+  const boss = state.dungeon?.enemies?.find((e) => e.boss && e.hp > 0),
+    bossBar = $("#boss-bar");
+  bossBar.classList.toggle("hidden", !boss);
+  if (boss) {
+    const pct = Math.max(0, (boss.hp / boss.maxHp) * 100);
+    $("#boss-name").textContent = FLOORS[state.dungeon.floor - 1]?.boss || "";
+    $("#boss-fill").style.width = pct + "%";
+    $("#boss-trail").style.width = pct + "%";
+    $("#boss-hp").textContent = `${Math.ceil(boss.hp)} / ${boss.maxHp}`;
+    bossBar.classList.toggle("enraged", pct <= 30);
   }
 
   const area =
