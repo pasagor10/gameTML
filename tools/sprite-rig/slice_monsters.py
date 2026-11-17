@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import time
 import math
 import statistics
 import sys
@@ -141,6 +142,7 @@ def main():
         src = next(SOURCE.glob(f"{name}.*"))
         index["monsters"][name] = slice_monster(name, src)
         print("wrote", name)
+    index["version"] = time.strftime("%Y%m%d%H%M%S")  # busts browser caches
     index_path.write_text(json.dumps(index, indent=2) + "\n")
 
 

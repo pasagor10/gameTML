@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import time
 import math
 from collections import deque
 from pathlib import Path
@@ -34,7 +35,8 @@ POCKET_BIG = 400  # ...unless they are this large (e.g. inside a slash arc)
 #   "cell"   x as drawn in the cell (keeps stride and the backward fall)
 #   "median" y from the row's median feet line (keeps run flight frames)
 TIMING = {
-    "idle": dict(ms=160, loop=True, hit=None, x="feet", y="feet"),
+    # One frame is fine: creature-fx adds breathing on top.
+    "idle": dict(ms=160, loop=True, hit=None, x="cell", y="feet"),
     "attack": dict(ms=[70, 70, 70, 80, 90, 110], loop=False, hit=4, x="feet", y="feet"),
     "walk": dict(ms=110, loop=True, hit=None, x="cell", y="feet"),
     "run": dict(ms=80, loop=True, hit=None, x="cell", y="median"),
@@ -42,6 +44,8 @@ TIMING = {
     "hurt": dict(ms=[40, 40, 45, 45, 50, 60], loop=False, hit=None, x="cell", y="feet"),
     "death": dict(ms=[90, 110, 130, 160, 200, 300], loop=False, hit=None, x="cell", y="feet"),
 }
+BODY_PX = 180  # stored body height for every hero clip (one pixel density, ~1.6x screen)
+HERO_HEIGHT = 112  # on-screen body height in world px (NPCs are ~98, old heroes ~110)
 STATE_FOR = {"idle": "idle", "attack": "attack", "walk": "walk", "run": "run", "hurt": "hit", "death": "death"}
 
 
@@ -215,6 +219,11 @@ def main():
     ap.add_argument("--cols", type=int, required=True)
     ap.add_argument("--rows", nargs="+", required=True, help="set:action per sheet row, top to bottom")
     ap.add_argument("--suffix", default="-painted", help="folder suffix for each set")
+    ap.add_argument("--derive", nargs="*", default=[],
+                    help="extra clip from frames of a sliced row: set:action=row_action:i,j "
+                         "(e.g. archer-male:idle=hurt:0 uses the neutral first hurt frame)")
+    ap.add_argument("--replace", action="store_true",
+                    help="rebuild the set's action map from this sheet only and delete other action folders")
     args = ap.parse_args()
 
     sheet = Image.open(args.sheet).convert("RGB")
@@ -247,6 +256,11 @@ def main():
             im = drop_edge_specks(im)
             frames.append((im, feet(im)))
         rows.setdefault(name, {})[action] = frames
+    for spec in args.derive:
+        target, src = spec.split("=")
+        name, action = target.split(":")
+        src_action, idx = src.split(":")
+        rows[name][action] = [rows[name][src_action][int(i)] for i in idx.split(",")]
 
     index_path = ROOT / "index.json"
     index = json.loads(index_path.read_text()) if index_path.exists() else {"sets": {}}
@@ -277,6 +291,12 @@ def main():
             atlas = Image.new("RGBA", (cw * n, ch))
             for i, (im, (fx, fy)) in enumerate(frames):
                 atlas.alpha_composite(im, (i * cw + round(ax - fx), round(ay - fy)))
+            # Every hero clip is stored at the same pixel density (BODY_PX
+            # source px per body), so switching idle -> walk never changes
+            # sharpness even when the source sheets differ in resolution.
+            k = BODY_PX / body
+            ncw, nh = max(1, round(cw * k)), max(1, round(ch * k))
+            atlas = atlas.resize((ncw * n, nh), Image.LANCZOS)
             folder = folder_root / action
             folder.mkdir(parents=True, exist_ok=True)
             page = f"{action}-atlas-00.webp"
@@ -286,26 +306,33 @@ def main():
             events = [] if t["hit"] is None else [{"name": "hit", "atMs": sum(durations[: t["hit"]]), "frame": t["hit"]}]
             manifest = {
                 "schemaVersion": "3.0", "name": action, "artSource": "painted sheet (supplied artwork)",
-                "sourceSize": [cw, ch], "sourceAnchor": [float(ax), float(ay)],
+                "sourceSize": [ncw, nh], "sourceAnchor": [round(ax * ncw / cw, 2), round(ay * nh / ch, 2)],
                 "frameCount": n, "durationsMs": durations, "durationSeconds": sum(durations) / 1000,
                 "fps": round(1000 * n / sum(durations), 3), "loop": t["loop"],
-                "bodyHeightPx": float(body), "events": events, "sampling": "linear",
-                "fallback": {"type": "png-atlas", "cellSize": [cw, ch],
+                "bodyHeightPx": float(BODY_PX), "events": events, "sampling": "linear",
+                "fallback": {"type": "png-atlas", "cellSize": [ncw, nh],
                              "pages": [{"file": page, "firstFrame": 0, "frameCount": n, "columns": n}]},
             }
             (folder / "animation.json").write_text(json.dumps(manifest, indent=2) + "\n")
         # Merge with actions other sheets already provided for this set.
-        mapping = dict(index["sets"].get(name, {}).get("actions", {}))
+        mapping = {} if args.replace else dict(index["sets"].get(name, {}).get("actions", {}))
+        if args.replace:
+            for old in folder_root.iterdir():
+                if old.is_dir() and old.name not in actions:
+                    for f in old.iterdir():
+                        f.unlink()
+                    old.rmdir()
         for action in actions:
             mapping[STATE_FOR.get(action, action)] = action
         if "attack" in actions:
             mapping["skill"] = "attack"
         index["sets"][name] = {
-            "dir": folder_root.name, "height": 150, "facing": 1,
+            "dir": folder_root.name, "height": HERO_HEIGHT, "facing": 1,
             "source": "supplied painted sheets; states without frames use procedural motion on idle",
             "actions": mapping,
         }
         print("wrote", name, (cw, ch))
+    index["version"] = time.strftime("%Y%m%d%H%M%S")  # busts browser caches
     index_path.write_text(json.dumps(index, indent=2) + "\n")
 
 

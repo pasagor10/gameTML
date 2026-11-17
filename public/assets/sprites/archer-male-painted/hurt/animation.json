@@ -3,12 +3,12 @@
   "name": "hurt",
   "artSource": "painted sheet (supplied artwork)",
   "sourceSize": [
-    388,
-    238
+    339,
+    208
   ],
   "sourceAnchor": [
-    194.0,
-    234.0
+    169.5,
+    204.5
   ],
   "frameCount": 6,
   "durationsMs": [
@@ -22,14 +22,14 @@
   "durationSeconds": 0.28,
   "fps": 21.429,
   "loop": false,
-  "bodyHeightPx": 206.0,
+  "bodyHeightPx": 180.0,
   "events": [],
   "sampling": "linear",
   "fallback": {
     "type": "png-atlas",
     "cellSize": [
-      388,
-      238
+      339,
+      208
     ],
     "pages": [
       {

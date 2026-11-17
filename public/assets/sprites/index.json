@@ -2,92 +2,80 @@
   "sets": {
     "archer-male": {
       "dir": "archer-male-painted",
-      "height": 150,
+      "height": 112,
       "facing": 1,
       "source": "supplied painted sheets; states without frames use procedural motion on idle",
       "actions": {
-        "idle": "idle",
-        "attack": "attack",
-        "skill": "attack",
         "walk": "walk",
         "run": "run",
         "hit": "hurt",
-        "death": "death"
+        "death": "death",
+        "idle": "idle"
       }
     },
     "archer-female": {
       "dir": "archer-female-painted",
-      "height": 150,
+      "height": 112,
       "facing": 1,
       "source": "supplied painted sheets; states without frames use procedural motion on idle",
       "actions": {
-        "idle": "idle",
-        "attack": "attack",
-        "skill": "attack",
         "walk": "walk",
         "run": "run",
         "hit": "hurt",
-        "death": "death"
+        "death": "death",
+        "idle": "idle"
       }
     },
     "mage-male": {
       "dir": "mage-male-painted",
-      "height": 150,
+      "height": 112,
       "facing": 1,
       "source": "supplied painted sheets; states without frames use procedural motion on idle",
       "actions": {
-        "idle": "idle",
-        "attack": "attack",
-        "skill": "attack",
         "walk": "walk",
         "run": "run",
         "hit": "hurt",
-        "death": "death"
+        "death": "death",
+        "idle": "idle"
       }
     },
     "mage-female": {
       "dir": "mage-female-painted",
-      "height": 150,
+      "height": 112,
       "facing": 1,
       "source": "supplied painted sheets; states without frames use procedural motion on idle",
       "actions": {
-        "idle": "idle",
-        "attack": "attack",
-        "skill": "attack",
         "walk": "walk",
         "run": "run",
         "hit": "hurt",
-        "death": "death"
+        "death": "death",
+        "idle": "idle"
       }
     },
     "swordsman-male": {
       "dir": "swordsman-male-painted",
-      "height": 150,
+      "height": 112,
       "facing": 1,
       "source": "supplied painted sheets; states without frames use procedural motion on idle",
       "actions": {
-        "idle": "idle",
-        "attack": "attack",
-        "skill": "attack",
         "walk": "walk",
         "run": "run",
         "hit": "hurt",
-        "death": "death"
+        "death": "death",
+        "idle": "idle"
       }
     },
     "swordsman-female": {
       "dir": "swordsman-female-painted",
-      "height": 150,
+      "height": 112,
       "facing": 1,
       "source": "supplied painted sheets; states without frames use procedural motion on idle",
       "actions": {
-        "idle": "idle",
-        "attack": "attack",
-        "skill": "attack",
         "walk": "walk",
         "run": "run",
         "hit": "hurt",
-        "death": "death"
+        "death": "death",
+        "idle": "idle"
       }
     }
   },
@@ -212,5 +200,6 @@
         "spawn": "spawn"
       }
     }
-  }
+  },
+  "version": "20261117173920"
 }

@@ -3,12 +3,12 @@
   "name": "run",
   "artSource": "painted sheet (supplied artwork)",
   "sourceSize": [
-    388,
-    238
+    323,
+    198
   ],
   "sourceAnchor": [
-    194.0,
-    234.0
+    161.5,
+    194.67
   ],
   "frameCount": 6,
   "durationsMs": [
@@ -22,14 +22,14 @@
   "durationSeconds": 0.48,
   "fps": 12.5,
   "loop": true,
-  "bodyHeightPx": 216.0,
+  "bodyHeightPx": 180.0,
   "events": [],
   "sampling": "linear",
   "fallback": {
     "type": "png-atlas",
     "cellSize": [
-      388,
-      238
+      323,
+      198
     ],
     "pages": [
       {

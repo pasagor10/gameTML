@@ -3,12 +3,12 @@
   "name": "walk",
   "artSource": "painted sheet (supplied artwork)",
   "sourceSize": [
-    388,
-    240
+    320,
+    198
   ],
   "sourceAnchor": [
-    194.0,
-    236.0
+    160.0,
+    194.7
   ],
   "frameCount": 6,
   "durationsMs": [
@@ -22,14 +22,14 @@
   "durationSeconds": 0.66,
   "fps": 9.091,
   "loop": true,
-  "bodyHeightPx": 217.0,
+  "bodyHeightPx": 180.0,
   "events": [],
   "sampling": "linear",
   "fallback": {
     "type": "png-atlas",
     "cellSize": [
-      388,
-      240
+      320,
+      198
     ],
     "pages": [
       {

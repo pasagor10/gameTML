@@ -44,10 +44,18 @@ export function queueSpriteSets(scene) {
     for (const page of data?.fallback?.pages || [])
       scene.load.image(
         `${key}:${page.file}`,
-        `${ROOT}${set.dir}/${folder}/${page.file}`,
+        `${ROOT}${set.dir}/${folder}/${page.file}${stamp(scene)}`,
       );
   });
-  scene.load.json("sprite-index", `${ROOT}index.json`);
+  // The index is tiny; always fetch it fresh. Its "version" busts the cache
+  // of every animation.json and atlas, whose file names don't change.
+  scene.load.json("sprite-index", `${ROOT}index.json?t=${Date.now()}`);
+}
+
+function stamp(scene) {
+  const v = (scene.spriteSetIndex || scene.cache.json.get("sprite-index"))
+    ?.version;
+  return v ? `?v=${v}` : "";
 }
 
 function clipFrom(scene, key, manifest) {
@@ -131,7 +139,10 @@ export function createSpriteRegistry(scene) {
       for (const folder of new Set(Object.values(set.actions || {}))) {
         const key = `sprite:${group}:${name}:${folder}`;
         if (!scene.cache.json.exists(key))
-          scene.load.json(key, `${ROOT}${set.dir}/${folder}/animation.json`);
+          scene.load.json(
+            key,
+            `${ROOT}${set.dir}/${folder}/animation.json${stamp(scene)}`,
+          );
       }
       if (!scene.load.isLoading()) scene.load.start();
     },

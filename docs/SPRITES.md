@@ -67,32 +67,32 @@ Runtime rules (from the forge's runtime guide):
 
 ## Painted sheets (current heroes)
 
-Heroes come from two kinds of supplied sheets in `tools/sprite-rig/source/heroes/`
-(6 columns, flat navy backdrop):
-
-- `idle-attack.webp`: idle and attack rows for all six heroes.
-- `<hero>-move.webp`: walk, run, hurt and death rows for one hero.
+Each hero comes from one sheet in `tools/sprite-rig/source/heroes/<hero>-move.webp`
+(6 columns, flat navy backdrop; rows walk, run, hurt, death), so every state
+shows the same character design. Idle is the neutral first hurt frame with
+procedural breathing; attack, skill and jump use procedural lunge/stretch plus
+combat effects until an attack row drawn from the same design is added.
+`idle-attack.webp` (an older, different design) is kept but no longer used.
 
 `tools/sprite-rig/slice_sheet.py` keys out the backdrop (edge flood fill,
 enclosed gaps, soft matte), crops each cell with a margin so art that spills
 past the grid line survives while neighbouring frames are dropped, roots each
-action by its own rule (feet for idle/attack/walk/hurt/death, drawn x for
-walk/run/death so stride and the backward fall survive, median feet line for
-run flight frames), and merges the actions into `index.json`:
+action by its own rule, stores every clip at the same pixel density
+(`BODY_PX`), and writes `index.json` (heroes display at `HERO_HEIGHT` = 112 px):
 
 ```bash
 D=tools/sprite-rig/source/heroes
-python3 tools/sprite-rig/slice_sheet.py $D/idle-attack.webp --cols 6 \
-  --rows archer-male:idle archer-male:attack archer-female:idle archer-female:attack \
-         mage-male:idle mage-male:attack mage-female:idle mage-female:attack \
-         swordsman-male:idle swordsman-male:attack swordsman-female:idle swordsman-female:attack
-python3 tools/sprite-rig/slice_sheet.py "$D/archer-male-move.webp" --cols 6 \
-  --rows "archer-male:walk" "archer-male:run" "archer-male:hurt" "archer-male:death"
+for h in archer-male archer-female mage-male mage-female swordsman-male swordsman-female; do
+  python3 tools/sprite-rig/slice_sheet.py "$D/${h}-move.webp" --cols 6 \
+    --rows "${h}:walk" "${h}:run" "${h}:hurt" "${h}:death" \
+    --derive "${h}:idle=hurt:0" --replace
+done
 ```
 
-(In zsh, quote `"$h:walk"`-style arguments as `"${h}:walk"`; `$h:w…` is a modifier.)
-Jump still uses the idle frame with procedural stretch. A set can also be a
-single still (`"still": true`).
+To add attack frames later, slice the new sheet without `--replace` (e.g.
+`--rows "${h}:attack"`); the action merges into the set. Keep one design per
+hero: mixing sheets drawn from different references makes the character
+change between states.
 
 ## Painted monster sheets
 

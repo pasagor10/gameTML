@@ -23,7 +23,7 @@ import {
   playSpriteSet,
   playMonsterSet,
   playMonsterDeath,
-} from "/sprite-sets.js?v=0.12.0";
+} from "/sprite-sets.js?v=0.13.0";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 let job = "swordsman",
@@ -1285,9 +1285,14 @@ class Adventure extends Phaser.Scene {
       a.image.setPosition(point.x, point.y);
       animateHeroBody(a, p, pose, serverTime, time);
       this.fx.applyKick(a, a.image);
-      a.label.setPosition(a.image.x, a.image.y - (p.hp <= 0 ? 60 : 158));
+      // Name sits just above the head: painted sets know their height.
+      const headroom = spriteSet ? spriteSet.height + 24 : 158;
+      a.label.setPosition(a.image.x, a.image.y - (p.hp <= 0 ? 60 : headroom));
       a.marker
-        ?.setPosition(a.image.x, a.image.y - 178 + Math.sin(time * 0.006) * 4)
+        ?.setPosition(
+          a.image.x,
+          a.image.y - headroom - 20 + Math.sin(time * 0.006) * 4,
+        )
         .setVisible(p.hp > 0);
       a.shadow
         .setPosition(a.image.x, p.grounded ? p.y : 600)
