@@ -5,7 +5,7 @@ import {
   SPECIALIZATIONS,
   CLASS_SKILLS,
 } from "/shared/rpg.js";
-import { CLASSES } from "/shared/config.js";
+import { CLASSES, combatPower } from "/shared/config.js";
 import { ACTIONS } from "/shared/motion.js";
 const statNames = {
   atk: "ATK",
@@ -24,7 +24,7 @@ const rarity = (item) => `rarity-${item.rarity}`;
 export function rpgPanel(p, area, tab = "inventory") {
   const stats = p.stats,
     cls = CLASSES[p.class],
-    owned = p.ownedEquipment || [];
+    owned = (p.ownedEquipment || []).filter((id) => GEAR[id]);
   const spec = SPECIALIZATIONS[p.class].find((s) => s.id === p.specialization);
   const base = `<div class="rpg-summary"><span class="class-crest">${cls.icon}</span><div><small>ผู้กล้า · LEVEL ${p.level}</small><h3>${cls.name} <span>${spec?.name || "ยังไม่เลือกสายพัฒนา"}</span></h3></div><strong>◈ ${p.gold.toLocaleString()} <small>ทอง</small></strong></div><div class="rpg-tabs"><button data-rpg-tab="inventory" class="${tab === "inventory" ? "active" : ""}">อุปกรณ์ & กระเป๋า <kbd>I</kbd></button><button data-rpg-tab="class" class="${tab === "class" ? "active" : ""}">คลาส & สกิล <kbd>C</kbd></button></div>`;
   if (tab === "class")
@@ -36,6 +36,23 @@ export function rpgPanel(p, area, tab = "inventory") {
   const item = GEAR[selected];
   const equipped = item && p.equipment[item.slot] === selected;
   const previous = item ? GEAR[p.equipment[item.slot]] : null;
+  const comparedStats = { ...stats };
+  if (item)
+    for (const key of new Set([
+      ...Object.keys(item.stats),
+      ...Object.keys(previous?.stats || {}),
+    ]))
+      comparedStats[key] =
+        (stats[key] || 0) +
+        (equipped
+          ? -(item.stats[key] || 0)
+          : (item.stats[key] || 0) - (previous?.stats[key] || 0));
+  if (item?.slot === "weapon" && p.upgrade) {
+    if (equipped) comparedStats.atk -= p.upgrade * 8;
+    else if (!previous) comparedStats.atk += p.upgrade * 8;
+  }
+  const currentPower = p.power ?? combatPower(stats);
+  const comparedPower = combatPower(comparedStats);
   const deltas = item
     ? [
         ...new Set([
@@ -44,7 +61,7 @@ export function rpgPanel(p, area, tab = "inventory") {
         ]),
       ]
         .map((key) => {
-          const delta = (item.stats[key] || 0) - (previous?.stats[key] || 0);
+          const delta = (comparedStats[key] || 0) - (stats[key] || 0);
           return `<span class="${delta < 0 ? "negative" : delta > 0 ? "positive" : ""}">${statNames[key]} ${delta > 0 ? "+" : ""}${delta}</span>`;
         })
         .join("")
@@ -56,7 +73,7 @@ export function rpgPanel(p, area, tab = "inventory") {
     area === "town";
   return (
     base +
-    `<div class="equipment-layout"><aside class="character-sheet"><div class="paper-hero"><span>${cls.icon}</span><small>${spec?.role || cls.name}</small></div><div class="character-stats">${Object.entries(
+    `<div class="equipment-layout"><aside class="character-sheet"><div class="paper-hero"><span>${cls.icon}</span><small>${spec?.role || cls.name}</small></div><div class="power-score"><small>พลังรวม</small><strong>${currentPower.toLocaleString()}</strong></div><div class="character-stats">${Object.entries(
       stats,
     )
       .map(([k, v]) => `<div><span>${statNames[k]}</span><b>${v}</b></div>`)
@@ -79,7 +96,7 @@ export function rpgPanel(p, area, tab = "inventory") {
       })
       .join(
         "",
-      )}</div>${item ? `<div class="item-inspector ${rarity(item)}"><span class="item-large-icon">${item.icon}</span><div><small>${RARITIES[item.rarity]} · ${SLOTS[item.slot]}</small><h3>${item.name}</h3><p>${statText(item.stats)}</p><div class="item-deltas">เทียบกับที่ใส่อยู่ ${deltas || "—"}</div></div><button data-equip="${selected}" data-slot="${item.slot}" ${!canEquip ? "disabled" : ""}>${equipped ? "ถอดออก" : area !== "town" ? "สวมใส่ในเมือง" : p.level < item.level ? `ต้องการ Lv.${item.level}` : item.class && item.class !== p.class ? "ไม่ตรงคลาส" : "สวมใส่"}</button></div>` : ""}<h4 class="rpg-section-title">เสบียง & วัตถุดิบ</h4><div class="supply-row"><button data-use="hp"><b>✚</b><span>ยา HP <strong>×${p.inventory.hp}</strong><small>ฟื้นฟู 90 HP</small></span></button><button data-use="mp"><b>✦</b><span>ยา MP <strong>×${p.inventory.mp}</strong><small>ฟื้นฟู 80 MP</small></span></button><div><b>◈</b><span>แร่จันทรา <strong>×${p.inventory.ore}</strong><small>ใช้ที่โรงตีอาวุธ</small></span></div></div><p class="hint">อุปกรณ์เพิ่มค่าสถานะจริง · เปลี่ยนชุดได้ในเมือง · ตราผู้พิชิตถ้ำดรอปเมื่อชนะบอสครั้งแรก</p></section></div>`
+      )}</div>${item ? `<div class="item-inspector ${rarity(item)}"><span class="item-large-icon">${item.icon}</span><div><small>${RARITIES[item.rarity]} · ${SLOTS[item.slot]}${item.floor ? ` · บอสชั้น ${item.floor}` : ""}</small><h3>${item.name}</h3><p>${statText(item.stats)}</p>${item.lore ? `<p class="item-lore">${item.lore}</p>` : ""}<div class="item-deltas">${equipped ? "เมื่อถอด" : "เมื่อสวม"} ${deltas || "ไม่มีค่าสถานะเปลี่ยน"}<span class="${comparedPower < currentPower ? "negative" : comparedPower > currentPower ? "positive" : ""}">พลัง ${currentPower.toLocaleString()} → ${comparedPower.toLocaleString()} (${comparedPower - currentPower >= 0 ? "+" : ""}${comparedPower - currentPower})</span></div></div><button data-equip="${selected}" data-slot="${item.slot}" ${!canEquip ? "disabled" : ""}>${equipped ? "ถอดออก" : area !== "town" ? "สวมใส่ในเมือง" : p.level < item.level ? `ต้องการ Lv.${item.level}` : item.class && item.class !== p.class ? "ไม่ตรงคลาส" : "สวมใส่"}</button></div>` : ""}<h4 class="rpg-section-title">เสบียง & วัตถุดิบ</h4><div class="supply-row"><button data-use="hp"><b>✚</b><span>ยา HP <strong>×${p.inventory.hp}</strong><small>ฟื้นฟู 90 HP</small></span></button><button data-use="mp"><b>✦</b><span>ยา MP <strong>×${p.inventory.mp}</strong><small>ฟื้นฟู 80 MP</small></span></button><div><b>◈</b><span>แร่จันทรา <strong>×${p.inventory.ore}</strong><small>ใช้ที่โรงตีอาวุธ</small></span></div></div><p class="hint">บอสแต่ละชั้นมีชุดของเฉพาะ · รอบแรกได้อาวุธประจำอาชีพ · ของซ้ำเมื่อสะสมครบเปลี่ยนเป็นแร่จันทรา</p></section></div>`
   );
 }
 export function bindRpgPanel(root, p, handlers) {

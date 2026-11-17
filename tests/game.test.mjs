@@ -7,8 +7,9 @@ const dir = mkdtempSync(path.join(tmpdir(), "tml-engine-"));
 process.env.DB_PATH = path.join(dir, "test.sqlite");
 const { db, persist, loadCharacter } = await import("../server/database.js");
 const world = await import("../server/world.js");
-const { damage, WORLD, combatStats, maxHp } =
+const { damage, WORLD, combatStats, combatPower, maxHp } =
   await import("../shared/config.js");
+const { FLOOR_LOOT } = await import("../shared/rpg.js");
 function create(id, job = "swordsman") {
   db.prepare("INSERT INTO users VALUES(?,?,?,?)").run(id, id, null, Date.now());
   const state = {
@@ -52,6 +53,25 @@ test("damage is bounded, authoritative input ignores client gold and enforces co
   world.tick(0.05, t + 0.2);
   assert.equal(i.enemies[0].hp, hp, "recovery prevents an extra hit");
   assert.ok(hp < i.enemies[0].maxHp);
+});
+test("boss loot guarantees a class weapon, avoids duplicates, and power reflects gear", () => {
+  const p = create("loot-plan", "archer");
+  const before = combatPower(combatStats(p));
+  const first = world.rollBossLoot(p, 1, true, () => 0.99);
+  assert.equal(first, FLOOR_LOOT[1].weapons.archer);
+  p.ownedEquipment.push(first);
+  p.equipment.weapon = first;
+  const after = combatPower(combatStats(p));
+  assert.ok(after > before);
+  const repeat = world.rollBossLoot(p, 1, false, () => 0);
+  assert.equal(repeat, FLOOR_LOOT[1].pool[0]);
+  p.ownedEquipment.push(...FLOOR_LOOT[1].pool);
+  assert.equal(
+    world.rollBossLoot(p, 1, false, () => 0),
+    null,
+  );
+  const legendary = world.rollBossLoot(p, 3, false, () => 0.01);
+  assert.equal(legendary, "moonheart_talisman");
 });
 test("NPC purchases and enhancement are idempotent, stock sale atomic, no negative gold", () => {
   const a = create("seller"),
@@ -124,10 +144,10 @@ test("trade requires consent, revision reset, both confirmations and atomic tran
   assert.equal(b.inventory.hp, 4);
   assert.equal(world.trades.has(t.id), false);
 });
-test("all classes clear 9 configured stages, unlocks persist and duplicate rewards prevented", () => {
+test("all classes clear 30 configured stages, unlocks persist and duplicate rewards prevented", () => {
   for (const job of ["swordsman", "archer", "mage"]) {
     const p = create("clear-" + job, job);
-    for (let floor = 1; floor <= 3; floor++) {
+    for (let floor = 1; floor <= 10; floor++) {
       world.beginDungeon(p, floor);
       const i = world.instances.get(p.instance);
       for (let stage = 1; stage <= 3; stage++) {
@@ -158,13 +178,13 @@ test("all classes clear 9 configured stages, unlocks persist and duplicate rewar
       }
       world.returnTown(p);
     }
-    assert.equal(p.quest, 3);
+    assert.equal(p.quest, 10);
     assert.equal(
       p.ownedEquipment.filter((id) => id === "cavern_charm").length,
       1,
     );
     assert.ok(loadCharacter(p.id).ownedEquipment.includes("cavern_charm"));
-    assert.equal(loadCharacter(p.id).quest, 3);
+    assert.equal(loadCharacter(p.id).quest, 10);
   }
 });
 test("party requires readiness, is capped at three, shares instances, movement and jump collide", () => {
@@ -257,6 +277,21 @@ test("animation state prioritizes death/hit and matches the shared impact timeli
   assert.equal(heroPose({ ...p, hitAt: 10.1 }, 10.2).state, "hit");
   assert.equal(slimePose({ hp: 50, moving: true }, 10).state, "move");
   assert.equal(slimePose({ hp: 0, diedAt: 10 }, 11).frame, 3);
+});
+test("the town is walkable all the way to the dungeon portal", () => {
+  const p = create("walk-to-portal"),
+    t = Date.now() / 1000 + 700;
+  p.x = 400;
+  p.input = 1;
+  p.running = true;
+  for (let n = 0; n < 400 && p.x < WORLD.portal; n++) {
+    p.input = 1;
+    p.lastInput = t + n * 0.05; // a held key keeps sending input
+    world.tick(0.05, t + n * 0.05);
+  }
+  assert.ok(WORLD.townWidth >= WORLD.portal + 140, "portal inside the town");
+  assert.ok(p.x >= WORLD.portal, `reached x=${Math.round(p.x)}`);
+  world.players.delete(p.id);
 });
 test("jump clears and lands on a platform, with a bounded ledge grace period", () => {
   const p = create("platform-motion"),

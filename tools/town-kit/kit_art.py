@@ -34,12 +34,14 @@ OUT = ROOT / "public" / "assets" / "town-kit"
 PIECES = {"stall": 0.36, "shop": 0.42, "smithy": 0.46, "stairs": 0.42,
           "tower": 0.42, "tree": 0.5, "cavegate": 0.42}
 PROP_SCALE = {"props-ground": 0.34, "props-hanging": 0.3, "props-foliage": 0.42}
+# Pieces with no real pink near their edges: also turn pink rim light green.
+RIM_FIX = {"tree"}
 ANIM_ROWS = ["banner", "lantern", "brazier"]
 ANIM_SCALE = 0.32
 
 
 def keyed(name):
-    return key_magenta(Image.open(next(SRC.glob(f"{name}.*"))), despill=False, rim_fix=False)
+    return key_magenta(Image.open(next(SRC.glob(f"{name}.*"))), despill=False, rim_fix=name in RIM_FIX)
 
 
 def save(im, name, scale):

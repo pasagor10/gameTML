@@ -14,7 +14,7 @@ export const TOWN_GROUND = 600;
 
 // Width and height are the keyed piece sizes (public/assets/town-kit/kit.json).
 export const TOWN_PIECES = {
-  tree: { w: 512, h: 764, ledges: [[80, 512, 167]] },
+  tree: { w: 512, h: 750, ledges: [] },
   stall: { w: 369, h: 550, ledges: [] },
   shop: {
     w: 521,
@@ -49,11 +49,7 @@ export const TOWN_PIECES = {
       [85, 345, 345],
     ],
   },
-  cavegate: {
-    w: 456,
-    h: 605,
-    ledges: [[65, 385, 124]], // the portal landing
-  },
+  cavegate: { w: 456, h: 605, ledges: [[130, 340, 152]] }, // portal landing
 };
 
 // Left to right; x is where each piece's left edge stands.
@@ -77,7 +73,7 @@ export const TOWN_WIDTH = TOWN_LAYOUT.reduce(
 // front: drawn in front of the heroes. step: [w, h] climbable top.
 export const TOWN_PROPS = [
   { key: "prop-foliage-0", x: 36 },
-  { key: "prop-ground-1", x: 140, step: [57, 100] },
+  { key: "prop-ground-1", x: 140 },
   { key: "prop-foliage-4", x: 250, front: true },
   { key: "prop-ground-8", x: 455 },
   { key: "prop-ground-4", x: 900 },
@@ -107,11 +103,11 @@ export const TOWN_ANIMS = {
 
 // NPC spots and the portal (world coordinates).
 export const TOWN_SPOTS = {
-  elder: 330, // under the great tree
+  elder: 385, // under the great tree
   potion: 680, // at the stall counter
   weapon: 2000, // beside the weapon rack
   forge: 2150, // at the anvil
-  portal: { x: 3153, y: TOWN_BASE - 214 },
+  portal: { x: 3168, y: TOWN_BASE - 245 },
   forgeFire: { x: 2277, y: TOWN_BASE - 52 },
   chimney: { x: 2312, y: TOWN_BASE - 410 },
 };

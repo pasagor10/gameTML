@@ -1,4 +1,11 @@
-import { GEAR, SPECIALIZATIONS, initializeGear } from "../shared/rpg.js";
+import {
+  GEAR,
+  SLOTS,
+  FLOOR_LOOT,
+  bossLootCandidates,
+  SPECIALIZATIONS,
+  initializeGear,
+} from "../shared/rpg.js";
 import { ACTIONS } from "../shared/motion.js";
 import { randomUUID } from "node:crypto";
 import { db, loadCharacter, persist, atomic, log } from "./database.js";
@@ -12,6 +19,7 @@ import {
   maxMp,
   damage,
   combatStats,
+  combatPower,
 } from "../shared/config.js";
 export const players = new Map(),
   instances = new Map(),
@@ -85,14 +93,18 @@ export function buyEquipment(p, id, key) {
     c.gold -= item.price;
     c.ownedEquipment.push(id);
     persist(c);
-    return { message: "ได้รับ " + item.name + " · สวมใส่ได้ในกระเป๋า" };
+    return {
+      message: "ได้รับ " + item.name + " · สวมใส่ได้ในกระเป๋า",
+      item: id,
+      rarity: item.rarity,
+    };
   });
   sync(p);
   return result;
 }
 export function equip(p, slot, id) {
   ensureTown(p);
-  if (!["weapon", "armor", "charm", "boots"].includes(slot))
+  if (!Object.hasOwn(SLOTS, slot))
     throw Error("ช่องอุปกรณ์ไม่ถูกต้อง");
   const item = GEAR[id];
   if (
@@ -106,7 +118,25 @@ export function equip(p, slot, id) {
   p.hp = Math.min(p.hp, maxHp(p));
   p.mp = Math.min(p.mp, maxMp(p));
   savePlayer(p);
-  return { message: item ? "สวมใส่ " + item.name : "ถอดอุปกรณ์แล้ว" };
+  return {
+    message: item ? "สวมใส่ " + item.name : "ถอดอุปกรณ์แล้ว",
+    equipped: id,
+    rarity: item?.rarity || "common",
+  };
+}
+
+export function rollBossLoot(p, floor, firstClear, random = Math.random) {
+  const table = FLOOR_LOOT[floor];
+  if (!table) return null;
+  const weapon = table.weapons[p.class];
+  if (firstClear && weapon && !p.ownedEquipment.includes(weapon)) return weapon;
+  const candidates = bossLootCandidates(floor, p.class, p.ownedEquipment);
+  if (!candidates.length) return null;
+  const legendary = candidates.find((id) => GEAR[id].rarity === "legendary");
+  if (legendary && random() < 0.05) return legendary;
+  const regular = candidates.filter((id) => id !== legendary);
+  const pool = regular.length ? regular : candidates;
+  return pool[Math.floor(random() * pool.length)];
 }
 export function specialize(p, id) {
   ensureTown(p);
@@ -305,7 +335,7 @@ export function savePlayer(p) {
   persist(stored(p));
 }
 export function beginDungeon(p, floor) {
-  if (!validInt(floor, 1, 3)) throw Error("ชั้นไม่ถูกต้อง");
+  if (!validInt(floor, 1, FLOORS.length)) throw Error("ชั้นไม่ถูกต้อง");
   const party = parties.get(p.party),
     members = party ? party.members.map(live).filter(Boolean) : [p];
   if (party && party.leader !== p.id) throw Error("ให้หัวหน้าปาร์ตี้เริ่มดันเจียน");
@@ -415,7 +445,9 @@ function spawnStage(i) {
   const boss = i.stage === 3,
     count = boss ? 1 : 4 + i.floor;
   for (let n = 0; n < count; n++) {
-    const max = boss ? 280 + i.floor * 140 : 45 + i.floor * 12 + i.stage * 10;
+    const max = boss
+      ? 300 + i.floor * 220 + i.floor * i.floor * 55
+      : 45 + i.floor * 18 + i.stage * 12;
     i.enemies.push({
       id: randomUUID(),
       x: 700 + n * 230,
@@ -423,7 +455,7 @@ function spawnStage(i) {
       hp: max,
       maxHp: max,
       type: boss
-        ? ["batking", "golem", "serpent"][i.floor - 1]
+        ? ["batking", "golem", "serpent"][(i.floor - 1) % 3]
         : ["slime", "bat", "boar", "mushroom", "wolf", "goblin"][
             (n + i.stage + i.floor) % 6
           ],
@@ -635,9 +667,44 @@ function resolveAttack(p, t) {
       for (const id of i.members) {
         const m = live(id);
         if (m) {
-          m.unlocked = Math.min(3, Math.max(m.unlocked, i.floor + 1));
+          const firstClear = m.quest < i.floor;
+          m.unlocked = Math.min(
+            FLOORS.length,
+            Math.max(m.unlocked, i.floor + 1),
+          );
           m.gold += 80;
-          if (!m.ownedEquipment.includes("cavern_charm")) {
+          const item = rollBossLoot(m, i.floor, firstClear);
+          if (item) {
+            m.ownedEquipment.push(item);
+            i.events.push({
+              id: randomUUID(),
+              kind: "loot",
+              actorId: m.id,
+              x: m.x,
+              y: m.y - 110,
+              item,
+              rarity: GEAR[item].rarity,
+              at: t,
+            });
+          } else {
+            const ore = 2 + i.floor;
+            m.inventory.ore = (m.inventory.ore || 0) + ore;
+            i.events.push({
+              id: randomUUID(),
+              kind: "material",
+              actorId: m.id,
+              x: m.x,
+              y: m.y - 110,
+              item: "ore",
+              amount: ore,
+              at: t,
+            });
+          }
+          if (
+            i.floor === 3 &&
+            firstClear &&
+            !m.ownedEquipment.includes("cavern_charm")
+          ) {
             m.ownedEquipment.push("cavern_charm");
             i.events.push({
               id: randomUUID(),
@@ -646,6 +713,7 @@ function resolveAttack(p, t) {
               x: m.x,
               y: m.y - 110,
               item: "cavern_charm",
+              rarity: GEAR.cavern_charm.rarity,
               at: t,
             });
           }
@@ -1084,6 +1152,8 @@ export function snapshot(p) {
     hp: m.hp,
     maxHp: maxHp(m),
     level: m.level,
+    equipment: m.equipment,
+    upgrade: m.upgrade,
     attackAt: m.attackAt,
   });
   return {
@@ -1099,6 +1169,7 @@ export function snapshot(p) {
       ownedEquipment: p.ownedEquipment,
       specialization: p.specialization,
       stats: combatStats(p),
+      power: combatPower(combatStats(p)),
       upgrade: p.upgrade,
       weapon: p.weapon,
       armor: p.armor,

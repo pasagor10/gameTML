@@ -1,7 +1,13 @@
 import { TOWN_ANIMS, TOWN_LAYOUT, TOWN_PROPS } from "/shared/town-layout.js";
 import { createWorldDetails } from "/world-details.js?v=3";
 import { rpgPanel, bindRpgPanel, gearShop } from "/rpg-ui.js?v=1";
-import { GEAR, CLASS_SKILLS, SPECIALIZATIONS } from "/shared/rpg.js";
+import {
+  GEAR,
+  RARITIES,
+  FLOOR_LOOT,
+  CLASS_SKILLS,
+  SPECIALIZATIONS,
+} from "/shared/rpg.js";
 import { createTownNpcs } from "/town-npcs.js?v=3";
 import { sampleMotion } from "/shared/smoothing.js";
 import { ACTIONS } from "/shared/motion.js";
@@ -89,22 +95,53 @@ function toast(text, error = false) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => $("#toast").classList.remove("visible"), 3500);
 }
-function tone(f = 440, d = 0.18, type = "sine", volume = 0.035) {
+function tone(f = 440, d = 0.18, type = "sine", volume = 0.035, delay = 0) {
   if (muted) return;
   try {
     audio ??= new (window.AudioContext || window.webkitAudioContext)();
     audio.resume();
     const o = audio.createOscillator(),
-      g = audio.createGain();
+      g = audio.createGain(),
+      at = audio.currentTime + delay;
     o.type = type;
-    o.frequency.setValueAtTime(f, audio.currentTime);
-    o.frequency.exponentialRampToValueAtTime(f * 0.55, audio.currentTime + d);
-    g.gain.setValueAtTime(volume, audio.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + d);
+    o.frequency.setValueAtTime(f, at);
+    o.frequency.exponentialRampToValueAtTime(f * 0.72, at + d);
+    g.gain.setValueAtTime(volume, at);
+    g.gain.exponentialRampToValueAtTime(0.001, at + d);
     o.connect(g).connect(audio.destination);
-    o.start();
-    o.stop(audio.currentTime + d);
+    o.start(at);
+    o.stop(at + d);
   } catch {}
+}
+function soundCue(name, rarity = "common") {
+  if (name === "equip") {
+    [392, 523, 659].forEach((f, i) =>
+      tone(f, 0.16, "triangle", 0.035, i * 0.07),
+    );
+  } else if (name === "loot") {
+    const notes =
+      rarity === "legendary"
+        ? [392, 523, 659, 784, 1047]
+        : rarity === "epic"
+          ? [392, 523, 659, 784]
+          : [440, 554, 659];
+    notes.forEach((f, i) =>
+      tone(f, 0.3, i % 2 ? "sine" : "triangle", 0.045, i * 0.09),
+    );
+  } else if (name === "enhance-success") {
+    [330, 494, 659, 988].forEach((f, i) =>
+      tone(f, 0.22, "triangle", 0.045, i * 0.08),
+    );
+  } else if (name === "enhance-fail") {
+    tone(180, 0.45, "sawtooth", 0.025);
+    tone(125, 0.5, "sine", 0.03, 0.12);
+  } else if (name === "material") {
+    tone(520, 0.12, "square", 0.018);
+    tone(690, 0.18, "triangle", 0.025, 0.07);
+  } else if (name === "buy") {
+    tone(740, 0.09, "square", 0.018);
+    tone(980, 0.13, "triangle", 0.025, 0.07);
+  }
 }
 $("#sound").onclick = () => {
   muted = !muted;
@@ -425,7 +462,13 @@ function emit(event, data = {}) {
   });
 }
 async function transaction(event, data = {}) {
-  return emit(event, { ...data, key: crypto.randomUUID() });
+  const result = await emit(event, { ...data, key: crypto.randomUUID() });
+  if (!result) return result;
+  if (event === "equipment:enhance")
+    soundCue(result.success ? "enhance-success" : "enhance-fail");
+  else if (event === "equipment:buy" || event === "npc:buy")
+    soundCue("buy", result.rarity);
+  return result;
 }
 function enterGame() {
   $("#prologue").classList.add("hidden");
@@ -552,7 +595,7 @@ function updateHUD() {
   $("#stage-label").textContent = d?.training
     ? "สนามฝึก · ไม่มีรางวัล · สไลม์เกิดใหม่อัตโนมัติ"
     : d
-      ? `ชั้น ${d.floor} / 3 · ด่าน ${d.stage} / 3 · ${d.stage === 3 ? "BOSS STAGE" : d.stage === 2 ? "ELITE STAGE" : "MONSTER STAGE"}`
+      ? `ชั้น ${d.floor} / ${FLOORS.length} · ด่าน ${d.stage} / 3 · ${d.stage === 3 ? "BOSS STAGE" : d.stage === 2 ? "ELITE STAGE" : "MONSTER STAGE"}`
       : "เมืองกลาง · CH.1 · เขตปลอดภัย";
   $("#map-title").textContent = d?.training
     ? "สนามฝึกผู้พิทักษ์"
@@ -584,7 +627,7 @@ function updateHUD() {
       ? d.clear
         ? "เส้นทางเปิดแล้ว! เดินหน้าสู่ด่านต่อไป"
         : `กำจัด${d.stage === 3 ? FLOORS[d.floor - 1].boss : "มอนสเตอร์ทั้งหมด"} · เหลือ ${d.enemies.length} ตัว`
-      : p.quest >= 3
+      : p.quest >= FLOORS.length
         ? "ตำนานบทแรกสำเร็จ! กลับไปท้าทายดันเจียนได้อีกครั้ง"
         : "คุยกับผู้ใหญ่คำ แล้วเข้าสู่ประตูถ้ำหลวง";
   const streak =
@@ -594,11 +637,11 @@ function updateHUD() {
   $("#quest-counter").textContent =
     d && !d.training
       ? `กำจัด ${d.defeated} / ${d.totalEnemies}${streak} · SPACE หลบพื้นเตือน`
-      : `ดันเจียนที่พิชิต ${p.quest} / 3`;
+      : `ดันเจียนที่พิชิต ${p.quest} / ${FLOORS.length}`;
   $("#quest-fill").style.width =
     (d && !d.training
       ? (d.defeated / Math.max(1, d.totalEnemies)) * 100
-      : (p.quest / 3) * 100) + "%";
+      : (p.quest / FLOORS.length) * 100) + "%";
   $("#stage-clear").classList.toggle(
     "hidden",
     !d?.clear || d?.training || p.hp <= 0 || p.auto,
@@ -720,7 +763,10 @@ function showPanel(panel) {
     bindRpgPanel($("#modal-body"), p, {
       open: showPanel,
       action: async (event, data) => {
-        await emit(event, data);
+        const result = await emit(event, data);
+        if (result && event === "equipment:equip")
+          soundCue("equip", result.rarity);
+        else if (result && event === "class:specialize") soundCue("equip");
       },
     });
   } else if (panel === "weapon") {
@@ -761,20 +807,29 @@ function showPanel(panel) {
     $("#enhance").onclick = async () => {
       const r = await transaction("equipment:enhance");
       if (r) {
-        tone(r.success ? 800 : 150, 0.5);
         closeModal();
       }
     };
   } else if (panel === "elder" || panel === "quest") {
     modal(
       "ผู้ใหญ่คำ · เสียงเรียกจากขุนเขา",
-      `<p>“เจ้าได้ยินเสียงนั้นไหม… ตั้งแต่แสงสีฟ้าส่องออกจากถ้ำ สัตว์ป่าก็ไม่เหมือนเดิมอีกเลย ผู้พิทักษ์ทั้งสามชั้นอาจรู้คำตอบ”</p>${FLOORS.map((f, i) => row(["🦇", "🪨", "🐍"][i], "ชั้น " + (i + 1) + " · " + f.name, `${f.boss} · 3 ด่าน · ${p.quest > i ? "พิชิตแล้ว ✓" : "ยังไม่พิชิต"}`)).join("")}<button id="elder-heal" class="primary-button">พักฟื้น HP / MP เต็ม</button><p class="hint">เล่นบทเปิดครบ 3 ชั้นเพื่อจบเดโม · โลกฉบับเต็มวางแผนไว้ 100 ชั้น</p>`,
+      `<p>“เจ้าได้ยินเสียงนั้นไหม… แสงจากหัวใจถ้ำกำลังปลุกผู้พิทักษ์ทั้งสิบ จงตามเสียงนั้นลงไปให้ถึงชั้นสุดท้าย”</p>${FLOORS.map((f, i) => row(["🦇", "🪨", "🐍", "🌿", "🔥", "❄", "⚡", "☽", "🐉", "✺"][i], "ชั้น " + (i + 1) + " · " + f.name, `${f.boss} · 3 ด่าน · ${p.quest > i ? "พิชิตแล้ว ✓" : "ยังไม่พิชิต"}`)).join("")}<button id="elder-heal" class="primary-button">พักฟื้น HP / MP เต็ม</button><p class="hint">พิชิตครบ 10 ชั้นเพื่อเปิดของตำนานทั้งหมด</p>`,
     );
     $("#elder-heal").onclick = () => emit("player:heal");
   } else if (panel === "dungeon") {
     modal(
       "ประตูถ้ำหลวง · เลือกดันเจียน",
-      `<p>แต่ละชั้นมี 3 ด่าน: มอนสเตอร์ → อีลิท → บอส<br>ปาร์ตี้สูงสุด 3 คน สมาชิกต้องกดพร้อมก่อนหัวหน้าเริ่ม</p><p class="hint">SPACE กระโดดหลบคริสตัลและบอสทุบพื้น · กำจัดศัตรูต่อเนื่องภายใน 5 วินาที รับโบนัสทองและ MP · ระวังบอสคลั่งเมื่อ HP ต่ำกว่าครึ่ง</p>${FLOORS.map((f, i) => `<div class="dungeon-card"><h3>0${i + 1} / ${f.name}</h3><p>บอส: ${f.boss} · 3 ด่าน · ${i === 0 ? "เริ่มต้นการผจญภัย" : "ผ่านชั้น " + i + " ก่อน"}</p><button data-floor="${i + 1}" ${p.unlocked < i + 1 ? "disabled" : ""}>${p.unlocked < i + 1 ? "🔒 ยังไม่ปลดล็อก" : "เข้าสู่ดันเจียน ➜"}</button></div>`).join("")}`,
+      `<p>แต่ละชั้นมี 3 ด่าน: มอนสเตอร์ → อีลิท → บอส<br>ปาร์ตี้สูงสุด 3 คน สมาชิกต้องกดพร้อมก่อนหัวหน้าเริ่ม</p><p class="hint">SPACE กระโดดหลบคริสตัลและบอสทุบพื้น · รอบแรกได้อาวุธประจำอาชีพแน่นอน · รอบต่อไปล่าชิ้นที่ยังไม่มี</p>${FLOORS.map(
+        (f, i) => {
+          const table = FLOOR_LOOT[i + 1];
+          const featured = [table?.weapons[p.class], ...(table?.pool || [])]
+            .filter(Boolean)
+            .slice(0, 4)
+            .map((id) => `${GEAR[id].icon} ${GEAR[id].name}`)
+            .join(" · ");
+          return `<div class="dungeon-card"><h3>${String(i + 1).padStart(2, "0")} / ${f.name}</h3><p>บอส: ${f.boss} · 3 ด่าน · ${i === 0 ? "เริ่มต้นการผจญภัย" : "ผ่านชั้น " + i + " ก่อน"}</p><small>ของเด่น: ${featured}</small><button data-floor="${i + 1}" ${p.unlocked < i + 1 ? "disabled" : ""}>${p.unlocked < i + 1 ? "🔒 ยังไม่ปลดล็อก" : "เข้าสู่ดันเจียน ➜"}</button></div>`;
+        },
+      ).join("")}`,
     );
     $$("[data-floor]").forEach(
       (b) =>
@@ -1111,7 +1166,7 @@ class Adventure extends Phaser.Scene {
   preload() {
     queueSpriteSets(this);
     // Town kit: pieces, props, animated props and far layers (tools/town-kit).
-    const kit = (key) => `/assets/town-kit/${key}.webp?v=5`;
+    const kit = (key) => `/assets/town-kit/${key}.webp?v=6`;
     for (const piece of new Set(TOWN_LAYOUT.map((p) => p.piece)))
       this.load.image(`town-piece-${piece}`, kit(`piece-${piece}`));
     for (const key of new Set(TOWN_PROPS.map((p) => p.key)))
@@ -1230,7 +1285,8 @@ class Adventure extends Phaser.Scene {
         ? Math.min(850 - viewH / 2, WORLD.ground - 0.26 * viewH)
         : 340;
     this.cameras.main.setZoom(zoom);
-    this.cameras.main.setBounds(0, -100, 2400, 950);
+    // The town is as long as its kit layout; dungeons keep WORLD.width.
+    this.cameras.main.setBounds(0, -100, areaWidth(state?.area), 950);
     this.parallax?.resize();
   }
   makePlatforms() {
@@ -1288,6 +1344,16 @@ class Adventure extends Phaser.Scene {
             strokeThickness: 4,
           })
           .setOrigin(0.5)
+          .setDepth(14),
+        gearBadge = this.add
+          .text(p.x + 48, p.y - 116, "", {
+            fontFamily: "Noto Sans Thai",
+            fontSize: "14px",
+            color: "#d9e3df",
+            stroke: "#07131e",
+            strokeThickness: 4,
+          })
+          .setOrigin(0.5)
           .setDepth(14);
       const marker =
         p.id === state.self.id
@@ -1305,6 +1371,7 @@ class Adventure extends Phaser.Scene {
       a = {
         image,
         label,
+        gearBadge,
         shadow,
         marker,
         target: p,
@@ -1333,9 +1400,10 @@ class Adventure extends Phaser.Scene {
     if (areaChanged) {
       this.lastArea = area;
       const town = s.area === "town";
+      this.cameras.main.setBounds(0, -100, areaWidth(s.area), 950);
       this.parallax.setArea(
         town ? "town" : "cave",
-        town ? null : [0xc1b9ff, 0x95dfff, 0x91d7ce][s.dungeon.floor - 1],
+        town ? null : FLOORS[s.dungeon.floor - 1].color,
       );
       this.lookX = 0;
       this.npcs.forEach((n) => n.setVisible(town));
@@ -1460,8 +1528,50 @@ class Adventure extends Phaser.Scene {
   }
   effect(e) {
     if (e.kind === "loot") {
-      if (e.actorId === state.self.id)
-        toast("ได้รับ " + GEAR[e.item].name + " · เปิดกระเป๋า I เพื่อสวมใส่");
+      if (e.actorId === state.self.id) {
+        const item = GEAR[e.item];
+        toast(
+          `ได้รับ ${item.icon} ${item.name} [${RARITIES[item.rarity]}] · เปิดกระเป๋า I เพื่อสวมใส่`,
+        );
+        soundCue("loot", item.rarity);
+        const color = {
+          common: "#d5ded9",
+          rare: "#79d9f2",
+          epic: "#d0a7ff",
+          legendary: "#ffc35d",
+        }[item.rarity];
+        const text = this.add
+          .text(
+            e.x,
+            e.y,
+            `${item.icon} ${item.name}\n${RARITIES[item.rarity]}`,
+            {
+              align: "center",
+              fontFamily: "Noto Sans Thai",
+              fontSize: item.rarity === "legendary" ? "20px" : "16px",
+              color,
+              stroke: "#07131e",
+              strokeThickness: 5,
+            },
+          )
+          .setOrigin(0.5)
+          .setDepth(45);
+        this.tweens.add({
+          targets: text,
+          y: e.y - 70,
+          alpha: 0,
+          duration: 2200,
+          ease: "Cubic.Out",
+          onComplete: () => text.destroy(),
+        });
+      }
+      return;
+    }
+    if (e.kind === "material") {
+      if (e.actorId === state.self.id) {
+        toast(`สะสมชุดชั้นนี้ครบแล้ว · ได้แร่จันทรา ×${e.amount}`);
+        soundCue("material");
+      }
       return;
     }
     if (e.kind === "streak") {
@@ -1603,6 +1713,41 @@ class Adventure extends Phaser.Scene {
       // Name sits just above the head: painted sets know their height.
       const headroom = spriteSet ? spriteSet.height + 24 : 158;
       a.label.setPosition(a.image.x, a.image.y - (p.hp <= 0 ? 60 : headroom));
+      const visibleGear = Object.values(p.equipment || {})
+        .map((itemId) => GEAR[itemId])
+        .filter(Boolean);
+      const weapon = visibleGear.find((item) => item.slot === "weapon"),
+        armor = visibleGear.find((item) => item.slot === "armor"),
+        rarityRank = { common: 0, rare: 1, epic: 2, legendary: 3 },
+        best = visibleGear.reduce(
+          (top, item) =>
+            !top || rarityRank[item.rarity] > rarityRank[top.rarity]
+              ? item
+              : top,
+          null,
+        ),
+        gearColor = {
+          common: "#d5ded9",
+          rare: "#79d9f2",
+          epic: "#d0a7ff",
+          legendary: "#ffc35d",
+        }[best?.rarity || "common"];
+      a.gearBadge
+        .setText(
+          [
+            weapon?.icon,
+            p.upgrade && weapon ? `+${p.upgrade}` : "",
+            armor?.icon,
+          ]
+            .filter(Boolean)
+            .join(" "),
+        )
+        .setColor(gearColor)
+        .setPosition(
+          a.image.x + 48,
+          a.image.y - (p.hp <= 0 ? 45 : headroom - 18),
+        )
+        .setVisible(p.hp > 0 && visibleGear.length > 0);
       a.marker
         ?.setPosition(
           a.image.x,

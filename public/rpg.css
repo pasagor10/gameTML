@@ -253,6 +253,26 @@ kbd {
   color: #b5c6c7;
   z-index: 1;
 }
+.power-score {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: -2px 0 10px;
+  padding: 8px 10px;
+  border: 1px solid #d5b66c52;
+  border-radius: 5px;
+  background: linear-gradient(90deg, #e2bc7112, transparent);
+}
+.power-score small {
+  color: #b6a06f;
+  font-size: 9px;
+  letter-spacing: 0.8px;
+}
+.power-score strong {
+  color: #ffe0a0;
+  font-size: 20px;
+  text-shadow: 0 0 14px #edbc5a55;
+}
 .character-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -323,6 +343,13 @@ kbd {
 }
 .rarity-epic {
   --rarity: #c8a2f4;
+}
+.rarity-legendary {
+  --rarity: #ffbd5b;
+}
+.gear-card.rarity-legendary,
+.item-inspector.rarity-legendary {
+  box-shadow: 0 0 20px #ffae3330, inset 0 0 18px #ffca6320;
 }
 .bag-content {
   min-width: 0;
@@ -410,6 +437,10 @@ kbd {
 .item-inspector p {
   margin: 3px 0;
   font-size: 10px;
+}
+.item-inspector .item-lore {
+  color: #93aab4;
+  font-style: italic;
 }
 .item-deltas {
   display: flex;

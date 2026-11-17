@@ -46,6 +46,13 @@ export const FLOORS = [
   { name: "ปากถ้ำต้องคำสาป", boss: "ราชาค้างคาว", color: 0x9870df },
   { name: "ถ้ำหินเรืองแสง", boss: "ผู้พิทักษ์หิน", color: 0x64d9f7 },
   { name: "โพรงน้ำใต้ดิน", boss: "อสรพิษถ้ำ", color: 0x52d7b8 },
+  { name: "สุสานเถาวัลย์", boss: "ราชินีรากไม้", color: 0x7abf62 },
+  { name: "เตาหลอมใต้พิภพ", boss: "ยักษ์เตาหลอม", color: 0xef7048 },
+  { name: "วิหารน้ำแข็ง", boss: "ผู้พิทักษ์เหมันต์", color: 0x8fd9ef },
+  { name: "รังอัสนี", boss: "วิหคสายฟ้า", color: 0xd8ba55 },
+  { name: "หอเงาสะท้อน", boss: "ฝาแฝดเงา", color: 0x8c72c7 },
+  { name: "ประตูมังกร", boss: "นายทวารมังกร", color: 0xb34f5e },
+  { name: "หัวใจถ้ำหลวง", boss: "มังกรจันทราทมิฬ", color: 0x5f4a94 },
 ];
 export const WORLD = {
   width: 2400,
@@ -116,4 +123,14 @@ export function combatStats(p) {
     hp: maxHp(p),
     mp: maxMp(p),
   };
+}
+
+export function combatPower(stats) {
+  return Math.round(
+    stats.atk * 6 +
+      (stats.hp * (1 + stats.def / 100)) / 2 +
+      stats.mp * 0.2 +
+      stats.speed * 0.1 +
+      stats.range * 0.05,
+  );
 }
