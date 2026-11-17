@@ -277,6 +277,52 @@ test("jump clears and lands on a platform, with a bounded ledge grace period", (
   world.tick(0.05, t + 3.2);
   assert.ok(p.vy > 0, "expired ledge grace must not allow an air jump");
 });
+test("every platform is reachable from the ground with one jump", () => {
+  const t = Date.now() / 1000 + 900;
+  for (const [n, platform] of WORLD.platforms.entries()) {
+    const p = create("reach-" + n);
+    p.x = platform.x + platform.w / 2;
+    p.jump = true;
+    for (let k = 0; k < 30; k++) world.tick(0.05, t + n * 5 + k * 0.05);
+    assert.equal(p.y, platform.y, `platform ${n} at y=${platform.y}`);
+    world.players.delete(p.id);
+  }
+});
+test("one attack emits exactly one attack event, facing the windup direction", () => {
+  const p = create("single-event"),
+    t = Date.now() / 1000 + 1200;
+  world.beginTraining(p);
+  const i = world.instances.get(p.instance);
+  i.enemies[0].x = p.x + 40;
+  p.direction = 1;
+  world.attack(p, 0, t);
+  p.direction = -1;
+  world.tick(0.05, t + 0.17);
+  const attacks = i.events.filter(
+    (e) => e.kind === "attack" && e.actorId === p.id,
+  );
+  assert.equal(attacks.length, 1);
+  assert.equal(attacks[0].direction, 1);
+  assert.ok(attacks.every((e) => e.range));
+  world.returnTown(p);
+});
+test("snapshot shop list is cached and refreshed after shop actions", () => {
+  const owner = create("cache-owner");
+  const before = world.snapshot(owner).shops;
+  assert.equal(world.snapshot(owner).shops, before, "reused between ticks");
+  world.createShop(owner, {
+    name: "แคช",
+    item: "hp",
+    price: 10,
+    qty: 2,
+    key: "cache-shop-0001",
+  });
+  const after = world.snapshot(owner).shops;
+  assert.notEqual(after, before);
+  assert.ok(after.some((s) => s.owner === owner.id && s.qty === 2));
+  world.closeShop(owner, "cache-shop-close1");
+  assert.ok(!world.snapshot(owner).shops.some((s) => s.owner === owner.id));
+});
 test("WAL-safe backup opens independently with intact character state", async () => {
   const Database = (await import("better-sqlite3")).default;
   const file = path.join(dir, "verified-backup.sqlite");

@@ -50,7 +50,8 @@ export const WORLD = {
   ground: 600,
   platforms: [
     { x: 570, y: 460, w: 230 },
-    { x: 1100, y: 405, w: 260 },
+    // Max jump height is ~184px (vy 650, gravity 1150); keep every platform below that.
+    { x: 1100, y: 440, w: 260 },
     { x: 1620, y: 470, w: 210 },
   ],
   npcs: [

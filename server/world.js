@@ -15,6 +15,18 @@ export const players = new Map(),
   parties = new Map(),
   trades = new Map();
 const now = () => Date.now() / 1000;
+// Snapshots go out 20×/s per player; shops change only via the three shop actions below.
+let shopCache = null;
+export function shopList() {
+  return (shopCache ??= db
+    .prepare(
+      "SELECT s.*,c.name AS ownerName FROM shops s JOIN characters c ON c.id=s.owner",
+    )
+    .all());
+}
+export function invalidateShops() {
+  shopCache = null;
+}
 export function live(id) {
   return [...players.values()].find((p) => p.id === id);
 }
@@ -117,6 +129,7 @@ export function createShop(p, { name, item, price, qty, key }) {
     );
     return { message: "เปิดร้านแล้ว ไอเทมถูกเก็บเข้าร้าน", id };
   });
+  invalidateShops();
   sync(p);
   return result;
 }
@@ -137,6 +150,7 @@ export function buyShop(p, { id, key }) {
     db.prepare("UPDATE shops SET qty=qty-1 WHERE id=? AND qty>0").run(id);
     return { message: "ซื้อสินค้าจาก " + s.name + " สำเร็จ" };
   });
+  invalidateShops();
   sync(p);
   const shop = db.prepare("SELECT owner FROM shops WHERE id=?").get(id);
   const seller = shop && live(shop.owner);
@@ -154,6 +168,7 @@ export function closeShop(p, key) {
     db.prepare("DELETE FROM shops WHERE id=?").run(s.id);
     return { message: "ปิดร้านและคืนสินค้าคงเหลือแล้ว" };
   });
+  invalidateShops();
   sync(p);
   return result;
 }
@@ -475,17 +490,6 @@ function resolveAttack(p, t) {
     at: t,
   });
   const range = c.range + ACTIONS[skill].rangeBonus;
-  i.events.push({
-    id: randomUUID(),
-    kind: "attack",
-    x: p.x,
-    y: p.y - 50,
-    color: c.color,
-    direction: p.direction,
-    class: p.class,
-    skill,
-    at: t,
-  });
   let hits = 0;
   for (const e of i.enemies) {
     if (
@@ -934,11 +938,7 @@ export function snapshot(p) {
           events: i.events,
         }
       : null,
-    shops: db
-      .prepare(
-        "SELECT s.*,c.name AS ownerName FROM shops s JOIN characters c ON c.id=s.owner",
-      )
-      .all(),
+    shops: shopList(),
     party: party
       ? {
           ...party,
