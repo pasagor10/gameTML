@@ -1,3 +1,8 @@
+import {
+  queueSpriteSets,
+  createSpriteRegistry,
+  playSpriteSet,
+} from "/sprite-sets.js?v=0.16.0";
 // Presentation only. Character creation and authentication stay in game.js.
 export function createSelectionPreview() {
   const host = document.querySelector("#hero-preview");
@@ -7,12 +12,16 @@ export function createSelectionPreview() {
   const colors = { swordsman: 0xffcf82, archer: 0x9bf1c2, mage: 0xd8b5ff };
   class SelectionScene extends Phaser.Scene {
     preload() {
+      queueSpriteSets(this);
       this.load.spritesheet("selection-heroes", "/assets/heroes.png", {
         frameWidth: 512,
         frameHeight: 512,
       });
     }
     create() {
+      this.sprites = createSpriteRegistry(this);
+      this.previewMode = "idle";
+      this.previewAt = 0;
       this.runes = this.add.graphics();
       this.aura = this.add
         .ellipse(350, 260, 265, 370, 0x6ddcff, 0.035)
@@ -40,11 +49,10 @@ export function createSelectionPreview() {
     }
     select(burst = true) {
       if (!this.ready) return;
-      const index =
-          ["swordsman", "archer", "mage"].indexOf(selected.job) +
-          (selected.gender === "female" ? 3 : 0),
-        color = colors[selected.job];
-      this.hero.setFrame(index);
+      const color = colors[selected.job];
+      this.sprites.want("sets", `${selected.job}-${selected.gender}`);
+      this.hero.setVisible(false);
+      this.previewMode = "idle";
       this.runes.clear();
       this.pedestal.clear();
       this.pedestal.fillStyle(0x142b41, 0.85);
@@ -70,15 +78,14 @@ export function createSelectionPreview() {
         this.runes.fillTriangle(x, y - 4, x + 3, y, x, y + 4);
       }
       this.hero.setAlpha(1);
-      this.hero.setScale(395 / 512);
+
       this.hero.setTint(0xffffff);
       if (burst && !reducedMotion.matches) {
         this.tweens.killTweensOf(this.hero);
-        this.hero.setAlpha(0.3).setScale(370 / 512);
+        this.hero.setAlpha(0.3);
         this.tweens.add({
           targets: this.hero,
           alpha: 1,
-          scale: 395 / 512,
           duration: 330,
           ease: "Cubic.Out",
         });
@@ -106,9 +113,31 @@ export function createSelectionPreview() {
       }
     }
     update(time) {
+      const set = this.sprites.heroes.get(`${selected.job}-${selected.gender}`);
+      if (set) {
+        let mode = this.previewMode;
+        if (time - this.previewAt > 1800) mode = this.previewMode = "idle";
+        const seconds = reducedMotion.matches ? 0 : time / 1000;
+        const startedAt = this.previewAt / 1000;
+        const pose = { state: mode, frame: 0 };
+        const p = {
+          direction: 1,
+          action: ["attack", "skill"].includes(mode)
+            ? {
+                startedAt,
+                impactAt: startedAt + 0.55,
+                endsAt: startedAt + 1.8,
+              }
+            : null,
+        };
+        playSpriteSet(this.hero, { ...set, height: 345 }, p, pose, seconds);
+        this.hero
+          .setVisible(true)
+          .setFlipX(set.facing < 0)
+          .setPosition(350, 455)
+          .setAngle(0);
+      }
       if (reducedMotion.matches) return;
-      this.hero.y = 455 + Math.sin(time * 0.0018) * 4;
-      this.hero.angle = Math.sin(time * 0.0012) * 0.55;
       this.aura.alpha = 0.7 + Math.sin(time * 0.001) * 0.3;
       for (const m of this.motes) {
         m.dot.x = m.x + Math.sin(time * 0.0004 + m.phase) * 18;
@@ -149,6 +178,12 @@ export function createSelectionPreview() {
     setHero(job, gender) {
       selected = { job, gender };
       if (ready) game.scene.getScenes()[0].select();
+    },
+    preview(mode) {
+      if (!ready || !["idle", "run", "attack", "skill"].includes(mode)) return;
+      const scene = game.scene.getScenes()[0];
+      scene.previewMode = mode;
+      scene.previewAt = scene.time.now;
     },
     destroy() {
       observer.disconnect();

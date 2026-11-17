@@ -1,3 +1,8 @@
+import { TOWN_ANIMS, TOWN_LAYOUT, TOWN_PROPS } from "/shared/town-layout.js";
+import { createWorldDetails } from "/world-details.js?v=3";
+import { rpgPanel, bindRpgPanel, gearShop } from "/rpg-ui.js?v=1";
+import { GEAR, CLASS_SKILLS, SPECIALIZATIONS } from "/shared/rpg.js";
+import { createTownNpcs } from "/town-npcs.js?v=3";
 import { sampleMotion } from "/shared/smoothing.js";
 import { ACTIONS } from "/shared/motion.js";
 import {
@@ -6,9 +11,16 @@ import {
   animateSlime,
   monsterDeath,
 } from "/combat-visuals.js?v=0.3.1";
-import { createSelectionPreview } from "/selection-scene.js?v=0.2.2";
-import { CLASSES, ITEMS, FLOORS, WORLD } from "/shared/config.js";
-import { createParallax } from "/parallax.js?v=0.4.0";
+import { createSelectionPreview } from "/selection-scene.js?v=0.6.1";
+import {
+  CLASSES,
+  ITEMS,
+  FLOORS,
+  WORLD,
+  areaWidth,
+  combatStats,
+} from "/shared/config.js";
+import { createParallax } from "/parallax.js?v=0.7.0";
 import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.0";
 import { createCombatFx } from "/combat-fx.js?v=0.5.1";
 import {
@@ -23,9 +35,12 @@ import {
   playSpriteSet,
   playMonsterSet,
   playMonsterDeath,
-} from "/sprite-sets.js?v=0.13.0";
+} from "/sprite-sets.js?v=0.16.0";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
+let lobbyCharacterId = null;
+let lobbyMode = "loading";
+let lastRpgPanelHash = "";
 let job = "swordsman",
   gender = "female",
   account = null,
@@ -118,22 +133,45 @@ async function refreshAccount() {
   $("#account-status").textContent = account
     ? `เชื่อมต่อแล้ว · ${account.name.startsWith("guest-") ? "นักเดินทาง" : account.name} · บันทึกบนเซิร์ฟเวอร์`
     : "เล่นได้ทันทีแบบผู้มาเยือน · บันทึกบนเซิร์ฟเวอร์";
-  $("#saved-characters").innerHTML = characters
-    .map(
-      (c) =>
-        `<button data-resume="${c.id}">${CLASSES[c.class].icon} ${escape(c.name)} · Lv.${c.level} ↗</button>`,
-    )
-    .join("");
+  $("#character-count").textContent = `${characters.length} / 3`;
+  $("#saved-characters").innerHTML = characters.length
+    ? characters
+        .map(
+          (c) =>
+            `<button data-resume="${c.id}" class="saved-hero"><span class="saved-portrait hero-art" style="${lobbyHeroStyle(c.class, c.gender)}"></span><span><strong>${escape(c.name)}</strong><small>${CLASSES[c.class].name}</small></span><b>Lv.${c.level}</b></button>`,
+        )
+        .join("")
+    : '<p class="empty-roster">ยังไม่มีผู้กล้าในบัญชีนี้<br><span>เลือกคลาสแล้วสร้างตำนานแรกของคุณ</span></p>';
+  $("#new-hero").disabled = characters.length >= 3;
+  $("#new-hero").title =
+    characters.length >= 3
+      ? "มีผู้กล้าครบ 3 ตัวแล้ว · เลือกตัวละครเดิมเพื่อเข้าเกม"
+      : "สร้างตัวละครใหม่";
   $$("[data-resume]").forEach(
     (b) =>
       (b.onclick = () => {
         const c = characters.find((c) => c.id === b.dataset.resume);
+        lobbyMode = "roster";
+        lobbyCharacterId = c.id;
         selectedId = c.id;
         job = c.class;
         gender = c.gender;
-        showPrologue();
+        $("#character-name").value = c.name;
+        $("#character-name").readOnly = true;
+        renderCards();
       }),
   );
+  if (characters.length) {
+    if (lobbyMode !== "create" || !lobbyCharacterId) {
+      const button =
+        $(`[data-resume="${lobbyCharacterId}"]`) || $("[data-resume]");
+      button?.click();
+    } else renderCards();
+  } else {
+    lobbyMode = "create";
+    lobbyCharacterId = null;
+    renderCards();
+  }
 }
 let selectionPreview;
 const heroDescriptions = {
@@ -157,41 +195,82 @@ const heroDescriptions = {
   },
 };
 function renderCards() {
-  const c = CLASSES[job],
+  const saved = characters.find((c) => c.id === lobbyCharacterId);
+  const c = saved ? { ...CLASSES[job], ...combatStats(saved) } : CLASSES[job],
     detail = heroDescriptions[job];
+  $("#landing").dataset.heroClass = job;
+  $("#landing").dataset.lobbyMode = lobbyMode;
+  $("#roster-subtitle").textContent =
+    lobbyMode === "create" ? "CREATE A NEW HERO" : "YOUR CHARACTERS";
+  $("#roster-title").textContent =
+    lobbyMode === "create" ? "สร้างผู้กล้า" : "ผู้กล้าของคุณ";
+  $("#creation-back").hidden = lobbyMode !== "create" || !characters.length;
+  $("#entry-title").textContent = saved
+    ? `${saved.name} · Lv.${saved.level}`
+    : "เริ่มต้นตำนานใหม่";
+  $("#lobby-switch-label").textContent =
+    lobbyMode === "create" ? "เปลี่ยนคลาส" : "เลือกตัวละคร";
+  $$("[data-cycle]").forEach((b) =>
+    b.setAttribute(
+      "aria-label",
+      lobbyMode === "create" ? "เปลี่ยนคลาส" : "เปลี่ยนตัวละคร",
+    ),
+  );
+  $("#lobby-level").textContent = String(saved?.level || 1).padStart(2, "0");
+  $("#identity-label").innerHTML = saved
+    ? "ผู้กล้าที่เลือก <small>พร้อมเดินทางต่อ</small>"
+    : "ชื่อผู้กล้าใหม่ <small>2–20 ตัวอักษร</small>";
+  $("#start-label").textContent = saved ? "เข้าสู่โลก" : "สร้างผู้กล้า";
+  $("#start").disabled = !saved && characters.length >= 3;
+  $$("[data-resume]").forEach((b) => {
+    b.classList.toggle("active", b.dataset.resume === lobbyCharacterId);
+    b.setAttribute(
+      "aria-pressed",
+      String(b.dataset.resume === lobbyCharacterId),
+    );
+  });
   $(".hero-showcase").style.setProperty(
     "--hero-accent",
     "#" + c.color.toString(16).padStart(6, "0"),
   );
-  $("#selected-class").textContent = c.name;
+  $("#selected-class").textContent = saved?.name || c.name;
   $("#selected-epithet").textContent = detail.title;
   $("#selected-lore").textContent = detail.lore;
-  $(".hero-fallback").style.cssText = heroStyle(job, gender);
+  $(".hero-fallback").style.cssText = lobbyHeroStyle(job, gender);
   $("#hero-stats").innerHTML =
-    `<div class="stats-heading"><span>พลังเริ่มต้น</span><small>BASE ATTRIBUTES</small></div><p class="class-role">${detail.role}</p>${[
-      ["HP", "พลังชีวิต", c.hp, 180],
-      ["MP", "พลังเวท", c.mp, 150],
-      ["ATK", "พลังโจมตี", c.atk, 35],
-      ["DEF", "พลังป้องกัน", c.def, 12],
+    `<div class="class-identity"><span>${c.icon}</span><div><h3>${c.name}</h3><p class="class-role">${detail.role}</p></div></div><div class="stats-heading"><span>${saved ? "ค่าสถานะปัจจุบัน" : "ค่าสถานะเริ่มต้น"}</span><small>ATTRIBUTES</small></div>${[
+      ["HP", "พลังชีวิต", c.hp, saved ? c.hp : 180],
+      ["MP", "พลังเวท", c.mp, saved ? c.mp : 150],
+      ["ATK", "พลังโจมตี", c.atk, saved ? Math.max(35, c.atk) : 35],
+      ["DEF", "พลังป้องกัน", c.def, saved ? Math.max(12, c.def) : 12],
     ]
       .map(
         ([key, label, value, max]) =>
-          `<div class="attribute"><div><span>${key} <small>${label}</small></span><b>${value}</b></div><div class="attribute-track"><i style="width:${(value / max) * 100}%"></i></div></div>`,
+          `<div class="attribute"><div><span><b>${key}</b> <small>${label}</small></span><strong>${value}</strong></div><div class="attribute-track"><i style="width:${Math.min(100, (value / max) * 100)}%"></i></div></div>`,
       )
-      .join(
-        "",
-      )}<div class="signature-skill"><small>ความสามารถอาชีพ</small><p>${detail.skill}</p></div>`;
+      .join("")}
+  <div class="stats-heading skill-heading"><span>สกิลประจำคลาส</span><small>SKILL PREVIEW</small></div><div class="lobby-skills">${CLASS_SKILLS[job].map((skill, i) => `<button data-lobby-skill="${i}" title="${skill.detail}"><span>${skill.icon}</span><div><strong>${skill.name}</strong><small>${ACTIONS[i + 1].mp} MP · ${ACTIONS[i + 1].cooldown} วินาที</small></div><b>${["Q", "W", "E"][i]}</b></button>`).join("")}</div>`;
+  $$("[data-lobby-skill]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        selectionPreview?.preview("skill");
+        b.classList.add("skill-previewing");
+        setTimeout(() => b.classList.remove("skill-previewing"), 800);
+      }),
+  );
   $("#class-cards").innerHTML = JOBS.map(
     (name, i) =>
-      `<button class="hero-card ${name === job ? "active" : ""}" data-class="${name}" aria-pressed="${name === job}" aria-label="เลือก${CLASSES[name].name}"><span class="hero-art" style="${heroStyle(name, gender)}" aria-hidden="true"></span><span class="class-card-copy"><small>${eng[i]}</small><strong>${CLASSES[name].name}</strong></span><span class="selected-mark" aria-hidden="true">◆</span></button>`,
+      `<button class="hero-card ${name === job ? "active" : ""}" data-class="${name}" aria-pressed="${name === job}" aria-label="เลือก${CLASSES[name].name}"><span class="hero-art" style="${lobbyHeroStyle(name, gender)}" aria-hidden="true"></span><span class="class-card-copy"><small>${eng[i]}</small><strong>${CLASSES[name].name}</strong><em>${heroDescriptions[name].role}</em></span><span class="class-order">0${i + 1}</span><span class="selected-mark" aria-hidden="true">◆</span></button>`,
   ).join("");
-  $$("[data-gender]").forEach((b) =>
-    b.setAttribute("aria-pressed", String(b.dataset.gender === gender)),
-  );
+  $$("[data-gender]").forEach((b) => {
+    b.setAttribute("aria-pressed", String(b.dataset.gender === gender));
+    b.classList.toggle("active", b.dataset.gender === gender);
+  });
   selectionPreview?.setHero(job, gender);
   $$("[data-class]").forEach(
     (b) =>
       (b.onclick = () => {
+        if (lobbyCharacterId) resetLobbyCreation();
         job = b.dataset.class;
         renderCards();
         tone(550, 0.1);
@@ -201,6 +280,7 @@ function renderCards() {
 $$("[data-gender]").forEach(
   (b) =>
     (b.onclick = () => {
+      if (lobbyCharacterId) resetLobbyCreation();
       gender = b.dataset.gender;
       $$("[data-gender]").forEach((x) => x.classList.toggle("active", x === b));
       renderCards();
@@ -212,11 +292,19 @@ try {
 } catch {
   /* The full-body static art remains available if WebGL is unavailable. */
 }
+$$("[data-preview]").forEach(
+  (b) => (b.onclick = () => selectionPreview?.preview(b.dataset.preview)),
+);
 refreshAccount().catch(() => toast("เซิร์ฟเวอร์ยังไม่พร้อม กรุณาลองใหม่", true));
 $("#start").onclick = async () => {
   const b = $("#start");
   b.disabled = true;
   try {
+    if (lobbyCharacterId) {
+      selectedId = lobbyCharacterId;
+      enterGame();
+      return;
+    }
     const name = $("#character-name").value.trim();
     if (name.length < 2) throw Error("กรุณาตั้งชื่อตัวละครอย่างน้อย 2 ตัวอักษร");
     if (!account) {
@@ -239,6 +327,10 @@ function modal(title, html, panel) {
   $("#modal-title").textContent = title;
   $("#modal-body").innerHTML = html;
   $("#modal").classList.remove("hidden");
+  $("#modal").classList.toggle(
+    "rpg-modal",
+    ["inventory", "class", "weapon"].includes(panel),
+  );
   if (socket?.connected)
     socket.emit("player:input", { direction: 0, seq: ++seq, jump: false });
 }
@@ -402,6 +494,33 @@ function updateHUD() {
     d = state.dungeon;
   $("#player-name").textContent = p.name;
   $("#player-level").textContent = "Lv." + p.level;
+  $("#player-class").textContent =
+    SPECIALIZATIONS[p.class].find((s) => s.id === p.specialization)?.name ||
+    CLASSES[p.class].name;
+  $("#exp-label").textContent = `${p.exp} / ${p.level * 80} EXP`;
+  if (["inventory", "class"].includes(activePanel)) {
+    const hash = JSON.stringify([
+      p.equipment,
+      p.ownedEquipment,
+      p.inventory,
+      p.specialization,
+      p.level,
+      p.gold,
+      state.area,
+    ]);
+    if (hash !== lastRpgPanelHash) showPanel(activePanel);
+  } else if (activePanel === "weapon") {
+    const hash = JSON.stringify([p.ownedEquipment, p.gold]);
+    if (hash !== lastRpgPanelHash) showPanel("weapon");
+  }
+  CLASS_SKILLS[p.class].forEach((skill, i) => {
+    const button = $(`[data-action="skill${i + 1}"]`);
+    button.querySelector("b").textContent = skill.icon;
+    button.querySelector("small").textContent = skill.name;
+    button.dataset.tip = `${skill.name} · ${skill.detail} · ${ACTIONS[i + 1].mp} MP · ${ACTIONS[i + 1].cooldown}s`;
+    button.setAttribute("aria-label", button.dataset.tip);
+    button.querySelector(".skill-cost").textContent = ACTIONS[i + 1].mp + " MP";
+  });
   $("#avatar").style.cssText = heroStyle(p.class, p.gender);
   $("#hp-fill").style.width = (p.hp / p.maxHp) * 100 + "%";
   $("#mp-fill").style.width = (p.mp / p.maxMp) * 100 + "%";
@@ -441,7 +560,22 @@ function updateHUD() {
       ? "ถ้ำหลวง · ชั้น " + d.floor
       : "เมืองหน้าถ้ำหลวง";
   $("#online-count").textContent = "● " + state.online + " ออนไลน์";
-  $("#map-dot").setAttribute("cx", String(8 + (p.x / WORLD.width) * 200));
+  const mapW = areaWidth(state.area);
+  $("#map-dot").setAttribute("cx", String(8 + (p.x / mapW) * 200));
+  $("#map-dot").setAttribute(
+    "cy",
+    String(52 - ((WORLD.ground - p.y) / 450) * 43),
+  );
+  $("#map-platforms").setAttribute(
+    "d",
+    "M8 52H211" +
+      (state.area === "town" ? WORLD.platforms : WORLD.dungeonPlatforms)
+        .map(
+          (q) =>
+            `M${8 + (q.x / mapW) * 200} ${52 - ((WORLD.ground - q.y) / 450) * 43}h${(q.w / mapW) * 200}`,
+        )
+        .join(""),
+  );
   $("#auto-button").classList.toggle("on", p.auto);
   $("#auto-button small").textContent = p.auto ? "เปิด" : "ปิด";
   $("#quest-description").textContent = d?.training
@@ -453,8 +587,18 @@ function updateHUD() {
       : p.quest >= 3
         ? "ตำนานบทแรกสำเร็จ! กลับไปท้าทายดันเจียนได้อีกครั้ง"
         : "คุยกับผู้ใหญ่คำ แล้วเข้าสู่ประตูถ้ำหลวง";
-  $("#quest-counter").textContent = `ดันเจียนที่พิชิต ${p.quest} / 3`;
-  $("#quest-fill").style.width = (p.quest / 3) * 100 + "%";
+  const streak =
+    d && d.streakUntil > state.time && d.streak > 1
+      ? ` · ต่อเนื่อง ×${d.streak}`
+      : "";
+  $("#quest-counter").textContent =
+    d && !d.training
+      ? `กำจัด ${d.defeated} / ${d.totalEnemies}${streak} · SPACE หลบพื้นเตือน`
+      : `ดันเจียนที่พิชิต ${p.quest} / 3`;
+  $("#quest-fill").style.width =
+    (d && !d.training
+      ? (d.defeated / Math.max(1, d.totalEnemies)) * 100
+      : (p.quest / 3) * 100) + "%";
   $("#stage-clear").classList.toggle(
     "hidden",
     !d?.clear || d?.training || p.hp <= 0 || p.auto,
@@ -471,7 +615,8 @@ function updateHUD() {
       state.area !== "dungeon" ||
       p.mp < ACTIONS[i].mp ||
       remaining > 0;
-    skillButton.title = p.mp < ACTIONS[i].mp ? "MP ไม่พอ" : "";
+    skillButton.title =
+      p.mp < ACTIONS[i].mp ? "MP ไม่พอ" : skillButton.dataset.tip;
     button.style.display = remaining > 0 ? "grid" : "none";
     button.textContent = remaining > 0 ? Math.ceil(remaining) : "";
   }
@@ -498,7 +643,10 @@ function nearby() {
   const p = state.self;
   if (state.area === "dungeon")
     return state.dungeon.clear ? { id: "next", label: "เข้าสู่ด่านต่อไป" } : null;
-  const npc = WORLD.npcs.find((n) => Math.abs(n.x - p.x) < 105);
+  const npc = WORLD.npcs.find(
+    (n) =>
+      Math.abs(n.x - p.x) < 105 && Math.abs((n.y ?? WORLD.ground) - p.y) < 90,
+  );
   if (npc) return { ...npc, label: npc.name + " · " + npc.role };
   if (Math.abs(p.x - WORLD.portal) < 140)
     return { id: "portal", label: "เข้าสู่ดันเจียนถ้ำหลวง" };
@@ -554,30 +702,38 @@ function showPanel(panel) {
   const row = (icon, name, desc, button) =>
     `<div class="item-row"><span>${icon}</span><div><strong>${escape(name)}</strong><small>${escape(desc)}</small></div>${button || ""}</div>`;
   const btn = (data, label) => `<button ${data}>${label}</button>`;
-  if (panel === "inventory") {
+  if (panel === "inventory" || panel === "class") {
     modal(
-      "กระเป๋านักเดินทาง",
-      `<p>ทอง ${p.gold} · อาวุธ +${p.upgrade} · ${p.weapon ? "สวมอาวุธผู้พิทักษ์" : "อาวุธเริ่มต้น"} · ${p.armor ? "สวมเกราะนักเดินทาง" : "ชุดเริ่มต้น"}</p>${row("🧪", "ยาฟื้นฟู HP ×" + p.inventory.hp, "ฟื้นฟู 90 HP", btn('data-potion="hp"', "ใช้ยา"))}${row("💧", "ยาฟื้นฟู MP ×" + p.inventory.mp, "ฟื้นฟู 80 MP", btn('data-potion="mp"', "ใช้ยา"))}<div class="inventory-grid">${Array.from(
-        { length: 40 },
-        (_, i) => {
-          const items = [
-            ["⚔", p.upgrade ? "+" + p.upgrade : "1"],
-            ["🛡", p.armor ? "1" : "—"],
-            ["🧪", p.inventory.hp],
-            ["💧", p.inventory.mp],
-            ["💎", p.inventory.ore],
-          ];
-          return `<div class="inventory-slot">${items[i]?.[0] || ""}<small>${items[i]?.[1] ?? ""}</small></div>`;
-        },
-      ).join(
-        "",
-      )}</div><p class="hint">เดโมใช้อาวุธและเกราะอัตโนมัติเมื่อซื้อจาก NPC · วัตถุดิบดรอปจากมอนสเตอร์</p>`,
-      "inventory",
+      panel === "class" ? "เส้นทางผู้กล้า" : "อุปกรณ์ของผู้กล้า",
+      rpgPanel(p, state.area, panel),
+      panel,
     );
-    $$("[data-potion]").forEach(
+    lastRpgPanelHash = JSON.stringify([
+      p.equipment,
+      p.ownedEquipment,
+      p.inventory,
+      p.specialization,
+      p.level,
+      p.gold,
+      state.area,
+    ]);
+    bindRpgPanel($("#modal-body"), p, {
+      open: showPanel,
+      action: async (event, data) => {
+        await emit(event, data);
+      },
+    });
+  } else if (panel === "weapon") {
+    modal("อริน · คลังอาวุธผู้พิทักษ์", gearShop(p), "weapon");
+    lastRpgPanelHash = JSON.stringify([p.ownedEquipment, p.gold]);
+    $$("[data-buy-gear]").forEach(
       (b) =>
         (b.onclick = async () => {
-          await emit("player:potion", { type: b.dataset.potion });
+          b.disabled = true;
+          const r = await transaction("equipment:buy", {
+            id: b.dataset.buyGear,
+          });
+          if (!r) b.disabled = false;
         }),
     );
   } else if (panel === "potion" || panel === "weapon") {
@@ -618,7 +774,7 @@ function showPanel(panel) {
   } else if (panel === "dungeon") {
     modal(
       "ประตูถ้ำหลวง · เลือกดันเจียน",
-      `<p>แต่ละชั้นมี 3 ด่าน: มอนสเตอร์ → อีลิท → บอส<br>ปาร์ตี้สูงสุด 3 คน สมาชิกต้องกดพร้อมก่อนหัวหน้าเริ่ม</p>${FLOORS.map((f, i) => `<div class="dungeon-card"><h3>0${i + 1} / ${f.name}</h3><p>บอส: ${f.boss} · 3 ด่าน · ${i === 0 ? "เริ่มต้นการผจญภัย" : "ผ่านชั้น " + i + " ก่อน"}</p><button data-floor="${i + 1}" ${p.unlocked < i + 1 ? "disabled" : ""}>${p.unlocked < i + 1 ? "🔒 ยังไม่ปลดล็อก" : "เข้าสู่ดันเจียน ➜"}</button></div>`).join("")}`,
+      `<p>แต่ละชั้นมี 3 ด่าน: มอนสเตอร์ → อีลิท → บอส<br>ปาร์ตี้สูงสุด 3 คน สมาชิกต้องกดพร้อมก่อนหัวหน้าเริ่ม</p><p class="hint">SPACE กระโดดหลบคริสตัลและบอสทุบพื้น · กำจัดศัตรูต่อเนื่องภายใน 5 วินาที รับโบนัสทองและ MP · ระวังบอสคลั่งเมื่อ HP ต่ำกว่าครึ่ง</p>${FLOORS.map((f, i) => `<div class="dungeon-card"><h3>0${i + 1} / ${f.name}</h3><p>บอส: ${f.boss} · 3 ด่าน · ${i === 0 ? "เริ่มต้นการผจญภัย" : "ผ่านชั้น " + i + " ก่อน"}</p><button data-floor="${i + 1}" ${p.unlocked < i + 1 ? "disabled" : ""}>${p.unlocked < i + 1 ? "🔒 ยังไม่ปลดล็อก" : "เข้าสู่ดันเจียน ➜"}</button></div>`).join("")}`,
     );
     $$("[data-floor]").forEach(
       (b) =>
@@ -803,7 +959,40 @@ function addChat(p) {
   while ($("#chat-log").children.length > 60)
     $("#chat-log").firstChild.remove();
   $("#chat-log").scrollTop = $("#chat-log").scrollHeight;
+  if (!$("#chat").classList.contains("open") && p.name !== "ระบบ")
+    $("#chat-toggle").classList.add("unread");
 }
+// Phone portrait: chat and quest details fold away (see mobile.css).
+$("#chat-toggle").onclick = () => {
+  const open = $("#chat").classList.toggle("open");
+  $("#chat-toggle").classList.remove("unread");
+  $("#chat-toggle").setAttribute("aria-expanded", String(open));
+  if (open) $("#chat-log").scrollTop = $("#chat-log").scrollHeight;
+};
+$("#quests").onclick = () => $("#quests").classList.toggle("open");
+// Block pinch and double-tap zoom (iOS ignores user-scalable=no).
+for (const type of ["gesturestart", "gesturechange", "gestureend"])
+  document.addEventListener(type, (e) => e.preventDefault(), {
+    passive: false,
+  });
+document.addEventListener(
+  "touchmove",
+  (e) => {
+    if (e.touches.length > 1) e.preventDefault();
+  },
+  { passive: false },
+);
+let lastTouchEnd = 0;
+document.addEventListener(
+  "touchend",
+  (e) => {
+    const now = Date.now();
+    if (now - lastTouchEnd < 300 && !e.target.closest("input,textarea,select"))
+      e.preventDefault();
+    lastTouchEnd = now;
+  },
+  { passive: false },
+);
 $("#chat-form").onsubmit = async (e) => {
   e.preventDefault();
   const input = $("#chat-input"),
@@ -829,6 +1018,13 @@ addEventListener("keydown", (e) => {
     closeModal();
     return;
   }
+  if (state && !e.repeat && ["KeyI", "KeyC"].includes(e.code)) {
+    e.preventDefault();
+    const panel = e.code === "KeyI" ? "inventory" : "class";
+    if (activePanel === panel) closeModal();
+    else showPanel(panel);
+    return;
+  }
   if (!state || activePanel) return;
   if (e.code === "Space" || e.key.startsWith("Arrow")) e.preventDefault();
   keys.add(e.code);
@@ -844,7 +1040,7 @@ addEventListener("keydown", (e) => {
   if (actions[e.code]) action(actions[e.code]);
   if (e.code === "Space") jumpQueued = true;
   if (e.code === "KeyF") interact();
-  if (e.code === "KeyI") showPanel("inventory");
+  if (e.code === "KeyV") toggleWalkability();
 });
 addEventListener("keyup", (e) => keys.delete(e.code));
 addEventListener("blur", () => {
@@ -914,7 +1110,27 @@ class Adventure extends Phaser.Scene {
   }
   preload() {
     queueSpriteSets(this);
-    this.load.image("town", "/assets/town.png");
+    // Town kit: pieces, props, animated props and far layers (tools/town-kit).
+    const kit = (key) => `/assets/town-kit/${key}.webp?v=5`;
+    for (const piece of new Set(TOWN_LAYOUT.map((p) => p.piece)))
+      this.load.image(`town-piece-${piece}`, kit(`piece-${piece}`));
+    for (const key of new Set(TOWN_PROPS.map((p) => p.key)))
+      if (key.startsWith("anim-")) {
+        const [frameWidth, frameHeight] = TOWN_ANIMS[key.slice(5)];
+        this.load.spritesheet(`town-${key}`, kit(key), {
+          frameWidth,
+          frameHeight,
+        });
+      } else this.load.image(`town-${key}`, kit(key));
+    for (const key of [
+      "street",
+      "far-sky",
+      "far-clouds",
+      "far-mountains",
+      "far-hills",
+      "far-treeline",
+    ])
+      this.load.image(`town-${key}`, kit(key));
     this.load.image("cave", "/assets/cave.png");
     this.load.image("knight-motion", "/assets/animations/knight-female.png");
     this.load.image("slime-motion", "/assets/animations/slime.png");
@@ -936,41 +1152,36 @@ class Adventure extends Phaser.Scene {
     this.monsterSets = this.sprites.monsters;
     this.slimeAtlas = registerMotionAtlas(this, "slime-motion", 6);
     this.telegraphs = this.add.graphics().setDepth(6);
+    this.dangerHint = this.add
+      .text(0, 0, "", {
+        fontFamily: "Noto Sans Thai",
+        fontSize: "15px",
+        color: "#ffe8a8",
+        stroke: "#322847",
+        strokeThickness: 5,
+        align: "center",
+      })
+      .setOrigin(0.5)
+      .setDepth(18);
     this.reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
     this.cameras.main.setBackgroundColor("#234b68");
     this.parallax = createParallax(this);
     this.fx = createCombatFx(this);
     this.parallax.setArea("town");
+    this.worldDetails = createWorldDetails(this);
+    this.showWalkability =
+      $("#walkability-toggle").getAttribute("aria-pressed") === "true";
     this.decor = this.add.graphics().setDepth(-5);
     this.effectLayer = this.add.graphics().setDepth(30);
     this.npcs = [];
-    for (const [i, n] of WORLD.npcs.entries()) {
-      const image = this.add
-        .image(n.x, 600, "heroes", [2, 5, 0, 0][i])
-        .setOrigin(0.5, 1)
-        .setDisplaySize(98, 98)
-        .setDepth(7);
-      const label = this.add
-        .text(n.x, 466, n.name + "\n" + n.role, {
-          fontFamily: "Noto Sans Thai",
-          fontSize: "13px",
-          color: "#fff1b5",
-          align: "center",
-          stroke: "#17384e",
-          strokeThickness: 4,
-          backgroundColor: "#17354a99",
-          padding: { x: 8, y: 4 },
-        })
-        .setOrigin(0.5, 0)
-        .setDepth(15);
-      this.npcs.push(image, label);
-    }
+    this.townNpcs = createTownNpcs(this, WORLD.npcs, this.sprites);
+    this.npcs = this.townNpcs.objects;
     this.portal = this.add
-      .ellipse(WORLD.portal, 518, 94, 150, 0x63eaff, 0.25)
+      .ellipse(WORLD.portal, WORLD.portalY, 94, 150, 0x63eaff, 0.25)
       .setStrokeStyle(3, 0xb5faff, 0.8)
       .setDepth(3);
     this.portalGlow = this.add
-      .ellipse(WORLD.portal, 518, 65, 125, 0x99f7ff, 0.2)
+      .ellipse(WORLD.portal, WORLD.portalY, 65, 125, 0x99f7ff, 0.2)
       .setDepth(3);
     this.tweens.add({
       targets: [this.portal, this.portalGlow],
@@ -982,7 +1193,7 @@ class Adventure extends Phaser.Scene {
       repeat: -1,
     });
     this.portalLabel = this.add
-      .text(WORLD.portal, 417, "ถ้ำหลวง\nประตูสู่ดอยนางนอน", {
+      .text(WORLD.portal, WORLD.portalY - 175, "ถ้ำหลวง\nประตูสู่ดอยนางนอน", {
         fontFamily: "Noto Sans Thai",
         fontSize: "15px",
         align: "center",
@@ -993,7 +1204,7 @@ class Adventure extends Phaser.Scene {
       .setOrigin(0.5)
       .setDepth(12);
     this.makePlatforms();
-    this.cameras.main.centerOn(380, 350);
+    this.cameras.main.centerOn(380, this.camY ?? 340);
     this.scale.on("resize", () => this.resize());
     this.resize();
     if (state) this.applySnapshot(state);
@@ -1001,7 +1212,23 @@ class Adventure extends Phaser.Scene {
   resize() {
     const w = this.scale.width,
       h = this.scale.height,
-      zoom = w < 700 ? Math.max(0.6, h / 900) : Math.max(0.7, h / 800);
+      portrait = h > w && w < 700,
+      // Portrait phones: frame by width so heroes stay readable, and put the
+      // ground near 2/3 of the screen so thumb controls sit below the action.
+      zoom = portrait
+        ? Phaser.Math.Clamp(w / 420, 0.75, 1.2)
+        : w < 700
+          ? Math.max(0.6, h / 900)
+          : Math.max(0.7, h / 800),
+      viewH = h / zoom;
+    this.portrait = portrait;
+    // Ground at ~2/3 on portrait phones, ~3/4 on short landscape screens
+    // (phones sideways); tall desktop windows keep the original framing.
+    this.camY = portrait
+      ? Math.min(850 - viewH / 2, WORLD.ground - 0.17 * viewH)
+      : h < 520
+        ? Math.min(850 - viewH / 2, WORLD.ground - 0.26 * viewH)
+        : 340;
     this.cameras.main.setZoom(zoom);
     this.cameras.main.setBounds(0, -100, 2400, 950);
     this.parallax?.resize();
@@ -1009,7 +1236,9 @@ class Adventure extends Phaser.Scene {
   makePlatforms() {
     this.decor.clear();
     const cave = state?.area === "dungeon";
-    for (const p of WORLD.platforms) {
+    for (const p of cave ? WORLD.dungeonPlatforms : WORLD.platforms) {
+      // Town ledges are painted into the architecture; collisions use WORLD.
+      if (!cave) continue;
       this.decor.fillStyle(0x152e40, 0.28);
       this.decor.fillEllipse(p.x + p.w / 2, p.y + 42, p.w - 15, 15);
       this.decor.fillStyle(cave ? 0x334461 : 0x71664d);
@@ -1114,7 +1343,7 @@ class Adventure extends Phaser.Scene {
       this.portal.setVisible(town);
       this.portalGlow.setVisible(town);
       this.makePlatforms();
-      this.cameras.main.centerOn(s.self.x, 340);
+      this.cameras.main.centerOn(s.self.x, this.camY);
       this.actors.forEach((a) => {
         a.image.x = s.self.x;
         a.image.y = s.self.y;
@@ -1230,6 +1459,35 @@ class Adventure extends Phaser.Scene {
     this.shopObjects.forEach((o) => o.setVisible(s.area === "town"));
   }
   effect(e) {
+    if (e.kind === "loot") {
+      if (e.actorId === state.self.id)
+        toast("ได้รับ " + GEAR[e.item].name + " · เปิดกระเป๋า I เพื่อสวมใส่");
+      return;
+    }
+    if (e.kind === "streak") {
+      const text = this.add
+        .text(e.x, e.y, `ต่อเนื่อง ×${e.streak} · +${e.bonus} ทอง · +4 MP`, {
+          fontFamily: "Noto Sans Thai",
+          fontSize: "18px",
+          color: "#ffe29a",
+          stroke: "#44301f",
+          strokeThickness: 4,
+        })
+        .setOrigin(0.5)
+        .setDepth(35);
+      this.tweens.add({
+        targets: text,
+        y: e.y - 55,
+        alpha: 0,
+        duration: 1400,
+        onComplete: () => text.destroy(),
+      });
+      return;
+    }
+    if (e.kind === "eruption") {
+      this.fx.death(e.x, e.y, false);
+      return;
+    }
     const source =
       this.actors.get(e.actorId)?.image || this.monsters.get(e.actorId)?.image;
     if (e.kind === "damage") {
@@ -1246,6 +1504,56 @@ class Adventure extends Phaser.Scene {
       tone(e.skill ? 220 : 480, 0.13);
       this.fx.attack(e);
     }
+  }
+  drawDungeonHazards(time) {
+    const g = this.telegraphs,
+      d = state.dungeon;
+    this.dangerHint.setVisible(false);
+    if (!d || d.clear) return;
+    const threats = [
+      ...(d.hazards || []).map((h) => ({ ...h, crystal: true })),
+      ...d.enemies
+        .filter((e) => e.action?.kind === "slam")
+        .map((e) => e.action),
+    ];
+    let hint = null;
+    for (const h of threats) {
+      const charging = time < h.impactAt;
+      if (!h.crystal) {
+        if (charging && Math.abs(h.x - state.self.x) < h.radius + 180) hint = h;
+        continue;
+      }
+      const progress = Phaser.Math.Clamp(
+        (time - h.startedAt) / (h.impactAt - h.startedAt),
+        0,
+        1,
+      );
+      const color = charging ? 0xffca6b : 0xb7f7ff;
+      g.fillStyle(color, charging ? 0.12 + progress * 0.22 : 0.4);
+      g.fillEllipse(h.x, WORLD.ground - 3, h.radius * 2, 26);
+      g.lineStyle(charging ? 2 : 3, color, 0.9);
+      g.strokeEllipse(h.x, WORLD.ground - 3, h.radius * 2, 26);
+      for (let x = h.x - h.radius + 12; x < h.x + h.radius; x += 28) {
+        const height = charging ? 8 + progress * 10 : 45 + Math.sin(x) * 15;
+        g.fillStyle(charging ? 0xf4d08f : 0x9defff, charging ? 0.45 : 0.9);
+        g.fillTriangle(
+          x - 7,
+          WORLD.ground,
+          x,
+          WORLD.ground - height,
+          x + 7,
+          WORLD.ground,
+        );
+      }
+      if (charging && Math.abs(h.x - state.self.x) < h.radius + 180) hint = h;
+    }
+    if (hint)
+      this.dangerHint
+        .setVisible(true)
+        .setPosition(hint.x, WORLD.ground - 105)
+        .setText(
+          `${hint.crystal ? "คริสตัลปะทุ" : "บอสทุบพื้น"} · ${Math.max(0, hint.impactAt - time).toFixed(1)}s\nSPACE กระโดด หรือเดินหลบวง`,
+        );
   }
   dust(x, y, count = 7) {
     if (this.reducedMotion || this.children.length > 180) return;
@@ -1269,6 +1577,13 @@ class Adventure extends Phaser.Scene {
       performance.now() / 1000 +
       (serverOffset ?? state.time - performance.now() / 1000);
     this.telegraphs.clear();
+    this.drawDungeonHazards(serverTime);
+    this.townNpcs.update(
+      time,
+      state.area === "town",
+      this.reducedMotion,
+      state.self,
+    );
     for (const [id, a] of this.actors) {
       const p = a.target,
         pose = animateHero(a.image, p, serverTime, this.knightAtlas),
@@ -1360,6 +1675,11 @@ class Adventure extends Phaser.Scene {
       m.image.setPosition(point.x, point.y);
       animateMonsterBody(m, e, serverTime, time, this.slimeAtlas);
       this.fx.applyKick(m, m.image);
+      if (e.boss)
+        m.label.setText(
+          FLOORS[state.dungeon.floor - 1].boss +
+            (e.hp <= e.maxHp * 0.5 ? " · คลั่ง!" : ""),
+        );
       m.label.setPosition(m.image.x, m.image.y - m.size - 14);
       m.bar.setPosition(m.image.x, m.image.y);
       m.lagHp ??= e.hp;
@@ -1391,16 +1711,16 @@ class Adventure extends Phaser.Scene {
         );
         this.telegraphs.fillStyle(0xff725b, 0.08 + progress * 0.25);
         this.telegraphs.fillEllipse(
-          e.x + e.action.direction * 42,
+          e.action.kind === "slam" ? e.action.x : e.x + e.action.direction * 42,
           e.y - 3,
-          e.boss ? 240 : 160,
+          e.action.kind === "slam" ? e.action.radius * 2 : e.boss ? 240 : 160,
           30,
         );
         this.telegraphs.lineStyle(2, 0xff9474, 0.8);
         this.telegraphs.strokeEllipse(
-          e.x + e.action.direction * 42,
+          e.action.kind === "slam" ? e.action.x : e.x + e.action.direction * 42,
           e.y - 3,
-          e.boss ? 240 : 160,
+          e.action.kind === "slam" ? e.action.radius * 2 : e.boss ? 240 : 160,
           30,
         );
       }
@@ -1414,15 +1734,91 @@ class Adventure extends Phaser.Scene {
       const targetX = Phaser.Math.Clamp(
           me.image.x + this.lookX,
           c.width / c.zoom / 2,
-          WORLD.width - c.width / c.zoom / 2,
+          areaWidth(state.area) - c.width / c.zoom / 2,
         ),
+        // Portrait follows climbs fully (terraces rise far above the ground).
         targetY =
-          340 + Phaser.Math.Clamp((me.image.y - WORLD.ground) * 0.3, -50, 0);
+          this.camY +
+          (this.portrait
+            ? Math.min(0, me.image.y - WORLD.ground)
+            : Phaser.Math.Clamp((me.image.y - WORLD.ground) * 0.3, -50, 0));
       c.centerOn(
         Phaser.Math.Linear(c.midPoint.x, targetX, 0.08),
         Phaser.Math.Linear(c.midPoint.y, targetY, 0.06),
       );
     }
+    this.worldDetails.update(
+      time,
+      state,
+      this.showWalkability,
+      this.reducedMotion,
+    );
     this.parallax.update(time);
   }
+}
+
+function toggleWalkability() {
+  const button = $("#walkability-toggle");
+  const enabled = button.getAttribute("aria-pressed") !== "true";
+  button.setAttribute("aria-pressed", String(enabled));
+  if (scene) scene.showWalkability = enabled;
+}
+$("#walkability-toggle").onclick = toggleWalkability;
+
+function resetLobbyCreation() {
+  lobbyMode = "create";
+  lobbyCharacterId = null;
+  $("#character-name").readOnly = false;
+  $("#character-name").value = "";
+}
+$("#new-hero").onclick = () => {
+  resetLobbyCreation();
+  renderCards();
+  $("#character-name").focus();
+};
+function cycleLobbyClass(direction) {
+  if (lobbyMode === "roster" && characters.length) {
+    const index = characters.findIndex((c) => c.id === lobbyCharacterId);
+    const next =
+      characters[(index + direction + characters.length) % characters.length];
+    $(`[data-resume="${next.id}"]`)?.click();
+    return;
+  }
+  if (lobbyMode !== "create") return;
+  if (lobbyCharacterId) resetLobbyCreation();
+  job = JOBS[(JOBS.indexOf(job) + direction + JOBS.length) % JOBS.length];
+  renderCards();
+  tone(550, 0.08);
+}
+$$("[data-cycle]").forEach(
+  (b) => (b.onclick = () => cycleLobbyClass(Number(b.dataset.cycle))),
+);
+$("#character-name").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !$("#start").disabled) {
+    e.preventDefault();
+    $("#start").click();
+  }
+});
+addEventListener("keydown", (e) => {
+  if (
+    $("#landing").classList.contains("hidden") ||
+    activePanel ||
+    e.repeat ||
+    ["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName)
+  )
+    return;
+  if (["ArrowLeft", "ArrowRight"].includes(e.code)) {
+    e.preventDefault();
+    cycleLobbyClass(e.code === "ArrowLeft" ? -1 : 1);
+  } else if (e.code === "Enter" && !$("#start").disabled) {
+    e.preventDefault();
+    $("#start").click();
+  }
+});
+
+$("#creation-back").onclick = () => {
+  if (characters.length) $("[data-resume]")?.click();
+};
+function lobbyHeroStyle(c, g) {
+  return heroStyle(c, g);
 }

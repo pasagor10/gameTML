@@ -1,3 +1,5 @@
+import { rpgBonuses } from "./rpg.js";
+import { townPlatforms, TOWN_SPOTS, TOWN_WIDTH } from "./town-layout.js";
 export const CLASSES = {
   swordsman: {
     name: "นักดาบ",
@@ -48,22 +50,70 @@ export const FLOORS = [
 export const WORLD = {
   width: 2400,
   ground: 600,
-  platforms: [
+  // Town ledges, NPC spots and the portal come from the kit layout.
+  platforms: townPlatforms(),
+  dungeonPlatforms: [
     { x: 570, y: 460, w: 230 },
-    // Max jump height is ~184px (vy 650, gravity 1150); keep every platform below that.
     { x: 1100, y: 440, w: 260 },
     { x: 1620, y: 470, w: 210 },
   ],
   npcs: [
-    { id: "elder", x: 240, name: "ผู้ใหญ่คำ", role: "เควส", icon: "📜" },
-    { id: "potion", x: 620, name: "มีรา", role: "ร้านยา", icon: "🧪" },
-    { id: "weapon", x: 1040, name: "อริน", role: "ร้านอาวุธ", icon: "⚔" },
-    { id: "forge", x: 1420, name: "ลุงเหล็ก", role: "ตีบวก", icon: "⚒" },
+    {
+      id: "elder",
+      x: TOWN_SPOTS.elder,
+      name: "ผู้ใหญ่คำ",
+      role: "เควส",
+      icon: "📜",
+    },
+    {
+      id: "potion",
+      x: TOWN_SPOTS.potion,
+      name: "มีรา",
+      role: "ร้านยา",
+      icon: "🧪",
+    },
+    {
+      id: "weapon",
+      x: TOWN_SPOTS.weapon,
+      name: "อริน",
+      role: "ร้านอาวุธ",
+      icon: "⚔",
+    },
+    {
+      id: "forge",
+      x: TOWN_SPOTS.forge,
+      name: "ลุงเหล็ก",
+      role: "ตีบวก",
+      icon: "⚒",
+    },
   ],
-  portal: 2180,
+  portal: TOWN_SPOTS.portal.x,
+  portalY: TOWN_SPOTS.portal.y,
+  townWidth: TOWN_WIDTH,
 };
+// Walkable width of an area: the town is as long as its kit layout.
+export const areaWidth = (area) =>
+  area === "town" ? WORLD.townWidth : WORLD.width;
 export const maxHp = (p) =>
-  CLASSES[p.class].hp + (p.level - 1) * 12 + (p.armor ? 30 : 0);
-export const maxMp = (p) => CLASSES[p.class].mp + (p.level - 1) * 5;
+  CLASSES[p.class].hp + (p.level - 1) * 12 + (rpgBonuses(p).hp || 0);
+export const maxMp = (p) =>
+  CLASSES[p.class].mp + (p.level - 1) * 5 + (rpgBonuses(p).mp || 0);
 export const damage = (atk, def, mult = 1) =>
   Math.max(1, Math.floor((atk * mult * 100) / (100 + def)));
+
+export function combatStats(p) {
+  const c = CLASSES[p.class],
+    b = rpgBonuses(p);
+  return {
+    atk:
+      c.atk +
+      (p.level - 1) * 3 +
+      (p.equipment?.weapon === null ? 0 : p.upgrade * 8) +
+      (b.atk || 0),
+    def: c.def + (b.def || 0),
+    speed: c.speed + (b.speed || 0),
+    range: c.range + (b.range || 0),
+    hp: maxHp(p),
+    mp: maxMp(p),
+  };
+}

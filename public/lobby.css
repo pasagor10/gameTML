@@ -1,0 +1,1426 @@
+/* Full-screen character lobby. The scene is the stage; menus frame the hero. */
+#landing.game-lobby {
+  --lobby-accent: #e8ca88;
+  --lobby-glow: #c7a75e;
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  height: 100svh;
+  min-height: 660px;
+  overflow: hidden;
+  display: block;
+  background:
+    linear-gradient(180deg, #07132110, #07121c45),
+    url("/assets/cave.png") center 58% / cover no-repeat;
+  color: #e8ded0;
+}
+#landing.game-lobby[data-hero-class="archer"] {
+  --lobby-accent: #a0dec2;
+  --lobby-glow: #60ae97;
+}
+#landing.game-lobby[data-hero-class="mage"] {
+  --lobby-accent: #d5b3f4;
+  --lobby-glow: #aa87cb;
+}
+#landing.game-lobby::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(
+    ellipse at 50% 47%,
+    transparent 12%,
+    #03101c4d 58%,
+    #020914c9 100%
+  );
+  pointer-events: none;
+}
+#landing.game-lobby .landing-shade {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(
+      90deg,
+      #04101cc9,
+      transparent 32%,
+      transparent 68%,
+      #04101ce3
+    ),
+    linear-gradient(
+      0deg,
+      #020c17f0,
+      transparent 35%,
+      transparent 80%,
+      #03101aaf
+    );
+}
+#landing.game-lobby .lobby-atmosphere {
+  position: absolute;
+  z-index: -1;
+  top: 25%;
+  left: 25%;
+  width: 50%;
+  height: 65%;
+  background: radial-gradient(
+    ellipse at 50% 75%,
+    color-mix(in srgb, var(--lobby-glow) 14%, transparent),
+    transparent 62%
+  );
+  filter: blur(22px);
+  animation: lobby-breathe 7s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+#landing.game-lobby .landing-header {
+  height: 90px;
+  padding: 16px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+  border-bottom: 1px solid #d7c48a22;
+  background: linear-gradient(180deg, #03101cbb, transparent);
+}
+#landing.game-lobby .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: #f5dea5;
+}
+#landing.game-lobby .brand > span {
+  font-size: 32px;
+  color: #f3d38b;
+}
+#landing.game-lobby .brand > div {
+  font:
+    23px "Chonburi",
+    serif;
+}
+#landing.game-lobby .brand b {
+  font-size: 32px;
+}
+#landing.game-lobby .brand small {
+  font:
+    6px "Noto Sans Thai",
+    sans-serif;
+  letter-spacing: 3px;
+  display: block;
+  margin-top: 3px;
+  color: #b8beb9;
+}
+#landing.game-lobby .lobby-chapter {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #c4d5db;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+.lobby-chapter > i,
+.status-dot {
+  width: 5px;
+  height: 5px;
+  display: inline-block;
+  border-radius: 50%;
+  background: #8adbb8;
+  box-shadow: 0 0 8px #83d6b7;
+}
+#landing.game-lobby .lobby-chapter span {
+  border-left: 1px solid #8dabb64d;
+  padding-left: 12px;
+  color: #e2c58d;
+  font-size: 9px;
+}
+#landing.game-lobby #sound {
+  background: #0b202c9c;
+  border: 1px solid #b1c3bf50;
+  border-radius: 3px;
+  padding: 8px 14px;
+  color: #e6d9bc;
+  font-size: 10px;
+}
+#landing.game-lobby .lobby-layout {
+  position: absolute;
+  inset: 114px 32px 176px;
+  display: grid;
+  grid-template-columns: 278px minmax(300px, 1fr) 292px;
+  gap: 32px;
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 0;
+}
+#landing.game-lobby .lobby-panel {
+  position: relative;
+  min-height: 0;
+  border: 1px solid #baa16a69;
+  background: linear-gradient(135deg, #24414d80, #0b1c28ec 35%, #0b1c28d9);
+  box-shadow:
+    0 12px 40px #0005,
+    inset 0 0 0 4px #0b1a2555;
+  border-radius: 4px;
+  backdrop-filter: blur(10px);
+  padding: 19px;
+  align-self: start;
+  max-height: 100%;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #b59b6655 transparent;
+}
+#landing.game-lobby .lobby-panel::before {
+  content: "◆";
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 7px;
+  color: #bba26e;
+}
+#landing.game-lobby .lobby-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding-bottom: 17px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #e4c68635;
+}
+#landing.game-lobby .lobby-panel-title > span {
+  font-size: 25px;
+  color: #e6cd91;
+  font-family: serif;
+}
+#landing.game-lobby .lobby-panel-title small {
+  display: block;
+  font-size: 7px;
+  letter-spacing: 1.7px;
+  color: #879eaa;
+}
+#landing.game-lobby .lobby-panel-title h1,
+#landing.game-lobby .lobby-panel-title h2 {
+  font:
+    20px "Chonburi",
+    serif;
+  color: #eedba8;
+  margin: 4px 0 0;
+}
+#landing.game-lobby .lobby-panel-title > b {
+  margin-left: auto;
+  font:
+    29px Georgia,
+    serif;
+  color: #a9b7b23d;
+}
+#landing.game-lobby #class-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin: 0;
+}
+#landing.game-lobby #class-cards .hero-card {
+  position: relative;
+  width: 100%;
+  min-height: 92px;
+  height: auto;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 11px 8px 5px;
+  border: 1px solid #8099a03d;
+  background: linear-gradient(90deg, #35485238, #12263399);
+  border-radius: 3px;
+  color: #c8d7d8;
+  text-align: left;
+  overflow: hidden;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.2s;
+  box-shadow: none;
+}
+#landing.game-lobby #class-cards .hero-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: transparent;
+}
+#landing.game-lobby #class-cards .hero-card:hover {
+  border-color: #cfbe94a0;
+  background-color: #3a535964;
+  transform: translateX(2px);
+}
+#landing.game-lobby #class-cards .hero-card.active {
+  border-color: var(--lobby-accent);
+  background: linear-gradient(
+    100deg,
+    color-mix(in srgb, var(--lobby-glow) 28%, #1e303b),
+    #132a35d9
+  );
+  box-shadow:
+    inset 0 0 20px #d7c28a0c,
+    0 0 16px color-mix(in srgb, var(--lobby-glow) 12%, transparent);
+}
+#landing.game-lobby #class-cards .hero-card.active::before {
+  background: var(--lobby-accent);
+  box-shadow: 0 0 10px var(--lobby-accent);
+}
+#landing.game-lobby #class-cards .hero-art {
+  flex: 0 0 65px;
+  width: 65px;
+  height: 77px;
+  filter: drop-shadow(0 4px 5px #0006);
+}
+#landing.game-lobby .class-card-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+#landing.game-lobby #class-cards small {
+  font-size: 6px;
+  letter-spacing: 1.2px;
+  color: #a4bbbf;
+}
+#landing.game-lobby .class-card-copy strong {
+  font-size: 15px;
+  color: #f0dfbb;
+}
+#landing.game-lobby .class-card-copy em {
+  font-size: 8px;
+  font-style: normal;
+  color: #91aab5;
+}
+#landing.game-lobby .class-order {
+  position: absolute;
+  right: 8px;
+  top: 3px;
+  font:
+    23px Georgia,
+    serif;
+  color: #d3d4b81c;
+}
+#landing.game-lobby .selected-mark {
+  display: none;
+}
+#landing.game-lobby .hero-card.active .selected-mark {
+  display: block;
+  position: absolute;
+  right: 9px;
+  bottom: 8px;
+  color: var(--lobby-accent);
+  font-size: 8px;
+}
+#landing.game-lobby .roster-divider {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 22px 0 10px;
+  font-size: 10px;
+  color: #ccb98f;
+}
+#landing.game-lobby .roster-divider small {
+  font-size: 8px;
+  color: #92a5ac;
+}
+#landing.game-lobby #saved-characters {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+}
+#landing.game-lobby .saved-hero {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 5px 8px;
+  border: 1px solid #6a87943d;
+  border-radius: 3px;
+  background: #0a1926b3;
+  text-align: left;
+  color: #d5dddd;
+  min-height: 52px;
+  width: 100%;
+}
+#landing.game-lobby .saved-hero.active {
+  border-color: var(--lobby-accent);
+  background: #2d454a;
+}
+#landing.game-lobby .saved-portrait {
+  width: 33px;
+  height: 42px;
+  flex: 0 0 33px;
+}
+#landing.game-lobby .saved-hero > span:nth-child(2) {
+  display: flex;
+  flex-direction: column;
+}
+#landing.game-lobby .saved-hero strong {
+  font-size: 10px;
+  font-weight: 500;
+  color: #e1d4b7;
+}
+#landing.game-lobby .saved-hero small {
+  font-size: 8px;
+  color: #7f9ca8;
+}
+#landing.game-lobby .saved-hero > b {
+  margin-left: auto;
+  font:
+    10px Georgia,
+    serif;
+  color: #d7bd86;
+}
+#landing.game-lobby .empty-roster {
+  font-size: 10px;
+  line-height: 1.8;
+  color: #8ca3b0;
+  margin: 0;
+  padding: 10px 0;
+}
+#landing.game-lobby .empty-roster > span {
+  font-size: 8px;
+  color: #5e7b8d;
+}
+#landing.game-lobby .new-hero {
+  width: 100%;
+  margin: 10px 0 0;
+  border: 1px dashed #9aafa146;
+  background: #0b1f2c88;
+  border-radius: 3px;
+  padding: 8px;
+  color: #c5c4ae;
+  font-size: 10px;
+}
+#landing.game-lobby .new-hero b {
+  margin-right: 6px;
+  font-size: 13px;
+  color: #e8cc90;
+}
+#landing.game-lobby .new-hero:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+#landing.game-lobby #account-open {
+  font-size: 8px;
+  margin: 12px 0 0;
+  width: 100%;
+  color: #7d9ba9;
+  background: none;
+  padding: 0;
+}
+#landing.game-lobby .hero-showcase {
+  min-width: 0;
+  height: 100%;
+  position: relative;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+  isolation: auto;
+  --hero-accent: var(--lobby-accent);
+}
+#landing.game-lobby .hero-showcase::before {
+  display: none;
+}
+#landing.game-lobby #hero-preview {
+  position: absolute;
+  inset: 50px -35px 95px;
+  width: calc(100% + 70px);
+  height: auto;
+  transform: none;
+  z-index: 1;
+  pointer-events: none;
+}
+#landing.game-lobby #hero-preview canvas {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain;
+}
+#landing.game-lobby .hero-fallback {
+  position: absolute;
+  width: 290px;
+  height: 350px;
+  left: 50%;
+  top: 42%;
+  transform: translate(-50%, -50%);
+}
+#landing.game-lobby .showcase-location {
+  position: absolute;
+  left: 50%;
+  top: 1px;
+  transform: translateX(-50%);
+  text-align: center;
+  width: 100%;
+}
+#landing.game-lobby .showcase-location small {
+  display: block;
+  font-size: 12px;
+  color: #d5ddd6;
+  letter-spacing: 0.7px;
+}
+#landing.game-lobby .showcase-location span {
+  display: block;
+  font-size: 6px;
+  letter-spacing: 2px;
+  color: #88a9b5;
+  margin-top: 5px;
+}
+#landing.game-lobby .lobby-gender {
+  position: absolute;
+  top: 48px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2px;
+  background: #0719259c;
+  padding: 3px;
+  border: 1px solid #adbbac44;
+  border-radius: 3px;
+  z-index: 4;
+}
+#landing.game-lobby .gender-toggle button {
+  min-width: 52px;
+  min-height: 27px;
+  font-size: 9px;
+  padding: 4px 9px;
+  color: #93aeb8;
+  background: none;
+  border-radius: 2px;
+  border: 0;
+}
+#landing.game-lobby .gender-toggle button.active {
+  background: #d6bb7d;
+  color: #152735;
+  box-shadow: 0 1px 5px #0007;
+}
+#landing.game-lobby .hero-caption {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  width: 115%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 2;
+  pointer-events: none;
+}
+#landing.game-lobby .hero-caption::before {
+  content: "◆ ━━━━━ ◇ ━━━━━ ◆";
+  display: block;
+  color: var(--lobby-accent);
+  font-size: 8px;
+  letter-spacing: 3px;
+  margin-bottom: 7px;
+  opacity: 0.7;
+}
+#landing.game-lobby .hero-caption > small {
+  font-size: 8px;
+  color: var(--lobby-accent);
+  letter-spacing: 3px;
+}
+#landing.game-lobby .hero-caption h2 {
+  font:
+    37px/1.6 "Chonburi",
+    serif;
+  margin: 2px 0 0;
+  color: #fff0c9;
+  text-shadow:
+    0 3px 14px #00101d,
+    0 0 25px color-mix(in srgb, var(--lobby-glow) 25%, transparent);
+}
+#landing.game-lobby .hero-caption p {
+  max-width: none;
+  font-size: 9px;
+  color: #9ab5c1;
+  margin: 0;
+}
+#landing.game-lobby .hero-cycle {
+  position: absolute;
+  top: 43%;
+  width: 35px;
+  height: 57px;
+  font:
+    45px/1 Georgia,
+    serif;
+  padding: 0;
+  border: 0;
+  color: #d7bd89;
+  background: linear-gradient(90deg, #0a20337f, transparent);
+  opacity: 0.7;
+  z-index: 4;
+}
+#landing.game-lobby .hero-cycle:hover {
+  opacity: 1;
+  color: #ffe9ae;
+}
+#landing.game-lobby .hero-cycle.previous {
+  left: 0;
+}
+.hero-cycle.next {
+  right: 0;
+  transform: rotateY(180deg);
+}
+#landing.game-lobby .hero-cycle.next {
+  transform: none;
+  background: linear-gradient(-90deg, #0a20337f, transparent);
+}
+#landing.game-lobby .preview-actions {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin: 0;
+  white-space: nowrap;
+  z-index: 4;
+}
+#landing.game-lobby .preview-actions button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #aab9aa5e;
+  background: #081e2dde;
+  border-radius: 3px;
+  color: #d5c493;
+  padding: 0;
+  font-size: 17px;
+}
+#landing.game-lobby .preview-actions button:hover {
+  border-color: var(--lobby-accent);
+  color: var(--lobby-accent);
+  background: #284650;
+}
+#landing.game-lobby .preview-actions > span {
+  font-size: 7px;
+  color: #73939e;
+  margin-left: 6px;
+  display: block;
+}
+#landing.game-lobby .lobby-details {
+  padding-bottom: 15px;
+}
+#landing.game-lobby .lobby-level {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #9b9c83;
+  font-size: 7px;
+  line-height: 1.15;
+}
+#landing.game-lobby .lobby-level b {
+  font:
+    30px/1.2 Georgia,
+    serif;
+  color: #eed697;
+}
+#landing.game-lobby #hero-stats {
+  position: static;
+  top: auto;
+  bottom: auto;
+  right: auto;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  max-height: none;
+  overflow: visible;
+}
+#landing.game-lobby .class-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 0 17px;
+}
+#landing.game-lobby .class-identity > span {
+  display: grid;
+  place-items: center;
+  width: 43px;
+  height: 48px;
+  border: 1px solid #b9a47467;
+  color: var(--lobby-accent);
+  background: radial-gradient(ellipse, #9b956927, transparent);
+  font-size: 28px;
+  clip-path: polygon(0 0, 100% 0, 100% 78%, 50% 100%, 0 78%);
+}
+#landing.game-lobby .class-identity h3 {
+  font-size: 19px;
+  color: var(--lobby-accent);
+  margin: 0;
+  font-weight: 500;
+}
+#landing.game-lobby .class-role {
+  font-size: 9px;
+  color: #91aab6;
+  margin: 2px 0 0;
+}
+#landing.game-lobby .stats-heading {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 0 10px;
+  border: 0;
+  margin: 0;
+}
+#landing.game-lobby .stats-heading > span {
+  font-size: 10px;
+  color: #d2c6a8;
+}
+.stats-heading small {
+  font-size: 6px;
+  letter-spacing: 1px;
+  color: #637f8f;
+}
+#landing.game-lobby .attribute {
+  margin: 0 0 12px;
+}
+#landing.game-lobby .attribute > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+  font-size: 10px;
+}
+#landing.game-lobby .attribute > div > span > b {
+  font-size: 9px;
+  color: #b1c4cd;
+  font-weight: 500;
+}
+#landing.game-lobby .attribute small {
+  color: #668797;
+  font-size: 8px;
+  margin-left: 7px;
+}
+#landing.game-lobby .attribute strong {
+  font:
+    15px Georgia,
+    serif;
+  color: #e6d4aa;
+}
+#landing.game-lobby .attribute-track {
+  height: 3px;
+  background: #354b535e;
+}
+#landing.game-lobby .attribute-track i {
+  display: block;
+  height: 3px;
+  background: linear-gradient(90deg, #6d9ca4, var(--lobby-accent));
+  box-shadow: 0 0 6px color-mix(in srgb, var(--lobby-glow) 20%, transparent);
+}
+#landing.game-lobby .skill-heading {
+  border-top: 1px solid #aab79929;
+  padding-top: 15px;
+  margin-top: 18px;
+}
+#landing.game-lobby .lobby-skills {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+#landing.game-lobby .lobby-skills button {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 6px 8px;
+  text-align: left;
+  border: 1px solid #7c97a42e;
+  background: #0718256b;
+  border-radius: 3px;
+  color: #d4d5ca;
+}
+#landing.game-lobby .lobby-skills button > span {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 31px;
+  border: 1px solid #c7b58253;
+  background: linear-gradient(#5e635a45, #182e3f9e);
+  color: var(--lobby-accent);
+  font-size: 22px;
+}
+#landing.game-lobby .lobby-skills button strong {
+  display: block;
+  font-size: 10px;
+  font-weight: 500;
+}
+#landing.game-lobby .lobby-skills button small {
+  font-size: 7px;
+  color: #7494a4;
+}
+#landing.game-lobby .lobby-skills button > b {
+  font:
+    10px Georgia,
+    serif;
+  color: #859b9f;
+  margin-left: auto;
+  padding: 2px 4px;
+  border: 1px solid #617e8c50;
+  border-radius: 2px;
+}
+#landing.game-lobby .lobby-skills button:hover,
+#landing.game-lobby .lobby-skills button.skill-previewing {
+  background: #4a535642;
+  border-color: var(--lobby-accent);
+}
+#landing.game-lobby .lobby-adventure {
+  display: flex;
+  gap: 12px;
+  padding: 15px 0 0;
+  margin-top: 16px;
+  border-top: 1px solid #b8ad8429;
+}
+#landing.game-lobby .lobby-adventure > span {
+  font-size: 25px;
+  color: #ac9571;
+}
+.lobby-adventure small {
+  display: block;
+  font-size: 8px;
+  color: #7292a0;
+}
+.lobby-adventure strong {
+  font-size: 11px;
+  font-weight: 500;
+  color: #c9bd9f;
+}
+.lobby-adventure p {
+  font-size: 8px;
+  line-height: 1.8;
+  color: #6e8b9c;
+  margin: 4px 0 0;
+}
+#landing.game-lobby .lobby-entry {
+  position: absolute;
+  left: 32px;
+  right: 32px;
+  bottom: 43px;
+  min-height: 108px;
+  border-top: 1px solid #cbb27466;
+  border-bottom: 1px solid #a7b9b01c;
+  background: linear-gradient(90deg, #0a1b29f5, #142b39d9, #0a1b29f5);
+  box-shadow: 0 -10px 40px #06132055;
+  display: flex;
+  gap: 30px;
+  align-items: center;
+  padding: 17px 25px;
+}
+#landing.game-lobby .entry-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 200px;
+}
+#landing.game-lobby .entry-status strong {
+  font-size: 13px;
+  font-weight: 500;
+  color: #c4d9d3;
+}
+#landing.game-lobby .save-hint {
+  text-align: left;
+  color: #638697;
+  font-size: 8px;
+  line-height: 1.8;
+  margin: 5px 0 0;
+}
+#landing.game-lobby .identity-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 15px;
+  flex: 0 1 720px;
+  margin: 0;
+  flex-wrap: nowrap;
+}
+#landing.game-lobby .identity-row label {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  color: #c5bda5;
+  font-size: 9px;
+}
+#landing.game-lobby .identity-row label > span {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 7px;
+}
+#landing.game-lobby .identity-row label small {
+  font-size: 7px;
+  color: #5e8092;
+}
+#landing.game-lobby #character-name {
+  height: 44px;
+  width: 100%;
+  margin: 0;
+  border: 1px solid #9da99159;
+  border-radius: 3px;
+  color: #ecdfbd;
+  padding: 0 13px;
+  font-size: 12px;
+  background: #071421b3;
+  box-shadow: inset 0 2px 5px #0002;
+}
+#landing.game-lobby #character-name:focus {
+  outline: 0;
+  border-color: var(--lobby-accent);
+  box-shadow: 0 0 10px #dbbe7230;
+}
+#landing.game-lobby #character-name:read-only {
+  border-color: #82a89b66;
+  color: #a8d8c5;
+}
+#landing.game-lobby #start {
+  flex: 0 0 240px;
+  min-width: 0;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 0 24px;
+  color: #332817;
+  font-size: 16px;
+  font-weight: 600;
+  background: linear-gradient(120deg, #f4dea3, #c3a15c 65%, #e1c27e);
+  border: 1px solid #ffe4a3;
+  border-radius: 3px;
+  box-shadow:
+    inset 0 0 0 3px #7650243d,
+    0 4px 20px #0007,
+    0 0 20px #ccab6520;
+  transition:
+    filter 0.15s,
+    box-shadow 0.15s;
+}
+#landing.game-lobby #start:hover {
+  filter: brightness(1.12);
+  box-shadow:
+    inset 0 0 0 3px #7650243d,
+    0 0 30px #ccab6550;
+  transform: none;
+}
+#landing.game-lobby #start > b {
+  font-size: 26px;
+  font-weight: 400;
+}
+#landing.game-lobby #start:disabled {
+  opacity: 0.35;
+  filter: saturate(0.2);
+  cursor: default;
+}
+#landing.game-lobby .landing-footer {
+  position: absolute;
+  bottom: 0;
+  height: 43px;
+  left: 32px;
+  right: 32px;
+  width: auto;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #547785;
+  font-size: 7px;
+  letter-spacing: 0.4px;
+  border: 0;
+}
+#landing.game-lobby .landing-footer kbd {
+  font-size: 7px;
+  background: #102330b3;
+  border-color: #6582914f;
+  margin-right: 4px;
+  color: #a3b5b8;
+}
+#landing.game-lobby .footer-separator {
+  margin: 0 13px;
+  color: #708a8f;
+}
+#landing.game-lobby .landing-footer b {
+  color: #bda77c;
+  margin: 0 10px;
+}
+@keyframes lobby-breathe {
+  from {
+    opacity: 0.55;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-15px);
+  }
+}
+@media (min-width: 1700px) {
+  #landing.game-lobby .lobby-layout {
+    inset: 125px 55px 184px;
+    grid-template-columns: 300px minmax(300px, 1fr) 320px;
+    gap: 50px;
+  }
+  #landing.game-lobby .lobby-panel {
+    padding: 23px;
+  }
+  #landing.game-lobby .lobby-entry {
+    left: 55px;
+    right: 55px;
+    padding: 17px 30px;
+  }
+  #landing.game-lobby .hero-caption h2 {
+    font-size: 43px;
+  }
+}
+@media (min-height: 850px) and (min-width: 1000px) {
+  #landing.game-lobby .hero-showcase #hero-preview {
+    inset: 35px -35px 100px;
+  }
+  #landing.game-lobby .lobby-roster,
+  #landing.game-lobby .lobby-details {
+    margin-top: 12px;
+  }
+}
+@media (max-height: 800px) and (min-width: 1000px) {
+  #landing.game-lobby {
+    min-height: 590px;
+  }
+  #landing.game-lobby .landing-header {
+    height: 74px;
+  }
+  #landing.game-lobby .lobby-layout {
+    top: 90px;
+    bottom: 156px;
+    gap: 24px;
+  }
+  #landing.game-lobby .lobby-panel {
+    padding: 14px;
+  }
+  #landing.game-lobby .lobby-panel-title {
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+  }
+  #landing.game-lobby .lobby-panel-title h1,
+  #landing.game-lobby .lobby-panel-title h2 {
+    font-size: 17px;
+  }
+  #landing.game-lobby #class-cards .hero-card {
+    min-height: 74px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+  }
+  #landing.game-lobby #class-cards .hero-art {
+    height: 62px;
+    width: 55px;
+    flex-basis: 55px;
+  }
+  #landing.game-lobby .roster-divider {
+    margin-top: 14px;
+  }
+  #landing.game-lobby .attribute {
+    margin-bottom: 9px;
+  }
+  #landing.game-lobby .lobby-adventure {
+    display: none;
+  }
+  #landing.game-lobby .class-identity {
+    padding-bottom: 12px;
+  }
+  #landing.game-lobby .skill-heading {
+    margin-top: 12px;
+    padding-top: 12px;
+  }
+  #landing.game-lobby .lobby-entry {
+    min-height: 94px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+  #landing.game-lobby .hero-caption h2 {
+    font-size: 30px;
+  }
+  #landing.game-lobby .hero-caption p {
+    font-size: 8px;
+  }
+}
+@media (max-width: 1100px) and (min-width: 761px) {
+  #landing.game-lobby .lobby-layout {
+    left: 20px;
+    right: 20px;
+    grid-template-columns: 225px minmax(220px, 1fr) 245px;
+    gap: 15px;
+  }
+  #landing.game-lobby .lobby-panel {
+    padding: 14px;
+  }
+  #landing.game-lobby .lobby-entry {
+    left: 20px;
+    right: 20px;
+    gap: 20px;
+    padding-left: 17px;
+    padding-right: 17px;
+  }
+  #landing.game-lobby .identity-row {
+    flex-basis: 550px;
+  }
+  #landing.game-lobby #start {
+    flex-basis: 190px;
+    font-size: 14px;
+  }
+  #landing.game-lobby .entry-status {
+    min-width: 150px;
+  }
+  #landing.game-lobby .lobby-chapter {
+    display: none;
+  }
+  #landing.game-lobby #class-cards .hero-art {
+    width: 47px;
+    flex-basis: 47px;
+    height: 65px;
+  }
+  #landing.game-lobby .class-card-copy strong {
+    font-size: 13px;
+  }
+  #landing.game-lobby .class-card-copy em {
+    font-size: 7px;
+  }
+  #landing.game-lobby .hero-caption h2 {
+    font-size: 28px;
+  }
+  #landing.game-lobby .hero-caption p {
+    font-size: 8px;
+  }
+}
+@media (max-width: 760px) {
+  #landing.game-lobby {
+    height: auto;
+    min-height: 100svh;
+    overflow: visible;
+    background-attachment: fixed;
+  }
+  #landing.game-lobby .landing-header {
+    height: 72px;
+    padding: 12px 15px;
+  }
+  .game-lobby .brand > div {
+    font-size: 17px !important;
+  }
+  .game-lobby .brand b {
+    font-size: 23px !important;
+  }
+  .game-lobby .brand > span {
+    font-size: 24px !important;
+  }
+  .game-lobby .brand small {
+    font-size: 5px !important;
+    letter-spacing: 2px !important;
+  }
+  #landing.game-lobby .lobby-chapter {
+    display: none;
+  }
+  #landing.game-lobby #sound {
+    padding: 7px 9px;
+    font-size: 8px;
+  }
+  #landing.game-lobby .lobby-layout {
+    position: relative;
+    inset: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: 0;
+    padding: 0 13px 200px;
+    max-width: none;
+  }
+  #landing.game-lobby .hero-showcase {
+    order: 0;
+    height: 420px;
+    min-height: 420px;
+    width: 100%;
+    margin: 0;
+  }
+  #landing.game-lobby #hero-preview {
+    inset: 35px -20px 75px;
+    width: calc(100% + 40px);
+    transform: none;
+  }
+  #landing.game-lobby .showcase-location {
+    top: 8px;
+  }
+  #landing.game-lobby .showcase-location small {
+    font-size: 10px;
+  }
+  #landing.game-lobby .showcase-location span {
+    font-size: 5px;
+  }
+  #landing.game-lobby .lobby-gender {
+    top: 42px;
+  }
+  #landing.game-lobby .gender-toggle button {
+    min-height: 26px;
+    padding: 3px 9px;
+    font-size: 8px;
+  }
+  #landing.game-lobby .hero-caption {
+    bottom: 35px;
+    width: 100%;
+  }
+  #landing.game-lobby .hero-caption h2 {
+    font-size: 28px;
+  }
+  #landing.game-lobby .hero-caption > small {
+    font-size: 6px;
+    letter-spacing: 2px;
+  }
+  #landing.game-lobby .hero-caption p {
+    font-size: 8px;
+  }
+  #landing.game-lobby .hero-caption::before {
+    margin-bottom: 2px;
+  }
+  #landing.game-lobby .preview-actions {
+    bottom: 0;
+  }
+  #landing.game-lobby .preview-actions button {
+    width: 28px;
+    height: 28px;
+  }
+  #landing.game-lobby .preview-actions > span {
+    font-size: 6px;
+  }
+  #landing.game-lobby .lobby-roster {
+    order: 1;
+    width: 100%;
+    max-height: none;
+    padding: 13px;
+  }
+  #landing.game-lobby .lobby-details {
+    order: 2;
+    width: 100%;
+    max-height: none;
+    padding: 16px;
+  }
+  #landing.game-lobby .lobby-panel-title {
+    padding-bottom: 11px;
+    margin-bottom: 11px;
+  }
+  #landing.game-lobby .lobby-panel-title h1,
+  #landing.game-lobby .lobby-panel-title h2 {
+    font-size: 17px;
+  }
+  #landing.game-lobby #class-cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  #landing.game-lobby #class-cards .hero-card {
+    flex-direction: column;
+    gap: 0;
+    padding: 4px 3px 8px;
+    text-align: center;
+    min-height: 119px;
+    align-items: center;
+  }
+  #landing.game-lobby #class-cards .hero-art {
+    flex-basis: auto;
+    width: 58px;
+    height: 64px;
+  }
+  #landing.game-lobby .class-card-copy strong {
+    font-size: 11px;
+  }
+  #landing.game-lobby #class-cards small {
+    font-size: 4px;
+    letter-spacing: 0.7px;
+  }
+  #landing.game-lobby .class-card-copy em {
+    font-size: 6px;
+    margin-top: 2px;
+  }
+  #landing.game-lobby .class-order {
+    font-size: 17px;
+    right: 4px;
+  }
+  #landing.game-lobby .hero-card.active .selected-mark {
+    font-size: 5px;
+    bottom: 5px;
+    right: 5px;
+  }
+  #landing.game-lobby .roster-divider {
+    margin-top: 16px;
+  }
+  #landing.game-lobby #saved-characters {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  #landing.game-lobby .saved-hero {
+    min-width: 0;
+    padding: 5px;
+    gap: 5px;
+  }
+  #landing.game-lobby .saved-hero strong {
+    font-size: 9px;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  #landing.game-lobby .saved-hero small {
+    font-size: 7px;
+  }
+  #landing.game-lobby .saved-hero > b {
+    font-size: 8px;
+  }
+  #landing.game-lobby .empty-roster {
+    grid-column: 1/-1;
+    font-size: 9px;
+  }
+  #landing.game-lobby .lobby-adventure {
+    display: none;
+  }
+  #landing.game-lobby .class-identity {
+    padding-bottom: 10px;
+  }
+  #landing.game-lobby .attribute {
+    display: inline-block;
+    width: calc(50% - 9px);
+    margin-right: 12px;
+    margin-bottom: 14px;
+  }
+  #landing.game-lobby .attribute:nth-child(2n) {
+    margin-right: 0;
+  }
+  #landing.game-lobby .lobby-skills {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  #landing.game-lobby .lobby-entry {
+    position: fixed;
+    z-index: 12;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    min-height: 0;
+    display: block;
+    padding: 10px 14px calc(12px + env(safe-area-inset-bottom));
+    backdrop-filter: blur(15px);
+    border-bottom: 0;
+  }
+  #landing.game-lobby .entry-status {
+    display: none;
+  }
+  #landing.game-lobby .identity-row {
+    gap: 9px;
+  }
+  #landing.game-lobby .identity-row label {
+    font-size: 8px;
+  }
+  #landing.game-lobby .identity-row label small {
+    display: none;
+  }
+  #landing.game-lobby #character-name {
+    height: 40px;
+    font-size: 10px;
+    padding: 0 10px;
+  }
+  #landing.game-lobby #start {
+    flex: 0 0 133px;
+    height: 40px;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+  #landing.game-lobby #start > b {
+    font-size: 20px;
+  }
+  #landing.game-lobby .landing-footer {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #landing.game-lobby .lobby-atmosphere {
+    animation: none;
+  }
+  #landing.game-lobby * {
+    transition: none !important;
+  }
+}
+@media (min-width: 761px) and (max-height: 980px) {
+  #landing.game-lobby .lobby-adventure {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  #landing.game-lobby {
+    overflow-x: clip;
+  }
+  #landing.game-lobby #hero-preview {
+    left: 0;
+    right: 0;
+    width: 100%;
+  }
+}
+/* Preserve the requested saved-hero-first flow with the painted lobby art. */
+#landing[data-lobby-mode="roster"] #class-cards,
+#landing[data-lobby-mode="roster"] .lobby-gender,
+#landing[data-lobby-mode="roster"] .identity-row > label {
+  display: none;
+}
+#landing[data-lobby-mode="roster"] .identity-row {
+  flex: 0 0 auto;
+}
+#landing[data-lobby-mode="roster"] #start {
+  flex: 0 0 240px;
+  min-width: 240px;
+}
+#landing[data-lobby-mode="create"] #saved-characters,
+#landing[data-lobby-mode="create"] .roster-divider,
+#landing[data-lobby-mode="create"] #new-hero {
+  display: none;
+}
+#landing.game-lobby .creation-back {
+  width: 100%;
+  margin-top: 17px;
+  padding: 9px;
+  border: 1px solid #9aafa146;
+  background: #0b1f2c88;
+  color: #c5c4ae;
+  border-radius: 3px;
+  font-size: 10px;
+}
+#landing.game-lobby .creation-back[hidden] {
+  display: none;
+}
+#landing[data-lobby-mode="loading"] .lobby-layout,
+#landing[data-lobby-mode="loading"] .lobby-entry {
+  visibility: hidden;
+}
+#landing[data-lobby-mode="roster"] .roster-divider {
+  margin-top: 0;
+}
+@media (max-width: 760px) {
+  #landing.game-lobby[data-lobby-mode="roster"] .entry-status {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+  }
+  #landing.game-lobby[data-lobby-mode="roster"] .lobby-entry {
+    display: flex;
+    gap: 12px;
+  }
+  #landing.game-lobby[data-lobby-mode="roster"] .entry-status strong {
+    font-size: 11px;
+  }
+  #landing.game-lobby[data-lobby-mode="roster"] .save-hint {
+    font-size: 7px;
+    max-width: 190px;
+  }
+  #landing.game-lobby[data-lobby-mode="roster"] #start {
+    min-width: 130px;
+    flex-basis: 130px;
+  }
+}

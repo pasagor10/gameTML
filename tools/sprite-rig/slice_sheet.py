@@ -37,7 +37,10 @@ POCKET_BIG = 400  # ...unless they are this large (e.g. inside a slash arc)
 TIMING = {
     # One frame is fine: creature-fx adds breathing on top.
     "idle": dict(ms=160, loop=True, hit=None, x="cell", y="feet"),
-    "attack": dict(ms=[70, 70, 70, 80, 90, 110], loop=False, hit=4, x="feet", y="feet"),
+    # Rows: ready, wind-up, wind-up, strike, follow-through, recover.
+    "attack": dict(ms=[70, 70, 80, 70, 90, 110], loop=False, hit=3, x="cell", y="feet"),
+    # Rows: charge, charge, release, effect fading, recover, ready.
+    "skill": dict(ms=[80, 90, 80, 90, 100, 110], loop=False, hit=2, x="cell", y="feet"),
     "walk": dict(ms=110, loop=True, hit=None, x="cell", y="feet"),
     "run": dict(ms=80, loop=True, hit=None, x="cell", y="median"),
     # The game's hit state lasts 0.22 s, so the recoil sits up front.
@@ -46,7 +49,7 @@ TIMING = {
 }
 BODY_PX = 180  # stored body height for every hero clip (one pixel density, ~1.6x screen)
 HERO_HEIGHT = 112  # on-screen body height in world px (NPCs are ~98, old heroes ~110)
-STATE_FOR = {"idle": "idle", "attack": "attack", "walk": "walk", "run": "run", "hurt": "hit", "death": "death"}
+STATE_FOR = {"idle": "idle", "attack": "attack", "skill": "skill", "walk": "walk", "run": "run", "hurt": "hit", "death": "death"}
 
 
 def dist(a, b):
@@ -222,6 +225,9 @@ def main():
     ap.add_argument("--derive", nargs="*", default=[],
                     help="extra clip from frames of a sliced row: set:action=row_action:i,j "
                          "(e.g. archer-male:idle=hurt:0 uses the neutral first hurt frame)")
+    ap.add_argument("--hit", nargs="*", default=[],
+                    help="override the damage frame per action, e.g. attack=4 skill=3 "
+                         "(0-based; bows release later than swords strike)")
     ap.add_argument("--replace", action="store_true",
                     help="rebuild the set's action map from this sheet only and delete other action folders")
     args = ap.parse_args()
@@ -256,6 +262,7 @@ def main():
             im = drop_edge_specks(im)
             frames.append((im, feet(im)))
         rows.setdefault(name, {})[action] = frames
+    hit_override = {a: int(i) for a, i in (h.split("=") for h in args.hit)}
     for spec in args.derive:
         target, src = spec.split("=")
         name, action = target.split(":")
@@ -281,11 +288,15 @@ def main():
         cw, ch = math.ceil(left + right) + 4, math.ceil(up) + 6
         ax, ay = math.ceil(left) + 2, math.ceil(up) + 2
         # Scale from standing frames only (a lying body would blow the scale up).
-        standing = [f for a in ("idle", "walk", "attack") for f in actions.get(a, [])] or all_frames
+        # Raised weapons and effects must not shrink the body, so attack/skill
+        # sheets measure only their first (ready) frame.
+        standing = [f for a in ("idle", "walk") for f in actions.get(a, [])] \
+            or [fs[0] for fs in actions.values() if fs] or all_frames
         body = max(fy - (im.getchannel("A").getbbox() or (0, 0, 0, 0))[1] for im, (_, fy) in standing)
         folder_root = ROOT / f"{name}{args.suffix}"
         for action, frames in actions.items():
-            t = TIMING.get(action, TIMING["idle"])
+            t = dict(TIMING.get(action, TIMING["idle"]))
+            t["hit"] = hit_override.get(action, t["hit"])
             n = len(frames)
             durations = t["ms"] if isinstance(t["ms"], list) else [t["ms"]] * n
             atlas = Image.new("RGBA", (cw * n, ch))
@@ -324,7 +335,7 @@ def main():
                     old.rmdir()
         for action in actions:
             mapping[STATE_FOR.get(action, action)] = action
-        if "attack" in actions:
+        if "attack" in mapping.values() and "skill" not in mapping:
             mapping["skill"] = "attack"
         index["sets"][name] = {
             "dir": folder_root.name, "height": HERO_HEIGHT, "facing": 1,

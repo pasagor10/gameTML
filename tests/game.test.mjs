@@ -7,7 +7,8 @@ const dir = mkdtempSync(path.join(tmpdir(), "tml-engine-"));
 process.env.DB_PATH = path.join(dir, "test.sqlite");
 const { db, persist, loadCharacter } = await import("../server/database.js");
 const world = await import("../server/world.js");
-const { damage, WORLD } = await import("../shared/config.js");
+const { damage, WORLD, combatStats, maxHp } =
+  await import("../shared/config.js");
 function create(id, job = "swordsman") {
   db.prepare("INSERT INTO users VALUES(?,?,?,?)").run(id, id, null, Date.now());
   const state = {
@@ -158,6 +159,11 @@ test("all classes clear 9 configured stages, unlocks persist and duplicate rewar
       world.returnTown(p);
     }
     assert.equal(p.quest, 3);
+    assert.equal(
+      p.ownedEquipment.filter((id) => id === "cavern_charm").length,
+      1,
+    );
+    assert.ok(loadCharacter(p.id).ownedEquipment.includes("cavern_charm"));
     assert.equal(loadCharacter(p.id).quest, 3);
   }
 });
@@ -255,10 +261,10 @@ test("animation state prioritizes death/hit and matches the shared impact timeli
 test("jump clears and lands on a platform, with a bounded ledge grace period", () => {
   const p = create("platform-motion"),
     t = Date.now() / 1000 + 500;
-  p.x = 600;
+  p.x = WORLD.platforms[0].x + WORLD.platforms[0].w / 2;
   p.jump = true;
   for (let n = 0; n < 25; n++) world.tick(0.05, t + n * 0.05);
-  assert.equal(p.y, 460);
+  assert.equal(p.y, WORLD.platforms[0].y);
   assert.equal(p.grounded, true);
   p.x = 820;
   p.y = 460;
@@ -277,14 +283,48 @@ test("jump clears and lands on a platform, with a bounded ledge grace period", (
   world.tick(0.05, t + 3.2);
   assert.ok(p.vy > 0, "expired ledge grace must not allow an air jump");
 });
-test("every platform is reachable from the ground with one jump", () => {
+test("every town terrace is reachable from the ground or a connected lower terrace", () => {
   const t = Date.now() / 1000 + 900;
   for (const [n, platform] of WORLD.platforms.entries()) {
+    const lower =
+      platform.tier === 1
+        ? null
+        : WORLD.platforms.find(
+            (q) =>
+              q.tier === platform.tier - 1 &&
+              Math.min(q.x + q.w, platform.x + platform.w) -
+                Math.max(q.x, platform.x) >
+                40,
+          );
+    assert.ok(platform.tier === 1 || lower, `connected lower tier for ${n}`);
     const p = create("reach-" + n);
-    p.x = platform.x + platform.w / 2;
+    p.x = lower
+      ? (Math.max(lower.x, platform.x) +
+          Math.min(lower.x + lower.w, platform.x + platform.w)) /
+        2
+      : platform.x + platform.w / 2;
+    p.y = lower?.y ?? WORLD.ground;
+    p.vy = 0;
+    p.grounded = true;
     p.jump = true;
     for (let k = 0; k < 30; k++) world.tick(0.05, t + n * 5 + k * 0.05);
-    assert.equal(p.y, platform.y, `platform ${n} at y=${platform.y}`);
+    assert.equal(p.y, platform.y, `terrace ${n} at y=${platform.y}`);
+    assert.equal(p.grounded, true);
+    world.players.delete(p.id);
+  }
+});
+test("dungeons retain their own reachable platforms", () => {
+  const t = Date.now() / 1000 + 1000;
+  for (const [n, platform] of WORLD.dungeonPlatforms.entries()) {
+    const p = create("cave-reach-" + n);
+    world.beginDungeon(p, 1);
+    world.instances.get(p.instance).enemies.forEach((e) => {
+      e.x = 2300;
+    });
+    p.x = platform.x + platform.w / 2;
+    p.jump = true;
+    for (let k = 0; k < 25; k++) world.tick(0.05, t + n * 5 + k * 0.05);
+    assert.equal(p.y, platform.y);
     world.players.delete(p.id);
   }
 });
@@ -322,6 +362,194 @@ test("snapshot shop list is cached and refreshed after shop actions", () => {
   assert.ok(after.some((s) => s.owner === owner.id && s.qty === 2));
   world.closeShop(owner, "cache-shop-close1");
   assert.ok(!world.snapshot(owner).shops.some((s) => s.owner === owner.id));
+});
+test("crystal traps warn, can be jumped or escaped, and only damage once", () => {
+  const p = create("crystal-dodge");
+  world.beginDungeon(p, 1);
+  const i = world.instances.get(p.instance),
+    t = Date.now() / 1000 + 2000;
+  i.enemies.forEach((e) => {
+    e.x = 2300;
+  });
+  i.nextHazardAt = t;
+  world.tick(0.05, t);
+  const h = i.hazards[0],
+    hp = p.hp;
+  assert.ok(h.impactAt > t + 1, "visible warning before impact");
+  assert.equal(p.hp, hp);
+  p.x = h.x;
+  p.y = 460;
+  p.vy = 0;
+  p.grounded = false;
+  world.tick(0.05, h.impactAt);
+  assert.equal(p.hp, hp, "jump clears eruption");
+  world.tick(0.05, h.endsAt + 0.1);
+  i.nextHazardAt = t + 2;
+  world.tick(0.05, t + 2);
+  const hit = i.hazards[0];
+  p.x = hit.x;
+  p.y = 600;
+  p.vy = 0;
+  world.tick(0.05, hit.impactAt);
+  assert.ok(p.hp < hp, "standing in the warning is dangerous");
+  const after = p.hp;
+  world.tick(0.05, hit.impactAt + 0.1);
+  assert.equal(p.hp, after, "one eruption cannot hit repeatedly");
+  world.tick(0.05, hit.endsAt + 0.1);
+  i.nextHazardAt = t + 4;
+  world.tick(0.05, t + 4);
+  const escaped = i.hazards[0];
+  p.x = escaped.x + escaped.radius + 30;
+  world.tick(0.05, escaped.impactAt);
+  assert.equal(p.hp, after, "walking outside the circle dodges it");
+  world.returnTown(p);
+});
+test("boss slam locks its aim, supports jump dodges, and accelerates below half health", () => {
+  const p = create("boss-slam");
+  world.beginDungeon(p, 1);
+  const i = world.instances.get(p.instance),
+    t = Date.now() / 1000 + 2200;
+  i.stage = 2;
+  i.clear = true;
+  world.nextStage(p);
+  const boss = i.enemies[0];
+  i.nextHazardAt = Infinity;
+  p.x = boss.x - 200;
+  world.tick(0.05, t);
+  assert.equal(boss.action.kind, "slam");
+  assert.equal(boss.action.x, p.x);
+  assert.ok(boss.action.impactAt - t >= 0.9);
+  const aim = boss.action.x,
+    hp = p.hp;
+  p.x = aim + boss.action.radius + 30;
+  world.tick(0.05, t + 0.96);
+  assert.equal(p.hp, hp, "leaving captured aim avoids damage");
+  world.tick(0.05, t + 1.4);
+  boss.attackCount = 0;
+  boss.attackAt = 0;
+  p.x = boss.x - 200;
+  world.tick(0.05, t + 2);
+  p.y = 455;
+  p.vy = 0;
+  p.grounded = false;
+  world.tick(0.05, t + 2.96);
+  assert.equal(p.hp, hp, "jumping avoids boss ground slam");
+  boss.action = null;
+  boss.hp = boss.maxHp / 2;
+  boss.attackCount = 0;
+  boss.attackAt = t + 3;
+  p.x = boss.x - 200;
+  world.tick(0.05, t + 4.1);
+  assert.equal(boss.action.radius, 195, "enraged slam covers more ground");
+  world.returnTown(p);
+});
+test("consecutive kills award bonus gold and MP, resetting after the window", () => {
+  const p = create("kill-streak", "mage");
+  world.beginDungeon(p, 1);
+  const i = world.instances.get(p.instance),
+    t = Date.now() / 1000 + 2400;
+  i.nextHazardAt = Infinity;
+  i.enemies.forEach((e, n) => {
+    e.x = 2000 + n * 20;
+    e.hp = 1;
+  });
+  const gold = p.gold;
+  for (let n = 0; n < 2; n++) {
+    const e = i.enemies[0];
+    e.x = p.x + 30;
+    p.direction = 1;
+    p.action = null;
+    p.pending = null;
+    p.cooldowns = {};
+    world.attack(p, 0, t + n);
+    world.tick(0.05, t + n + 0.17);
+  }
+  assert.equal(i.streak, 2);
+  assert.equal(p.gold - gold, 23, "two base rewards plus second-kill bonus");
+  assert.equal(i.events.find((e) => e.kind === "streak").bonus, 3);
+  assert.equal(world.snapshot(p).dungeon.defeated, 2);
+  const e = i.enemies[0];
+  e.x = p.x + 30;
+  p.action = null;
+  p.pending = null;
+  p.cooldowns = {};
+  world.attack(p, 0, t + 8);
+  world.tick(0.05, t + 8.17);
+  assert.equal(i.streak, 1, "expired streak starts over");
+  world.returnTown(p);
+});
+test("old saves retain purchased gear, upgrades, currency and bonuses during migration", () => {
+  const p = create("rpg-legacy-save");
+  const raw = JSON.parse(
+    db.prepare("SELECT state FROM characters WHERE id=?").get(p.id).state,
+  );
+  raw.weapon = true;
+  raw.armor = true;
+  raw.upgrade = 2;
+  db.prepare("UPDATE characters SET state=? WHERE id=?").run(
+    JSON.stringify(raw),
+    p.id,
+  );
+  const saved = loadCharacter(p.id);
+  assert.equal(saved.equipment.weapon, "guardian_weapon");
+  assert.equal(saved.equipment.armor, "traveler_armor");
+  assert.equal(saved.gold, 120);
+  assert.equal(combatStats(saved).atk, 25 + 16 + 10);
+  assert.equal(combatStats(saved).def, 25);
+  assert.equal(maxHp(saved), 210);
+});
+test("legacy equipment migrates; explicit gear changes stats and persists without duplicate charges", () => {
+  const p = create("rpg-equipment");
+  assert.ok(p.ownedEquipment.includes("starter_swordsman"));
+  assert.equal(p.equipment.weapon, "starter_swordsman");
+  p.gold = 1000;
+  p.level = 5;
+  world.savePlayer(p);
+  const before = combatStats(p);
+  world.buyEquipment(p, "moon_blade", "rpg-buy-weapon-01");
+  world.buyEquipment(p, "moon_blade", "rpg-buy-weapon-01");
+  assert.equal(p.gold, 780);
+  assert.equal(
+    p.equipment.weapon,
+    "starter_swordsman",
+    "purchase does not silently equip",
+  );
+  world.equip(p, "weapon", "moon_blade");
+  assert.equal(combatStats(p).atk, before.atk + 22);
+  assert.equal(combatStats(p).def, before.def + 3);
+  world.buyEquipment(p, "crystal_charm", "rpg-buy-charm-01");
+  world.equip(p, "charm", "crystal_charm");
+  assert.equal(combatStats(p).mp, before.mp + 25);
+  assert.throws(() => world.equip(p, "armor", "moon_blade"));
+  assert.throws(() => world.equip(p, "boots", "wind_boots"));
+  world.buyEquipment(p, "star_staff", "rpg-foreign-class");
+  assert.throws(() => world.equip(p, "weapon", "star_staff"));
+  const restored = loadCharacter(p.id);
+  assert.equal(restored.equipment.weapon, "moon_blade");
+  assert.equal(restored.equipment.charm, "crystal_charm");
+  world.equip(p, "weapon", null);
+  assert.equal(combatStats(p).atk, before.atk + 3);
+  p.level = 1;
+  assert.throws(() => world.equip(p, "weapon", "moon_blade"));
+});
+test("specializations validate class and level, update combat stats and clamp health on switching", () => {
+  const p = create("rpg-specialization");
+  assert.throws(() => world.specialize(p, "guardian"));
+  p.level = 3;
+  assert.throws(() => world.specialize(p, "ranger"));
+  const before = combatStats(p);
+  world.specialize(p, "guardian");
+  assert.equal(maxHp(p), before.hp + 35);
+  assert.equal(combatStats(p).def, before.def + 5);
+  p.hp = maxHp(p);
+  world.specialize(p, "duelist");
+  assert.equal(p.hp, maxHp(p), "switching cannot retain HP above the new cap");
+  assert.equal(combatStats(p).atk, before.atk + 7);
+  assert.equal(loadCharacter(p.id).specialization, "duelist");
+  world.beginDungeon(p, 1);
+  assert.throws(() => world.specialize(p, "guardian"));
+  assert.throws(() => world.equip(p, "weapon", null));
+  world.returnTown(p);
 });
 test("WAL-safe backup opens independently with intact character state", async () => {
   const Database = (await import("better-sqlite3")).default;

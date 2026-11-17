@@ -1,14 +1,28 @@
 // Layered, animated background for the Adventure scene.
-// The painted backdrop is split at the walkway's back edge: the scenery above it
-// scrolls slower than the floor (true parallax), and procedural layers add
+// The town is assembled from kit pieces (shared/town-layout.js) on a repeating
+// street tile, aligned 1:1 with the collision world. The cave backdrop is one
+// painting split at the walkway's back edge; its scenery scrolls slower.
+// Procedural layers add
 // light shafts, ambient particles, drifting fog and blurred foreground framing.
+
+import {
+  TOWN_BASE,
+  TOWN_LAYOUT,
+  TOWN_PIECES,
+  TOWN_PROPS,
+  TOWN_SPOTS,
+  TOWN_STREET_Y,
+  TOWN_WIDTH,
+  TOWN_ANIMS,
+  TOWN_GROUND,
+} from "/shared/town-layout.js";
 
 const WORLD_W = 2400,
   BACK_Y = -180,
   BACK_H = 1000,
   SCENERY_FACTOR = 0.9,
   // Fraction of each painting's height where the walkable floor begins.
-  SPLIT = { town: 0.716, cave: 0.697 };
+  SPLIT = { town: 0.754, cave: 0.716 };
 
 function canvasTexture(scene, key, w, h, draw) {
   if (scene.textures.exists(key)) return;
@@ -299,13 +313,13 @@ export function createParallax(scene) {
     cam = () => scene.cameras.main;
 
   const scenery = scene.add
-      .image(0, BACK_Y, "town")
+      .image(0, BACK_Y, "cave")
       .setOrigin(0)
       .setDisplaySize(WORLD_W, BACK_H)
       .setScrollFactor(SCENERY_FACTOR, 1)
       .setDepth(-30),
     floor = scene.add
-      .image(0, BACK_Y, "town")
+      .image(0, BACK_Y, "cave")
       .setOrigin(0)
       .setDisplaySize(WORLD_W, BACK_H)
       .setDepth(-24),
@@ -345,6 +359,62 @@ export function createParallax(scene) {
       .setScrollFactor(0)
       .setDepth(48);
 
+  // Town far layers, back to front: painted strips that repeat sideways and
+  // scroll slower the further away they are (tools/town-kit/far_layers.py).
+  // top: world y of the strip's top at the camera's resting height.
+  const FAR = [
+    { key: "sky", top: -760, h: 1400, fx: 0.03, fy: 0.15, depth: -38 },
+    { key: "clouds", top: -360, fx: 0.12, fy: 0.3, depth: -37, drift: 0.006 },
+    { key: "mountains", top: -400, fx: 0.22, fy: 0.45, depth: -36 },
+    { key: "hills", top: -40, fx: 0.4, fy: 0.65, depth: -35 },
+    { key: "treeline", top: 110, fx: 0.62, fy: 0.85, depth: -34 },
+  ];
+  const far = FAR.map((l) => {
+    const src = scene.textures.get(`town-far-${l.key}`).getSourceImage(),
+      h = l.h || src.height,
+      layer = scene.add
+        .tileSprite(0, 0, 10, h, `town-far-${l.key}`)
+        .setOrigin(0.5, 0)
+        .setScrollFactor(0, l.fy)
+        .setDepth(l.depth);
+    if (l.h) layer.setTileScale(h / src.height, h / src.height);
+    return { ...l, layer };
+  });
+  // Kit pieces on the street tile, then props: behind the heroes, or in
+  // front of them for a little foreground depth.
+  const animated = [];
+  const props = TOWN_PROPS.map((p, i) => {
+    const anim = p.key.startsWith("anim-"),
+      img = scene.add
+        .image(
+          p.x,
+          p.y ?? TOWN_GROUND + 2,
+          `town-${p.key}`,
+          anim ? 0 : undefined,
+        )
+        .setOrigin(0.5, p.hang ? 0 : 1)
+        .setFlipX(!!p.flip)
+        .setDepth(p.front ? 18 : -29);
+    if (p.front) img.setAlpha(0.95);
+    if (anim) animated.push({ img, phase: i * 137 });
+    return img;
+  });
+  const kit = [
+    ...far.map((l) => l.layer),
+    scene.add
+      .tileSprite(-200, TOWN_STREET_Y, TOWN_WIDTH + 400, 254, "town-street")
+      .setOrigin(0)
+      .setDepth(-31),
+    ...TOWN_LAYOUT.map((p) =>
+      scene.add
+        .image(p.x, TOWN_BASE, `town-piece-${p.piece}`)
+        .setOrigin(0, 1)
+        .setFlipX(!!p.flip)
+        .setDepth(-30),
+    ),
+    ...props,
+  ];
+
   if (!lowPower && scene.renderer.type === Phaser.WEBGL) {
     fgBottom.preFX?.addBlur(0, 2, 2, 1.1);
     fgTop.preFX?.addBlur(0, 2, 2, 1.1);
@@ -381,7 +451,7 @@ export function createParallax(scene) {
     addEmitter(
       "fx-dot",
       {
-        x: { min: 0, max: WORLD_W },
+        x: { min: 0, max: TOWN_WIDTH },
         y: { min: -60, max: 560 },
         lifespan: { min: 6000, max: 10000 },
         speedX: { min: -10, max: 12 },
@@ -400,7 +470,7 @@ export function createParallax(scene) {
     addEmitter(
       "fx-petal",
       {
-        x: { min: -300, max: WORLD_W },
+        x: { min: -300, max: TOWN_WIDTH },
         y: -140,
         lifespan: 16000,
         speedX: { min: 25, max: 70 },
@@ -419,7 +489,7 @@ export function createParallax(scene) {
     addEmitter(
       "fx-leaf",
       {
-        x: { min: -400, max: WORLD_W },
+        x: { min: -400, max: TOWN_WIDTH },
         y: -180,
         lifespan: 13000,
         speedX: { min: 50, max: 110 },
@@ -439,10 +509,10 @@ export function createParallax(scene) {
       "fx-dot",
       {
         x: {
-          min: (905 / 1536) * WORLD_W - 12,
-          max: (905 / 1536) * WORLD_W + 12,
+          min: TOWN_SPOTS.chimney.x - 12,
+          max: TOWN_SPOTS.chimney.x + 12,
         },
-        y: BACK_Y + (300 / 1024) * BACK_H,
+        y: TOWN_SPOTS.chimney.y,
         lifespan: 4200,
         speedX: { min: 6, max: 22 },
         speedY: { min: -38, max: -24 },
@@ -498,8 +568,8 @@ export function createParallax(scene) {
     addEmitter(
       "fx-dot",
       {
-        x: { min: (900 / 1536) * WORLD_W, max: (1060 / 1536) * WORLD_W },
-        y: BACK_Y + (600 / 1024) * BACK_H,
+        x: { min: TOWN_SPOTS.portal.x - 110, max: TOWN_SPOTS.portal.x + 110 },
+        y: TOWN_SPOTS.portal.y + 90,
         lifespan: 3600,
         speedX: { min: -18, max: 18 },
         speedY: { min: -22, max: -8 },
@@ -566,20 +636,28 @@ export function createParallax(scene) {
   function setArea(area, tint) {
     kind = area === "town" ? "town" : "cave";
     const theme = THEMES[kind],
-      key = kind,
-      tex = scene.textures.get(key).getSourceImage(),
+      tex = scene.textures.get("cave").getSourceImage(),
       th = tex.height,
       tw = tex.width;
     split = SPLIT[kind];
-    const cut = Math.round(th * split);
+    const cut = Math.round(th * split),
+      isTown = kind === "town";
+    kit.forEach((o) => o.setVisible(isTown));
+    scenery.setVisible(!isTown);
+    floor.setVisible(!isTown);
+    // Cave path is painted at pixel y=733. Its top must meet world ground=600,
+    // rather than leaving feet ~64px below the stone walkway.
+    const backY = kind === "cave" ? -116 : BACK_Y;
     for (const img of [scenery, floor]) {
-      img.setTexture(key).setDisplaySize(WORLD_W, BACK_H);
+      img.setTexture("cave").setY(backY).setDisplaySize(WORLD_W, BACK_H);
       img.clearTint();
       if (tint) img.setTint(tint);
     }
+    // Painted balconies must share the collision world's scroll factor.
+    scenery.setScrollFactor(kind === "town" ? 1 : SCENERY_FACTOR, 1);
     scenery.setCrop(0, 0, tw, cut);
     floor.setCrop(0, cut, tw, th - cut);
-    seam.setY(BACK_Y + split * BACK_H - 1);
+    seam.setY(isTown ? TOWN_STREET_Y - 1 : backY + split * BACK_H - 1);
     fgBottom.setTexture(`fg-${kind}-bottom`);
     fgTop.setTexture(`fg-${kind}-top`);
     fog.setTint(theme.fogColor).setAlpha(theme.fogAlpha);
@@ -604,16 +682,31 @@ export function createParallax(scene) {
       vw = w / z,
       vh = h / z;
     // Align the slower scenery with the floor when the camera is mid-world.
-    scenery.x = (-(1 - SCENERY_FACTOR) * Math.max(0, WORLD_W - vw)) / 2;
+    scenery.x =
+      kind === "town"
+        ? 0
+        : (-(1 - SCENERY_FACTOR) * Math.max(0, WORLD_W - vw)) / 2;
     const top = h / 2 - vh / 2,
       bottom = h / 2 + vh / 2,
       // Keep foreground framing below the walkway the heroes stand on
       // (feet sit ~260 world units under the camera's resting centre).
-      room = Phaser.Math.Clamp(vh / 2 - 260 - 24, 50, 220);
+      room = Phaser.Math.Clamp(
+        vh / 2 - (600 - (scene.camY ?? 340)) - 24,
+        50,
+        220,
+      );
     fgBottom.setPosition(w / 2, bottom + 6).setSize(vw + 40, room);
     fgBottom.tilePositionY = 220 - room;
     fgTop.setPosition(w / 2, top - 4).setSize(vw + 40, 200);
     fgTop.setScale(1, lowPower ? 0.6 : 0.85);
+    // Keep each far strip where its `top` says while the camera rests at camY;
+    // a scroll factor below 1 then moves it less as the camera climbs.
+    const restY = (scene.camY ?? 340) - h / 2;
+    for (const l of far)
+      l.layer
+        .setX(w / 2)
+        .setSize(vw + 40, l.layer.height)
+        .setY(l.top - restY * (1 - l.fy));
     fog.setX(w / 2).setSize(vw + 40, 128);
     fogBack.setX(w / 2).setSize(vw + 40, 128);
     vignette.setPosition(w / 2, h / 2).setDisplaySize(vw + 4, vh + 4);
@@ -625,8 +718,14 @@ export function createParallax(scene) {
     const c = cam(),
       sx = c.scrollX,
       drift = reduced ? 0 : time * 0.012;
+    if (kind === "town" && !reduced)
+      for (const a of animated)
+        a.img.setFrame(Math.floor((time + a.phase) / 160) % 4);
     fgBottom.tilePositionX = sx * 1.45;
     fgTop.tilePositionX = sx * 1.3 + 300;
+    for (const l of far)
+      l.layer.tilePositionX =
+        (sx * l.fx + (l.drift ? drift * l.drift * 80 : 0)) / l.layer.tileScaleX;
     fog.tilePositionX = sx * 1.12 + drift;
     fogBack.tilePositionX = sx * 0.8 - drift * 0.6;
     if (!reduced) {

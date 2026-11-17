@@ -1,3 +1,4 @@
+import { initializeGear } from "../shared/rpg.js";
 import Database from "better-sqlite3";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
@@ -16,12 +17,12 @@ CREATE TABLE IF NOT EXISTS requests(id TEXT PRIMARY KEY,actor TEXT,action TEXT,r
 export function loadCharacter(id) {
   const row = db.prepare("SELECT * FROM characters WHERE id=?").get(id);
   return row
-    ? {
+    ? initializeGear({
         ...JSON.parse(row.state),
         id: row.id,
         userId: row.user_id,
         name: row.name,
-      }
+      })
     : null;
 }
 export function persist(p) {
@@ -39,6 +40,9 @@ export function persist(p) {
       "exp",
       "unlocked",
       "quest",
+      "equipment",
+      "ownedEquipment",
+      "specialization",
     ].map((k) => [k, p[k]]),
   );
   db.prepare("UPDATE characters SET state=? WHERE id=?").run(

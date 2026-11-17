@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "3.0",
+  "name": "attack",
+  "artSource": "painted sheet (supplied artwork)",
+  "sourceSize": [
+    398,
+    220
+  ],
+  "sourceAnchor": [
+    199.0,
+    216.86
+  ],
+  "frameCount": 6,
+  "durationsMs": [
+    70,
+    70,
+    80,
+    70,
+    90,
+    110
+  ],
+  "durationSeconds": 0.49,
+  "fps": 12.245,
+  "loop": false,
+  "bodyHeightPx": 180.0,
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 220,
+      "frame": 3
+    }
+  ],
+  "sampling": "linear",
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      398,
+      220
+    ],
+    "pages": [
+      {
+        "file": "attack-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 6,
+        "columns": 6
+      }
+    ]
+  }
+}

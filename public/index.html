@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta
       name="viewport"
-      content="width=device-width,initial-scale=1,viewport-fit=cover"
+      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"
     />
     <meta name="theme-color" content="#132c46" />
     <title>ตำนาน 3 อัศวิน — ถ้ำหลวงดอยนางนอน</title>
@@ -14,10 +14,14 @@
     />
     <link rel="stylesheet" href="/style.css?v=0.3.1" />
     <link rel="stylesheet" href="/hud.css?v=0.6.1" />
+    <link rel="stylesheet" href="/mobile.css?v=0.15.3" />
+    <link rel="stylesheet" href="/rpg.css?v=1" />
+    <link rel="stylesheet" href="/lobby.css?v=2" />
   </head>
   <body>
-    <section id="landing">
+    <section id="landing" class="game-lobby" data-lobby-mode="loading">
       <div class="landing-shade"></div>
+      <div class="lobby-atmosphere" aria-hidden="true"></div>
       <header class="landing-header">
         <a href="/" class="brand"
           ><span>✦</span>
@@ -25,74 +29,131 @@
             ตำนาน <b>3</b> อัศวิน<small>LEGENDS OF DOI NANG NON</small>
           </div></a
         >
-        <div class="live-pill">
-          <i></i> ONLINE ADVENTURE <span>DEMO v0.3</span>
-        </div>
+        <div class="lobby-chapter"><i></i> ดอยนางนอน <span>CH. 01</span></div>
         <button id="sound" class="glass-button">♫ เปิดเสียง</button>
       </header>
-      <main class="creation">
-        <div class="creation-intro">
-          <span class="eyebrow">THE MOUNTAIN IS CALLING</span>
-          <h1>ทุกตำนาน…<br />เริ่มต้นที่<span>ผู้กล้า</span></h1>
-          <p>ถ้ำหลวงเปิดประตูอีกครั้ง และครั้งนี้<br />ชะตาของดอยนางนอน อยู่ในมือของเจ้า</p>
-          <div class="world-tags">
-            <span>✦ โลกแฟนตาซี 2D</span><span>♧ เล่นกับเพื่อนได้</span
-            ><span>⚔ 9 ด่านผจญภัย</span>
-          </div>
-        </div>
-        <div class="character-creation">
-          <div class="creation-heading">
-            <span>01 / เลือกผู้กล้าของคุณ</span>
-            <div class="gender-toggle">
-              <button data-gender="male">♂ ชาย</button
-              ><button data-gender="female" class="active">♀ หญิง</button>
+      <main class="lobby-layout">
+        <aside class="lobby-roster lobby-panel">
+          <div class="lobby-panel-title">
+            <span>Ⅰ</span>
+            <div>
+              <small id="roster-subtitle">YOUR CHARACTERS</small>
+              <h1 id="roster-title">ผู้กล้าของคุณ</h1>
             </div>
-          </div>
-          <div class="hero-showcase">
-            <div class="showcase-location">
-              <span>✦ DOI NANG NON SANCTUARY</span
-              ><small>วิหารผู้พิทักษ์ · ถ้ำหลวง</small>
-            </div>
-            <div id="hero-preview" aria-hidden="true"></div>
-            <div class="hero-fallback hero-art" aria-hidden="true"></div>
-            <div class="hero-caption">
-              <small id="selected-epithet">THE DAWNBLADE</small>
-              <h2 id="selected-class">นักดาบ</h2>
-              <p id="selected-lore"></p>
-            </div>
-            <aside
-              id="hero-stats"
-              aria-label="ค่าสถานะอาชีพ"
-              aria-live="polite"
-            ></aside>
-            <span class="showcase-level"
-              >LV.<b>01</b><small>เริ่มต้นตำนาน</small></span
-            >
+            <b>03</b>
           </div>
           <div id="class-cards" role="group" aria-label="เลือกอาชีพ"></div>
-          <div class="identity-row">
-            <label
-              >ชื่อตัวละคร<input
-                id="character-name"
-                maxlength="20"
-                placeholder="ตั้งชื่อผู้กล้าของคุณ"
-                autocomplete="off" /></label
-            ><button id="start" class="primary-button">
-              เริ่มการผจญภัย <span>➜</span>
-            </button>
+          <div class="roster-divider">
+            <span>ผู้กล้าของคุณ</span><small id="character-count">0 / 3</small>
           </div>
-          <p class="save-hint" id="account-status">
-            เล่นได้ทันทีแบบผู้มาเยือน · บันทึกบนเซิร์ฟเวอร์
-          </p>
           <div id="saved-characters"></div>
+          <button id="creation-back" class="creation-back" hidden>
+            ◀ กลับไปเลือกตัวละคร
+          </button>
+          <button id="new-hero" class="new-hero"><b>＋</b> สร้างผู้กล้าใหม่</button>
           <button id="account-open" class="text-button">
-            มีบัญชีแล้ว / สมัครบัญชีเพื่อเล่นข้ามเครื่อง
+            ♙ บัญชีผู้เล่น / เข้าสู่ระบบ
+          </button>
+        </aside>
+        <section class="hero-showcase" aria-label="แสดงตัวละคร">
+          <div class="showcase-location">
+            <small>วิหารผู้พิทักษ์</small><span>DOI NANG NON SANCTUARY</span>
+          </div>
+          <div class="lobby-gender gender-toggle">
+            <button data-gender="male">♂ ชาย</button
+            ><button data-gender="female" class="active">♀ หญิง</button>
+          </div>
+          <div id="hero-preview" aria-hidden="true"></div>
+          <div class="hero-fallback hero-art" aria-hidden="true"></div>
+          <button
+            class="hero-cycle previous"
+            data-cycle="-1"
+            aria-label="คลาสก่อนหน้า"
+          >
+            ‹
+          </button>
+          <button class="hero-cycle next" data-cycle="1" aria-label="คลาสถัดไป">
+            ›
+          </button>
+          <div class="hero-caption">
+            <small id="selected-epithet">THE DAWNBLADE</small>
+            <h2 id="selected-class">นักดาบ</h2>
+            <p id="selected-lore"></p>
+          </div>
+          <div class="preview-actions">
+            <button data-preview="idle" title="ท่ายืน" aria-label="ทดลองท่ายืน">
+              ◇</button
+            ><button data-preview="run" title="ทดลองวิ่ง" aria-label="ทดลองวิ่ง">
+              ➟</button
+            ><button
+              data-preview="attack"
+              title="ทดลองโจมตี"
+              aria-label="ทดลองโจมตี"
+            >
+              ⚔</button
+            ><button
+              data-preview="skill"
+              title="ทดลองสกิล"
+              aria-label="ทดลองสกิล"
+            >
+              ✦</button
+            ><span>ทดลองท่าทาง</span>
+          </div>
+        </section>
+        <aside class="lobby-details lobby-panel">
+          <div class="lobby-panel-title">
+            <span>Ⅱ</span>
+            <div>
+              <small>HERO ATTRIBUTES</small>
+              <h2>ข้อมูลผู้กล้า</h2>
+            </div>
+            <div class="lobby-level">LV.<b id="lobby-level">01</b></div>
+          </div>
+          <aside
+            id="hero-stats"
+            aria-label="ค่าสถานะอาชีพ"
+            aria-live="polite"
+          ></aside>
+          <div class="lobby-adventure">
+            <span>✧</span>
+            <div>
+              <small>การเดินทางรออยู่</small><strong>เสียงเรียกจากขุนเขา</strong>
+              <p>ออกเดินทางจากเมืองหน้าถ้ำหลวง<br />พิชิตผู้พิทักษ์ทั้ง 3 ชั้น</p>
+            </div>
+          </div>
+        </aside>
+      </main>
+      <div class="lobby-entry">
+        <div class="entry-status">
+          <span class="status-dot"></span>
+          <div>
+            <strong id="entry-title">พร้อมออกเดินทาง</strong>
+            <p class="save-hint" id="account-status">
+              ผู้มาเยือน · บันทึกความคืบหน้าอัตโนมัติ
+            </p>
+          </div>
+        </div>
+        <div class="identity-row">
+          <label
+            ><span id="identity-label"
+              >ชื่อผู้กล้าใหม่ <small>2–20 ตัวอักษร</small></span
+            ><input
+              id="character-name"
+              maxlength="20"
+              placeholder="ตั้งชื่อผู้กล้าของคุณ"
+              autocomplete="off" /></label
+          ><button id="start" class="primary-button">
+            <span id="start-label">สร้างผู้กล้า</span><b>➜</b>
           </button>
         </div>
-      </main>
+      </div>
       <footer class="landing-footer">
-        <span>ดอยนางนอน · เชียงราย · โลกแห่งตำนาน</span
-        ><span>PHASER 3 · REALTIME MULTIPLAYER</span><span>TH / EN</span>
+        <span
+          ><kbd>←</kbd><kbd>→</kbd>
+          <span id="lobby-switch-label">เลือกตัวละคร</span>
+          <span class="footer-separator">/</span>
+          <kbd>ENTER</kbd> เริ่มผจญภัย</span
+        ><span>โลกแห่งตำนาน · เชียงราย <b>✦</b> ONLINE ADVENTURE</span>
       </footer>
     </section>
     <section id="prologue" class="hidden">
@@ -126,6 +187,10 @@
               ><span id="mp-label"></span>
             </div>
             <div class="stat-bar exp"><i id="exp-fill"></i></div>
+            <div class="profile-meta">
+              <button id="player-class" data-panel="class">นักดาบ</button
+              ><small id="exp-label">0 EXP</small>
+            </div>
           </div>
         </div>
         <div class="world-title">
@@ -134,7 +199,8 @@
           <span id="stage-label">เมืองกลาง · CH.1</span>
         </div>
         <nav id="top-menu">
-          <button data-panel="inventory"><b>🎒</b><span>กระเป๋า</span></button
+          <button data-panel="class"><b>♜</b><span>คลาส</span></button
+          ><button data-panel="inventory"><b>🎒</b><span>อุปกรณ์</span></button
           ><button data-panel="quest"><b>📜</b><span>เควส</span></button
           ><button data-panel="market"><b>🏪</b><span>ตลาด</span></button
           ><button data-panel="party"><b>👥</b><span>ปาร์ตี้</span></button
@@ -162,7 +228,8 @@
         </div>
         <svg viewBox="0 0 220 65">
           <path
-            d="M8 52H211M35 38H65M105 28H140M165 38H190"
+            id="map-platforms"
+            d="M8 52H211"
             stroke="#a4c982"
             stroke-width="4"
             fill="none"
@@ -172,6 +239,17 @@
         ><button id="dungeon-open">♜ เลือกดันเจียน <span>➜</span></button>
         <button id="training-open">⚔ สนามฝึก · ซ้อมกับสไลม์</button>
       </aside>
+      <button
+        id="walkability-toggle"
+        aria-pressed="false"
+        title="แสดงพื้นยืนได้ (V)"
+      >
+        <span>▱</span> พื้นยืน <kbd>V</kbd>
+      </button>
+      <div id="traversal-hint">
+        ขอบสว่าง = ยืนได้ <span>·</span> หลังคาและฉากจาง = ฉากหลัง
+        <span>·</span> SPACE กระโดด
+      </div>
       <div id="context-hint" class="hidden"><kbd>F</kbd> <span></span></div>
       <div id="stage-clear" class="hidden">
         <span>✦ STAGE CLEAR ✦</span>
@@ -183,6 +261,9 @@
         <p>ผลึกจันทราจะนำเจ้ากลับบ้าน โดยไม่เสีย EXP</p>
         <button id="revive" class="primary-button">กลับเมืองและฟื้นพลัง</button>
       </div>
+      <button id="chat-toggle" aria-label="เปิดแชท" aria-expanded="false">
+        💬<i></i>
+      </button>
       <div id="chat" class="ornate">
         <div class="chat-tabs">
           <button data-channel="world" class="active">โลก</button
@@ -204,11 +285,14 @@
           <button data-action="attack" class="skill basic">
             <b>⚔</b><span>J</span><small>โจมตี</small></button
           ><button data-action="skill1" class="skill blue">
-            <b>≋</b><span>Q</span><small>คลื่นพลัง</small><i></i></button
+            <b>≋</b><span>Q</span><small>คลื่นพลัง</small
+            ><em class="skill-cost"></em><i></i></button
           ><button data-action="skill2" class="skill orange">
-            <b>♨</b><span>W</span><small>พลังระเบิด</small><i></i></button
+            <b>♨</b><span>W</span><small>พลังระเบิด</small
+            ><em class="skill-cost"></em><i></i></button
           ><button data-action="skill3" class="skill violet">
-            <b>✦</b><span>E</span><small>ท่าไม้ตาย</small><i></i></button
+            <b>✦</b><span>E</span><small>ท่าไม้ตาย</small
+            ><em class="skill-cost"></em><i></i></button
           ><button data-action="hp" class="skill green">
             <b>✚</b><span>R</span
             ><small id="hp-potions">ยา HP ×5</small></button
@@ -254,6 +338,6 @@
     <div id="toast" role="status"></div>
     <script src="/vendor/phaser.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <script type="module" src="/game.js?v=0.13.0"></script>
+    <script type="module" src="/game.js?v=0.19.0"></script>
   </body>
 </html>

@@ -10,7 +10,9 @@
         "run": "run",
         "hit": "hurt",
         "death": "death",
-        "idle": "idle"
+        "idle": "idle",
+        "attack": "attack",
+        "skill": "skill"
       }
     },
     "archer-female": {
@@ -23,7 +25,9 @@
         "run": "run",
         "hit": "hurt",
         "death": "death",
-        "idle": "idle"
+        "idle": "idle",
+        "attack": "attack",
+        "skill": "skill"
       }
     },
     "mage-male": {
@@ -36,7 +40,9 @@
         "run": "run",
         "hit": "hurt",
         "death": "death",
-        "idle": "idle"
+        "idle": "idle",
+        "attack": "attack",
+        "skill": "skill"
       }
     },
     "mage-female": {
@@ -49,7 +55,9 @@
         "run": "run",
         "hit": "hurt",
         "death": "death",
-        "idle": "idle"
+        "idle": "idle",
+        "attack": "attack",
+        "skill": "skill"
       }
     },
     "swordsman-male": {
@@ -62,7 +70,9 @@
         "run": "run",
         "hit": "hurt",
         "death": "death",
-        "idle": "idle"
+        "idle": "idle",
+        "attack": "attack",
+        "skill": "skill"
       }
     },
     "swordsman-female": {
@@ -75,7 +85,9 @@
         "run": "run",
         "hit": "hurt",
         "death": "death",
-        "idle": "idle"
+        "idle": "idle",
+        "attack": "attack",
+        "skill": "skill"
       }
     }
   },
@@ -201,5 +213,47 @@
       }
     }
   },
-  "version": "20261117173920"
+  "version": "20261117203824",
+  "npcs": {
+    "elder": {
+      "dir": "npcs/elder",
+      "height": 104,
+      "facing": 1,
+      "source": "supplied painted sheet",
+      "actions": {
+        "idle": "idle",
+        "talk": "talk"
+      }
+    },
+    "forge": {
+      "dir": "npcs/forge",
+      "height": 114,
+      "facing": 1,
+      "source": "supplied painted sheet",
+      "actions": {
+        "idle": "idle",
+        "talk": "talk"
+      }
+    },
+    "potion": {
+      "dir": "npcs/potion",
+      "height": 108,
+      "facing": 1,
+      "source": "supplied painted sheet",
+      "actions": {
+        "idle": "idle",
+        "talk": "talk"
+      }
+    },
+    "weapon": {
+      "dir": "npcs/weapon",
+      "height": 114,
+      "facing": 1,
+      "source": "supplied painted sheet",
+      "actions": {
+        "idle": "idle",
+        "talk": "talk"
+      }
+    }
+  }
 }

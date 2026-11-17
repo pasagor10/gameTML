@@ -89,6 +89,17 @@ for h in archer-male archer-female mage-male mage-female swordsman-male swordsma
 done
 ```
 
+Attack/skill sheets (rows attack, skill) are merged per hero; `--hit` sets
+the damage frame when it differs from the defaults (attack 3, skill 2), e.g.
+bows release later:
+
+```bash
+python3 tools/sprite-rig/slice_sheet.py "$D/archer-female-attack.webp" --cols 6 \
+  --rows "archer-female:attack" "archer-female:skill" --hit attack=4 skill=3
+```
+
+All six heroes have painted attack/skill. Damage frames used: swords attack=3 skill=3 (female skill=2), archer-male attack=4 skill=2, archer-female attack=4 skill=3, mages attack=3 skill=3.
+
 To add attack frames later, slice the new sheet without `--replace` (e.g.
 `--rows "${h}:attack"`); the action merges into the set. Keep one design per
 hero: mixing sheets drawn from different references makes the character

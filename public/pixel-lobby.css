@@ -1,0 +1,513 @@
+/* Pixel-art selection only. Adventure art is deliberately scoped separately. */
+#landing.game-lobby.pixel-lobby {
+  --px-dark: #091b29;
+  --px-panel: #102b3b;
+  --px-line: #476574;
+  --px-gold: #e4c27c;
+  background: #0a2537 url("/assets/selection/pixel-sanctuary-v1.png") center
+    65% / cover no-repeat;
+  image-rendering: pixelated;
+  font-family: "Noto Sans Thai", monospace;
+}
+#landing.game-lobby.pixel-lobby::before {
+  background: linear-gradient(
+    90deg,
+    #06152180,
+    transparent 30%,
+    transparent 70%,
+    #06152180
+  );
+}
+#landing.game-lobby.pixel-lobby .landing-shade {
+  background: #07142138;
+}
+#landing.game-lobby.pixel-lobby .lobby-atmosphere {
+  display: none;
+}
+#landing.game-lobby.pixel-lobby .landing-header {
+  background: #081b2de8;
+  border-bottom: 3px solid #385666;
+  box-shadow: 0 3px #081724;
+}
+#landing.game-lobby.pixel-lobby .brand > div {
+  font-family: monospace, "Noto Sans Thai";
+  font-weight: 800;
+  text-shadow: 2px 2px #050f19;
+}
+#landing.game-lobby.pixel-lobby .brand > span {
+  text-shadow: 3px 3px #050f19;
+}
+#landing.game-lobby.pixel-lobby .brand small {
+  letter-spacing: 2px;
+  font-family: monospace;
+}
+#landing.game-lobby.pixel-lobby .lobby-panel {
+  background: #102838f5;
+  border: 3px solid #526b75;
+  border-radius: 0;
+  box-shadow:
+    0 0 0 2px #071422,
+    inset 0 0 0 2px #1d3c4b,
+    5px 5px #061321b0;
+  backdrop-filter: none;
+}
+#landing.game-lobby.pixel-lobby .lobby-panel::before {
+  top: -3px;
+  font-size: 9px;
+  background: #132b3b;
+  padding: 0 5px;
+}
+#landing.game-lobby.pixel-lobby .lobby-panel-title h1,
+#landing.game-lobby.pixel-lobby .lobby-panel-title h2 {
+  font-family: monospace, "Noto Sans Thai";
+  font-size: 22px;
+  font-weight: 700;
+  text-shadow: 2px 2px #061522;
+}
+#landing.game-lobby.pixel-lobby .lobby-panel-title {
+  border-bottom: 2px solid #33505e;
+}
+#landing.game-lobby.pixel-lobby .lobby-panel-title > span {
+  font-family: monospace;
+  font-size: 22px;
+  color: #acc6be;
+}
+#landing.game-lobby.pixel-lobby .lobby-panel-title small,
+#landing.game-lobby.pixel-lobby .stats-heading small {
+  font-family: monospace;
+  letter-spacing: 1px;
+  font-size: 8px;
+}
+#landing.game-lobby.pixel-lobby .lobby-level b {
+  font-family: monospace;
+  font-size: 28px;
+  font-weight: 700;
+}
+#landing.game-lobby.pixel-lobby #class-cards .hero-card {
+  background: #132e40;
+  border: 2px solid #395564;
+  border-radius: 0;
+  box-shadow: 2px 2px #071724;
+  transition: none;
+}
+#landing.game-lobby.pixel-lobby #class-cards .hero-card.active {
+  background: #334246;
+  border-color: var(--lobby-accent);
+  box-shadow:
+    2px 2px #071724,
+    inset 0 0 0 2px #182e37;
+}
+#landing.game-lobby.pixel-lobby #class-cards .hero-card:hover {
+  transform: none;
+  background: #244454;
+}
+#landing.game-lobby.pixel-lobby #class-cards .hero-card::before {
+  display: none;
+}
+#landing.game-lobby.pixel-lobby #class-cards .hero-art {
+  filter: none;
+  image-rendering: pixelated;
+  width: 76px;
+  height: 76px;
+  flex-basis: 76px;
+}
+#landing.game-lobby.pixel-lobby .class-card-copy strong {
+  font-size: 15px;
+}
+#landing.game-lobby.pixel-lobby .class-card-copy em {
+  color: #9fb9c3;
+  font-size: 9px;
+}
+#landing.game-lobby.pixel-lobby #class-cards small {
+  font-family: monospace;
+  font-size: 7px;
+}
+#landing.game-lobby.pixel-lobby .class-order {
+  font-family: monospace;
+  font-size: 23px;
+}
+#landing.game-lobby.pixel-lobby .saved-hero {
+  background: #122e40;
+  border: 2px solid #3e5a6a;
+  border-radius: 0;
+  box-shadow: 2px 2px #061522;
+  min-height: 110px;
+  padding: 8px;
+}
+#landing.game-lobby.pixel-lobby .saved-hero.active {
+  border-color: #e5c582;
+  background: #344747;
+  box-shadow:
+    2px 2px #061522,
+    inset 0 0 0 2px #172c38;
+}
+#landing.game-lobby.pixel-lobby .saved-portrait {
+  width: 78px;
+  height: 78px;
+  flex: 0 0 78px;
+  image-rendering: pixelated;
+}
+#landing.game-lobby.pixel-lobby .saved-hero strong {
+  font-size: 13px;
+  color: #f0dbaa;
+}
+#landing.game-lobby.pixel-lobby .saved-hero small {
+  font-size: 10px;
+  color: #9bb9c3;
+}
+#landing.game-lobby.pixel-lobby .saved-hero > b {
+  font: 12px monospace;
+  color: #e5c582;
+}
+#landing.game-lobby.pixel-lobby #saved-characters {
+  gap: 10px;
+}
+#landing.game-lobby.pixel-lobby .new-hero,
+#landing.game-lobby.pixel-lobby .creation-back {
+  display: block;
+  width: 100%;
+  padding: 11px 8px;
+  color: #e9d6a6;
+  border: 2px solid #68807e;
+  background: #1b3947;
+  border-radius: 0;
+  box-shadow: 2px 2px #061522;
+  font-size: 11px;
+}
+#landing.game-lobby.pixel-lobby .creation-back[hidden] {
+  display: none;
+}
+#landing.game-lobby.pixel-lobby .roster-divider {
+  border: 0;
+  font-size: 11px;
+  color: #bcccbf;
+  margin-top: 0;
+}
+#landing.game-lobby.pixel-lobby .roster-divider small {
+  font-family: monospace;
+  font-size: 10px;
+}
+#landing.game-lobby.pixel-lobby #hero-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+#landing.game-lobby.pixel-lobby #hero-preview canvas {
+  display: block;
+  flex: none;
+  max-width: none !important;
+  max-height: none !important;
+  width: var(--pixel-size, 320px) !important;
+  height: var(--pixel-size, 320px) !important;
+  object-fit: fill;
+  margin: 0 !important;
+  image-rendering: pixelated;
+}
+#landing.game-lobby.pixel-lobby .hero-fallback {
+  background-size: 300% 200%;
+  filter: none;
+  image-rendering: pixelated;
+}
+#landing.game-lobby.pixel-lobby .hero-caption h2 {
+  font-family: monospace, "Noto Sans Thai";
+  font-size: 34px;
+  font-weight: 800;
+  text-shadow: 3px 3px #061725;
+}
+#landing.game-lobby.pixel-lobby .hero-caption p {
+  color: #d0ded4;
+  text-shadow: 1px 1px #081b2d;
+}
+#landing.game-lobby.pixel-lobby .hero-caption > small {
+  color: #f0d69d;
+  font-family: monospace;
+  letter-spacing: 2px;
+  background: #102d3ebf;
+  padding: 3px 7px;
+}
+#landing.game-lobby.pixel-lobby .hero-caption::before {
+  content: "▪ ▪ ▪";
+  text-shadow: 1px 1px #091b2d;
+}
+#landing.game-lobby.pixel-lobby .showcase-location {
+  background: #102b3bdb;
+  border: 2px solid #426370;
+  padding: 5px 16px;
+  width: auto;
+  min-width: 200px;
+}
+#landing.game-lobby.pixel-lobby .showcase-location small {
+  font-size: 11px;
+  color: #dce4c8;
+}
+#landing.game-lobby.pixel-lobby .showcase-location span {
+  font-family: monospace;
+  font-size: 7px;
+  letter-spacing: 1px;
+}
+#landing.game-lobby.pixel-lobby .lobby-gender {
+  top: 57px;
+  border: 2px solid #4b6973;
+  background: #0c2332;
+  border-radius: 0;
+}
+#landing.game-lobby.pixel-lobby .gender-toggle button {
+  border-radius: 0;
+}
+#landing.game-lobby.pixel-lobby .gender-toggle button.active {
+  background: #d4b574;
+  box-shadow: 2px 2px #071725;
+}
+#landing.game-lobby.pixel-lobby .hero-cycle {
+  font-family: monospace;
+  font-weight: 800;
+  background: #122d3edb;
+  border: 2px solid #58717c;
+  font-size: 25px;
+  width: 28px;
+  height: 40px;
+  opacity: 1;
+}
+#landing.game-lobby.pixel-lobby .preview-actions button {
+  background: #153346;
+  border: 2px solid #5a7580;
+  box-shadow: 2px 2px #061725;
+  border-radius: 0;
+  font: 16px monospace;
+}
+#landing.game-lobby.pixel-lobby .preview-actions > span {
+  color: #b6ceca;
+  text-shadow: 1px 1px #061522;
+}
+#landing.game-lobby.pixel-lobby .class-identity .pixel-class-emblem {
+  width: 58px;
+  height: 58px;
+  image-rendering: pixelated;
+  border: 0;
+  clip-path: none;
+  filter: none;
+  background-color: #1c3c4a;
+}
+#landing.game-lobby.pixel-lobby .class-identity h3 {
+  font-family: monospace, "Noto Sans Thai";
+  font-size: 19px;
+  font-weight: 700;
+}
+#landing.game-lobby.pixel-lobby .attribute-track {
+  height: 5px;
+  background: #071b29;
+  border: 1px solid #385465;
+}
+#landing.game-lobby.pixel-lobby .attribute-track i {
+  height: 3px;
+  background: var(--lobby-accent);
+  box-shadow: none;
+}
+#landing.game-lobby.pixel-lobby .attribute strong {
+  font-family: monospace;
+  font-size: 15px;
+  font-weight: 700;
+}
+#landing.game-lobby.pixel-lobby .stats-heading > span {
+  color: #c5d4cb;
+}
+#landing.game-lobby.pixel-lobby .lobby-skills button {
+  border: 2px solid #365462;
+  background: #0c2232;
+  border-radius: 0;
+}
+#landing.game-lobby.pixel-lobby .lobby-skills button > span {
+  background: #244455;
+  border: 2px solid #607873;
+  box-shadow: 2px 2px #071724;
+  font-family: monospace;
+}
+#landing.game-lobby.pixel-lobby .lobby-skills button > b {
+  border-radius: 0;
+  font-family: monospace;
+}
+#landing.game-lobby.pixel-lobby .lobby-entry {
+  background: #102b3bf5;
+  backdrop-filter: none;
+  border-top: 3px solid #6a7d7a;
+  border-bottom: 2px solid #2b4a5a;
+  box-shadow: 0 -3px #071725;
+}
+#landing.game-lobby.pixel-lobby .entry-status strong {
+  color: #e4d6b1;
+  font-size: 14px;
+}
+#landing.game-lobby.pixel-lobby .status-dot {
+  border-radius: 0;
+  width: 6px;
+  height: 6px;
+  box-shadow: 2px 2px #061725;
+}
+#landing.game-lobby.pixel-lobby .save-hint {
+  color: #95b1bc;
+  font-size: 9px;
+}
+#landing.game-lobby.pixel-lobby #character-name {
+  background: #091d2c;
+  border: 2px solid #4d6c79;
+  border-radius: 0;
+  box-shadow: inset 2px 2px #050f1b;
+}
+#landing.game-lobby.pixel-lobby #character-name:focus {
+  border-color: #e1c384;
+  box-shadow: inset 2px 2px #050f1b;
+}
+#landing.game-lobby.pixel-lobby #start {
+  background: #dfbe79;
+  border: 3px solid #f7dfa4;
+  border-radius: 0;
+  box-shadow:
+    inset -3px -3px #a27a44,
+    inset 3px 3px #f2d59b,
+    4px 4px #071725;
+  font-family: monospace, "Noto Sans Thai";
+  font-weight: 800;
+}
+#landing.game-lobby.pixel-lobby #start:hover {
+  background: #efcf8d;
+  filter: none;
+  box-shadow:
+    inset -3px -3px #a27a44,
+    inset 3px 3px #f2d59b,
+    4px 4px #071725;
+}
+#landing.game-lobby.pixel-lobby #sound {
+  border-radius: 0;
+  background: #173345;
+  border: 2px solid #4a6572;
+  box-shadow: 2px 2px #061522;
+}
+#landing.game-lobby.pixel-lobby .landing-footer {
+  background: #071c2be8;
+  padding: 0 12px;
+  left: 0;
+  right: 0;
+  color: #9ab5bd;
+}
+#landing.game-lobby.pixel-lobby kbd {
+  border-radius: 0;
+  background: #183444;
+  border-color: #536c78;
+  font-family: monospace;
+}
+/* Existing-player selection is separate from the creation form. */
+#landing[data-lobby-mode="roster"] #class-cards,
+#landing[data-lobby-mode="roster"] .lobby-gender,
+#landing[data-lobby-mode="roster"] .identity-row > label {
+  display: none;
+}
+#landing[data-lobby-mode="roster"] .identity-row {
+  flex: 0 0 auto;
+}
+#landing[data-lobby-mode="roster"] #start {
+  flex: 0 0 240px;
+  min-width: 240px;
+}
+#landing[data-lobby-mode="create"] #saved-characters,
+#landing[data-lobby-mode="create"] .roster-divider,
+#landing[data-lobby-mode="create"] #new-hero {
+  display: none;
+}
+#landing[data-lobby-mode="create"] .creation-back {
+  margin-top: 17px;
+}
+#landing[data-lobby-mode="loading"] .lobby-layout,
+#landing[data-lobby-mode="loading"] .lobby-entry {
+  visibility: hidden;
+}
+#landing[data-lobby-mode="roster"] .lobby-roster .roster-divider {
+  margin-top: 0;
+}
+@media (max-height: 800px) and (min-width: 1000px) {
+  #landing.game-lobby.pixel-lobby .saved-hero {
+    min-height: 92px;
+  }
+  .pixel-lobby .saved-portrait {
+    width: 66px;
+    height: 66px;
+    flex-basis: 66px;
+  }
+  #landing.game-lobby.pixel-lobby .lobby-panel-title h1,
+  #landing.game-lobby.pixel-lobby .lobby-panel-title h2 {
+    font-size: 18px;
+  }
+  #landing.game-lobby.pixel-lobby .class-identity {
+    padding-bottom: 7px;
+  }
+}
+@media (max-width: 760px) {
+  #landing.game-lobby.pixel-lobby #hero-preview {
+    inset: 45px 0 85px;
+  }
+  #landing.game-lobby.pixel-lobby .showcase-location {
+    top: 6px;
+    padding: 3px 10px;
+  }
+  #landing.game-lobby.pixel-lobby .lobby-gender {
+    top: 55px;
+  }
+  #landing.game-lobby.pixel-lobby .hero-caption h2 {
+    font-size: 26px;
+  }
+  #landing.game-lobby.pixel-lobby .hero-showcase {
+    height: 410px;
+    min-height: 410px;
+  }
+  #landing.game-lobby.pixel-lobby #class-cards .hero-art {
+    flex-basis: auto;
+    width: 67px;
+    height: 67px;
+  }
+  #landing.game-lobby.pixel-lobby .class-card-copy strong {
+    font-size: 11px;
+  }
+  .pixel-lobby .class-card-copy em {
+    font-size: 7px !important;
+  }
+  #landing.game-lobby.pixel-lobby #saved-characters {
+    grid-template-columns: 1fr;
+  }
+  #landing.game-lobby.pixel-lobby .saved-hero {
+    min-height: 100px;
+  }
+  .pixel-lobby .saved-hero strong {
+    max-width: none !important;
+    font-size: 13px !important;
+  }
+  #landing.game-lobby.pixel-lobby .saved-portrait {
+    width: 74px;
+    height: 74px;
+    flex-basis: 74px;
+  }
+  #landing.game-lobby.pixel-lobby .lobby-entry {
+    padding-top: 10px;
+  }
+  #landing.game-lobby.pixel-lobby[data-lobby-mode="roster"] .entry-status {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+  }
+  #landing.game-lobby.pixel-lobby[data-lobby-mode="roster"] .lobby-entry {
+    display: flex;
+    gap: 12px;
+  }
+  #landing.game-lobby.pixel-lobby[data-lobby-mode="roster"]
+    .entry-status
+    strong {
+    font-size: 11px;
+  }
+  .pixel-lobby[data-lobby-mode="roster"] .entry-status .save-hint {
+    font-size: 7px;
+    max-width: 190px;
+  }
+  #landing.game-lobby.pixel-lobby[data-lobby-mode="roster"] #start {
+    min-width: 130px;
+    flex-basis: 130px;
+  }
+}

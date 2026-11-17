@@ -1,0 +1,280 @@
+{
+ "piece-stall": {
+  "src": [
+   1024,
+   1528
+  ],
+  "out": [
+   369,
+   550
+  ],
+  "scale": 0.36
+ },
+ "piece-shop": {
+  "src": [
+   1240,
+   1246
+  ],
+  "out": [
+   521,
+   523
+  ],
+  "scale": 0.42
+ },
+ "piece-smithy": {
+  "src": [
+   1448,
+   1064
+  ],
+  "out": [
+   666,
+   489
+  ],
+  "scale": 0.46
+ },
+ "piece-stairs": {
+  "src": [
+   1024,
+   1508
+  ],
+  "out": [
+   430,
+   633
+  ],
+  "scale": 0.42
+ },
+ "piece-tower": {
+  "src": [
+   1024,
+   1517
+  ],
+  "out": [
+   430,
+   637
+  ],
+  "scale": 0.42
+ },
+ "piece-tree": {
+  "src": [
+   1024,
+   1528
+  ],
+  "out": [
+   512,
+   764
+  ],
+  "scale": 0.5
+ },
+ "piece-cavegate": {
+  "src": [
+   1086,
+   1440
+  ],
+  "out": [
+   456,
+   605
+  ],
+  "scale": 0.42
+ },
+ "prop-ground-0": {
+  "out": [
+   59,
+   74
+  ]
+ },
+ "prop-ground-1": {
+  "out": [
+   57,
+   100
+  ]
+ },
+ "prop-ground-2": {
+  "out": [
+   83,
+   76
+  ]
+ },
+ "prop-ground-3": {
+  "out": [
+   80,
+   97
+  ]
+ },
+ "prop-ground-4": {
+  "out": [
+   110,
+   106
+  ]
+ },
+ "prop-ground-5": {
+  "out": [
+   69,
+   80
+  ]
+ },
+ "prop-ground-6": {
+  "out": [
+   106,
+   108
+  ]
+ },
+ "prop-ground-7": {
+  "out": [
+   109,
+   73
+  ]
+ },
+ "prop-ground-8": {
+  "out": [
+   49,
+   110
+  ]
+ },
+ "prop-ground-9": {
+  "out": [
+   57,
+   111
+  ]
+ },
+ "prop-ground-10": {
+  "out": [
+   116,
+   56
+  ]
+ },
+ "prop-ground-11": {
+  "out": [
+   106,
+   74
+  ]
+ },
+ "prop-hanging-0": {
+  "out": [
+   53,
+   118
+  ]
+ },
+ "prop-hanging-1": {
+  "out": [
+   45,
+   118
+  ]
+ },
+ "prop-hanging-2": {
+  "out": [
+   116,
+   60
+  ]
+ },
+ "prop-hanging-3": {
+  "out": [
+   90,
+   119
+  ]
+ },
+ "prop-hanging-4": {
+  "out": [
+   53,
+   120
+  ]
+ },
+ "prop-hanging-5": {
+  "out": [
+   118,
+   96
+  ]
+ },
+ "prop-hanging-6": {
+  "out": [
+   77,
+   118
+  ]
+ },
+ "prop-hanging-7": {
+  "out": [
+   47,
+   120
+  ]
+ },
+ "prop-foliage-0": {
+  "out": [
+   120,
+   172
+  ]
+ },
+ "prop-foliage-1": {
+  "out": [
+   145,
+   173
+  ]
+ },
+ "prop-foliage-2": {
+  "out": [
+   164,
+   163
+  ]
+ },
+ "prop-foliage-3": {
+  "out": [
+   155,
+   147
+  ]
+ },
+ "prop-foliage-4": {
+  "out": [
+   147,
+   131
+  ]
+ },
+ "prop-foliage-5": {
+  "out": [
+   152,
+   108
+  ]
+ },
+ "prop-foliage-6": {
+  "out": [
+   75,
+   176
+  ]
+ },
+ "prop-foliage-7": {
+  "out": [
+   150,
+   84
+  ]
+ },
+ "anim-banner": {
+  "out": [
+   376,
+   99
+  ],
+  "frame": [
+   94,
+   99
+  ],
+  "frames": 4
+ },
+ "anim-lantern": {
+  "out": [
+   328,
+   111
+  ],
+  "frame": [
+   82,
+   111
+  ],
+  "frames": 4
+ },
+ "anim-brazier": {
+  "out": [
+   364,
+   103
+  ],
+  "frame": [
+   91,
+   103
+  ],
+  "frames": 4
+ }
+}

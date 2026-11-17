@@ -6,7 +6,7 @@ import argon2 from "argon2";
 import path from "node:path";
 import { mkdirSync, readdirSync, unlinkSync } from "node:fs";
 import { db, loadCharacter, persist } from "./server/database.js";
-import { CLASSES } from "./shared/config.js";
+import { CLASSES, maxHp, maxMp } from "./shared/config.js";
 import * as world from "./server/world.js";
 const app = express(),
   server = http.createServer(app),
@@ -256,8 +256,8 @@ io.on("connection", (socket) => {
   execute("player:potion", (p, d) => world.potion(p, d.type));
   execute("player:heal", (p) => {
     world.ensureTown(p);
-    p.hp = CLASSES[p.class].hp + (p.level - 1) * 12 + (p.armor ? 30 : 0);
-    p.mp = CLASSES[p.class].mp + (p.level - 1) * 5;
+    p.hp = maxHp(p);
+    p.mp = maxMp(p);
     return { message: "พักฟื้นพลังเต็มแล้ว" };
   });
   execute("training:enter", (p) => world.beginTraining(p), 2);
@@ -265,6 +265,9 @@ io.on("connection", (socket) => {
   execute("dungeon:next", (p) => world.nextStage(p));
   execute("dungeon:leave", (p) => world.returnTown(p));
   execute("npc:buy", (p, d) => world.buyNpc(p, d.item, d.key), 5);
+  execute("equipment:buy", (p, d) => world.buyEquipment(p, d.id, d.key));
+  execute("equipment:equip", (p, d) => world.equip(p, d.slot, d.id));
+  execute("class:specialize", (p, d) => world.specialize(p, d.id));
   execute("equipment:enhance", (p, d) => world.enhance(p, d.key), 3);
   execute("shop:create", (p, d) => world.createShop(p, d), 3);
   execute("shop:buy", (p, d) => world.buyShop(p, d), 5);

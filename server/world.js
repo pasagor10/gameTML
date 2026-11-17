@@ -1,3 +1,4 @@
+import { GEAR, SPECIALIZATIONS, initializeGear } from "../shared/rpg.js";
 import { ACTIONS } from "../shared/motion.js";
 import { randomUUID } from "node:crypto";
 import { db, loadCharacter, persist, atomic, log } from "./database.js";
@@ -6,9 +7,11 @@ import {
   ITEMS,
   FLOORS,
   WORLD,
+  areaWidth,
   maxHp,
   maxMp,
   damage,
+  combatStats,
 } from "../shared/config.js";
 export const players = new Map(),
   instances = new Map(),
@@ -39,6 +42,9 @@ export function sync(p) {
       upgrade: saved.upgrade,
       armor: saved.armor,
       weapon: saved.weapon,
+      equipment: saved.equipment,
+      ownedEquipment: saved.ownedEquipment,
+      specialization: saved.specialization,
     });
 }
 export function ensureTown(p) {
@@ -56,13 +62,62 @@ export function buyNpc(p, item, key) {
     if (["weapon", "armor"].includes(item) && c[item])
       throw Error("มีอุปกรณ์นี้แล้ว");
     c.gold -= cost;
-    if (["weapon", "armor"].includes(item)) c[item] = true;
-    else c.inventory[item] = (c.inventory[item] || 0) + 1;
+    if (["weapon", "armor"].includes(item)) {
+      c[item] = true;
+      const id = item === "weapon" ? "guardian_weapon" : "traveler_armor";
+      c.ownedEquipment = [...new Set([...c.ownedEquipment, id])];
+      c.equipment[item] = id;
+    } else c.inventory[item] = (c.inventory[item] || 0) + 1;
     persist(c);
     return { message: "ซื้อ " + ITEMS[item].name + " สำเร็จ" };
   });
   sync(p);
   return result;
+}
+export function buyEquipment(p, id, key) {
+  ensureTown(p);
+  const item = GEAR[id];
+  if (!item?.price) throw Error("ไม่มีอุปกรณ์นี้ในร้าน");
+  const result = atomic(p.id, "equipment:buy", key, () => {
+    const c = loadCharacter(p.id);
+    if (c.ownedEquipment.includes(id)) throw Error("มีอุปกรณ์นี้แล้ว");
+    if (c.gold < item.price) throw Error("ทองไม่พอ");
+    c.gold -= item.price;
+    c.ownedEquipment.push(id);
+    persist(c);
+    return { message: "ได้รับ " + item.name + " · สวมใส่ได้ในกระเป๋า" };
+  });
+  sync(p);
+  return result;
+}
+export function equip(p, slot, id) {
+  ensureTown(p);
+  if (!["weapon", "armor", "charm", "boots"].includes(slot))
+    throw Error("ช่องอุปกรณ์ไม่ถูกต้อง");
+  const item = GEAR[id];
+  if (
+    id !== null &&
+    (!item || item.slot !== slot || !p.ownedEquipment.includes(id))
+  )
+    throw Error("ไม่มีอุปกรณ์นี้");
+  if (item?.class && item.class !== p.class) throw Error("อุปกรณ์ไม่ตรงอาชีพ");
+  if (item && p.level < item.level) throw Error("เลเวลยังไม่ถึง");
+  p.equipment[slot] = id;
+  p.hp = Math.min(p.hp, maxHp(p));
+  p.mp = Math.min(p.mp, maxMp(p));
+  savePlayer(p);
+  return { message: item ? "สวมใส่ " + item.name : "ถอดอุปกรณ์แล้ว" };
+}
+export function specialize(p, id) {
+  ensureTown(p);
+  if (p.level < 3) throw Error("ปลดล็อกสายพัฒนาเมื่อเลเวล 3");
+  if (!SPECIALIZATIONS[p.class].some((s) => s.id === id))
+    throw Error("สายพัฒนาไม่ตรงอาชีพ");
+  p.specialization = id;
+  p.hp = Math.min(p.hp, maxHp(p));
+  p.mp = Math.min(p.mp, maxMp(p));
+  savePlayer(p);
+  return { message: "เลือกสายพัฒนาแล้ว" };
 }
 export function enhance(p, key) {
   ensureTown(p);
@@ -193,6 +248,7 @@ export function potion(p, type = "hp") {
   if (!training) persist(p);
 }
 export function makeRuntime(c, socket) {
+  initializeGear(c);
   return {
     ...c,
     socket,
@@ -234,6 +290,9 @@ export function stored(p) {
     "exp",
     "unlocked",
     "quest",
+    "equipment",
+    "ownedEquipment",
+    "specialization",
   ];
   return {
     id: p.id,
@@ -271,7 +330,7 @@ export function beginDungeon(p, floor) {
   for (const m of members) {
     m.area = "dungeon";
     m.instance = id;
-    m.x = 180;
+    m.x = 380;
     m.y = 600;
     m.hp = maxHp(m);
     m.mp = maxMp(m);
@@ -283,6 +342,9 @@ export function beginDungeon(p, floor) {
     m.hitAt = 0;
     m.grounded = true;
     m.vx = 0;
+    m.vy = 0;
+    m.jump = false;
+    m.input = 0;
   }
   if (party) party.ready.clear();
   return { message: "เข้าสู่ " + FLOORS[floor - 1].name };
@@ -345,6 +407,11 @@ function spawnTraining(i) {
 function spawnStage(i) {
   i.clear = false;
   i.enemies = [];
+  i.hazards = [];
+  i.nextHazardAt = now() + 4;
+  i.streak = 0;
+  i.streakUntil = 0;
+  i.defeated = 0;
   const boss = i.stage === 3,
     count = boss ? 1 : 4 + i.floor;
   for (let n = 0; n < count; n++) {
@@ -361,10 +428,13 @@ function spawnStage(i) {
             (n + i.stage + i.floor) % 6
           ],
       boss,
+      spawnAt: now() + n * 0.06,
+      attackCount: 0,
       direction: -1,
       attackAt: 0,
     });
   }
+  i.totalEnemies = i.enemies.length;
   i.events = [];
 }
 export function nextStage(p) {
@@ -380,10 +450,14 @@ export function nextStage(p) {
   for (const id of i.members) {
     const m = live(id);
     if (m) {
-      m.x = 180;
+      m.x = 380;
       m.y = 600;
       m.vx = 0;
       m.vy = 0;
+      m.grounded = true;
+      m.jump = false;
+      m.input = 0;
+      m.hitAt = 0;
       m.pending = null;
       m.action = null;
       m.hp = Math.min(maxHp(m), m.hp + 40);
@@ -485,11 +559,11 @@ function resolveAttack(p, t) {
     direction: a.direction,
     class: p.class,
     skill,
-    range: c.range + ACTIONS[skill].rangeBonus,
+    range: combatStats(p).range + ACTIONS[skill].rangeBonus,
     combo: a.combo,
     at: t,
   });
-  const range = c.range + ACTIONS[skill].rangeBonus;
+  const range = combatStats(p).range + ACTIONS[skill].rangeBonus;
   let hits = 0;
   for (const e of i.enemies) {
     if (
@@ -502,11 +576,8 @@ function resolveAttack(p, t) {
     if (p.class === "archer" && skill < 2 && hits > 0) continue;
     const crit = Math.random() < 0.12,
       amount =
-        damage(
-          c.atk + (p.level - 1) * 3 + p.upgrade * 8 + (p.weapon ? 10 : 0),
-          i.floor * 5,
-          [1, 1.6, 2, 2.5][skill],
-        ) * (crit ? 1.5 : 1);
+        damage(combatStats(p).atk, i.floor * 5, [1, 1.6, 2, 2.5][skill]) *
+        (crit ? 1.5 : 1);
     e.hp -= Math.floor(amount);
     e.hitAt = t;
     e.hitDirection = a.direction;
@@ -530,10 +601,25 @@ function resolveAttack(p, t) {
       at: t,
     });
     if (e.hp <= 0 && !i.training) {
+      i.defeated = (i.defeated || 0) + 1;
+      i.streak = t <= (i.streakUntil || 0) ? i.streak + 1 : 1;
+      i.streakUntil = t + 5;
+      const bonus = Math.min(12, (i.streak - 1) * 3);
+      if (bonus)
+        i.events.push({
+          id: randomUUID(),
+          kind: "streak",
+          x: e.x,
+          y: e.y - 115,
+          streak: i.streak,
+          bonus,
+          at: t,
+        });
       for (const id of i.members) {
         const m = live(id);
         if (m && m.hp > 0) {
-          m.gold += e.boss ? 50 + i.floor * 20 : 8 + i.floor * 2;
+          m.gold += (e.boss ? 50 + i.floor * 20 : 8 + i.floor * 2) + bonus;
+          m.mp = Math.min(maxMp(m), m.mp + (bonus ? 4 : 0));
           exp(m, e.boss ? 110 : 20);
           if (Math.random() < 0.4) m.inventory.ore++;
           savePlayer(m);
@@ -551,6 +637,18 @@ function resolveAttack(p, t) {
         if (m) {
           m.unlocked = Math.min(3, Math.max(m.unlocked, i.floor + 1));
           m.gold += 80;
+          if (!m.ownedEquipment.includes("cavern_charm")) {
+            m.ownedEquipment.push("cavern_charm");
+            i.events.push({
+              id: randomUUID(),
+              kind: "loot",
+              actorId: m.id,
+              x: m.x,
+              y: m.y - 110,
+              item: "cavern_charm",
+              at: t,
+            });
+          }
           m.quest = Math.max(m.quest, i.floor);
           savePlayer(m);
         }
@@ -707,13 +805,13 @@ function physics(p, dt, t) {
   if (p.jump) p.jumpBufferedAt = t;
   const actionSlow = p.action && t < p.action.endsAt ? 0.36 : 1;
   const target =
-    p.input * CLASSES[p.class].speed * (p.running ? 1.25 : 0.78) * actionSlow;
+    p.input * combatStats(p).speed * (p.running ? 1.25 : 0.78) * actionSlow;
   const acceleration = (p.grounded ? (p.input ? 1900 : 2400) : 900) * dt;
   p.vx =
     (p.vx || 0) +
     Math.sign(target - (p.vx || 0)) *
       Math.min(Math.abs(target - (p.vx || 0)), acceleration);
-  p.x = Math.max(45, Math.min(WORLD.width - 45, p.x + p.vx * dt));
+  p.x = Math.max(45, Math.min(areaWidth(p.area) - 45, p.x + p.vx * dt));
   if (
     p.hp > 0 &&
     t - (p.jumpBufferedAt || 0) < 0.13 &&
@@ -730,7 +828,9 @@ function physics(p, dt, t) {
   p.grounded = false;
   let floor = WORLD.ground;
   if (p.vy >= 0)
-    for (const platform of WORLD.platforms)
+    for (const platform of p.area === "town"
+      ? WORLD.platforms
+      : WORLD.dungeonPlatforms)
       if (
         p.x >= platform.x &&
         p.x <= platform.x + platform.w &&
@@ -745,6 +845,77 @@ function physics(p, dt, t) {
   }
   if (p.action && t < p.action.endsAt) p.direction = p.action.direction;
   else if (p.input) p.direction = Math.sign(p.input);
+}
+// All damage and rewards stay authoritative, including environmental attacks.
+function dealDungeonDamage(i, p, base, actorId, direction, t) {
+  const amount = damage(base, combatStats(p).def);
+  p.hp = Math.max(0, p.hp - amount);
+  p.hitAt = t;
+  p.hitDirection = direction;
+  p.pending = null;
+  p.action = null;
+  i.streak = 0;
+  i.streakUntil = 0;
+  i.events.push({
+    id: randomUUID(),
+    kind: "damage",
+    targetId: p.id,
+    actorId,
+    x: p.x,
+    y: p.y - 85,
+    amount: -amount,
+    at: t,
+  });
+  if (!p.hp) {
+    p.diedAt = t;
+    p.auto = false;
+    p.input = 0;
+    savePlayer(p);
+  }
+}
+function updateCrystalHazards(i, t) {
+  if (i.training || i.clear) {
+    i.hazards = [];
+    return;
+  }
+  i.hazards = (i.hazards || []).filter((h) => t < h.endsAt);
+  const active = i.members.map(live).filter((p) => p?.hp > 0);
+  if (!active.length) return;
+  if (t >= i.nextHazardAt && !i.hazards.length) {
+    const p = active[(i.defeated || 0) % active.length];
+    i.hazards.push({
+      id: randomUUID(),
+      x: Math.max(160, Math.min(2240, p.x + (p.direction || 1) * 100)),
+      radius: 110,
+      startedAt: t,
+      impactAt: t + 1.2,
+      endsAt: t + 1.65,
+      resolved: false,
+    });
+    i.nextHazardAt = t + (i.stage === 2 ? 4.5 : 6);
+  }
+  for (const h of i.hazards) {
+    if (h.resolved || t < h.impactAt) continue;
+    h.resolved = true;
+    for (const p of active)
+      if (Math.abs(p.x - h.x) < h.radius && Math.abs(p.y - WORLD.ground) < 65)
+        dealDungeonDamage(
+          i,
+          p,
+          15 + i.floor * 3,
+          h.id,
+          Math.sign(p.x - h.x) || 1,
+          t,
+        );
+    i.events.push({
+      id: randomUUID(),
+      kind: "eruption",
+      x: h.x,
+      y: WORLD.ground,
+      radius: h.radius,
+      at: t,
+    });
+  }
 }
 export function tick(dt, t = now()) {
   for (const p of players.values()) {
@@ -766,7 +937,7 @@ export function tick(dt, t = now()) {
         const dist = e.x - p.x;
         p.direction = Math.sign(dist) || 1;
         p.input =
-          Math.abs(dist) > CLASSES[p.class].range * 0.75 ? Math.sign(dist) : 0;
+          Math.abs(dist) > combatStats(p).range * 0.75 ? Math.sign(dist) : 0;
         if (p.y < 540) {
           p.input = Math.sign(dist);
           p.jump = false;
@@ -801,6 +972,7 @@ export function tick(dt, t = now()) {
       if (!i.respawnAt) i.respawnAt = t + 2.5;
       if (t >= i.respawnAt) spawnTraining(i);
     }
+    updateCrystalHazards(i, t);
     for (const e of i.enemies) {
       const p = i.members
         .map(live)
@@ -816,37 +988,43 @@ export function tick(dt, t = now()) {
         const a = e.action;
         if (!a.resolved && t >= a.impactAt) {
           a.resolved = true;
-          if (
+          if (a.kind === "slam") {
+            for (const id of i.members) {
+              const target = live(id);
+              if (
+                target?.hp > 0 &&
+                Math.abs(target.x - a.x) < a.radius &&
+                Math.abs(target.y - WORLD.ground) < 65
+              )
+                dealDungeonDamage(
+                  i,
+                  target,
+                  30 + i.floor * 6,
+                  e.id,
+                  a.direction,
+                  t,
+                );
+            }
+            i.events.push({
+              id: randomUUID(),
+              kind: "eruption",
+              x: a.x,
+              y: WORLD.ground,
+              radius: a.radius,
+              at: t,
+            });
+          } else if (
             Math.abs(p.x - e.x) < (e.boss ? 130 : 100) &&
             Math.abs(p.y - e.y) < 100
           ) {
-            const amount = damage(
+            dealDungeonDamage(
+              i,
+              p,
               i.training ? 18 : e.boss ? 25 + i.floor * 5 : 13 + i.floor * 3,
-              CLASSES[p.class].def + (p.armor ? 15 : 0),
+              e.id,
+              a.direction,
+              t,
             );
-            p.hp = Math.max(0, p.hp - amount);
-            p.hitAt = t;
-            p.hitDirection = a.direction;
-            p.pending = null;
-            p.action = null;
-            i.events.push({
-              id: randomUUID(),
-              kind: "damage",
-              targetId: p.id,
-              actorId: e.id,
-              x: p.x,
-              y: p.y - 85,
-              amount: -amount,
-              at: t,
-            });
-            if (!p.hp) {
-              p.diedAt = t;
-              p.pending = null;
-              p.action = null;
-              p.auto = false;
-              p.input = 0;
-              savePlayer(p);
-            }
           }
         }
         if (t >= a.endsAt) e.action = null;
@@ -854,22 +1032,27 @@ export function tick(dt, t = now()) {
       }
       e.direction = Math.sign(distance) || 1;
       if (t - (e.hitAt || 0) < 0.14) continue;
+      const enraged = e.boss && e.hp <= e.maxHp * 0.5;
+      const slam = e.boss && (e.attackCount || 0) % 3 === 0;
       if (Math.abs(distance) > 70) {
-        e.x += Math.sign(distance) * (e.boss ? 75 : 90) * dt;
+        e.x += Math.sign(distance) * (e.boss ? (enraged ? 110 : 75) : 90) * dt;
         e.moving = true;
       }
       if (
-        Math.abs(distance) < (e.boss ? 115 : 82) &&
-        Math.abs(p.y - e.y) < 110 &&
-        t - e.attackAt > 1.4
+        Math.abs(distance) < (slam ? 650 : e.boss ? 115 : 82) &&
+        (slam || Math.abs(p.y - e.y) < 110) &&
+        t - e.attackAt > (enraged ? 1.05 : 1.4)
       ) {
         e.attackAt = t;
+        e.attackCount = (e.attackCount || 0) + 1;
         e.action = {
-          kind: "attack",
+          kind: slam ? "slam" : "attack",
+          x: p.x,
+          radius: enraged ? 195 : 165,
           direction: e.direction,
           startedAt: t,
-          impactAt: t + 0.42,
-          endsAt: t + 0.72,
+          impactAt: t + (slam ? 0.95 : 0.42),
+          endsAt: t + (slam ? 1.3 : 0.72),
         };
       }
     }
@@ -912,6 +1095,10 @@ export function snapshot(p) {
       maxMp: maxMp(p),
       exp: p.exp,
       inventory: p.inventory,
+      equipment: p.equipment,
+      ownedEquipment: p.ownedEquipment,
+      specialization: p.specialization,
+      stats: combatStats(p),
       upgrade: p.upgrade,
       weapon: p.weapon,
       armor: p.armor,
@@ -935,6 +1122,11 @@ export function snapshot(p) {
           training: !!i.training,
           instanceId: i.id,
           enemies: i.enemies,
+          hazards: i.hazards || [],
+          defeated: i.defeated || 0,
+          totalEnemies: i.totalEnemies || i.enemies.length,
+          streak: i.streak || 0,
+          streakUntil: i.streakUntil || 0,
           events: i.events,
         }
       : null,

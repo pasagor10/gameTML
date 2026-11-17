@@ -12,12 +12,14 @@
 // Each action folder holds the exporter's animation.json and atlas pages.
 // Missing game states fall back to idle.
 //
+// "npcs" lists town NPC sets by id (elder, potion, …): idle and talk.
 // "monsters" lists enemy sets by type ("bat", "golem", …) with the slime row
 // states: idle, move, attack, hit, death, spawn.
 
 const ROOT = "/assets/sprites/";
-const GROUPS = ["sets", "monsters"];
+const GROUPS = ["sets", "monsters", "npcs"];
 const MONSTER_STATES = ["idle", "move", "attack", "hit", "death", "spawn"];
+const NPC_STATES = ["idle", "talk"];
 const STATES = [
   "idle",
   "walk",
@@ -116,7 +118,7 @@ function clipFrom(scene, key, manifest) {
 // want(group, name) starts loading a set; it appears in the map when ready,
 // and callers fall back to static art + procedural motion until then.
 export function createSpriteRegistry(scene) {
-  const maps = { sets: new Map(), monsters: new Map() },
+  const maps = { sets: new Map(), monsters: new Map(), npcs: new Map() },
     requested = new Set(),
     index = () => scene.spriteSetIndex || scene.cache.json.get("sprite-index");
   const tryBuild = () => {
@@ -131,6 +133,7 @@ export function createSpriteRegistry(scene) {
   return {
     heroes: maps.sets,
     monsters: maps.monsters,
+    npcs: maps.npcs,
     want(group, name) {
       const id = `${group}|${name}`,
         set = index()?.[group]?.[name];
@@ -151,7 +154,12 @@ export function createSpriteRegistry(scene) {
 
 function buildSet(scene, group, name, set) {
   if (!set) return null;
-  const states = group === "monsters" ? MONSTER_STATES : STATES;
+  const states =
+    group === "monsters"
+      ? MONSTER_STATES
+      : group === "npcs"
+        ? NPC_STATES
+        : STATES;
   {
     const clips = {};
     for (const state of states) {
@@ -254,6 +262,16 @@ export function playMonsterSet(image, set, e, pose, time) {
   image._spriteStill = false;
   image.setScale(image._spriteScale);
   image.setFlipX((e.direction || 1) * set.facing < 0);
+}
+
+// Town NPCs: loop idle, or the talk row while a player stands close.
+export function playNpcSet(image, set, talking, time) {
+  const clip = set.clips[talking && set.clips.talk ? "talk" : "idle"],
+    f = clip.frames[frameAt(clip, time * 1000)];
+  if (image.texture.key !== f.key || image.frame.name !== f.frame)
+    image.setTexture(f.key, f.frame);
+  image.setOrigin(clip.origin[0], clip.origin[1]);
+  image.setScale(set.height / clip.bodyPx);
 }
 
 // Play the death clip once, then fade. Returns false if the set has none.

@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "3.0",
+  "name": "talk",
+  "artSource": "painted sheet (supplied artwork)",
+  "sourceSize": [
+    159,
+    165
+  ],
+  "sourceAnchor": [
+    80.46,
+    157.32
+  ],
+  "frameCount": 4,
+  "durationsMs": [
+    240,
+    260,
+    240,
+    320
+  ],
+  "durationSeconds": 1.06,
+  "fps": 3.774,
+  "loop": true,
+  "bodyHeightPx": 151.2,
+  "events": [],
+  "sampling": "linear",
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      159,
+      165
+    ],
+    "pages": [
+      {
+        "file": "talk-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  }
+}
