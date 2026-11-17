@@ -1,0 +1,14 @@
+{
+  "warning": "These are transparent placeholder art, not production chibi assets",
+  "frameWidth": 128,
+  "frameHeight": 128,
+  "frames": 4,
+  "assets": [
+    "characters/mage/male/idle_placeholder.png",
+    "characters/mage/female/idle_placeholder.png",
+    "characters/swordsman/male/idle_placeholder.png",
+    "characters/swordsman/female/idle_placeholder.png",
+    "characters/archer/male/idle_placeholder.png",
+    "characters/archer/female/idle_placeholder.png"
+  ]
+}

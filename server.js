@@ -1,7 +1,366 @@
-import http from 'node:http';
-import {readFile} from 'node:fs/promises';
-import path from 'node:path';
-const root=path.resolve('public');
-const types={'.html':'text/html; charset=utf-8','.css':'text/css','.js':'text/javascript','.png':'image/png','.webp':'image/webp','.jpg':'image/jpeg'};
-const server=http.createServer(async(req,res)=>{try{const p=decodeURIComponent(new URL(req.url,'http://localhost').pathname);const file=path.resolve(root,'.'+(p==='/'?'/index.html':p));if(!file.startsWith(root+path.sep)){res.writeHead(403).end();return;}const data=await readFile(file);res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream','Cache-Control':'no-cache'});res.end(data);}catch{res.writeHead(404).end('Not found');}});
-server.listen(Number(process.env.PORT)||5173,'0.0.0.0',()=>console.log('MOONFALL demo: http://localhost:'+(process.env.PORT||5173)));
+import express from "express";
+import http from "node:http";
+import { Server } from "socket.io";
+import { randomUUID, randomBytes, createHash } from "node:crypto";
+import argon2 from "argon2";
+import path from "node:path";
+import { mkdirSync, readdirSync, unlinkSync } from "node:fs";
+import { db, loadCharacter, persist } from "./server/database.js";
+import { CLASSES } from "./shared/config.js";
+import * as world from "./server/world.js";
+const app = express(),
+  server = http.createServer(app),
+  origin = process.env.APP_ORIGIN;
+app.disable("x-powered-by");
+app.set("trust proxy", "loopback");
+app.use(express.json({ limit: "12kb" }));
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "same-origin");
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' ws: wss:; media-src 'self' blob:",
+  );
+  if (
+    req.method === "POST" &&
+    req.headers.origin &&
+    req.headers.origin !== (origin || `${req.protocol}://${req.headers.host}`)
+  )
+    return res.status(403).json({ error: "Origin ไม่ถูกต้อง" });
+  next();
+});
+const sessions = (req) => {
+  const token = req.headers.cookie
+    ?.split(";")
+    .map((s) => s.trim())
+    .find((s) => s.startsWith("tml_session="))
+    ?.slice(12);
+  if (!token) return null;
+  return db
+    .prepare(
+      "SELECT u.id,u.name FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token=? AND s.expires>?",
+    )
+    .get(createHash("sha256").update(token).digest("hex"), Date.now());
+};
+const rate = new Map();
+function limited(key, max = 25, ms = 60000) {
+  const n = Date.now(),
+    old = rate.get(key) || { count: 0, at: n };
+  if (n - old.at > ms) {
+    old.at = n;
+    old.count = 0;
+  }
+  rate.set(key, old);
+  return ++old.count > max;
+}
+setInterval(() => {
+  for (const [k, v] of rate) if (Date.now() - v.at > 120000) rate.delete(k);
+  db.prepare("DELETE FROM sessions WHERE expires<?").run(Date.now());
+}, 60000).unref();
+function login(res, user) {
+  const token = randomBytes(32).toString("hex");
+  db.prepare("INSERT INTO sessions VALUES(?,?,?)").run(
+    createHash("sha256").update(token).digest("hex"),
+    user.id,
+    Date.now() + 30 * 86400000,
+  );
+  res.setHeader(
+    "Set-Cookie",
+    `tml_session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=2592000${process.env.NODE_ENV === "production" ? "; Secure" : ""}`,
+  );
+}
+app.get("/api/health", (req, res) =>
+  res.json({ ok: true, version: "0.2.0", online: world.players.size }),
+);
+app.get("/api/me", (req, res) => {
+  const user = sessions(req);
+  res.json({
+    user: user || null,
+    characters: user
+      ? db
+          .prepare("SELECT id,name,state FROM characters WHERE user_id=?")
+          .all(user.id)
+          .map((c) => ({ id: c.id, name: c.name, ...JSON.parse(c.state) }))
+      : [],
+  });
+});
+app.post("/api/auth/:action", async (req, res) => {
+  try {
+    if (limited("auth:" + req.ip, 15))
+      return res.status(429).json({ error: "ลองใหม่ใน 1 นาที" });
+    const { name, password } = req.body;
+    const action = req.params.action;
+    if (!["register", "login", "guest"].includes(action))
+      throw Error("ไม่พบคำสั่ง");
+    let user;
+    if (action === "guest") {
+      const id = randomUUID();
+      db.prepare("INSERT INTO users VALUES(?,?,?,?)").run(
+        id,
+        "guest-" + id,
+        null,
+        Date.now(),
+      );
+      user = { id, name: "นักเดินทาง" };
+    } else {
+      if (
+        typeof name !== "string" ||
+        name.trim().length < 3 ||
+        name.length > 30 ||
+        typeof password !== "string" ||
+        password.length < 8 ||
+        password.length > 128
+      )
+        throw Error("ชื่อบัญชี 3–30 ตัวอักษร และรหัสผ่าน 8–128 ตัวอักษร");
+      if (action === "register") {
+        const hash = await argon2.hash(password, { type: argon2.argon2id });
+        user = { id: randomUUID(), name: name.trim() };
+        db.prepare("INSERT INTO users VALUES(?,?,?,?)").run(
+          user.id,
+          user.name,
+          hash,
+          Date.now(),
+        );
+      } else {
+        const row = db
+          .prepare("SELECT * FROM users WHERE name=?")
+          .get(name.trim());
+        if (!row?.password || !(await argon2.verify(row.password, password)))
+          throw Error("ชื่อบัญชีหรือรหัสผ่านไม่ถูกต้อง");
+        user = { id: row.id, name: row.name };
+      }
+    }
+    login(res, user);
+    res.json({ user });
+  } catch (e) {
+    res
+      .status(400)
+      .json({
+        error: e.code?.startsWith("SQLITE_CONSTRAINT")
+          ? "ชื่อนี้ถูกใช้แล้ว"
+          : e.message,
+      });
+  }
+});
+app.post("/api/characters", (req, res) => {
+  try {
+    const user = sessions(req);
+    if (!user) return res.status(401).json({ error: "กรุณาเข้าสู่ระบบ" });
+    if (limited("char:" + user.id, 10)) throw Error("สร้างตัวละครถี่เกินไป");
+    const { name, class: job, gender } = req.body;
+    if (
+      !CLASSES[job] ||
+      !["male", "female"].includes(gender) ||
+      typeof name !== "string" ||
+      !/^[\p{L}\p{M}\p{N}_ -]{2,20}$/u.test(name)
+    )
+      throw Error("ชื่อตัวละครต้องยาว 2–20 ตัวอักษร ใช้ตัวอักษร ตัวเลข เว้นวรรค หรือ _ -");
+    if (
+      db
+        .prepare("SELECT count(*) n FROM characters WHERE user_id=?")
+        .get(user.id).n >= 3
+    )
+      throw Error("สร้างได้สูงสุด 3 ตัวละคร");
+    const id = randomUUID(),
+      state = {
+        class: job,
+        gender,
+        gold: 120,
+        inventory: { hp: 5, mp: 3, ore: 3 },
+        upgrade: 0,
+        weapon: false,
+        armor: false,
+        level: 1,
+        exp: 0,
+        unlocked: 1,
+        quest: 0,
+      };
+    db.prepare("INSERT INTO characters VALUES(?,?,?,?)").run(
+      id,
+      user.id,
+      name,
+      JSON.stringify(state),
+    );
+    res.json({ id, ...state, name });
+  } catch (e) {
+    res
+      .status(400)
+      .json({
+        error: e.code?.startsWith("SQLITE_CONSTRAINT")
+          ? "ชื่อตัวละครถูกใช้แล้ว"
+          : e.message,
+      });
+  }
+});
+app.use("/shared", express.static(path.resolve("shared")));
+app.use(
+  express.static(path.resolve("public"), {
+    maxAge: process.env.NODE_ENV === "production" ? "5m" : 0,
+  }),
+);
+const io = new Server(server, {
+  maxHttpBufferSize: 16384,
+  allowRequest: (req, done) => {
+    const o = req.headers.origin;
+    done(null, !o || o === (origin || `http://${req.headers.host}`));
+  },
+});
+io.use((socket, next) => {
+  const user = sessions(socket.request);
+  if (!user) return next(Error("กรุณาเข้าสู่ระบบ"));
+  socket.data.user = user;
+  next();
+});
+io.on("connection", (socket) => {
+  const execute = (event, handler, max = 20) =>
+    socket.on(event, (data = {}, ack = () => {}) => {
+      try {
+        if (limited(socket.id + event, max, 1000)) throw Error("ส่งคำสั่งถี่เกินไป");
+        const p = world.players.get(socket.id);
+        if (!p && event !== "player:join") throw Error("เลือกตัวละครก่อน");
+        const result = handler(p, data);
+        ack({ ok: true, ...result });
+      } catch (e) {
+        ack({ ok: false, error: e.message });
+      }
+    });
+  execute("player:join", (_, data) => {
+    const c = loadCharacter(data.id);
+    if (!c || c.userId !== socket.data.user.id) throw Error("ไม่พบตัวละคร");
+    if ([...world.players.values()].some((p) => p.id === c.id))
+      throw Error("ตัวละครนี้ออนไลน์อยู่แล้ว");
+    if (world.players.has(socket.id)) throw Error("เลือกตัวละครแล้ว");
+    const p = world.makeRuntime(c, socket);
+    world.players.set(socket.id, p);
+    return { message: "ยินดีต้อนรับ " + p.name };
+  });
+  execute(
+    "player:input",
+    (p, d) => {
+      if (
+        ![-1, 0, 1].includes(d.direction) ||
+        !Number.isSafeInteger(d.seq) ||
+        d.seq <= p.lastSeq
+      )
+        return;
+      p.lastSeq = d.seq;
+      p.lastInput = Date.now() / 1000;
+      p.input = d.direction;
+      p.jump = !!d.jump;
+      if (d.direction || d.jump) p.auto = false;
+    },
+    35,
+  );
+  execute("player:attack", (p, d) => world.attack(p, d.skill ?? 0));
+  execute("player:auto", (p, d) => {
+    if (p.area !== "dungeon" || p.hp <= 0)
+      throw Error("Auto เปิดได้เฉพาะในดันเจียน");
+    p.auto = !!d.enabled;
+  });
+  execute("player:potion", (p, d) => world.potion(p, d.type));
+  execute("player:heal", (p) => {
+    world.ensureTown(p);
+    p.hp = CLASSES[p.class].hp + (p.level - 1) * 12 + (p.armor ? 30 : 0);
+    p.mp = CLASSES[p.class].mp + (p.level - 1) * 5;
+    return { message: "พักฟื้นพลังเต็มแล้ว" };
+  });
+  execute("dungeon:enter", (p, d) => world.beginDungeon(p, d.floor));
+  execute("dungeon:next", (p) => world.nextStage(p));
+  execute("dungeon:leave", (p) => world.returnTown(p));
+  execute("npc:buy", (p, d) => world.buyNpc(p, d.item, d.key), 5);
+  execute("equipment:enhance", (p, d) => world.enhance(p, d.key), 3);
+  execute("shop:create", (p, d) => world.createShop(p, d), 3);
+  execute("shop:buy", (p, d) => world.buyShop(p, d), 5);
+  execute("shop:close", (p, d) => world.closeShop(p, d.key), 3);
+  execute("party:action", (p, d) => world.partyAction(p, d), 5);
+  execute("trade:action", (p, d) => world.tradeAction(p, d), 8);
+  execute(
+    "chat:send",
+    (p, d) => {
+      if (
+        typeof d.message !== "string" ||
+        !d.message.trim() ||
+        d.message.length > 160
+      )
+        throw Error("ข้อความ 1–160 ตัวอักษร");
+      const packet = {
+        id: randomUUID(),
+        name: p.name,
+        message: d.message.trim(),
+        channel: d.channel === "party" ? "party" : "world",
+      };
+      if (packet.channel === "party") {
+        if (!p.party) throw Error("ยังไม่มีปาร์ตี้");
+        for (const m of world.players.values())
+          if (m.party === p.party) m.socket.emit("chat:message", packet);
+      } else io.emit("chat:message", packet);
+    },
+    2,
+  );
+  socket.on("disconnect", () => {
+    const p = world.players.get(socket.id);
+    if (p) {
+      try {
+        world.disconnect(p);
+      } catch (e) {
+        console.error("disconnect:", e.message);
+      }
+      world.players.delete(socket.id);
+    }
+  });
+});
+const backupTimer = setInterval(async () => {
+  try {
+    const dir = path.resolve(
+      path.dirname(process.env.DB_PATH || "data/game.sqlite"),
+      "backups",
+    );
+    mkdirSync(dir, { recursive: true });
+    await db.backup(
+      path.join(
+        dir,
+        "scheduled-" +
+          new Date().toISOString().replace(/[:.]/g, "-") +
+          ".sqlite",
+      ),
+    );
+    const names = readdirSync(dir)
+      .filter((n) => n.startsWith("scheduled-") && n.endsWith(".sqlite"))
+      .sort();
+    for (const name of names.slice(0, -7)) unlinkSync(path.join(dir, name));
+  } catch (e) {
+    console.error("backup:", e.message);
+  }
+}, 86400000);
+backupTimer.unref();
+let step = 0;
+const timer = setInterval(() => {
+  try {
+    world.tick(0.05);
+    if (++step % 2 === 0)
+      for (const p of world.players.values())
+        p.socket.emit("world:snapshot", world.snapshot(p));
+    if (step % 200 === 0)
+      for (const p of world.players.values()) world.savePlayer(p);
+  } catch (e) {
+    console.error("tick:", e.message);
+  }
+}, 50);
+const port = Number(process.env.PORT) || 5173;
+server.listen(port, process.env.HOST || "127.0.0.1", () =>
+  console.log(`Tham Luang demo http://localhost:${port}`),
+);
+function shutdown() {
+  clearInterval(timer);
+  clearInterval(backupTimer);
+  for (const p of world.players.values()) world.savePlayer(p);
+  io.close();
+  server.close(() => {
+    db.close();
+    process.exit(0);
+  });
+  setTimeout(() => process.exit(1), 5000).unref();
+}
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);

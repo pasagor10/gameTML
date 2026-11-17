@@ -1,43 +1,1165 @@
-const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-const classes={knight:{name:'เซลีน',title:'THE MOONBLADE',quote:'“แสงสุดท้ายของข้า จะไม่ดับลงที่นี่”',color:'#dfc48a',hp:160,damage:27,range:105,speed:210},mage:{name:'ลิเรีย',title:'THE STARWEAVER',quote:'“แม้ในความมืด ดวงดาวยังจดจำเรา”',color:'#91e4ef',hp:105,damage:30,range:290,speed:200},archer:{name:'เอริน',title:'THE WINDWALKER',quote:'“จงฟังสายลม ก่อนที่ความเงียบจะมาถึง”',color:'#a8d5ad',hp:125,damage:22,range:340,speed:250}};
-let chosen='knight',mode='selection',audio,muted=true,ambientTimer,storyIndex=0,game;
-const stories=[['เสียงเรียกแห่งนางนอน','นานมาแล้ว ผู้พิทักษ์ทั้งสามผนึกหัวใจแห่งรัตติกาล\nไว้ใต้ขุนเขาที่ผู้คนเรียกว่า… ดอยนางนอน'],['คืนที่ดวงจันทร์แตกร้าว','ร้อยปีผ่านไป แสงสีฟ้าปรากฏจากปากถ้ำ\nพร้อมเสียงกระซิบที่เรียกชื่อเจ้า และเงาที่ไม่ควรตื่นขึ้น'],['สัญญาใต้แสงจันทร์','ผู้พิทักษ์คนสุดท้ายมอบเศษจันทร์ไว้ในมือเจ้า\n“จงลงไป ก่อนที่คืนสุดท้ายจะกลืนแสงของเรา”\nการเดินทางสู่ชั้นที่หนึ่ง เริ่มขึ้นแล้ว']];
-function sound(freq=440,duration=.2,type='sine',vol=.035){if(muted)return;try{audio??=new(window.AudioContext||window.webkitAudioContext)();audio.resume();const o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.setValueAtTime(freq,audio.currentTime);o.frequency.exponentialRampToValueAtTime(freq*.6,audio.currentTime+duration);g.gain.setValueAtTime(vol,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+duration);o.connect(g).connect(audio.destination);o.start();o.stop(audio.currentTime+duration);}catch{}}
-$('#sound').onclick=()=>{muted=!muted;$('#sound span').textContent=muted?'เสียงปิด':'เสียงเปิด';if(!muted){sound(392,1);clearInterval(ambientTimer);ambientTimer=setInterval(()=>{if(!muted){sound([196,246.94,293.66,392][Math.floor(Math.random()*4)],2,'sine',.016);}},2200);}else clearInterval(ambientTimer);};
-$$('.character').forEach(b=>b.onclick=()=>{chosen=b.dataset.class;$$('.character').forEach(x=>x.classList.toggle('selected',x===b));$('#hero-name').textContent=classes[chosen].name;$('#hero-title').textContent=classes[chosen].title;$('#hero-quote').textContent=classes[chosen].quote;sound(520,.12);});
-function setMode(m){mode=m;['selection','story','play'].forEach(id=>$('#'+id).classList.toggle('hidden',m!==id));$('header').classList.toggle('hidden',m==='play');$('#page-footer').classList.toggle('hidden',m==='play');}
-function showStory(){const s=stories[storyIndex];$('#story-title').textContent=s[0];$('#story-text').textContent=s[1];$('.story-dots').innerHTML=stories.map((_,i)=>`<i class="${i===storyIndex?'active':''}"></i>`).join('');$('#story-next').innerHTML=storyIndex===2?'เข้าสู่ค่ายแสงจันทร์ <span>⟶</span>':'อ่านต่อ <span>⟶</span>';sound(196+storyIndex*65,.8);}
-$('#begin').onclick=()=>{storyIndex=0;setMode('story');showStory();};$('#story-next').onclick=()=>{if(++storyIndex<3)showStory();else startGame();};$('#skip').onclick=()=>startGame();
-const ambience=$('#ambience'),ac=ambience.getContext('2d');let aw=0,ah=0;const motes=Array.from({length:65},()=>({x:Math.random(),y:Math.random(),s:Math.random()*1.6+.4,v:Math.random()*.00005+.000015,p:Math.random()*6}));
-function animateMotes(t){if(aw!==innerWidth||ah!==innerHeight){aw=ambience.width=innerWidth;ah=ambience.height=innerHeight;}ac.clearRect(0,0,aw,ah);if(mode!=='play')for(const p of motes){p.y-=p.v;if(p.y<0)p.y=1;const a=(Math.sin(t*.001+p.p)+1)*.25;ac.fillStyle=`rgba(174,232,227,${a})`;ac.shadowColor='#9ef7ec';ac.shadowBlur=8;ac.beginPath();ac.arc((p.x+Math.sin(t*.0002+p.p)*.01)*aw,p.y*ah,p.s,0,Math.PI*2);ac.fill();}requestAnimationFrame(animateMotes);}requestAnimationFrame(animateMotes);
-const canvas=$('#world'),ctx=canvas.getContext('2d'),keys=new Set();let width=0,height=0,last=0,toastTimer;
-function toast(text){$('#toast').textContent=text;$('#toast').classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').classList.remove('visible'),3000);}
-function save(){if(!game)return;try{localStorage.setItem('moonfall-save',JSON.stringify({class:chosen,gold:game.gold,potions:game.potions,level:game.level,upgrade:game.upgrade,completed:game.completed}));}catch{}}
-function startGame(){let old;try{old=JSON.parse(localStorage.getItem('moonfall-save'));}catch{}const same=old?.class===chosen;game={x:600,y:530,hp:classes[chosen].hp,gold:same?old.gold:0,potions:same?old.potions:3,level:same?old.level:1,upgrade:same?old.upgrade:0,completed:same?old.completed:false,area:'hub',floor:0,enemies:[],fx:[],floaters:[],auto:false,attackAt:0,skillAt:-10,time:0,dead:false,kills:0,dir:0};setMode('play');$('#dialog').classList.add('hidden');updateHUD();canvas.focus();toast(same?'ยินดีต้อนรับกลับ ความคืบหน้าถูกโหลดแล้ว':'ยินดีต้อนรับสู่ค่ายแสงจันทร์ · เดินด้วย WASD หรือปุ่มลูกศร');save();}
-function updateHUD(){if(!game)return;$('#player-name').textContent=classes[chosen].name;$('#level').textContent=`LV. ${game.level} · ${classes[chosen].title}`;$('#hp-fill').style.width=Math.max(0,game.hp/classes[chosen].hp*100)+'%';$('#hp-text').textContent=`${Math.ceil(Math.max(0,game.hp))} / ${classes[chosen].hp} HP`;$('#gold').textContent=game.gold;$('#potions').textContent=game.potions;$('.portrait').textContent=chosen==='knight'?'⚔':chosen==='mage'?'✧':'⌁';$('#area-sub').textContent=game.area==='hub'?'SANCTUARY':`THE HOLLOW · FLOOR 0${game.floor}`;$('#area-name').textContent=game.area==='hub'?'ค่ายแสงจันทร์':game.floor===3?'หัวใจแห่งรัตติกาล':`ถ้ำจันทรา · ชั้น ${game.floor}`;$('#quest-text').textContent=game.area==='hub'?(game.completed?'ชำระหัวใจรัตติกาลแล้ว! กลับลงดันเจียนเพื่อเล่นซ้ำได้':'เข้าใกล้ประตูสีฟ้า แล้วกด E เพื่อเข้าดันเจียน'):game.enemies.length?'กำจัดเงารัตติกาลทั้งหมด เพื่อเปิดประตูชั้นต่อไป':'ประตูเปิดแล้ว! เข้าใกล้ประตูด้านบนแล้วกด E';$('#kill-count').textContent=game.area==='hub'?'เป้าหมายเดโม: เคลียร์ดันเจียน 3 ชั้น':`ศัตรูเหลือ ${game.enemies.length} · อาวุธ +${game.upgrade}`;$('#auto').classList.toggle('on',game.auto);$('#auto small').textContent=`AUTO · ${game.auto?'เปิด':'ปิด'}`;$('#skill small').textContent=game.time-game.skillAt<6?`Q · ${Math.ceil(6-(game.time-game.skillAt))}s`:'Q · จันทรา';}
-function dialog(title,text,actions){keys.clear();$('#dialog-title').textContent=title;$('#dialog-text').textContent=text;$('#dialog-actions').replaceChildren();for(const [label,fn]of actions){const b=document.createElement('button');b.textContent=label;b.onclick=fn;$('#dialog-actions').append(b);}$('#dialog').classList.remove('hidden');}
-$('#dialog-close').onclick=()=>{$('#dialog').classList.add('hidden');canvas.focus();};$('#exit').onclick=()=>{save();keys.clear();setMode('selection');};
-function enterFloor(n){game.floor=n;game.area='dungeon';game.x=600;game.y=640;game.kills=0;game.enemies=[];game.fx=[];const count=n===3?1:n+3;for(let i=0;i<count;i++)game.enemies.push({x:310+(i%3)*260,y:260+Math.floor(i/3)*140,hp:n===3?650:60+n*20,max:n===3?650:60+n*20,boss:n===3,phase:i*1.4,hitAt:-5,attackAt:0});updateHUD();sound(95,1,'triangle');toast(n===3?'ผู้เฝ้าประตูรัตติกาลปรากฏตัว!':`เข้าสู่ถ้ำจันทรา ชั้น ${n} · กำจัดเงาให้หมด`);}
-function interact(){if(!game||game.dead||!$('#dialog').classList.contains('hidden'))return;if(game.area==='hub'){if(Math.hypot(game.x-600,game.y-230)<130){dialog('ประตูถ้ำจันทรา','แสงสีฟ้าสั่นไหว เงารัตติกาลกำลังรออยู่ข้างใน ดันเจียนนี้มี 3 ชั้น พร้อมหรือยัง?',[['ก้าวเข้าสู่ดันเจียน',()=>{$('#dialog').classList.add('hidden');enterFloor(1);}]]);}else if(Math.hypot(game.x-340,game.y-430)<130){dialog('มีรา · ผู้ปรุงยา',`ยาฟื้นฟู 60 HP ราคา 15 ทอง · เจ้าตอนนี้มี ${game.gold} ทอง`,[['ซื้อยาฟื้นฟู · 15 ทอง',()=>{if(game.gold<15){toast('ทองไม่พอ ต้องการ 15 ทอง');return;}game.gold-=15;game.potions++;save();updateHUD();toast('ได้รับยาฟื้นฟู 1 ขวด');}]]);}else if(Math.hypot(game.x-870,game.y-430)<130){dialog('โอริน · ช่างตีอาวุธ',`เสริมพลังอาวุธ +${game.upgrade+1} เพิ่มความเสียหาย 8 หน่วย ราคา ${(game.upgrade+1)*30} ทอง (สำเร็จแน่นอนในเดโม)`,[['เสริมพลังอาวุธ',()=>{const cost=(game.upgrade+1)*30;if(game.gold<cost){toast(`ทองไม่พอ ต้องการ ${cost} ทอง`);return;}game.gold-=cost;game.upgrade++;save();updateHUD();$('#dialog').classList.add('hidden');sound(800,.6);toast(`เสริมพลังสำเร็จ! อาวุธ +${game.upgrade}`);}]]);}else if(Math.hypot(game.x-600,game.y-610)<105){game.hp=classes[chosen].hp;updateHUD();toast('พักที่ผลึกจันทรา · ฟื้นฟู HP เต็มแล้ว');}else toast('เข้าใกล้ NPC ประตู หรือผลึกจันทรา แล้วกด E');}else if(!game.enemies.length&&Math.hypot(game.x-600,game.y-165)<140){if(game.floor<3)enterFloor(game.floor+1);else finishDungeon();}else toast(game.enemies.length?'กำจัดศัตรูให้หมดก่อนเปิดประตู':'เดินไปที่ประตูด้านบน แล้วกด E');}
-function finishDungeon(){game.completed=true;game.gold+=100;game.level++;save();dialog('รุ่งอรุณกลับมาอีกครั้ง','หัวใจรัตติกาลสงบลง เสียงกระซิบจากชั้นลึกหายไปชั่วคราว… แต่ภายใต้ขุนเขา ยังมีอีก 97 ชั้นรอการค้นพบ ได้รับ 100 ทอง และเพิ่ม 1 เลเวล',[['กลับค่ายแสงจันทร์',()=>{$('#dialog').classList.add('hidden');returnHub();}]]);sound(660,1);}
-function returnHub(){game.area='hub';game.floor=0;game.x=600;game.y=530;game.hp=classes[chosen].hp;game.dead=false;game.auto=false;game.enemies=[];game.fx=[];updateHUD();save();}
-function potion(){if(!game||game.dead)return;if(!game.potions){toast('ยาหมดแล้ว ซื้อเพิ่มที่ค่ายได้');return;}if(game.hp>=classes[chosen].hp){toast('HP เต็มอยู่แล้ว');return;}game.potions--;game.hp=Math.min(classes[chosen].hp,game.hp+60);game.fx.push({x:game.x,y:game.y,r:65,age:0,color:'#9ce4aa',duration:.7});sound(700,.3);save();updateHUD();toast('ฟื้นฟู 60 HP');}
-function attack(special=false){if(!game||game.dead||game.area!=='dungeon'||!$('#dialog').classList.contains('hidden'))return;const now=game.time;if(special?now-game.skillAt<6:now-game.attackAt<.48)return;if(special)game.skillAt=now;else game.attackAt=now;const c=classes[chosen],range=special?350:c.range;game.fx.push({x:game.x,y:game.y,r:range,age:0,color:special?'#9aeef7':c.color,duration:special?.65:.3,dir:game.dir,special});sound(special?180:420,special?.6:.12,special?'sine':'triangle');let hits=0;for(const e of game.enemies){if(Math.hypot(e.x-game.x,e.y-game.y)<range){if(chosen==='archer'&&!special&&hits)continue;const dmg=Math.round((c.damage+game.upgrade*8)*(special?2.3:1));e.hp-=dmg;e.hitAt=now;game.floaters.push({x:e.x,y:e.y-30,text:dmg,color:special?'#b8faff':'#f4deb0',age:0});game.fx.push({x:e.x,y:e.y,r:30,age:0,color:c.color,duration:.3});hits++;}}const killed=game.enemies.filter(e=>e.hp<=0);if(killed.length){game.gold+=killed.reduce((a,e)=>a+(e.boss?85:12),0);game.kills+=killed.length;game.enemies=game.enemies.filter(e=>e.hp>0);save();if(!game.enemies.length){toast('เงารัตติกาลสลายแล้ว · ประตูด้านบนเปิดออก');sound(880,.7);}}updateHUD();}
-$('#attack').onclick=()=>attack();$('#skill').onclick=()=>attack(true);$('#potion').onclick=potion;$('#auto').onclick=()=>{if(!game||game.dead)return;game.auto=!game.auto;updateHUD();toast(game.auto?'เปิด Auto · เดินเข้าหาระยะโจมตีและใช้สกิลอัตโนมัติ':'ปิด Auto');};$('#interact-touch').onclick=interact;
-addEventListener('keydown',e=>{if(mode!=='play')return;if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();keys.add(e.key.toLowerCase());if(e.repeat)return;if(e.code==='Space')attack();if(e.key.toLowerCase()==='q')attack(true);if(e.key.toLowerCase()==='r')potion();if(e.key.toLowerCase()==='e')interact();if(e.key==='Escape')$('#dialog-close').click();});addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));addEventListener('blur',()=>keys.clear());$$('[data-move]').forEach(b=>{b.addEventListener('pointerdown',e=>{b.setPointerCapture(e.pointerId);keys.add(b.dataset.move);});for(const evt of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(evt,()=>keys.delete(b.dataset.move));});
-function update(dt){const g=game;g.time+=dt;if(g.dead||!$('#dialog').classList.contains('hidden'))return;let dx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),dy=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0);if(g.auto&&g.area==='dungeon'&&!dx&&!dy){if(g.enemies.length){const e=[...g.enemies].sort((a,b)=>Math.hypot(a.x-g.x,a.y-g.y)-Math.hypot(b.x-g.x,b.y-g.y))[0],distance=Math.hypot(e.x-g.x,e.y-g.y);g.dir=Math.atan2(e.y-g.y,e.x-g.x);if(distance>classes[chosen].range*.75){dx=(e.x-g.x)/distance;dy=(e.y-g.y)/distance;}attack();attack(true);if(g.hp<classes[chosen].hp*.35&&g.potions)potion();}}const len=Math.hypot(dx,dy);if(len){g.x+=dx/len*classes[chosen].speed*dt;g.y+=dy/len*classes[chosen].speed*dt;g.dir=Math.atan2(dy,dx);}g.x=Math.max(155,Math.min(1045,g.x));g.y=Math.max(150,Math.min(690,g.y));for(const e of g.enemies){const dist=Math.hypot(g.x-e.x,g.y-e.y);if(dist>45){e.x+=(g.x-e.x)/dist*(e.boss?55:70+g.floor*8)*dt;e.y+=(g.y-e.y)/dist*(e.boss?55:70+g.floor*8)*dt;}if(dist<(e.boss?85:48)&&g.time-e.attackAt>(e.boss?1.3:.95)){e.attackAt=g.time;const damage=e.boss?20:8+g.floor*2;g.hp-=damage;g.floaters.push({x:g.x,y:g.y-40,text:'−'+damage,color:'#ff9b91',age:0});g.fx.push({x:g.x,y:g.y,r:45,age:0,color:'#ef766e',duration:.25});sound(100,.15,'sawtooth',.015);if(g.hp<=0){g.hp=0;g.dead=true;g.auto=false;dialog('แสงจันทร์ยังไม่ดับ','เจ้าพ่ายแพ้ต่อเงา แต่ผลึกจันทราจะพาเจ้ากลับค่าย ทองและอุปกรณ์ยังอยู่ครบ',[['ฟื้นที่ค่ายแสงจันทร์',()=>{$('#dialog').classList.add('hidden');returnHub();}]]);}}}g.fx.forEach(f=>f.age+=dt);g.fx=g.fx.filter(f=>f.age<f.duration);g.floaters.forEach(f=>{f.age+=dt;f.y-=dt*32;});g.floaters=g.floaters.filter(f=>f.age<1);updateHUD();}
-function ellipse(x,y,rx,ry,color){ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill();}function glow(x,y,r,color){const grad=ctx.createRadialGradient(x,y,0,x,y,r);grad.addColorStop(0,color);grad.addColorStop(1,'transparent');ctx.fillStyle=grad;ctx.fillRect(x-r,y-r,r*2,r*2);}function text(str,x,y,size=13,color='#c5d2d3'){ctx.font=`${size}px "Noto Sans Thai",sans-serif`;ctx.textAlign='center';ctx.fillStyle=color;ctx.fillText(str,x,y);}function crystal(x,y,color,size=30){ctx.save();ctx.translate(x,y);ctx.fillStyle=color;ctx.shadowColor=color;ctx.shadowBlur=25;ctx.beginPath();ctx.moveTo(0,-size);ctx.lineTo(size*.45,0);ctx.lineTo(0,size*.5);ctx.lineTo(-size*.45,0);ctx.closePath();ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle='#fff8';ctx.beginPath();ctx.moveTo(0,-size);ctx.lineTo(0,size*.5);ctx.stroke();ctx.restore();}
-function figure(x,y,color,kind='player',phase=0){ctx.save();ctx.translate(x,y);const bob=Math.sin(game.time*4+phase)*2;ellipse(0,15,23,9,'#0007');if(kind==='enemy'||kind==='boss'){const boss=kind==='boss',s=boss?2:1;ctx.scale(s,s);glow(0,-5,45,boss?'#a04e9833':'#577b9b22');ctx.fillStyle=boss?'#3e2e55':'#243746';ctx.beginPath();ctx.moveTo(0,-43+bob);ctx.quadraticCurveTo(-25,-34,-24,7);ctx.lineTo(-34,18);ctx.lineTo(-13,12);ctx.lineTo(0,21);ctx.lineTo(13,12);ctx.lineTo(30,18);ctx.quadraticCurveTo(24,-25,0,-43+bob);ctx.fill();ctx.fillStyle='#a7e9ed';ctx.shadowColor='#bce8ff';ctx.shadowBlur=12;ctx.fillRect(-10,-22+bob,6,3);ctx.fillRect(5,-22+bob,6,3);if(boss){ctx.strokeStyle='#c89bce';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-12,-35);ctx.lineTo(-25,-65);ctx.lineTo(-4,-49);ctx.moveTo(12,-35);ctx.lineTo(25,-65);ctx.lineTo(4,-49);ctx.stroke();}}else{const mage=chosen==='mage'&&kind==='player';ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(-9,-30+bob);ctx.lineTo(9,-30+bob);ctx.lineTo(mage?23:17,13);ctx.lineTo(-20,13);ctx.closePath();ctx.fill();ctx.fillStyle='#15263c';ctx.fillRect(-9,3,7,18);ctx.fillRect(3,3,7,18);ctx.fillStyle='#e0c6ac';ellipse(0,-38+bob,8,10,'#e0c6ac');ctx.fillStyle=kind==='player'?(chosen==='knight'?'#dce5ed':chosen==='mage'?'#243042':'#a96943'):'#b5b4a3';ctx.beginPath();ctx.arc(0,-43+bob,9,Math.PI,Math.PI*2);ctx.lineTo(11,-27+bob);ctx.lineTo(6,-36+bob);ctx.fill();ctx.strokeStyle='#d9c78e';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-10,-21);ctx.lineTo(11,-21);ctx.stroke();if(kind==='player'){ctx.strokeStyle=classes[chosen].color;ctx.shadowBlur=12;ctx.shadowColor=classes[chosen].color;ctx.lineWidth=3;ctx.beginPath();if(chosen==='knight'){ctx.moveTo(15,1);ctx.lineTo(31,-35);ctx.moveTo(18,-10);ctx.lineTo(29,-5);}else if(chosen==='mage'){ctx.moveTo(20,12);ctx.lineTo(22,-48);ctx.stroke();crystal(22,-48,'#9aebf6',10);}else{ctx.arc(16,-15,23,-1.3,1.3);ctx.moveTo(22,-37);ctx.lineTo(22,7);}ctx.stroke();}}ctx.restore();}
-function drawWorld(){const g=game;if(width!==innerWidth||height!==innerHeight){width=canvas.width=innerWidth; height=canvas.height=innerHeight;}ctx.clearRect(0,0,width,height);ctx.fillStyle='#07121b';ctx.fillRect(0,0,width,height);const scale=width<600?Math.min(1,height/800):Math.min(width/1200,height/800);ctx.save();ctx.translate(width<600?width/2-g.x*scale:(width-1200*scale)/2,(height-800*scale)/2);ctx.scale(scale,scale);const dungeon=g.area==='dungeon';let grad=ctx.createLinearGradient(0,0,0,800);grad.addColorStop(0,dungeon?'#0a1424':'#122c36');grad.addColorStop(1,'#08151d');ctx.fillStyle=grad;ctx.fillRect(0,0,1200,800);glow(600,250,450,dungeon?'#234b6633':'#44818433');
-// Layered cavern silhouettes and stone floor.
-for(let i=0;i<18;i++){const x=i*83-80,h=85+Math.sin(i*7.9)*40;ctx.fillStyle=i%2?'#0b1b26':'#0c202c';ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x+50,h);ctx.lineTo(x+95,0);ctx.fill();}ctx.fillStyle=dungeon?'#15232f':'#203539';ctx.beginPath();ctx.moveTo(250,150);ctx.lineTo(950,150);ctx.lineTo(1130,720);ctx.lineTo(70,720);ctx.closePath();ctx.fill();ctx.strokeStyle='#70989a12';ctx.lineWidth=1;for(let y=160;y<740;y+=50){ctx.beginPath();ctx.moveTo(110,y);ctx.lineTo(1090,y);ctx.stroke();for(let x=110+(y%100);x<1090;x+=100){ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-15,y+50);ctx.stroke();}}for(let i=0;i<55;i++){const x=120+(Math.sin(i*127.1)*.5+.5)*960,y=180+(Math.sin(i*73.7)*.5+.5)*520;ellipse(x,y,2+i%3,1,'#86aaa713');}
-// Ornamental central seal.
-ctx.save();ctx.translate(600,440);ctx.scale(1,.6);for(const r of [175,185,210]){ctx.strokeStyle='#c8b97918';ctx.lineWidth=r===185?3:1;ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.stroke();}for(let i=0;i<8;i++){const a=i*Math.PI/4;ctx.strokeStyle='#a8c5bd18';ctx.beginPath();ctx.moveTo(Math.cos(a)*175,Math.sin(a)*175);ctx.lineTo(Math.cos(a)*210,Math.sin(a)*210);ctx.stroke();}ctx.restore();
-// Border columns, teal braziers, drifting light.
-for(const x of [140,1060])for(const y of [260,540]){ellipse(x,y+20,35,12,'#0006');ctx.fillStyle='#213642';ctx.fillRect(x-15,y-65,30,80);ctx.fillStyle='#304451';ctx.fillRect(x-22,y-70,44,12);ctx.fillRect(x-22,y+8,44,12);glow(x,y-77,95,'#58dce833');crystal(x,y-80,'#8fe3e8',18);}
-const portalY=dungeon?165:230,open=!dungeon||!g.enemies.length;glow(600,portalY-30,130,open?'#53dcf04a':'#b15c9e22');ctx.lineWidth=12;ctx.strokeStyle='#314551';ctx.beginPath();ctx.ellipse(600,portalY-40,56,75,0,Math.PI,Math.PI*2);ctx.lineTo(656,portalY+20);ctx.moveTo(544,portalY-40);ctx.lineTo(544,portalY+20);ctx.stroke();if(open){const pg=ctx.createRadialGradient(600,portalY-30,5,600,portalY-30,70);pg.addColorStop(0,'#dbfcff');pg.addColorStop(.3,'#63cdebbb');pg.addColorStop(1,'#2c719d22');ellipse(600,portalY-30,44,63,pg);ctx.strokeStyle='#a5efff';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(600,portalY-30,42+Math.sin(g.time*2)*3,64,0,0,Math.PI*2);ctx.stroke();}text(open?(dungeon?'ประตูชั้นต่อไป · E':'ถ้ำจันทรา · E'):'ผนึกแห่งรัตติกาล',600,portalY+51,12,open?'#b4eff2':'#a58aa8');
-if(!dungeon){for(const [x,c,name,title]of [[340,'#96bec0','มีรา','ร้านยา · E'],[870,'#c6a477','โอริน','เสริมพลังอาวุธ · E']]){glow(x,430,85,'#c9a56914');ctx.fillStyle='#243744';ctx.fillRect(x-42,435,84,25);ctx.fillStyle='#6e6251';ctx.fillRect(x-48,433,96,8);figure(x,416,c,'npc');text(name,x,358,14,'#e2d3ac');text(title,x,480,11,'#98b4ba');}glow(600,600,75,'#72cce533');ellipse(600,620,42,15,'#354952');crystal(600,594+Math.sin(g.time*2)*4,'#a1e7ef',30);text('ผลึกจันทรา · E · ฟื้นฟู HP',600,662,11,'#a6cbd0');}
-for(const e of [...g.enemies].sort((a,b)=>a.y-b.y)){figure(e.x,e.y,g.time-e.hitAt<.15?'#fff':'#576a7d',e.boss?'boss':'enemy',e.phase);const bw=e.boss?110:44;ctx.fillStyle='#060d14';ctx.fillRect(e.x-bw/2,e.y-(e.boss?125:55),bw,4);ctx.fillStyle=e.boss?'#bf8bc7':'#8b9fae';ctx.fillRect(e.x-bw/2,e.y-(e.boss?125:55),bw*Math.max(0,e.hp/e.max),4);if(e.boss)text('ผู้เฝ้าประตูรัตติกาล',e.x,e.y-139,13,'#dcb7e3');}
-glow(g.x,g.y+8,48,classes[chosen].color+'18');ellipse(g.x,g.y+15,25,11,'#b8e6ea14');figure(g.x,g.y,classes[chosen].color);text(classes[chosen].name,g.x,g.y-66,11,'#e8dbb7');
-for(const f of g.fx){const t=f.age/f.duration;ctx.save();ctx.globalAlpha=1-t;ctx.strokeStyle=f.color;ctx.shadowColor=f.color;ctx.shadowBlur=20;ctx.lineWidth=f.special?5:3;ctx.beginPath();ctx.ellipse(f.x,f.y,f.r*(.35+t*.65),f.r*(.35+t*.65)*.65,0,f.special?0:(f.dir??0)-1.5,f.special?Math.PI*2:(f.dir??0)+1.5);ctx.stroke();for(let j=0;j<9;j++){const a=j*6.28/9+g.time;ellipse(f.x+Math.cos(a)*f.r*t,f.y+Math.sin(a)*f.r*t*.65,2,2,f.color);}ctx.restore();}for(const f of g.floaters){ctx.globalAlpha=1-f.age;text(f.text,f.x,f.y,20,f.color);ctx.globalAlpha=1;}for(let i=0;i<40;i++){const x=(i*137.4+Math.sin(g.time*.3+i)*20)%1200,y=(i*91.3-g.time*(5+i%4))%800;ctx.globalAlpha=.2+Math.sin(g.time+i)*.15;ellipse(x,y,1.5,1.5,i%2?'#b5e9e8':'#e0c58b');}ctx.globalAlpha=1;ctx.restore();const shade=ctx.createRadialGradient(width/2,height/2,height*.15,width/2,height/2,Math.max(width,height)*.68);shade.addColorStop(0,'transparent');shade.addColorStop(1,'#020710cc');ctx.fillStyle=shade;ctx.fillRect(0,0,width,height);}
-function loop(t){const dt=Math.min((t-last)/1000,.04);last=t;if(mode==='play'&&game){update(dt);drawWorld();}requestAnimationFrame(loop);}requestAnimationFrame(loop);
+import { CLASSES, ITEMS, FLOORS, WORLD } from "/shared/config.js";
+const $ = (s) => document.querySelector(s),
+  $$ = (s) => [...document.querySelectorAll(s)];
+let job = "swordsman",
+  gender = "female",
+  account = null,
+  characters = [],
+  selectedId = null,
+  socket = null,
+  state = null,
+  scene = null,
+  phaser = null,
+  activePanel = null,
+  toastTimer,
+  storyIndex = 0,
+  chatChannel = "world",
+  muted = true,
+  audio,
+  seq = 0,
+  keys = new Set(),
+  touchDirection = 0,
+  jumpQueued = false,
+  seen = new Set(),
+  lastTrade = "";
+const JOBS = ["swordsman", "archer", "mage"],
+  eng = ["SWORDSMAN", "WIND RANGER", "ARCANE MAGE"];
+function frame(c, g) {
+  return JOBS.indexOf(c) + (g === "female" ? 3 : 0);
+}
+function heroStyle(c, g) {
+  return `background-position:${JOBS.indexOf(c) * 50}% ${g === "female" ? 100 : 0}%`;
+}
+function escape(s) {
+  return String(s ?? "").replace(
+    /[&<>"']/g,
+    (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        c
+      ],
+  );
+}
+function toast(text, error = false) {
+  $("#toast").textContent = text;
+  $("#toast").classList.toggle("error", error);
+  $("#toast").classList.add("visible");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $("#toast").classList.remove("visible"), 3500);
+}
+function tone(f = 440, d = 0.18, type = "sine") {
+  if (muted) return;
+  try {
+    audio ??= new (window.AudioContext || window.webkitAudioContext)();
+    audio.resume();
+    const o = audio.createOscillator(),
+      g = audio.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(f, audio.currentTime);
+    o.frequency.exponentialRampToValueAtTime(f * 0.55, audio.currentTime + d);
+    g.gain.setValueAtTime(0.035, audio.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + d);
+    o.connect(g).connect(audio.destination);
+    o.start();
+    o.stop(audio.currentTime + d);
+  } catch {}
+}
+$("#sound").onclick = () => {
+  muted = !muted;
+  $("#sound").textContent = muted ? "♫ เปิดเสียง" : "♫ ปิดเสียง";
+  tone(392, 0.7);
+};
+async function api(url, body) {
+  const r = await fetch("/api/" + url, {
+    credentials: "same-origin",
+    ...(body
+      ? {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }
+      : {}),
+  });
+  const data = await r.json();
+  if (!r.ok) throw Error(data.error || "เชื่อมต่อไม่สำเร็จ");
+  return data;
+}
+async function refreshAccount() {
+  const data = await api("me");
+  account = data.user;
+  characters = data.characters;
+  $("#account-status").textContent = account
+    ? `เชื่อมต่อแล้ว · ${account.name.startsWith("guest-") ? "นักเดินทาง" : account.name} · บันทึกบนเซิร์ฟเวอร์`
+    : "เล่นได้ทันทีแบบผู้มาเยือน · บันทึกบนเซิร์ฟเวอร์";
+  $("#saved-characters").innerHTML = characters
+    .map(
+      (c) =>
+        `<button data-resume="${c.id}">${CLASSES[c.class].icon} ${escape(c.name)} · Lv.${c.level} ↗</button>`,
+    )
+    .join("");
+  $$("[data-resume]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        const c = characters.find((c) => c.id === b.dataset.resume);
+        selectedId = c.id;
+        job = c.class;
+        gender = c.gender;
+        showPrologue();
+      }),
+  );
+}
+function renderCards() {
+  $("#class-cards").innerHTML = JOBS.map(
+    (c, i) =>
+      `<button class="hero-card ${c === job ? "active" : ""}" data-class="${c}"><span class="selected-mark">✦</span><div class="hero-art" style="${heroStyle(c, gender)}"></div><small>${eng[i]}</small><h3>${CLASSES[c].name}</h3><p>${["คมดาบปกป้องแสงสุดท้าย", "ลูกศรที่สายลมไม่อาจหยุด", "เวทมนตร์ปลุกประกายดารา"][i]}</p><div class="hero-stat"><span>HP <b>${CLASSES[c].hp}</b></span><span>ATK <b>${CLASSES[c].atk}</b></span></div></button>`,
+  ).join("");
+  $$("[data-class]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        job = b.dataset.class;
+        renderCards();
+        tone(550, 0.1);
+      }),
+  );
+}
+$$("[data-gender]").forEach(
+  (b) =>
+    (b.onclick = () => {
+      gender = b.dataset.gender;
+      $$("[data-gender]").forEach((x) => x.classList.toggle("active", x === b));
+      renderCards();
+    }),
+);
+renderCards();
+refreshAccount().catch(() => toast("เซิร์ฟเวอร์ยังไม่พร้อม กรุณาลองใหม่", true));
+$("#start").onclick = async () => {
+  const b = $("#start");
+  b.disabled = true;
+  try {
+    const name = $("#character-name").value.trim();
+    if (name.length < 2) throw Error("กรุณาตั้งชื่อตัวละครอย่างน้อย 2 ตัวอักษร");
+    if (!account) {
+      await api("auth/guest", {});
+      await refreshAccount();
+    }
+    const c = await api("characters", { name, class: job, gender });
+    selectedId = c.id;
+    showPrologue();
+  } catch (e) {
+    toast(e.message, true);
+  } finally {
+    b.disabled = false;
+  }
+};
+function modal(title, html, panel) {
+  activePanel = panel || "modal";
+  keys.clear();
+  touchDirection = 0;
+  $("#modal-title").textContent = title;
+  $("#modal-body").innerHTML = html;
+  $("#modal").classList.remove("hidden");
+  if (socket?.connected)
+    socket.emit("player:input", { direction: 0, seq: ++seq, jump: false });
+}
+function closeModal() {
+  activePanel = null;
+  $("#modal").classList.add("hidden");
+  keys.clear();
+}
+$("#modal-close").onclick = closeModal;
+$("#modal").addEventListener("click", (e) => {
+  if (e.target === $("#modal")) closeModal();
+});
+$("#account-open").onclick = () => {
+  modal(
+    "บัญชีนักเดินทาง",
+    `<p>สมัครบัญชีเพื่อกลับมาเล่นข้ามเครื่องได้ บัญชีผู้มาเยือนใช้ได้เฉพาะเบราว์เซอร์นี้</p><label>ชื่อบัญชี<input id="login-name" autocomplete="username" maxlength="30"></label><label>รหัสผ่าน (อย่างน้อย 8 ตัวอักษร)<input id="login-password" type="password" autocomplete="current-password" maxlength="128"></label><button id="login" class="primary-button">เข้าสู่ระบบ</button><button id="register" class="text-button">สมัครบัญชีใหม่</button><p id="auth-note" class="hint"></p>`,
+  );
+  for (const action of ["login", "register"])
+    $("#" + action).onclick = async () => {
+      try {
+        $("#" + action).disabled = true;
+        await api("auth/" + action, {
+          name: $("#login-name").value.trim(),
+          password: $("#login-password").value,
+        });
+        await refreshAccount();
+        closeModal();
+        toast("เข้าสู่ระบบแล้ว");
+      } catch (e) {
+        $("#auth-note").textContent = e.message;
+        $("#auth-note").classList.add("error");
+      } finally {
+        const b = $("#" + action);
+        if (b) b.disabled = false;
+      }
+    };
+};
+const stories = [
+  [
+    "เมื่อขุนเขาเริ่มกระซิบ",
+    "ใต้เงาดอยนางนอน มีประตูสู่โลกวิญญาณ\nผู้พิทักษ์โบราณผนึกความมืดไว้ในถ้ำลึกหนึ่งร้อยชั้น\nจนกระทั่งแสงสีฟ้าปรากฏขึ้นอีกครั้ง…",
+  ],
+  [
+    "คำสัญญาของผู้กล้าทั้งสาม",
+    "สัตว์ป่ากลายเป็นปีศาจ หมู่บ้านกำลังตกอยู่ในอันตราย\nคมดาบ ลูกศร และเวทมนตร์\nคือประกายสุดท้ายที่จะนำรุ่งอรุณกลับมา",
+  ],
+  [
+    "ก้าวแรกสู่ตำนาน",
+    "ผู้ใหญ่คำกำลังรอเจ้าที่เมืองหน้าถ้ำหลวง\nเตรียมอาวุธ รวบรวมสหาย แล้วก้าวผ่านประตูจันทรา\nการเดินทางของเจ้า… เริ่มต้นแล้ว",
+  ],
+];
+function showPrologue() {
+  storyIndex = 0;
+  $("#prologue").classList.remove("hidden");
+  renderStory();
+}
+function renderStory() {
+  const s = stories[storyIndex];
+  $("#story-title").textContent = s[0];
+  $("#story-text").textContent = s[1];
+  $("#story-dots").innerHTML = stories
+    .map((_, i) => `<span class="${i === storyIndex ? "active" : ""}"></span>`)
+    .join("");
+  $("#story-next").textContent =
+    storyIndex === 2 ? "เข้าสู่เมืองหน้าถ้ำหลวง ➜" : "อ่านต่อ ➜";
+  tone(196 + storyIndex * 80, 0.7);
+}
+$("#story-next").onclick = () => {
+  if (++storyIndex < 3) renderStory();
+  else enterGame();
+};
+$("#story-skip").onclick = enterGame;
+function emit(event, data = {}) {
+  return new Promise((resolve) => {
+    if (!socket?.connected) {
+      toast("กำลังเชื่อมต่อเซิร์ฟเวอร์", true);
+      resolve(null);
+      return;
+    }
+    socket.timeout(5000).emit(event, data, (err, result) => {
+      if (err) {
+        toast("เซิร์ฟเวอร์ตอบช้า ลองใหม่อีกครั้ง", true);
+        resolve(null);
+      } else if (!result?.ok) {
+        toast(result?.error || "ทำรายการไม่สำเร็จ", true);
+        resolve(null);
+      } else {
+        if (result.message) toast(result.message);
+        resolve(result);
+      }
+    });
+  });
+}
+async function transaction(event, data = {}) {
+  return emit(event, { ...data, key: crypto.randomUUID() });
+}
+function enterGame() {
+  $("#prologue").classList.add("hidden");
+  $("#landing").classList.add("hidden");
+  $("#game-screen").classList.remove("hidden");
+  $("#connection-state").classList.remove("hidden");
+  closeModal();
+  if (!phaser)
+    phaser = new Phaser.Game({
+      type: Phaser.AUTO,
+      parent: "game-canvas",
+      transparent: false,
+      backgroundColor: "#122e47",
+      scale: {
+        mode: Phaser.Scale.RESIZE,
+        width: innerWidth,
+        height: innerHeight,
+      },
+      scene: Adventure,
+      render: { antialias: true, pixelArt: false },
+      audio: { noAudio: true },
+    });
+  socket?.disconnect();
+  socket = io({ transports: ["websocket", "polling"], reconnection: true });
+  socket.on("connect", () => {
+    socket.emit("player:join", { id: selectedId }, (result) => {
+      if (!result.ok) {
+        toast(result.error, true);
+        $("#connection-state").textContent = result.error;
+        return;
+      }
+      $("#connection-state").classList.add("hidden");
+      toast(result.message);
+    });
+  });
+  socket.on("connect_error", (e) => {
+    toast("เชื่อมต่อไม่ได้: " + e.message, true);
+  });
+  socket.on("disconnect", () => {
+    $("#connection-state").textContent = "การเชื่อมต่อขาดหาย กำลังเชื่อมต่อใหม่…";
+    $("#connection-state").classList.remove("hidden");
+  });
+  socket.on("world:snapshot", (packet) => {
+    state = packet;
+    updateHUD();
+    if (scene?.ready) scene.applySnapshot(packet);
+  });
+  socket.on("chat:message", (packet) => addChat(packet));
+  addChat({
+    name: "ระบบ",
+    message:
+      "ยินดีต้อนรับ! A/D เดิน · SPACE กระโดด · F คุยกับ NPC · ชวนเพื่อนเข้าเว็บนี้เพื่อพบกันในเมือง",
+    channel: "world",
+  });
+}
+function updateHUD() {
+  const p = state.self,
+    d = state.dungeon;
+  $("#player-name").textContent = p.name;
+  $("#player-level").textContent = "Lv." + p.level;
+  $("#avatar").style.cssText = heroStyle(p.class, p.gender);
+  $("#hp-fill").style.width = (p.hp / p.maxHp) * 100 + "%";
+  $("#mp-fill").style.width = (p.mp / p.maxMp) * 100 + "%";
+  $("#hp-label").textContent = `HP ${Math.ceil(p.hp)} / ${p.maxHp}`;
+  $("#mp-label").textContent = `MP ${Math.floor(p.mp)} / ${p.maxMp}`;
+  $("#exp-fill").style.width = (p.exp / (p.level * 80)) * 100 + "%";
+  $("#gold").textContent = p.gold.toLocaleString();
+  $("#hp-potions").textContent = "ยา HP ×" + p.inventory.hp;
+  $("#location-name").textContent = d
+    ? FLOORS[d.floor - 1].name
+    : "เมืองหน้าถ้ำหลวง";
+  $("#stage-label").textContent = d
+    ? `ชั้น ${d.floor} / 3 · ด่าน ${d.stage} / 3 · ${d.stage === 3 ? "BOSS STAGE" : d.stage === 2 ? "ELITE STAGE" : "MONSTER STAGE"}`
+    : "เมืองกลาง · CH.1 · เขตปลอดภัย";
+  $("#map-title").textContent = d ? "ถ้ำหลวง · ชั้น " + d.floor : "เมืองหน้าถ้ำหลวง";
+  $("#online-count").textContent = "● " + state.online + " ออนไลน์";
+  $("#map-dot").setAttribute("cx", String(8 + (p.x / WORLD.width) * 200));
+  $("#auto-button").classList.toggle("on", p.auto);
+  $("#auto-button small").textContent = p.auto ? "เปิด" : "ปิด";
+  $("#quest-description").textContent = d
+    ? d.clear
+      ? "เส้นทางเปิดแล้ว! เดินหน้าสู่ด่านต่อไป"
+      : `กำจัด${d.stage === 3 ? FLOORS[d.floor - 1].boss : "มอนสเตอร์ทั้งหมด"} · เหลือ ${d.enemies.length} ตัว`
+    : p.quest >= 3
+      ? "ตำนานบทแรกสำเร็จ! กลับไปท้าทายดันเจียนได้อีกครั้ง"
+      : "คุยกับผู้ใหญ่คำ แล้วเข้าสู่ประตูถ้ำหลวง";
+  $("#quest-counter").textContent = `ดันเจียนที่พิชิต ${p.quest} / 3`;
+  $("#quest-fill").style.width = (p.quest / 3) * 100 + "%";
+  $("#stage-clear").classList.toggle(
+    "hidden",
+    !d?.clear || p.hp <= 0 || p.auto,
+  );
+  $("#next-stage").textContent =
+    d?.stage === 3 ? "รับชัยชนะ · กลับเมือง ➜" : "เข้าสู่ด่านต่อไป ➜";
+  $("#death").classList.toggle("hidden", p.hp > 0);
+  for (let i = 1; i <= 3; i++) {
+    const button = $(`[data-action="skill${i}"] i`),
+      remaining = [0, 2, 4, 7][i] - (state.time - (p.cooldowns[i] || 0));
+    button.style.display = remaining > 0 ? "grid" : "none";
+    button.textContent = remaining > 0 ? Math.ceil(remaining) : "";
+  }
+  const hash = state.trade ? JSON.stringify(state.trade) : "";
+  if (hash !== lastTrade) {
+    if (state.trade) {
+      if (activePanel === "trade" || !activePanel) showTrade();
+    } else if (activePanel === "trade") {
+      closeModal();
+      toast("การแลกเปลี่ยนจบลงแล้ว");
+    }
+    lastTrade = hash;
+  }
+  const nearest = nearby();
+  $("#context-hint").classList.toggle(
+    "hidden",
+    !nearest || activePanel !== null || p.hp <= 0,
+  );
+  if (nearest) $("#context-hint span").textContent = nearest.label;
+}
+function nearby() {
+  if (!state) return null;
+  const p = state.self;
+  if (state.area === "dungeon")
+    return state.dungeon.clear ? { id: "next", label: "เข้าสู่ด่านต่อไป" } : null;
+  const npc = WORLD.npcs.find((n) => Math.abs(n.x - p.x) < 105);
+  if (npc) return { ...npc, label: npc.name + " · " + npc.role };
+  if (Math.abs(p.x - WORLD.portal) < 140)
+    return { id: "portal", label: "เข้าสู่ดันเจียนถ้ำหลวง" };
+  const shop = state.shops.find((s) => Math.abs(s.x - p.x) < 65);
+  if (shop) return { id: "market", label: "เลือกซื้อของจากร้านผู้เล่น" };
+  return null;
+}
+function interact() {
+  const n = nearby();
+  if (!n) return toast("เข้าใกล้ NPC หรือประตู แล้วกด F");
+  if (n.id === "next") emit("dungeon:next");
+  else if (n.id === "portal") showPanel("dungeon");
+  else showPanel(n.id);
+}
+function action(name) {
+  if (!state || activePanel) return;
+  if (name === "attack") emit("player:attack", { skill: 0 });
+  else if (name.startsWith("skill"))
+    emit("player:attack", { skill: Number(name.slice(-1)) });
+  else if (name === "hp") emit("player:potion", { type: "hp" });
+  else if (name === "auto") emit("player:auto", { enabled: !state.self.auto });
+  tone(name === "attack" ? 440 : 240, 0.12);
+}
+$$("[data-action]").forEach(
+  (b) => (b.onclick = () => action(b.dataset.action)),
+);
+$$("[data-panel]").forEach(
+  (b) => (b.onclick = () => showPanel(b.dataset.panel)),
+);
+$("#dungeon-open").onclick = () => showPanel("dungeon");
+$("#next-stage").onclick = () => emit("dungeon:next");
+$("#revive").onclick = () => emit("dungeon:leave");
+$("#town-return").onclick = () => {
+  if (state?.area === "town") {
+    emit("player:heal");
+  } else {
+    modal(
+      "กลับเมืองหน้าถ้ำหลวง",
+      '<p>ออกจากดันเจียนรอบนี้? ทองและไอเทมที่ได้รับยังอยู่ แต่ต้องเริ่มด่านใหม่เมื่อกลับเข้าไป</p><button id="confirm-town" class="primary-button">กลับเมือง</button>',
+    );
+    $("#confirm-town").onclick = async () => {
+      await emit("dungeon:leave");
+      closeModal();
+    };
+  }
+};
+function showPanel(panel) {
+  if (!state) return;
+  const p = state.self;
+  const row = (icon, name, desc, button) =>
+    `<div class="item-row"><span>${icon}</span><div><strong>${escape(name)}</strong><small>${escape(desc)}</small></div>${button || ""}</div>`;
+  const btn = (data, label) => `<button ${data}>${label}</button>`;
+  if (panel === "inventory") {
+    modal(
+      "กระเป๋านักเดินทาง",
+      `<p>ทอง ${p.gold} · อาวุธ +${p.upgrade} · ${p.weapon ? "สวมอาวุธผู้พิทักษ์" : "อาวุธเริ่มต้น"} · ${p.armor ? "สวมเกราะนักเดินทาง" : "ชุดเริ่มต้น"}</p>${row("🧪", "ยาฟื้นฟู HP ×" + p.inventory.hp, "ฟื้นฟู 90 HP", btn('data-potion="hp"', "ใช้ยา"))}${row("💧", "ยาฟื้นฟู MP ×" + p.inventory.mp, "ฟื้นฟู 80 MP", btn('data-potion="mp"', "ใช้ยา"))}<div class="inventory-grid">${Array.from(
+        { length: 40 },
+        (_, i) => {
+          const items = [
+            ["⚔", p.upgrade ? "+" + p.upgrade : "1"],
+            ["🛡", p.armor ? "1" : "—"],
+            ["🧪", p.inventory.hp],
+            ["💧", p.inventory.mp],
+            ["💎", p.inventory.ore],
+          ];
+          return `<div class="inventory-slot">${items[i]?.[0] || ""}<small>${items[i]?.[1] ?? ""}</small></div>`;
+        },
+      ).join(
+        "",
+      )}</div><p class="hint">เดโมใช้อาวุธและเกราะอัตโนมัติเมื่อซื้อจาก NPC · วัตถุดิบดรอปจากมอนสเตอร์</p>`,
+      "inventory",
+    );
+    $$("[data-potion]").forEach(
+      (b) =>
+        (b.onclick = async () => {
+          await emit("player:potion", { type: b.dataset.potion });
+        }),
+    );
+  } else if (panel === "potion" || panel === "weapon") {
+    const items =
+      panel === "potion" ? ["hp", "mp"] : ["weapon", "armor", "ore"];
+    modal(
+      panel === "potion" ? "มีรา · ร้านปรุงยา" : "อริน · อาวุธและอุปกรณ์",
+      `<p>ยินดีต้อนรับผู้กล้า · ทองของเจ้า ${p.gold}</p>${items.map((id) => row(ITEMS[id].icon, ITEMS[id].name, id === "weapon" ? "เพิ่ม ATK 10 · สวมให้อัตโนมัติ" : id === "armor" ? "เพิ่ม HP 30 · ป้องกันเพิ่ม" : id === "ore" ? "วัตถุดิบตีบวก" : "ใช้ฟื้นฟูระหว่างต่อสู้", btn(`data-buy="${id}"`, ITEMS[id].price + " ◈"))).join("")}`,
+    );
+    $$("[data-buy]").forEach(
+      (b) =>
+        (b.onclick = async () => {
+          b.disabled = true;
+          await transaction("npc:buy", { item: b.dataset.buy });
+          b.disabled = false;
+        }),
+    );
+  } else if (panel === "forge") {
+    const chance =
+      p.upgrade < 3 ? 100 : p.upgrade < 6 ? 70 : p.upgrade < 9 ? 40 : 15;
+    modal(
+      "ลุงเหล็ก · โรงตีอาวุธ",
+      `<div style="text-align:center;font-size:60px;color:#ffe1a1">⚒</div><h3 style="text-align:center">อาวุธ +${p.upgrade} → +${Math.min(10, p.upgrade + 1)}</h3><p>โอกาสสำเร็จ ${chance}% · เพิ่มพลังโจมตี 8 ต่อระดับ · สูงสุด +10<br>ใช้ ${(p.upgrade + 1) * 30} ทอง + แร่จันทรา 1 ชิ้น<br>ไม่สำเร็จจะเสียทรัพยากร แต่ระดับเดิมคงอยู่</p><p>มี ${p.gold} ทอง · แร่จันทรา ${p.inventory.ore} ชิ้น</p><button id="enhance" class="primary-button">เสริมพลังอาวุธ</button>`,
+    );
+    $("#enhance").onclick = async () => {
+      const r = await transaction("equipment:enhance");
+      if (r) {
+        tone(r.success ? 800 : 150, 0.5);
+        closeModal();
+      }
+    };
+  } else if (panel === "elder" || panel === "quest") {
+    modal(
+      "ผู้ใหญ่คำ · เสียงเรียกจากขุนเขา",
+      `<p>“เจ้าได้ยินเสียงนั้นไหม… ตั้งแต่แสงสีฟ้าส่องออกจากถ้ำ สัตว์ป่าก็ไม่เหมือนเดิมอีกเลย ผู้พิทักษ์ทั้งสามชั้นอาจรู้คำตอบ”</p>${FLOORS.map((f, i) => row(["🦇", "🪨", "🐍"][i], "ชั้น " + (i + 1) + " · " + f.name, `${f.boss} · 3 ด่าน · ${p.quest > i ? "พิชิตแล้ว ✓" : "ยังไม่พิชิต"}`)).join("")}<button id="elder-heal" class="primary-button">พักฟื้น HP / MP เต็ม</button><p class="hint">เล่นบทเปิดครบ 3 ชั้นเพื่อจบเดโม · โลกฉบับเต็มวางแผนไว้ 100 ชั้น</p>`,
+    );
+    $("#elder-heal").onclick = () => emit("player:heal");
+  } else if (panel === "dungeon") {
+    modal(
+      "ประตูถ้ำหลวง · เลือกดันเจียน",
+      `<p>แต่ละชั้นมี 3 ด่าน: มอนสเตอร์ → อีลิท → บอส<br>ปาร์ตี้สูงสุด 3 คน สมาชิกต้องกดพร้อมก่อนหัวหน้าเริ่ม</p>${FLOORS.map((f, i) => `<div class="dungeon-card"><h3>0${i + 1} / ${f.name}</h3><p>บอส: ${f.boss} · 3 ด่าน · ${i === 0 ? "เริ่มต้นการผจญภัย" : "ผ่านชั้น " + i + " ก่อน"}</p><button data-floor="${i + 1}" ${p.unlocked < i + 1 ? "disabled" : ""}>${p.unlocked < i + 1 ? "🔒 ยังไม่ปลดล็อก" : "เข้าสู่ดันเจียน ➜"}</button></div>`).join("")}`,
+    );
+    $$("[data-floor]").forEach(
+      (b) =>
+        (b.onclick = async () => {
+          const r = await emit("dungeon:enter", {
+            floor: Number(b.dataset.floor),
+          });
+          if (r) closeModal();
+        }),
+    );
+  } else if (panel === "market") {
+    modal(
+      "ตลาดนักเดินทาง",
+      `<p>ร้านค้าจากผู้เล่นจริง · ไอเทมถูกเก็บเข้าร้านบนเซิร์ฟเวอร์</p>${state.shops.length ? state.shops.map((s) => row(ITEMS[s.item]?.icon, s.name, `${s.ownerName} · ${ITEMS[s.item]?.name} · เหลือ ${s.qty}`, btn(`data-shop-buy="${s.id}"`, s.price + " ◈"))).join("") : "<p>ยังไม่มีร้านค้า ลองตั้งร้านแรกของเมืองได้เลย</p>"}<button id="open-own-shop" class="primary-button">ตั้งร้านของฉัน</button>`,
+    );
+    $$("[data-shop-buy]").forEach(
+      (b) =>
+        (b.onclick = async () => {
+          b.disabled = true;
+          const r = await transaction("shop:buy", { id: b.dataset.shopBuy });
+          if (r) closeModal();
+          else b.disabled = false;
+        }),
+    );
+    $("#open-own-shop").onclick = () => showPanel("shop");
+  } else if (panel === "shop") {
+    const existing = state.shops.find((s) => s.owner === p.id);
+    if (existing) {
+      modal(
+        "ร้านค้าของฉัน",
+        `<h3>${escape(existing.name)}</h3><p>${ITEMS[existing.item]?.name} · เหลือ ${existing.qty} · ราคา ${existing.price} ทอง<br>ร้านเปิดต่อเมื่อออกจากเกมได้</p><button id="close-shop" class="primary-button">ปิดร้านและรับสินค้าที่เหลือคืน</button>`,
+      );
+      $("#close-shop").onclick = async () => {
+        const r = await transaction("shop:close");
+        if (r) closeModal();
+      };
+    } else {
+      modal(
+        "ตั้งร้านในเมือง",
+        `<p>ตั้งได้หนึ่งร้านต่อบัญชี ร้านยังขายได้เมื่อออกจากเกม · ไอเทมวางขายจะออกจากกระเป๋า</p><label>ชื่อร้าน<input id="shop-name" maxlength="35" placeholder="ร้านของผู้กล้า"></label><label>สินค้า<select id="shop-item">${["hp", "mp", "ore"].map((id) => `<option value="${id}">${ITEMS[id].name} · มี ${p.inventory[id]}</option>`).join("")}</select></label><label>จำนวน<input id="shop-qty" type="number" value="1" min="1" max="999"></label><label>ราคาต่อชิ้น (Gold)<input id="shop-price" type="number" value="20" min="1" max="100000"></label><button id="create-shop" class="primary-button">เปิดร้าน</button>`,
+      );
+      $("#create-shop").onclick = async () => {
+        const r = await transaction("shop:create", {
+          name: $("#shop-name").value.trim(),
+          item: $("#shop-item").value,
+          qty: Number($("#shop-qty").value),
+          price: Number($("#shop-price").value),
+        });
+        if (r) closeModal();
+      };
+    }
+  } else if (panel === "party") {
+    const party = state.party;
+    modal(
+      "ปาร์ตี้ผู้กล้า",
+      party
+        ? `<p>สมาชิก ${party.members.length} / 3 · หัวหน้า ${escape(party.members.find((m) => m.leader)?.name)}</p>${party.members.map((m) => row(m.leader ? "♛" : "♧", m.name, `${party.ready.includes(m.id) ? "✓ พร้อมแล้ว" : "กำลังเตรียมตัว"}${m.id === p.id ? " · คุณ" : ""}`)).join("")}<button id="party-ready" class="primary-button">${party.ready.includes(p.id) ? "ยกเลิกพร้อม" : "พร้อมลงดันเจียน"}</button><button id="party-leave" class="text-button">ออกจากปาร์ตี้</button><p class="hint">หัวหน้าเลือกดันเจียนได้ที่ประตูถ้ำ สมาชิกที่กดพร้อมจะเข้าห้องเดียวกัน</p>`
+        : `<p>ร่วมทีมกับเพื่อนสูงสุด 3 คน แบ่งรับรางวัลส่วนตัวจากมอนสเตอร์</p><button id="party-create" class="primary-button">สร้างปาร์ตี้</button>${state.parties.map((g) => row("♧", g.name, `${g.count} / 3 คน`, btn(`data-party-join="${g.id}"`, "เข้าร่วม"))).join("")}`,
+    );
+    if (party) {
+      $("#party-ready").onclick = async () => {
+        await emit("party:action", { action: "ready" });
+        closeModal();
+      };
+      $("#party-leave").onclick = async () => {
+        await emit("party:action", { action: "leave" });
+        closeModal();
+      };
+    } else {
+      $("#party-create").onclick = async () => {
+        await emit("party:action", { action: "create" });
+        closeModal();
+      };
+      $$("[data-party-join]").forEach(
+        (b) =>
+          (b.onclick = async () => {
+            await emit("party:action", {
+              action: "join",
+              target: b.dataset.partyJoin,
+            });
+            closeModal();
+          }),
+      );
+    }
+  } else if (panel === "players") {
+    modal(
+      "ผู้เล่นในแผนที่",
+      `<p>ออนไลน์ทั้งหมด ${state.online} คน · ผู้เล่นแผนที่นี้ ${state.players.length + 1} คน</p>${state.players.map((m) => row(CLASSES[m.class].icon, m.name, `${CLASSES[m.class].name} · Lv.${m.level}`, btn(`data-trade-target="${m.id}"`, "แลกเปลี่ยน"))).join("") || "<p>ชวนเพื่อนเปิดเว็บเกมนี้เพื่อพบกันในเมือง</p>"}${state.trade ? '<button id="trade-reopen" class="primary-button">เปิดการแลกเปลี่ยนที่ค้างอยู่</button>' : ""}`,
+    );
+    $$("[data-trade-target]").forEach(
+      (b) =>
+        (b.onclick = async () => {
+          const r = await emit("trade:action", {
+            action: "request",
+            target: b.dataset.tradeTarget,
+          });
+          if (r) closeModal();
+        }),
+    );
+    if ($("#trade-reopen")) $("#trade-reopen").onclick = showTrade;
+  } else if (panel === "settings") {
+    modal(
+      "บันทึกการเดินทาง",
+      `<p>เกมบันทึกตัวละคร เงิน อุปกรณ์ และดันเจียนบนเซิร์ฟเวอร์อัตโนมัติ<br>บัญชีผู้มาเยือนผูกกับคุกกี้ในเบราว์เซอร์นี้</p><button id="toggle-sound" class="primary-button">${muted ? "เปิดเสียงเอฟเฟกต์" : "ปิดเสียงเอฟเฟกต์"}</button><button id="back-selection" class="text-button">กลับหน้าเลือกตัวละคร</button><p class="hint">Demo v0.2 · ภาพตัวละครแบบ idle พร้อมเอฟเฟกต์เคลื่อนไหว ยังไม่มี sprite animation ครบทุกท่า · เป้าหมาย 20–30 คนต่อห้องยังไม่ได้ยืนยันด้วย load test</p>`,
+    );
+    $("#toggle-sound").onclick = () => {
+      muted = !muted;
+      tone(440, 0.3);
+      closeModal();
+    };
+    $("#back-selection").onclick = () => {
+      socket.disconnect();
+      state = null;
+      $("#game-screen").classList.add("hidden");
+      $("#landing").classList.remove("hidden");
+      closeModal();
+      refreshAccount();
+    };
+  }
+}
+function showTrade() {
+  const t = state?.trade;
+  if (!t) return;
+  const p = state.self,
+    me = t.offers[p.id],
+    other = t.members.find((id) => id !== p.id);
+  if (!t.accepted && t.members[1] === p.id) {
+    modal(
+      "คำขอแลกเปลี่ยน",
+      `<p>${escape(t.names[other])} ขอแลกเปลี่ยนไอเทมกับคุณ</p><button id="trade-accept" class="primary-button">ตอบรับ</button><button id="trade-cancel" class="text-button">ปฏิเสธ</button>`,
+      "trade",
+    );
+    $("#trade-accept").onclick = () =>
+      emit("trade:action", { action: "accept", id: t.id });
+  } else if (!t.accepted) {
+    modal(
+      "รอการตอบรับ",
+      `<p>รอ ${escape(t.names[other])} ตอบรับคำขอ</p><button id="trade-cancel" class="text-button">ยกเลิก</button>`,
+      "trade",
+    );
+  } else {
+    modal(
+      "แลกเปลี่ยน · ตรวจสอบรายการ",
+      `<p>รายการรุ่น ${t.revision} · การแก้ไขจะยกเลิกการยืนยันทั้งสองฝ่าย</p>${t.members
+        .map((id) => {
+          const o = t.offers[id];
+          return `<div class="trade-offer"><b>${escape(t.names[id])}${id === p.id ? " (คุณ)" : ""}</b><p>${o.gold} ทอง + ${ITEMS[o.item].name} ×${o.qty}</p><small>${t.confirmed.includes(id) ? "✓ ยืนยันรอบแรกแล้ว" : "ยังไม่ยืนยัน"} ${t.final.includes(id) ? "· ✓ ยืนยันสุดท้ายแล้ว" : ""}</small></div>`;
+        })
+        .join(
+          "",
+        )}<label>ทองที่เสนอ<input id="trade-gold" type="number" min="0" value="${me.gold}"></label><label>ไอเทม<select id="trade-item">${["ore", "hp", "mp"].map((i) => `<option value="${i}" ${me.item === i ? "selected" : ""}>${ITEMS[i].name} · มี ${p.inventory[i]}</option>`).join("")}</select></label><label>จำนวน<input id="trade-qty" type="number" min="0" value="${me.qty}"></label><div class="trade-actions"><button id="trade-offer" class="secondary-button">อัปเดตข้อเสนอ</button><button id="trade-confirm" class="primary-button">${t.confirmed.length === 2 ? "ยืนยันรอบสุดท้าย" : "ยืนยันรายการรอบแรก"}</button></div><button id="trade-cancel" class="text-button">ยกเลิกการแลกเปลี่ยน</button>`,
+      "trade",
+    );
+    $("#trade-offer").onclick = () =>
+      emit("trade:action", {
+        action: "offer",
+        id: t.id,
+        gold: Number($("#trade-gold").value),
+        item: $("#trade-item").value,
+        qty: Number($("#trade-qty").value),
+      });
+    $("#trade-confirm").onclick = () =>
+      emit("trade:action", {
+        action: t.confirmed.length === 2 ? "final" : "confirm",
+        id: t.id,
+        revision: t.revision,
+      });
+  }
+  $("#trade-cancel").onclick = async () => {
+    await emit("trade:action", { action: "cancel", id: t.id });
+    closeModal();
+  };
+}
+function addChat(p) {
+  if (p.channel !== chatChannel && p.name !== "ระบบ") return;
+  const line = document.createElement("div"),
+    name = document.createElement("b");
+  name.textContent = "[" + p.name + "] ";
+  line.append(name, document.createTextNode(p.message));
+  $("#chat-log").append(line);
+  while ($("#chat-log").children.length > 60)
+    $("#chat-log").firstChild.remove();
+  $("#chat-log").scrollTop = $("#chat-log").scrollHeight;
+}
+$("#chat-form").onsubmit = async (e) => {
+  e.preventDefault();
+  const input = $("#chat-input"),
+    message = input.value.trim();
+  if (!message) return;
+  const r = await emit("chat:send", { message, channel: chatChannel });
+  if (r) input.value = "";
+};
+$$("[data-channel]").forEach(
+  (b) =>
+    (b.onclick = () => {
+      chatChannel = b.dataset.channel;
+      $$("[data-channel]").forEach((x) =>
+        x.classList.toggle("active", b === x),
+      );
+      $("#chat-log").replaceChildren();
+    }),
+);
+addEventListener("keydown", (e) => {
+  if (["INPUT", "SELECT", "TEXTAREA"].includes(document.activeElement?.tagName))
+    return;
+  if (e.key === "Escape") {
+    closeModal();
+    return;
+  }
+  if (!state || activePanel) return;
+  if (e.code === "Space" || e.key.startsWith("Arrow")) e.preventDefault();
+  keys.add(e.code);
+  if (e.repeat) return;
+  const actions = {
+    KeyJ: "attack",
+    KeyQ: "skill1",
+    KeyW: "skill2",
+    KeyE: "skill3",
+    KeyR: "hp",
+    KeyT: "auto",
+  };
+  if (actions[e.code]) action(actions[e.code]);
+  if (e.code === "Space") jumpQueued = true;
+  if (e.code === "KeyF") interact();
+  if (e.code === "KeyI") showPanel("inventory");
+});
+addEventListener("keyup", (e) => keys.delete(e.code));
+addEventListener("blur", () => {
+  keys.clear();
+  touchDirection = 0;
+});
+$$("[data-direction]").forEach((b) => {
+  b.onpointerdown = (e) => {
+    b.setPointerCapture(e.pointerId);
+    touchDirection = Number(b.dataset.direction);
+  };
+  for (const n of ["pointerup", "pointercancel", "lostpointercapture"])
+    b.addEventListener(n, () => (touchDirection = 0));
+});
+$("#mobile-jump").onclick = () => (jumpQueued = true);
+$("#mobile-interact").onclick = interact;
+setInterval(() => {
+  if (!state || !socket?.connected) return;
+  const focused = ["INPUT", "TEXTAREA", "SELECT"].includes(
+    document.activeElement?.tagName,
+  );
+  const direction =
+    activePanel || focused
+      ? 0
+      : touchDirection ||
+        (keys.has("KeyD") || keys.has("ArrowRight") ? 1 : 0) -
+          (keys.has("KeyA") || keys.has("ArrowLeft") ? 1 : 0);
+  socket.emit("player:input", {
+    direction,
+    seq: ++seq,
+    jump: jumpQueued && !activePanel,
+  });
+  jumpQueued = false;
+  if (keys.has("KeyJ") && !activePanel && !focused)
+    socket.emit("player:attack", { skill: 0 });
+}, 80);
+class Adventure extends Phaser.Scene {
+  constructor() {
+    super("adventure");
+    this.actors = new Map();
+    this.monsters = new Map();
+    this.shopObjects = [];
+    this.lastArea = null;
+  }
+  preload() {
+    this.load.image("town", "/assets/town.png");
+    this.load.image("cave", "/assets/cave.png");
+    this.load.spritesheet("heroes", "/assets/heroes.png", {
+      frameWidth: 512,
+      frameHeight: 512,
+    });
+    this.load.spritesheet("monsters", "/assets/monsters.png", {
+      frameWidth: 418,
+      frameHeight: 418,
+    });
+  }
+  create() {
+    scene = this;
+    this.ready = true;
+    this.cameras.main.setBackgroundColor("#234b68");
+    this.back = this.add
+      .image(0, -180, "town")
+      .setOrigin(0)
+      .setDisplaySize(2400, 1000)
+      .setDepth(-20);
+    this.decor = this.add.graphics().setDepth(-5);
+    this.effectLayer = this.add.graphics().setDepth(30);
+    this.npcs = [];
+    for (const [i, n] of WORLD.npcs.entries()) {
+      const image = this.add
+        .image(n.x, 600, "heroes", [2, 5, 0, 0][i])
+        .setOrigin(0.5, 1)
+        .setDisplaySize(98, 98)
+        .setDepth(7);
+      const label = this.add
+        .text(n.x, 466, n.name + "\n" + n.role, {
+          fontFamily: "Noto Sans Thai",
+          fontSize: "13px",
+          color: "#fff1b5",
+          align: "center",
+          stroke: "#17384e",
+          strokeThickness: 4,
+          backgroundColor: "#17354a99",
+          padding: { x: 8, y: 4 },
+        })
+        .setOrigin(0.5, 0)
+        .setDepth(15);
+      this.npcs.push(image, label);
+    }
+    this.portal = this.add
+      .ellipse(WORLD.portal, 518, 94, 150, 0x63eaff, 0.25)
+      .setStrokeStyle(3, 0xb5faff, 0.8)
+      .setDepth(3);
+    this.portalGlow = this.add
+      .ellipse(WORLD.portal, 518, 65, 125, 0x99f7ff, 0.2)
+      .setDepth(3);
+    this.tweens.add({
+      targets: [this.portal, this.portalGlow],
+      alpha: 0.45,
+      scaleX: 1.12,
+      scaleY: 1.04,
+      duration: 1400,
+      yoyo: true,
+      repeat: -1,
+    });
+    this.portalLabel = this.add
+      .text(WORLD.portal, 417, "ถ้ำหลวง\nประตูสู่ดอยนางนอน", {
+        fontFamily: "Noto Sans Thai",
+        fontSize: "15px",
+        align: "center",
+        color: "#d4fbff",
+        stroke: "#173756",
+        strokeThickness: 5,
+      })
+      .setOrigin(0.5)
+      .setDepth(12);
+    this.makePlatforms();
+    this.cameras.main.centerOn(380, 350);
+    this.scale.on("resize", () => this.resize());
+    this.resize();
+    if (state) this.applySnapshot(state);
+  }
+  resize() {
+    const w = this.scale.width,
+      h = this.scale.height,
+      zoom = w < 700 ? Math.max(0.6, h / 900) : Math.max(0.7, h / 800);
+    this.cameras.main.setZoom(zoom);
+    this.cameras.main.setBounds(0, -100, 2400, 950);
+  }
+  makePlatforms() {
+    this.decor.clear();
+    const cave = state?.area === "dungeon";
+    for (const p of WORLD.platforms) {
+      this.decor.fillStyle(0x152e40, 0.28);
+      this.decor.fillEllipse(p.x + p.w / 2, p.y + 42, p.w - 15, 15);
+      this.decor.fillStyle(cave ? 0x334461 : 0x71664d);
+      this.decor.fillRoundedRect(p.x, p.y + 3, p.w, 29, 7);
+      for (let x = p.x + 3, n = 0; x < p.x + p.w - 5; x += 38, n++) {
+        this.decor.fillStyle(
+          cave ? (n % 2 ? 0x64738e : 0x485f7b) : n % 2 ? 0x9a8d6c : 0x81775a,
+        );
+        this.decor.fillRoundedRect(x, p.y + 8, 34, 19, 4);
+        this.decor.lineStyle(1, cave ? 0x93b9da : 0xc8bd91, 0.55);
+        this.decor.lineBetween(x + 4, p.y + 10, x + 27, p.y + 10);
+      }
+      this.decor.fillStyle(cave ? 0x95b3db : 0x83b952);
+      this.decor.fillRoundedRect(p.x - 3, p.y, p.w + 6, 9, 4);
+      for (let x = p.x + 6; x < p.x + p.w; x += 13) {
+        this.decor.fillStyle(cave ? 0xb6d8f1 : 0xb3d96d, 0.9);
+        this.decor.fillTriangle(x, p.y + 3, x + 4, p.y - 5, x + 8, p.y + 3);
+      }
+      this.decor.lineStyle(3, cave ? 0x7399c6 : 0x668f4a, 0.8);
+      for (let x = p.x + 25; x < p.x + p.w - 10; x += 85) {
+        this.decor.beginPath();
+        this.decor.moveTo(x, p.y + 27);
+        this.decor.lineTo(x - 5, p.y + 40);
+        this.decor.lineTo(x + 1, p.y + 47);
+        this.decor.strokePath();
+      }
+    }
+  }
+  actor(p) {
+    let a = this.actors.get(p.id);
+    if (!a) {
+      const shadow = this.add
+          .ellipse(p.x, p.y - 3, 65, 15, 0x102b3c, 0.35)
+          .setDepth(6),
+        image = this.add
+          .image(p.x, p.y, "heroes", frame(p.class, p.gender))
+          .setOrigin(0.5, 1)
+          .setDisplaySize(125, 125)
+          .setDepth(10),
+        label = this.add
+          .text(p.x, p.y - 142, p.name, {
+            fontFamily: "Noto Sans Thai",
+            fontSize: "12px",
+            color: p.id === state.self.id ? "#fff0b5" : "#e4fff6",
+            stroke: "#193c51",
+            strokeThickness: 4,
+          })
+          .setOrigin(0.5)
+          .setDepth(14);
+      a = { image, label, shadow, target: p };
+      this.actors.set(p.id, a);
+    }
+    a.target = p;
+    return a;
+  }
+  applySnapshot(s) {
+    const area = s.area === "town" ? "town" : "dungeon" + s.dungeon.floor;
+    if (area !== this.lastArea) {
+      this.lastArea = area;
+      const town = s.area === "town";
+      this.back.setTexture(town ? "town" : "cave");
+      this.back.clearTint();
+      if (!town)
+        this.back.setTint([0xc1b9ff, 0x95dfff, 0x91d7ce][s.dungeon.floor - 1]);
+      this.npcs.forEach((n) => n.setVisible(town));
+      this.portalLabel.setVisible(town);
+      this.portal.setVisible(town);
+      this.portalGlow.setVisible(town);
+      this.makePlatforms();
+      this.actors.forEach((a) => {
+        a.image.x = s.self.x;
+        a.image.y = s.self.y;
+      });
+    }
+    const all = [s.self, ...s.players],
+      ids = new Set(all.map((p) => p.id));
+    for (const p of all) this.actor(p);
+    for (const [id, a] of this.actors)
+      if (!ids.has(id)) {
+        Object.values(a).forEach((o) => o?.destroy?.());
+        this.actors.delete(id);
+      }
+    const enemies = s.dungeon?.enemies || [],
+      eids = new Set(enemies.map((e) => e.id)),
+      types = [
+        "slime",
+        "bat",
+        "boar",
+        "mushroom",
+        "wolf",
+        "goblin",
+        "batking",
+        "golem",
+        "serpent",
+      ];
+    for (const e of enemies) {
+      let m = this.monsters.get(e.id);
+      if (!m) {
+        const size = e.boss ? 210 : 95;
+        const image = this.add
+          .image(e.x, e.y, "monsters", types.indexOf(e.type))
+          .setDisplaySize(size, size)
+          .setOrigin(0.5, 1)
+          .setDepth(8);
+        const label = this.add
+          .text(
+            e.x,
+            e.y - size - 15,
+            e.boss ? FLOORS[s.dungeon.floor - 1].boss : "",
+            {
+              fontFamily: "Noto Sans Thai",
+              fontSize: "14px",
+              color: "#ffe1b5",
+              stroke: "#152b4b",
+              strokeThickness: 4,
+            },
+          )
+          .setOrigin(0.5)
+          .setDepth(15);
+        const bar = this.add.graphics().setDepth(14);
+        m = { image, label, bar, target: e, size };
+        this.monsters.set(e.id, m);
+      }
+      m.target = e;
+    }
+    for (const [id, m] of this.monsters)
+      if (!eids.has(id)) {
+        this.burst(m.image.x, m.image.y - 40, 0xc3a6ff, 16);
+        m.image.destroy();
+        m.label.destroy();
+        m.bar.destroy();
+        this.monsters.delete(id);
+      }
+    for (const e of s.dungeon?.events || []) {
+      if (seen.has(e.id)) continue;
+      seen.add(e.id);
+      if (seen.size > 500) seen = new Set([...seen].slice(-200));
+      this.effect(e);
+    }
+    const sh = JSON.stringify(s.shops.map((v) => [v.id, v.qty]));
+    if (sh !== this.lastShops) {
+      this.shopObjects.forEach((o) => o.destroy());
+      this.shopObjects = [];
+      for (const shop of s.shops) {
+        const roof = this.add.graphics().setDepth(4);
+        roof.fillStyle(0x6b4155);
+        roof.fillRect(shop.x - 42, 550, 84, 38);
+        roof.fillStyle(0xdd9fb8);
+        roof.fillTriangle(shop.x - 58, 550, shop.x, 505, shop.x + 58, 550);
+        roof.lineStyle(3, 0xe9c587);
+        roof.strokeRect(shop.x - 42, 550, 84, 38);
+        const label = this.add
+          .text(shop.x, 487, shop.name, {
+            fontFamily: "Noto Sans Thai",
+            fontSize: "10px",
+            color: "#fff2cd",
+            stroke: "#193851",
+            strokeThickness: 3,
+          })
+          .setOrigin(0.5)
+          .setDepth(14);
+        this.shopObjects.push(roof, label);
+      }
+      this.lastShops = sh;
+    }
+    this.shopObjects.forEach((o) => o.setVisible(s.area === "town"));
+  }
+  burst(x, y, color, count = 12) {
+    for (let n = 0; n < count; n++) {
+      const a = Math.random() * Math.PI * 2,
+        r = 30 + Math.random() * 60,
+        dot = this.add.circle(x, y, 2 + Math.random() * 3, color).setDepth(35);
+      this.tweens.add({
+        targets: dot,
+        x: x + Math.cos(a) * r,
+        y: y + Math.sin(a) * r,
+        alpha: 0,
+        scale: 0,
+        duration: 450 + Math.random() * 300,
+        onComplete: () => dot.destroy(),
+      });
+    }
+  }
+  effect(e) {
+    if (e.kind === "damage") {
+      const label = this.add
+        .text(e.x, e.y, (e.crit ? "CRIT " : "") + e.amount, {
+          fontFamily: "Noto Sans Thai",
+          fontSize: e.crit ? "28px" : "22px",
+          fontStyle: "bold",
+          color: e.amount < 0 ? "#ffad9b" : e.crit ? "#ffe185" : "#f0f8ff",
+          stroke: "#273047",
+          strokeThickness: 4,
+        })
+        .setOrigin(0.5)
+        .setDepth(40);
+      this.tweens.add({
+        targets: label,
+        y: e.y - 65,
+        alpha: 0,
+        duration: 850,
+        onComplete: () => label.destroy(),
+      });
+    } else {
+      tone(e.skill ? 220 : 480, 0.13);
+      const g = this.add.graphics().setDepth(25);
+      g.lineStyle(e.skill ? 8 : 5, e.color, 0.9);
+      const radius = e.skill ? 110 : 65;
+      if (e.class === "archer") {
+        g.fillStyle(e.color);
+        g.fillTriangle(0, -5, 34, 0, 0, 5);
+        g.x = e.x + e.direction * 40;
+        g.y = e.y;
+        g.scaleX = e.direction;
+        this.tweens.add({
+          targets: g,
+          x: g.x + e.direction * (e.skill ? 600 : 410),
+          alpha: 0,
+          duration: 360,
+          onComplete: () => g.destroy(),
+        });
+      } else if (e.class === "mage") {
+        g.fillStyle(e.color, 0.6);
+        g.fillCircle(0, 0, e.skill ? 26 : 15);
+        g.lineStyle(3, 0xffffff, 0.8);
+        g.strokeCircle(0, 0, e.skill ? 30 : 18);
+        g.x = e.x;
+        g.y = e.y;
+        this.tweens.add({
+          targets: g,
+          x: e.x + e.direction * 350,
+          angle: 180,
+          alpha: 0,
+          duration: 450,
+          onComplete: () => g.destroy(),
+        });
+      } else {
+        g.beginPath();
+        g.arc(0, 0, radius, -1.3, 1.3);
+        g.strokePath();
+        g.x = e.x;
+        g.y = e.y;
+        g.scaleX = e.direction;
+        this.tweens.add({
+          targets: g,
+          angle: e.direction * 30,
+          alpha: 0,
+          scaleY: 1.4,
+          duration: 300,
+          onComplete: () => g.destroy(),
+        });
+      }
+      if (e.skill) {
+        this.burst(e.x + e.direction * 120, e.y, e.color, e.skill * 8);
+        if (e.skill === 3) this.cameras.main.shake(130, 0.003);
+      }
+      const p = this.actors.get(state.self.id);
+      if (p && Math.abs(p.image.x - e.x) < 20)
+        this.tweens.add({
+          targets: p.image,
+          angle: e.direction * 8,
+          duration: 90,
+          yoyo: true,
+        });
+    }
+  }
+  update(time, dt) {
+    if (!state) return;
+    const lerp = Math.min(1, dt / 65);
+    for (const [id, a] of this.actors) {
+      const p = a.target,
+        bob = p.moving
+          ? Math.sin(time * 0.015) * 3
+          : Math.sin(time * 0.002) * 1;
+      a.image.x = Phaser.Math.Linear(a.image.x, p.x, lerp);
+      a.image.y = Phaser.Math.Linear(a.image.y, p.y + bob, lerp);
+      a.image.setFlipX(p.direction < 0);
+      a.image.setAlpha(p.hp <= 0 ? 0.4 : 1);
+      a.label.setPosition(a.image.x, a.image.y - 145);
+      a.shadow.setPosition(a.image.x, p.y - 3);
+      a.image.setAngle(p.moving ? Math.sin(time * 0.012) * 2 : 0);
+    }
+    for (const m of this.monsters.values()) {
+      const e = m.target;
+      m.image.x = Phaser.Math.Linear(m.image.x, e.x, lerp);
+      m.image.y = e.y + Math.sin(time * 0.004 + e.x) * 3;
+      m.image.setFlipX(e.direction > 0);
+      m.label.setPosition(m.image.x, m.image.y - m.size - 14);
+      m.bar.clear();
+      m.bar.fillStyle(0x152540, 0.9);
+      m.bar.fillRoundedRect(m.image.x - 35, m.image.y - m.size + 4, 70, 5, 2);
+      m.bar.fillStyle(e.boss ? 0xdd8dcc : 0xffbd91);
+      m.bar.fillRoundedRect(
+        m.image.x - 35,
+        m.image.y - m.size + 4,
+        70 * Math.max(0, e.hp / e.maxHp),
+        5,
+        2,
+      );
+    }
+    const me = this.actors.get(state.self.id);
+    if (me) {
+      const c = this.cameras.main,
+        targetX = Phaser.Math.Clamp(
+          me.image.x,
+          c.width / c.zoom / 2,
+          WORLD.width - c.width / c.zoom / 2,
+        );
+      c.centerOn(Phaser.Math.Linear(c.midPoint.x, targetX, 0.08), 340);
+    }
+  }
+}
