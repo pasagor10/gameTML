@@ -16,7 +16,14 @@ import {
   animateMonsterBody,
   createMonsterExtras,
   destroyMonsterExtras,
-} from "/creature-fx.js?v=0.6.0";
+} from "/creature-fx.js?v=0.11.0";
+import {
+  queueSpriteSets,
+  createSpriteRegistry,
+  playSpriteSet,
+  playMonsterSet,
+  playMonsterDeath,
+} from "/sprite-sets.js?v=0.12.0";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 let job = "swordsman",
@@ -906,6 +913,7 @@ class Adventure extends Phaser.Scene {
     this.lastArea = null;
   }
   preload() {
+    queueSpriteSets(this);
     this.load.image("town", "/assets/town.png");
     this.load.image("cave", "/assets/cave.png");
     this.load.image("knight-motion", "/assets/animations/knight-female.png");
@@ -923,6 +931,9 @@ class Adventure extends Phaser.Scene {
     scene = this;
     this.ready = true;
     this.knightAtlas = registerMotionAtlas(this, "knight-motion", 8);
+    this.sprites = createSpriteRegistry(this);
+    this.spriteSets = this.sprites.heroes;
+    this.monsterSets = this.sprites.monsters;
     this.slimeAtlas = registerMotionAtlas(this, "slime-motion", 6);
     this.telegraphs = this.add.graphics().setDepth(6);
     this.reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -1029,6 +1040,7 @@ class Adventure extends Phaser.Scene {
   }
   actor(p, stamp, reset = false) {
     let a = this.actors.get(p.id);
+    this.sprites.want("sets", `${p.class}-${p.gender}`);
     if (!a) {
       const shadow = this.add
           .ellipse(p.x, p.y - 3, 65, 15, 0x102b3c, 0.35)
@@ -1132,7 +1144,9 @@ class Adventure extends Phaser.Scene {
     for (const e of enemies) {
       let m = this.monsters.get(e.id);
       if (!m) {
-        const size = e.boss ? 210 : 95;
+        this.sprites.want("monsters", e.type);
+        const mset = this.monsterSets.get(e.type),
+          size = mset ? mset.height + 12 : e.boss ? 210 : 95;
         const image = this.add
           .image(e.x, e.y, "monsters", types.indexOf(e.type))
           .setDisplaySize(size, size)
@@ -1172,7 +1186,10 @@ class Adventure extends Phaser.Scene {
       if (!eids.has(id)) {
         if (!areaChanged) this.fx.death(m.image.x, m.image.y, m.target.boss);
         if (areaChanged) m.image.destroy();
-        else monsterDeath(this, m, this.slimeAtlas);
+        else if (
+          !playMonsterDeath(this, m.image, this.monsterSets.get(m.target.type))
+        )
+          monsterDeath(this, m, this.slimeAtlas);
         m.label.destroy();
         m.bar.destroy();
         destroyMonsterExtras(m);
@@ -1254,7 +1271,13 @@ class Adventure extends Phaser.Scene {
     this.telegraphs.clear();
     for (const [id, a] of this.actors) {
       const p = a.target,
-        pose = animateHero(a.image, p, serverTime, this.knightAtlas);
+        pose = animateHero(a.image, p, serverTime, this.knightAtlas),
+        spriteSet = this.spriteSets.get(`${p.class}-${p.gender}`);
+      if (spriteSet) {
+        playSpriteSet(a.image, spriteSet, p, pose, serverTime);
+        if (!a.image._spriteStill) a.image.setAngle(0);
+        if (spriteSet.facing < 0) a.image.toggleFlipX();
+      }
       const point = sampleMotion(
         a.history,
         serverTime - (id === state.self.id ? 0.05 : 0.08),
@@ -1312,7 +1335,22 @@ class Adventure extends Phaser.Scene {
     }
     for (const m of this.monsters.values()) {
       const e = m.target;
-      animateSlime(m.image, e, serverTime, this.slimeAtlas, m.size);
+      const mpose = animateSlime(
+          m.image,
+          e,
+          serverTime,
+          this.slimeAtlas,
+          m.size,
+        ),
+        mset = this.monsterSets.get(e.type);
+      if (mset) {
+        // A set that finished loading after spawn: adopt its size.
+        if (!m.setSized) {
+          m.setSized = true;
+          m.size = mset.height + 12;
+        }
+        playMonsterSet(m.image, mset, e, mpose, serverTime);
+      }
       const point = sampleMotion(m.history, serverTime - 0.08);
       m.image.setPosition(point.x, point.y);
       animateMonsterBody(m, e, serverTime, time, this.slimeAtlas);

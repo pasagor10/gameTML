@@ -27,9 +27,13 @@ function flash(image, hitAge) {
 // Call after animateHero() and the interpolated setPosition().
 export function animateHeroBody(a, p, pose, serverTime, now) {
   const img = a.image,
+    spriteSet = img.texture.key.startsWith("sprite:"),
     size = img.texture.key === "knight-motion" ? 154 : 125,
-    atlas = img.texture.key === "knight-motion";
-  img.setDisplaySize(size, size);
+    atlas =
+      (spriteSet && !img._spriteStill) || img.texture.key === "knight-motion";
+  // Reset to the base size each frame, then layer squash on top.
+  if (spriteSet) img.setScale(img._spriteScale);
+  else img.setDisplaySize(size, size);
   let sx = 1,
     sy = 1,
     dx = 0,
@@ -142,8 +146,12 @@ export function animateMonsterBody(m, e, serverTime, now, atlas) {
   const img = m.image,
     g = m.gait,
     groundY = img.y,
-    usesAtlas = atlas && e.type === "slime";
-  img.setDisplaySize(m.size, m.size);
+    // Painted frame sets animate gait/attack themselves; only add hover,
+    // hit squash and spawn pop on top of them.
+    framed = img.texture.key.startsWith("sprite:"),
+    usesAtlas = (atlas && e.type === "slime") || framed;
+  if (framed) img.setScale(img._spriteScale);
+  else img.setDisplaySize(m.size, m.size);
   let sx = 1,
     sy = 1,
     dy = 0,
@@ -151,7 +159,11 @@ export function animateMonsterBody(m, e, serverTime, now, atlas) {
   const t = now * 0.001 + m.seed,
     dir = e.direction || 1;
   if (!reduced && e.hp > 0) {
-    if (g.fly) {
+    if (g.fly && framed) {
+      dy -= 26 + Math.sin(t * g.speed * 0.5) * g.bob;
+    } else if (framed) {
+      // frames carry the gait
+    } else if (g.fly) {
       dy -= 26 + Math.sin(t * g.speed * 0.5) * g.bob;
       const flap = Math.sin(t * 22);
       sy += flap * g.flap;
@@ -170,7 +182,7 @@ export function animateMonsterBody(m, e, serverTime, now, atlas) {
       if (g.sway) angle = Math.sin(t * 1.8) * g.tilt;
     }
     const ac = e.action;
-    if (ac && serverTime < ac.endsAt) {
+    if (!framed && ac && serverTime < ac.endsAt) {
       if (serverTime < ac.impactAt) {
         const k =
           (serverTime - ac.startedAt) /
@@ -195,12 +207,13 @@ export function animateMonsterBody(m, e, serverTime, now, atlas) {
     }
     const hitAge = serverTime - (e.hitAt || -1e9);
     if (hitAge >= 0 && hitAge < 0.2) {
-      const k = 1 - hitAge / 0.2;
+      const k = (1 - hitAge / 0.2) * (framed ? 0.5 : 1);
       sy -= k * 0.14;
       sx += k * 0.12;
     }
-    const spawn = (now - m.spawnAt) / 520;
-    if (spawn >= 0 && spawn < 1) {
+    const spawn = (now - m.spawnAt) / 520,
+      spawnClip = framed && e.spawnAt && serverTime - e.spawnAt < 0.6;
+    if (spawn >= 0 && spawn < 1 && !spawnClip) {
       const k = Phaser.Math.Easing.Back.Out(spawn);
       sx *= k;
       sy *= k;

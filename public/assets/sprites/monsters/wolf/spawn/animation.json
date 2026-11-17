@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "3.0",
+  "name": "spawn",
+  "artSource": "painted sheet (supplied artwork)",
+  "sourceSize": [
+    274,
+    131
+  ],
+  "sourceAnchor": [
+    137.0,
+    121.27
+  ],
+  "frameCount": 4,
+  "durationsMs": [
+    90,
+    90,
+    100,
+    120
+  ],
+  "durationSeconds": 0.4,
+  "fps": 10.0,
+  "loop": false,
+  "bodyHeightPx": 112.0,
+  "events": [],
+  "sampling": "linear",
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      274,
+      131
+    ],
+    "pages": [
+      {
+        "file": "spawn-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  }
+}

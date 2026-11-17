@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "3.0",
+  "name": "move",
+  "artSource": "painted sheet (supplied artwork)",
+  "sourceSize": [
+    159,
+    167
+  ],
+  "sourceAnchor": [
+    79.5,
+    148.62
+  ],
+  "frameCount": 4,
+  "durationsMs": [
+    110,
+    110,
+    110,
+    110
+  ],
+  "durationSeconds": 0.44,
+  "fps": 9.091,
+  "loop": true,
+  "bodyHeightPx": 128.8,
+  "events": [],
+  "sampling": "linear",
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      159,
+      167
+    ],
+    "pages": [
+      {
+        "file": "move-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  }
+}

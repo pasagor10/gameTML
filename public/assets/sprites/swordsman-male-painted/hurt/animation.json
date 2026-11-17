@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "3.0",
+  "name": "hurt",
+  "artSource": "painted sheet (supplied artwork)",
+  "sourceSize": [
+    388,
+    240
+  ],
+  "sourceAnchor": [
+    194.0,
+    236.0
+  ],
+  "frameCount": 6,
+  "durationsMs": [
+    40,
+    40,
+    45,
+    45,
+    50,
+    60
+  ],
+  "durationSeconds": 0.28,
+  "fps": 21.429,
+  "loop": false,
+  "bodyHeightPx": 217.0,
+  "events": [],
+  "sampling": "linear",
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      388,
+      240
+    ],
+    "pages": [
+      {
+        "file": "hurt-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 6,
+        "columns": 6
+      }
+    ]
+  }
+}

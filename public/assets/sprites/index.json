@@ -1,0 +1,216 @@
+{
+  "sets": {
+    "archer-male": {
+      "dir": "archer-male-painted",
+      "height": 150,
+      "facing": 1,
+      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "actions": {
+        "idle": "idle",
+        "attack": "attack",
+        "skill": "attack",
+        "walk": "walk",
+        "run": "run",
+        "hit": "hurt",
+        "death": "death"
+      }
+    },
+    "archer-female": {
+      "dir": "archer-female-painted",
+      "height": 150,
+      "facing": 1,
+      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "actions": {
+        "idle": "idle",
+        "attack": "attack",
+        "skill": "attack",
+        "walk": "walk",
+        "run": "run",
+        "hit": "hurt",
+        "death": "death"
+      }
+    },
+    "mage-male": {
+      "dir": "mage-male-painted",
+      "height": 150,
+      "facing": 1,
+      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "actions": {
+        "idle": "idle",
+        "attack": "attack",
+        "skill": "attack",
+        "walk": "walk",
+        "run": "run",
+        "hit": "hurt",
+        "death": "death"
+      }
+    },
+    "mage-female": {
+      "dir": "mage-female-painted",
+      "height": 150,
+      "facing": 1,
+      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "actions": {
+        "idle": "idle",
+        "attack": "attack",
+        "skill": "attack",
+        "walk": "walk",
+        "run": "run",
+        "hit": "hurt",
+        "death": "death"
+      }
+    },
+    "swordsman-male": {
+      "dir": "swordsman-male-painted",
+      "height": 150,
+      "facing": 1,
+      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "actions": {
+        "idle": "idle",
+        "attack": "attack",
+        "skill": "attack",
+        "walk": "walk",
+        "run": "run",
+        "hit": "hurt",
+        "death": "death"
+      }
+    },
+    "swordsman-female": {
+      "dir": "swordsman-female-painted",
+      "height": 150,
+      "facing": 1,
+      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "actions": {
+        "idle": "idle",
+        "attack": "attack",
+        "skill": "attack",
+        "walk": "walk",
+        "run": "run",
+        "hit": "hurt",
+        "death": "death"
+      }
+    }
+  },
+  "monsters": {
+    "bat": {
+      "dir": "monsters/bat",
+      "height": 72,
+      "facing": 1,
+      "flyer": true,
+      "source": "supplied painted sheet",
+      "actions": {
+        "idle": "idle",
+        "move": "move",
+        "attack": "attack",
+        "hit": "hit",
+        "death": "death",
+        "spawn": "spawn"
+      }
+    },
+    "batking": {
+      "dir": "monsters/batking",
+      "height": 175,
+      "facing": 1,
+      "flyer": true,
+      "source": "supplied painted sheet",
+      "actions": {
+        "idle": "idle",
+        "move": "move",
+        "attack": "attack",
+        "hit": "hit",
+        "death": "death",
+        "spawn": "spawn"
+      }
+    },
+    "boar": {
+      "dir": "monsters/boar",
+      "height": 78,
+      "facing": 1,
+      "flyer": false,
+      "source": "supplied painted sheet",
+      "actions": {
+        "idle": "idle",
+        "move": "move",
+        "attack": "attack",
+        "hit": "hit",
+        "death": "death",
+        "spawn": "spawn"
+      }
+    },
+    "goblin": {
+      "dir": "monsters/goblin",
+      "height": 92,
+      "facing": 1,
+      "flyer": false,
+      "source": "supplied painted sheet",
+      "actions": {
+        "idle": "idle",
+        "move": "move",
+        "attack": "attack",
+        "hit": "hit",
+        "death": "death",
+        "spawn": "spawn"
+      }
+    },
+    "golem": {
+      "dir": "monsters/golem",
+      "height": 185,
+      "facing": 1,
+      "flyer": false,
+      "source": "supplied painted sheet",
+      "actions": {
+        "idle": "idle",
+        "move": "move",
+        "attack": "attack",
+        "hit": "hit",
+        "death": "death",
+        "spawn": "spawn"
+      }
+    },
+    "mushroom": {
+      "dir": "monsters/mushroom",
+      "height": 82,
+      "facing": 1,
+      "flyer": false,
+      "source": "supplied painted sheet",
+      "actions": {
+        "idle": "idle",
+        "move": "move",
+        "attack": "attack",
+        "hit": "hit",
+        "death": "death",
+        "spawn": "spawn"
+      }
+    },
+    "serpent": {
+      "dir": "monsters/serpent",
+      "height": 190,
+      "facing": 1,
+      "flyer": false,
+      "source": "supplied painted sheet",
+      "actions": {
+        "idle": "idle",
+        "move": "move",
+        "attack": "attack",
+        "hit": "hit",
+        "death": "death",
+        "spawn": "spawn"
+      }
+    },
+    "wolf": {
+      "dir": "monsters/wolf",
+      "height": 80,
+      "facing": 1,
+      "flyer": false,
+      "source": "supplied painted sheet",
+      "actions": {
+        "idle": "idle",
+        "move": "move",
+        "attack": "attack",
+        "hit": "hit",
+        "death": "death",
+        "spawn": "spawn"
+      }
+    }
+  }
+}

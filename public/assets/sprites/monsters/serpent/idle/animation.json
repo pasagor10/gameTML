@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "3.0",
+  "name": "idle",
+  "artSource": "painted sheet (supplied artwork)",
+  "sourceSize": [
+    256,
+    270
+  ],
+  "sourceAnchor": [
+    128.0,
+    248.0
+  ],
+  "frameCount": 4,
+  "durationsMs": [
+    150,
+    150,
+    150,
+    150
+  ],
+  "durationSeconds": 0.6,
+  "fps": 6.667,
+  "loop": true,
+  "bodyHeightPx": 240.0,
+  "events": [],
+  "sampling": "linear",
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      256,
+      270
+    ],
+    "pages": [
+      {
+        "file": "idle-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  }
+}
