@@ -10,6 +10,7 @@ import { createSelectionPreview } from "/selection-scene.js?v=0.2.2";
 import { CLASSES, ITEMS, FLOORS, WORLD } from "/shared/config.js";
 import { createParallax } from "/parallax.js?v=0.4.0";
 import { updateHudFx, enterHud } from "/hud-fx.js?v=0.4.1";
+import { createCombatFx } from "/combat-fx.js?v=0.5.1";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 let job = "swordsman",
@@ -921,6 +922,7 @@ class Adventure extends Phaser.Scene {
     this.reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
     this.cameras.main.setBackgroundColor("#234b68");
     this.parallax = createParallax(this);
+    this.fx = createCombatFx(this);
     this.parallax.setArea("town");
     this.decor = this.add.graphics().setDepth(-5);
     this.effectLayer = this.add.graphics().setDepth(30);
@@ -1147,7 +1149,7 @@ class Adventure extends Phaser.Scene {
     }
     for (const [id, m] of this.monsters)
       if (!eids.has(id)) {
-        this.burst(m.image.x, m.image.y - 40, 0xc3a6ff, 8);
+        if (!areaChanged) this.fx.death(m.image.x, m.image.y, m.target.boss);
         if (areaChanged) m.image.destroy();
         else monsterDeath(this, m, this.slimeAtlas);
         m.label.destroy();
@@ -1188,165 +1190,22 @@ class Adventure extends Phaser.Scene {
     }
     this.shopObjects.forEach((o) => o.setVisible(s.area === "town"));
   }
-  burst(x, y, color, count = 12) {
-    if (this.children.length > 220) return;
-    count = Math.min(12, count);
-    for (let n = 0; n < count; n++) {
-      const a = Math.random() * Math.PI * 2,
-        r = 30 + Math.random() * 60,
-        dot = this.add.circle(x, y, 2 + Math.random() * 3, color).setDepth(35);
-      this.tweens.add({
-        targets: dot,
-        x: x + Math.cos(a) * r,
-        y: y + Math.sin(a) * r,
-        alpha: 0,
-        scale: 0,
-        duration: 450 + Math.random() * 300,
-        onComplete: () => dot.destroy(),
-      });
-    }
-  }
   effect(e) {
+    const source =
+      this.actors.get(e.actorId)?.image || this.monsters.get(e.actorId)?.image;
     if (e.kind === "damage") {
-      this.burst(
-        e.x,
-        e.y + 35,
-        e.amount < 0 ? 0xffa291 : 0xffe8a0,
-        e.crit ? 10 : 5,
+      tone(e.amount < 0 ? 105 : e.crit ? 980 : 720, 0.055, "triangle", 0.012);
+      const monster = this.monsters.get(e.targetId),
+        actor = this.actors.get(e.targetId);
+      this.fx.hit(
+        e,
+        source?.x,
+        monster || actor,
+        e.targetId === state?.self.id,
       );
-      tone(e.amount < 0 ? 105 : 720, 0.055, "triangle", 0.012);
-      const label = this.add
-        .text(e.x, e.y, (e.crit ? "CRIT " : "") + e.amount, {
-          fontFamily: "Noto Sans Thai",
-          fontSize: e.crit ? "28px" : "22px",
-          fontStyle: "bold",
-          color: e.amount < 0 ? "#ffad9b" : e.crit ? "#ffe185" : "#f0f8ff",
-          stroke: "#273047",
-          strokeThickness: 4,
-        })
-        .setOrigin(0.5)
-        .setDepth(40);
-      this.tweens.add({
-        targets: label,
-        y: e.y - 65,
-        alpha: 0,
-        duration: 850,
-        onComplete: () => label.destroy(),
-      });
     } else {
       tone(e.skill ? 220 : 480, 0.13);
-      const g = this.add.graphics().setDepth(25);
-      g.lineStyle(e.skill ? 8 : 5, e.color, 0.9);
-      const radius = e.skill ? 110 : 65;
-      if (e.class === "archer") {
-        g.fillStyle(e.color);
-        g.fillTriangle(0, -5, 34, 0, 0, 5);
-        g.x = e.x + e.direction * 40;
-        g.y = e.y;
-        g.scaleX = e.direction;
-        this.tweens.add({
-          targets: g,
-          x: g.x + e.direction * (e.skill ? 600 : 410),
-          alpha: 0,
-          duration: 360,
-          onComplete: () => g.destroy(),
-        });
-      } else if (e.class === "mage") {
-        g.fillStyle(e.color, 0.6);
-        g.fillCircle(0, 0, e.skill ? 26 : 15);
-        g.lineStyle(3, 0xffffff, 0.8);
-        g.strokeCircle(0, 0, e.skill ? 30 : 18);
-        g.x = e.x;
-        g.y = e.y;
-        this.tweens.add({
-          targets: g,
-          x: e.x + e.direction * 350,
-          angle: 180,
-          alpha: 0,
-          duration: 450,
-          onComplete: () => g.destroy(),
-        });
-      } else {
-        g.x = e.x;
-        g.y = e.y;
-        g.scaleX = e.direction;
-        const range = e.range || 130;
-        if (e.skill === 3) {
-          g.lineStyle(4, e.color, 0.8);
-          g.strokeEllipse(0, 35, range * 2, 110);
-          g.strokeEllipse(0, 35, range * 1.7, 80);
-          for (let n = -3; n <= 3; n++) {
-            g.fillStyle(n % 2 ? 0xfff4c4 : e.color, 0.65);
-            g.fillTriangle(
-              n * 70 - 10,
-              45,
-              n * 70,
-              -100 - Math.abs(n) * 8,
-              n * 70 + 10,
-              45,
-            );
-          }
-          this.tweens.add({
-            targets: g,
-            alpha: 0,
-            scaleY: 1.25,
-            duration: 420,
-            onComplete: () => g.destroy(),
-          });
-        } else if (e.skill === 2) {
-          g.lineStyle(6, 0xffe5a0, 0.9);
-          g.strokeEllipse(range * 0.45, 25, range, 110);
-          for (let n = 0; n < 7; n++) {
-            const x = 25 + n * 23;
-            g.lineBetween(x, 35, x + 25, -60 - Math.sin(n) * 25);
-          }
-          this.tweens.add({
-            targets: g,
-            alpha: 0,
-            scaleY: 1.3,
-            duration: 320,
-            onComplete: () => g.destroy(),
-          });
-        } else if (e.skill === 1) {
-          for (let n = 0; n < 3; n++) {
-            g.lineStyle(6 - n, e.color, 1 - n * 0.22);
-            g.beginPath();
-            g.arc(range * (0.25 + n * 0.25), 0, 65, -1.25, 1.25);
-            g.strokePath();
-          }
-          this.tweens.add({
-            targets: g,
-            x: e.x + e.direction * 20,
-            alpha: 0,
-            duration: 260,
-            onComplete: () => g.destroy(),
-          });
-        } else {
-          const flip = e.combo === 1 ? -1 : 1;
-          g.lineStyle(6, e.color, 0.9);
-          g.beginPath();
-          g.arc(0, 0, range * 0.9, -1.35, 1.35);
-          g.strokePath();
-          g.lineStyle(2, 0xfff8dc, 0.9);
-          g.beginPath();
-          g.arc(0, 0, range * 0.8, -1.2, 1.2);
-          g.strokePath();
-          g.angle = -e.direction * flip * 20;
-          this.tweens.add({
-            targets: g,
-            angle: e.direction * flip * 25,
-            alpha: 0,
-            duration: 230,
-            onComplete: () => g.destroy(),
-          });
-        }
-      }
-
-      if (e.skill) {
-        this.burst(e.x + e.direction * 120, e.y, e.color, e.skill * 8);
-        if (e.skill === 3 && !this.reducedMotion)
-          this.cameras.main.shake(100, 0.002);
-      }
+      this.fx.attack(e);
     }
   }
   dust(x, y, count = 7) {
@@ -1379,6 +1238,7 @@ class Adventure extends Phaser.Scene {
         serverTime - (id === state.self.id ? 0.05 : 0.08),
       );
       a.image.setPosition(point.x, point.y);
+      this.fx.applyKick(a, a.image);
       if (p.class !== "swordsman" || p.gender !== "female")
         a.image.y +=
           p.grounded && pose.state === "idle" ? Math.sin(time * 0.002) : 0;
@@ -1417,6 +1277,13 @@ class Adventure extends Phaser.Scene {
           65 + progress * 20,
           14,
         );
+        if (p.action.skill)
+          this.fx.charge(
+            a.image.x,
+            a.image.y - 60,
+            CLASSES[p.class].color,
+            progress,
+          );
       }
     }
     for (const m of this.monsters.values()) {
@@ -1428,21 +1295,29 @@ class Adventure extends Phaser.Scene {
         m.image.y += e.moving
           ? Math.sin(time * 0.009) * 3
           : Math.sin(time * 0.003) * 1;
+      this.fx.applyKick(m, m.image);
       m.label.setPosition(m.image.x, m.image.y - m.size - 14);
       m.bar.setPosition(m.image.x, m.image.y);
-      if (m.barHp !== e.hp) {
+      m.lagHp ??= e.hp;
+      if (m.lagHp < e.hp) m.lagHp = e.hp;
+      else if (m.lagHp > e.hp && time - (m.lagHoldAt ?? 0) > 0)
+        m.lagHp = Math.max(e.hp, m.lagHp - e.maxHp * dt * 0.0007);
+      if (m.barHp !== e.hp) m.lagHoldAt = time + 300;
+      if (m.barHp !== e.hp || m.barLag !== m.lagHp) {
         m.barHp = e.hp;
+        m.barLag = m.lagHp;
+        const w = e.boss ? 120 : 70,
+          top = -m.size + 4,
+          pct = (v) => Math.max(0, v / e.maxHp);
         m.bar.clear();
-        m.bar.fillStyle(0x152540, 0.9);
-        m.bar.fillRoundedRect(-35, -m.size + 4, 70, 5, 2);
-        m.bar.fillStyle(e.boss ? 0xdd8dcc : 0xffbd91);
-        m.bar.fillRoundedRect(
-          -35,
-          -m.size + 4,
-          70 * Math.max(0, e.hp / e.maxHp),
-          5,
-          2,
-        );
+        m.bar.fillStyle(0x05101f, 0.92);
+        m.bar.fillRoundedRect(-w / 2 - 2, top - 2, w + 4, 9, 4);
+        m.bar.fillStyle(0xfff1c4, 0.95);
+        m.bar.fillRoundedRect(-w / 2, top, w * pct(m.lagHp), 5, 2);
+        m.bar.fillStyle(e.boss ? 0xdd5fb8 : 0xff6b4a);
+        m.bar.fillRoundedRect(-w / 2, top, w * pct(e.hp), 5, 2);
+        m.bar.fillStyle(0xffffff, 0.35);
+        m.bar.fillRect(-w / 2 + 1, top + 1, Math.max(0, w * pct(e.hp) - 2), 1);
       }
       if (e.action && serverTime < e.action.impactAt) {
         const progress = Math.max(
