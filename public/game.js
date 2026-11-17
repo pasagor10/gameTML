@@ -1167,7 +1167,7 @@ class Adventure extends Phaser.Scene {
   preload() {
     queueSpriteSets(this);
     // Town kit: pieces, props, animated props and far layers (tools/town-kit).
-    const kit = (key) => `/assets/town-kit/${key}.webp?v=6`;
+    const kit = (key) => `/assets/town-kit/${key}.webp?v=7`;
     for (const piece of new Set(TOWN_LAYOUT.map((p) => p.piece)))
       this.load.image(`town-piece-${piece}`, kit(`piece-${piece}`));
     for (const key of new Set(TOWN_PROPS.map((p) => p.key)))

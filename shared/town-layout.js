@@ -14,7 +14,7 @@ export const TOWN_GROUND = 600;
 
 // Width and height are the keyed piece sizes (public/assets/town-kit/kit.json).
 export const TOWN_PIECES = {
-  tree: { w: 512, h: 750, ledges: [] },
+  tree: { w: 599, h: 686, ledges: [] },
   stall: { w: 369, h: 550, ledges: [] },
   shop: {
     w: 521,
@@ -54,7 +54,7 @@ export const TOWN_PIECES = {
 
 // Left to right; x is where each piece's left edge stands.
 export const TOWN_LAYOUT = [
-  { piece: "tree", x: 0 },
+  { piece: "tree", x: -40 }, // canopy tucks behind the stall roof
   { piece: "stall", x: 512 },
   { piece: "shop", x: 881 },
   { piece: "stairs", x: 1402 },

@@ -32,7 +32,7 @@ SRC = Path(__file__).parent / "source"
 OUT = ROOT / "public" / "assets" / "town-kit"
 # Scale from the painting to world px (old-town proportions: doors ~ 90 px).
 PIECES = {"stall": 0.36, "shop": 0.42, "smithy": 0.46, "stairs": 0.42,
-          "tower": 0.42, "tree": 0.5, "cavegate": 0.42}
+          "tower": 0.42, "tree": 0.6, "cavegate": 0.42}
 PROP_SCALE = {"props-ground": 0.34, "props-hanging": 0.3, "props-foliage": 0.42}
 # Pieces with no real pink near their edges: also turn pink rim light green.
 RIM_FIX = {"tree"}
@@ -86,7 +86,9 @@ def main():
     report = {}
     for name, k in PIECES.items():
         im = keyed(name)
-        im = im.crop(im.getchannel("A").getbbox())
+        # Trim to solid art: stray faint pixels at the edges must not count.
+        solid = im.getchannel("A").point(lambda v: 255 if v > 40 else 0)
+        im = im.crop(solid.getbbox())
         report[f"piece-{name}"] = {"src": im.size, "out": save(im, f"piece-{name}", k), "scale": k}
     for sheet, k in PROP_SCALE.items():
         im = keyed(sheet)
