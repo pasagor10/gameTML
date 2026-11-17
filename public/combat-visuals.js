@@ -23,8 +23,14 @@ export function animateHero(image, p, time, hasAtlas) {
   const pose = heroPose(p, time),
     animated = hasAtlas && p.class === "swordsman" && p.gender === "female";
   if (animated) {
-    image.setTexture("knight-motion", HERO_ROWS[pose.state] * 4 + pose.frame);
-    image.setOrigin(0.5, 0.96).setDisplaySize(154, 154);
+    const nextFrame = HERO_ROWS[pose.state] * 4 + pose.frame;
+    if (
+      image.texture.key !== "knight-motion" ||
+      Number(image.frame.name) !== nextFrame
+    ) {
+      image.setTexture("knight-motion", nextFrame);
+      image.setOrigin(0.5, 0.96).setDisplaySize(154, 154);
+    }
     image.setAngle(0);
   } else {
     image.setAngle(
@@ -52,10 +58,16 @@ export function animateHero(image, p, time, hasAtlas) {
 export function animateSlime(image, e, time, hasAtlas, size) {
   const pose = slimePose(e, time);
   if (hasAtlas && e.type === "slime") {
-    image
-      .setTexture("slime-motion", SLIME_ROWS[pose.state] * 4 + pose.frame)
-      .setDisplaySize(size, size);
-    image.setOrigin(0.5, 0.94);
+    const nextFrame = SLIME_ROWS[pose.state] * 4 + pose.frame;
+    if (
+      image.texture.key !== "slime-motion" ||
+      Number(image.frame.name) !== nextFrame
+    ) {
+      image
+        .setTexture("slime-motion", nextFrame)
+        .setDisplaySize(size, size)
+        .setOrigin(0.5, 0.94);
+    }
   }
   image
     .setTint(time - (e.hitAt || 0) < 0.08 ? 0xffc6cf : 0xffffff)

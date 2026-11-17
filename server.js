@@ -334,7 +334,7 @@ let step = 0;
 const timer = setInterval(() => {
   try {
     world.tick(0.05);
-    if (++step % 2 === 0)
+    if (++step % 1 === 0)
       for (const p of world.players.values())
         p.socket.emit("world:snapshot", world.snapshot(p));
     if (step % 200 === 0)

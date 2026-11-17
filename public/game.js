@@ -1,10 +1,11 @@
+import { sampleMotion } from "/shared/smoothing.js";
 import { ACTIONS } from "/shared/motion.js";
 import {
   registerMotionAtlas,
   animateHero,
   animateSlime,
   monsterDeath,
-} from "/combat-visuals.js?v=0.3.0";
+} from "/combat-visuals.js?v=0.3.1";
 import { createSelectionPreview } from "/selection-scene.js?v=0.2.2";
 import { CLASSES, ITEMS, FLOORS, WORLD } from "/shared/config.js";
 const $ = (s) => document.querySelector(s),
@@ -31,6 +32,7 @@ let job = "swordsman",
   seen = new Set(),
   lastTrade = "",
   snapshotAt = 0,
+  serverOffset = null,
   touchAttack = false;
 const JOBS = ["swordsman", "archer", "mage"],
   eng = ["SWORDSMAN", "WIND RANGER", "ARCANE MAGE"];
@@ -362,6 +364,11 @@ function enterGame() {
   socket.on("world:snapshot", (packet) => {
     state = packet;
     snapshotAt = performance.now();
+    const nextOffset = packet.time - snapshotAt / 1000;
+    serverOffset =
+      serverOffset === null
+        ? nextOffset
+        : serverOffset + (nextOffset - serverOffset) * 0.08;
     updateHUD();
     if (scene?.ready) scene.applySnapshot(packet);
   });
@@ -1011,7 +1018,7 @@ class Adventure extends Phaser.Scene {
       }
     }
   }
-  actor(p) {
+  actor(p, stamp, reset = false) {
     let a = this.actors.get(p.id);
     if (!a) {
       const shadow = this.add
@@ -1043,6 +1050,9 @@ class Adventure extends Phaser.Scene {
       this.actors.set(p.id, a);
     }
     a.target = p;
+    if (reset || !a.history) a.history = [];
+    a.history.push({ time: stamp, x: p.x, y: p.y, vx: p.vx || 0 });
+    if (a.history.length > 8) a.history.shift();
     return a;
   }
   applySnapshot(s) {
@@ -1076,7 +1086,7 @@ class Adventure extends Phaser.Scene {
     }
     const all = [s.self, ...s.players],
       ids = new Set(all.map((p) => p.id));
-    for (const p of all) this.actor(p);
+    for (const p of all) this.actor(p, s.time, areaChanged);
     for (const [id, a] of this.actors)
       if (!ids.has(id)) {
         Object.values(a).forEach((o) => o?.destroy?.());
@@ -1124,6 +1134,14 @@ class Adventure extends Phaser.Scene {
         this.monsters.set(e.id, m);
       }
       m.target = e;
+      if (areaChanged || !m.history) m.history = [];
+      m.history.push({
+        time: s.time,
+        x: e.x,
+        y: e.y,
+        vx: e.moving ? e.direction * (e.boss ? 75 : 90) : 0,
+      });
+      if (m.history.length > 8) m.history.shift();
     }
     for (const [id, m] of this.monsters)
       if (!eids.has(id)) {
@@ -1169,6 +1187,8 @@ class Adventure extends Phaser.Scene {
     this.shopObjects.forEach((o) => o.setVisible(s.area === "town"));
   }
   burst(x, y, color, count = 12) {
+    if (this.children.length > 220) return;
+    count = Math.min(12, count);
     for (let n = 0; n < count; n++) {
       const a = Math.random() * Math.PI * 2,
         r = 30 + Math.random() * 60,
@@ -1328,7 +1348,7 @@ class Adventure extends Phaser.Scene {
     }
   }
   dust(x, y, count = 7) {
-    if (this.reducedMotion) return;
+    if (this.reducedMotion || this.children.length > 180) return;
     for (let n = 0; n < count; n++) {
       const dot = this.add
         .ellipse(x, y - 3, 3 + Math.random() * 4, 2, 0xc2d6c4, 0.45)
@@ -1345,14 +1365,18 @@ class Adventure extends Phaser.Scene {
   }
   update(time, dt) {
     if (!state) return;
-    const serverTime = state.time + (performance.now() - snapshotAt) / 1000,
-      lerp = Math.min(1, dt / 65);
+    const serverTime =
+      performance.now() / 1000 +
+      (serverOffset ?? state.time - performance.now() / 1000);
     this.telegraphs.clear();
     for (const [id, a] of this.actors) {
       const p = a.target,
         pose = animateHero(a.image, p, serverTime, this.knightAtlas);
-      a.image.x = Phaser.Math.Linear(a.image.x, p.x, lerp);
-      a.image.y = Phaser.Math.Linear(a.image.y, p.y, lerp);
+      const point = sampleMotion(
+        a.history,
+        serverTime - (id === state.self.id ? 0.05 : 0.08),
+      );
+      a.image.setPosition(point.x, point.y);
       if (p.class !== "swordsman" || p.gender !== "female")
         a.image.y +=
           p.grounded && pose.state === "idle" ? Math.sin(time * 0.002) : 0;
@@ -1396,24 +1420,28 @@ class Adventure extends Phaser.Scene {
     for (const m of this.monsters.values()) {
       const e = m.target;
       animateSlime(m.image, e, serverTime, this.slimeAtlas, m.size);
-      m.image.x = Phaser.Math.Linear(m.image.x, e.x, lerp);
-      m.image.y = e.y;
+      const point = sampleMotion(m.history, serverTime - 0.08);
+      m.image.setPosition(point.x, point.y);
       if (e.type !== "slime")
         m.image.y += e.moving
           ? Math.sin(time * 0.009) * 3
           : Math.sin(time * 0.003) * 1;
       m.label.setPosition(m.image.x, m.image.y - m.size - 14);
-      m.bar.clear();
-      m.bar.fillStyle(0x152540, 0.9);
-      m.bar.fillRoundedRect(m.image.x - 35, m.image.y - m.size + 4, 70, 5, 2);
-      m.bar.fillStyle(e.boss ? 0xdd8dcc : 0xffbd91);
-      m.bar.fillRoundedRect(
-        m.image.x - 35,
-        m.image.y - m.size + 4,
-        70 * Math.max(0, e.hp / e.maxHp),
-        5,
-        2,
-      );
+      m.bar.setPosition(m.image.x, m.image.y);
+      if (m.barHp !== e.hp) {
+        m.barHp = e.hp;
+        m.bar.clear();
+        m.bar.fillStyle(0x152540, 0.9);
+        m.bar.fillRoundedRect(-35, -m.size + 4, 70, 5, 2);
+        m.bar.fillStyle(e.boss ? 0xdd8dcc : 0xffbd91);
+        m.bar.fillRoundedRect(
+          -35,
+          -m.size + 4,
+          70 * Math.max(0, e.hp / e.maxHp),
+          5,
+          2,
+        );
+      }
       if (e.action && serverTime < e.action.impactAt) {
         const progress = Math.max(
           0,

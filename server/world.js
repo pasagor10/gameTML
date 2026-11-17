@@ -885,6 +885,7 @@ export function snapshot(p) {
     y: m.y,
     direction: m.direction,
     moving: Math.abs(m.vx || 0) > 8,
+    vx: m.vx || 0,
     running: m.running,
     grounded: m.grounded,
     vy: m.vy,
