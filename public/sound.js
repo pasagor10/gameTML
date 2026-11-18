@@ -1,7 +1,7 @@
 // Game audio: local CC0 music and recorded CC0 combat sounds, layered with
 // synthesised WebAudio for punch. Sources and licenses: /assets/music/CREDITS.md
 //
-//   import { sfx, music, setSound, soundOn, unlockAudio } from "/sound.js?v=20261118-audio1";
+//   import { sfx, music, setSound, soundOn, unlockAudio } from "/sound.js?v=20261118-audio2";
 //   sfx("swing")            // one-shot effects, see SFX below
 //   music("town"|"dungeon"|"boss"|null)
 //
@@ -285,13 +285,28 @@ const SFX = {
     osc(d, { f: 200, to: 45, at: 0.05, dur: 0.45, vol: 0.34 });
     if (!ok) noise(d, { dur: 0.38, vol: 0.28, f: 450, to: 4500, q: 0.7, attack: 0.06 });
   },
+  // Priest: a bright bell over the cast swell.
+  holy() {
+    const d = out(sfxBus, 0.35), pitch = rnd(0.98, 1.04);
+    sample(d, "cast", { vol: 0.55, rate: 1.35 * pitch });
+    [1046, 1568].forEach((f, i) => osc(d, { f: f * pitch, at: i * 0.05, dur: 0.5, vol: 0.06, attack: 0.005 }));
+  },
+  smite() {
+    const d = out(sfxBus, 0.45);
+    sample(d, "cast", { vol: 0.7, rate: 1.1 });
+    osc(d, { f: 180, to: 50, at: 0.06, dur: 0.4, vol: 0.3 });
+    [784, 1175, 1568, 2093].forEach((f, i) => osc(d, { f, at: i * 0.045, dur: 0.6, vol: 0.05, attack: 0.005 }));
+  },
   // Contact: a recorded hit per weapon over a short synth punch.
   hit(arg = {}) {
     const d = out(sfxBus, 0.06), pitch = rnd(0.88, 1.12);
     osc(d, { f: 170 * pitch, to: 50, dur: 0.12, vol: 0.3 });
     noise(d, { dur: 0.035, vol: 0.3, f: 2600 * pitch, to: 700, q: 0.7 });
     const cls = arg?.class;
-    if (cls === "mage") {
+    if (cls === "priest") {
+      osc(d, { f: 1318 * pitch, dur: 0.25, vol: 0.05, attack: 0.003 });
+      if (!sample(d, "thud", { vol: 0.6, rate: 1.2 * pitch })) noise(d, { dur: 0.1, vol: 0.08, f: 3800, type: "highpass" });
+    } else if (cls === "mage") {
       if (!sample(d, "fire", { vol: 0.45, rate: 1.5 * pitch })) noise(d, { dur: 0.13, vol: 0.1, f: 4200, type: "highpass" });
     } else if (cls === "archer") {
       if (!sample(d, "thud", { vol: 0.9, rate: pitch })) osc(d, { type: "triangle", f: 650 * pitch, to: 170, dur: 0.065, vol: 0.08 });

@@ -497,6 +497,94 @@
         "hit": "hurt",
         "death": "death"
       }
+    },
+    "priest-male": {
+      "dir": "priest-male",
+      "height": 112,
+      "facing": 1,
+      "portrait": "portrait.webp",
+      "source": "codeart layered (tools/sprite-rig/layered_rig.py)",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "layers": {
+        "order": [
+          "outfit",
+          "head",
+          "weapon"
+        ],
+        "looks": {
+          "outfit": [
+            "robe-1",
+            "robe-2",
+            "robe-3",
+            "robe-4"
+          ],
+          "head": [
+            "hair",
+            "circlet",
+            "hood",
+            "mitre"
+          ],
+          "weapon": [
+            "staff-1",
+            "staff-2",
+            "staff-3",
+            "staff-4"
+          ]
+        }
+      }
+    },
+    "priest-female": {
+      "dir": "priest-female",
+      "height": 112,
+      "facing": 1,
+      "portrait": "portrait.webp",
+      "source": "codeart layered (tools/sprite-rig/layered_rig.py)",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "layers": {
+        "order": [
+          "outfit",
+          "head",
+          "weapon"
+        ],
+        "looks": {
+          "outfit": [
+            "robe-1",
+            "robe-2",
+            "robe-3",
+            "robe-4"
+          ],
+          "head": [
+            "hair",
+            "circlet",
+            "hood",
+            "mitre"
+          ],
+          "weapon": [
+            "staff-1",
+            "staff-2",
+            "staff-3",
+            "staff-4"
+          ]
+        }
+      }
     }
   },
   "monsters": {

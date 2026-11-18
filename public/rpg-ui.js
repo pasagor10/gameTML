@@ -12,7 +12,7 @@ import {
 } from "/shared/rpg.js";
 import { CLASSES, combatPower } from "/shared/config.js";
 import { ACTIONS } from "/shared/motion.js";
-import { skillIcon } from "/skill-icons.js?v=2";
+import { skillIcon } from "/skill-icons.js?v=3";
 const statNames = {
   atk: "ATK",
   def: "DEF",

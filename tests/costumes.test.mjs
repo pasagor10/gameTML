@@ -10,15 +10,17 @@ test("every registered costume is complete, so skins never point at missing art"
   for (const [key, set] of Object.entries(index.sets)) {
     assert.ok(set.dir, key);
     assert.ok(set.actions?.idle, `${key}: needs an idle clip`);
+    // Layered (paper-doll) sets keep their own clips under body/.
+    const dir = set.layers ? `${set.dir}/body` : set.dir;
     for (const folder of new Set(Object.values(set.actions)))
-      await access(new URL(`${set.dir}/${folder}/animation.json`, root));
+      await access(new URL(`${dir}/${folder}/animation.json`, root));
     if (set.portrait) await access(new URL(`${set.dir}/${set.portrait}`, root));
   }
 });
 
 test("costume lookups always end at a plain class look that exists", async () => {
   const index = JSON.parse(await readFile(new URL("index.json", root)));
-  for (const cls of ["swordsman", "archer", "mage"])
+  for (const cls of ["swordsman", "archer", "mage", "priest"])
     for (const gender of ["male", "female"])
       for (const specialization of [null, "x"])
         for (const advanced of [false, true]) {

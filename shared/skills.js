@@ -20,6 +20,8 @@ export const BUFFS = {
   rage: { name: "ปลุกพลังนักรบ", icon: "♛", color: "#ff8a3c", damage: 0.3 },
   focus: { name: "สมาธินักล่า", icon: "◎", color: "#7fe0a8", crit: 0.3 },
   barrier: { name: "บาเรียมนตรา", icon: "⬡", color: "#b89bff", guard: 0.4 },
+  // regen: share of max HP restored every second while it lasts.
+  blessing: { name: "พรศักดิ์สิทธิ์", icon: "✚", color: "#ffe08a", regen: 0.04 },
 };
 
 const atk = (name, icon, hits, power, status, detail) => ({ name, icon, hits, power, status, detail });
@@ -44,6 +46,14 @@ export const SKILL_KITS = {
     atk("เวทระเบิด", "❖", 3, 0.67, { type: "burn", chance: 1, duration: 5 }, "ระเบิด 3 ครั้ง · ติดไฟแน่นอน"),
     atk("พายุน้ำแข็ง", "❄", 4, 0.63, { type: "freeze", chance: 0.45, duration: 2.2 }, "พายุรอบตัว 4 ครั้ง · 45% แช่แข็ง"),
     { name: "บาเรียมนตรา", icon: "⬡", buff: "barrier", duration: 12, detail: "ปาร์ตี้รับดาเมจลด 40% · 12 วิ" },
+  ],
+  // heal: share of each ally's max HP restored when the skill lands.
+  priest: [
+    atk("แสงศักดิ์สิทธิ์", "✚", 1, 1, null, "โจมตีปกติ"),
+    atk("แสงชำระ", "☀", 2, 0.85, { type: "weaken", chance: 0.5, duration: 5 }, "แสง 2 ครั้ง · 50% เกราะแตก"),
+    { ...atk("ธรรมรักษา", "✙", 2, 0.6, null, "แสง 2 ครั้ง · ฟื้น HP ปาร์ตี้ 18%"), heal: 0.18 },
+    atk("วงล้อแสง", "☸", 4, 0.6, { type: "stun", chance: 0.35, duration: 1.6 }, "วงแสงรอบตัว 4 ครั้ง · 35% มึนงง"),
+    { name: "พรศักดิ์สิทธิ์", icon: "✚", buff: "blessing", duration: 12, detail: "ปาร์ตี้ฟื้น HP 4% ทุกวินาที · 12 วิ" },
   ],
 };
 export const skillOf = (cls, skill) => SKILL_KITS[cls]?.[skill] || SKILL_KITS.swordsman[0];

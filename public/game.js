@@ -1,7 +1,7 @@
 import { SLOT_MACHINE } from "/shared/slots.js";
 import { slotPanelHtml, bindSlotPanel } from "/slots-ui.js?v=2";
 import { heroPortraitStyle } from "/hero-appearance.js?v=2";
-import { skillIcon, potionIcon, autoIcon } from "/skill-icons.js?v=2";
+import { skillIcon, potionIcon, autoIcon } from "/skill-icons.js?v=3";
 import { dungeonPlatforms, withinDungeonSign } from "/shared/dungeons.js";
 import { supplyArt, itemArtPath } from "/item-art.js";
 import {
@@ -11,14 +11,14 @@ import {
   soundOn,
   setMusic,
   musicOn,
-} from "/sound.js?v=20261118-audio1";
+} from "/sound.js?v=20261118-audio2";
 import { TOWN_ANIMS, TOWN_LAYOUT, TOWN_PROPS } from "/shared/town-layout.js";
 import { createWorldDetails } from "/world-details.js?v=4";
 import {
   rpgPanel,
   bindRpgPanel,
   gearShop,
-} from "/rpg-ui.js?v=8";
+} from "/rpg-ui.js?v=9";
 import {
   GEAR,
   RARITIES,
@@ -32,9 +32,9 @@ import {
   enhancementCost,
   enhancementChance,
 } from "/shared/rpg.js";
-import { createTownNpcs, footGlow, createRim } from "/town-npcs.js?v=8";
+import { createTownNpcs, footGlow, createRim } from "/town-npcs.js?v=9";
 import { updateEnhanceAura, AURA_LEVEL } from "/enhance-aura.js?v=3";
-import { marketHtml, shopManagerHtml, marketState } from "/market-ui.js?v=6";
+import { marketHtml, shopManagerHtml, marketState } from "/market-ui.js?v=7";
 import { sampleMotion } from "/shared/smoothing.js";
 import {
   questPanelHtml,
@@ -62,7 +62,7 @@ import {
   animateSlime,
   monsterDeath,
 } from "/combat-visuals.js?v=0.3.1";
-import { createSelectionPreview } from "/selection-scene.js?v=0.8.1";
+import { createSelectionPreview } from "/selection-scene.js?v=0.9.0";
 import {
   CLASSES,
   ITEMS,
@@ -74,8 +74,8 @@ import {
   DUNGEON_ENERGY_MAX,
 } from "/shared/config.js";
 import { createParallax } from "/parallax.js?v=0.8.1";
-import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.5";
-import { createCombatFx } from "/combat-fx.js?v=0.8.1";
+import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.6";
+import { createCombatFx } from "/combat-fx.js?v=0.9.0";
 import { activeEffects, effectTint, effectRow, hudEffects } from "/status-ui.js?v=1";
 import { STATUSES, BUFFS } from "/shared/skills.js";
 import { WORLD_BOSS, worldInfo } from "/shared/world-boss.js";
@@ -92,7 +92,9 @@ import {
   playSpriteSet,
   playMonsterSet,
   playMonsterDeath,
-} from "/sprite-sets.js?v=0.17.0";
+  playLayers,
+} from "/sprite-sets.js?v=0.18.0";
+import { heroLooks } from "/shared/appearance.js";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 let lobbyCharacterId = null;
@@ -135,10 +137,11 @@ let job = "swordsman",
   snapshotAt = 0,
   serverOffset = null,
   touchAttack = false;
-const JOBS = ["swordsman", "archer", "mage"],
-  eng = ["SWORDSMAN", "WIND RANGER", "ARCANE MAGE"];
+const JOBS = ["swordsman", "archer", "mage", "priest"],
+  eng = ["SWORDSMAN", "WIND RANGER", "ARCANE MAGE", "HOLY PRIEST"];
+// Stand-in frame from the 3x2 class sheet until a hero's sprite set loads.
 function frame(c, g) {
-  return JOBS.indexOf(c) + (g === "female" ? 3 : 0);
+  return Math.min(2, JOBS.indexOf(c)) + (g === "female" ? 3 : 0);
 }
 function heroStyle(c, g, hero) {
   return heroPortraitStyle(hero || { class: c, gender: g });
@@ -267,6 +270,12 @@ const heroDescriptions = {
     lore: "ผู้ถักทอแสงดารา ปลุกเวทโบราณใต้ขุนเขา",
     skill: "✦ ลูกพลัง · เวทระเบิด · พายุดารา",
   },
+  priest: {
+    title: "THE LIGHTBEARER",
+    role: "ฟื้นฟูทีม · แสงศักดิ์สิทธิ์",
+    lore: "ผู้ถือแสงแห่งศรัทธา รักษาสหายและขับไล่ความมืดในถ้ำ",
+    skill: "✚ แสงชำระ · ธรรมรักษา · วงล้อแสง",
+  },
 };
 function renderCards() {
   const saved = characters.find((c) => c.id === lobbyCharacterId);
@@ -345,6 +354,7 @@ function renderCards() {
     gender,
     saved ? heroSkins(saved) : [`${job}-${gender}`],
     saved?.id || `create-${job}-${gender}`,
+    heroLooks(saved || { class: job }),
   );
   $$("[data-class]").forEach(
     (b) =>
@@ -2572,6 +2582,7 @@ class Adventure extends Phaser.Scene {
           swordsman: ["swing", "slash"],
           archer: ["arrow", "volley"],
           mage: ["cast", "spell"],
+          priest: ["holy", "smite"],
         }[cls] || ["swing", "slash"];
       sfx(
         kind[e.skill ? 1 : 0],
@@ -2717,6 +2728,10 @@ class Adventure extends Phaser.Scene {
       animateHeroBody(a, p, pose, serverTime, time);
       this.fx.applyKick(a, a.image);
       a.rim.sync(a.image);
+      // Paper-doll heroes: worn gear stacked over the bare body.
+      if (spriteSet?.layers)
+        playLayers(this, a, a.image, spriteSet, heroLooks(p, spriteSet.layers.looks), this.sprites);
+      else if (a.layers) a.layers.destroy();
       // Name sits just above the head: painted sets know their height.
       const headroom = spriteSet ? spriteSet.height + 24 : 158;
       a.label.setPosition(a.image.x, a.image.y - (p.hp <= 0 ? 60 : headroom));

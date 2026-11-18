@@ -34,7 +34,7 @@ export function itemArtPath(id, item) {
   if (!art && item?.floor) {
     const group =
       item.slot === "weapon"
-        ? { swordsman: "sword", archer: "bow", mage: "staff" }[item.class]
+        ? { swordsman: "sword", archer: "bow", mage: "staff", priest: "staff" }[item.class]
         : item.slot;
     const index = floorIndices[group]?.[item.floor - 1];
     if (index !== undefined) art = [group, index];

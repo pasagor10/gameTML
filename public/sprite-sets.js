@@ -24,7 +24,7 @@ const NPC_STATES = ["idle", "talk"];
 // On-screen size per group, on top of index.json's height: heroes and
 // townsfolk read smaller against the painted town. NPC sheets are authored a
 // little smaller than heroes, so they scale less to stand eye to eye.
-const GROUP_SCALE = { sets: 0.86, npcs: 0.9, monsters: 1 };
+const GROUP_SCALE = { sets: 0.86, npcs: 0.9, monsters: 1, layers: 0.86 };
 const STATES = [
   "idle",
   "walk",
@@ -121,19 +121,38 @@ function clipFrom(scene, key, manifest) {
 // On-demand registry. heroes: Map("class-gender" → set); monsters: Map(type → set).
 // want(group, name) starts loading a set; it appears in the map when ready,
 // and callers fall back to static art + procedural motion until then.
+// Layered hero sets ("layers" in index.json) load their bare body as the set
+// and each gear look on demand through layer(): see playLayers().
 export function createSpriteRegistry(scene) {
-  const maps = { sets: new Map(), monsters: new Map(), npcs: new Map() },
-    requested = new Set(),
+  const maps = { sets: new Map(), monsters: new Map(), npcs: new Map(), layers: new Map() },
+    requested = new Map(), // id → { group, name, set }
     queuedClips = new Set(),
     finished = new Set(),
     index = () => scene.spriteSetIndex || scene.cache.json.get("sprite-index");
   const tryBuild = () => {
-    for (const id of requested) {
-      const [group, name] = id.split("|");
+    for (const [id, r] of requested) {
       if (finished.has(id)) continue;
-      const set = buildSet(scene, group, name, index()?.[group]?.[name]);
-      if (set) maps[group].set(name, set);
+      const built = buildSet(scene, r.group, r.name, r.set);
+      if (built) maps[r.group].set(r.name, built);
       finished.add(id);
+    }
+  };
+  // Queue every action's animation.json for a set (or one layer look).
+  const request = (group, name, set) => {
+    const id = `${group}|${name}`;
+    if (requested.has(id) || !set) return;
+    requested.set(id, { group, name, set });
+    let enqueued = false;
+    for (const folder of Object.values(set.actions || {})) {
+      const key = clipKey(set, folder);
+      if (queuedClips.has(key) || scene.cache.json.exists(key)) continue;
+      queuedClips.add(key);
+      enqueued = true;
+      scene.load.json(key, `${ROOT}${set.dir}/${folder}/animation.json${stamp(scene)}`);
+    }
+    if (!scene.load.isLoading()) {
+      if (enqueued) scene.load.start();
+      else tryBuild();
     }
   };
   scene.load.on("complete", tryBuild);
@@ -150,25 +169,18 @@ export function createSpriteRegistry(scene) {
       }
     },
     want(group, name) {
-      const id = `${group}|${name}`,
-        set = index()?.[group]?.[name];
-      if (requested.has(id) || !set) return;
-      requested.add(id);
-      let enqueued = false;
-      for (const folder of Object.values(set.actions || {})) {
-        const key = clipKey(set, folder);
-        if (queuedClips.has(key) || scene.cache.json.exists(key)) continue;
-        queuedClips.add(key);
-        enqueued = true;
-        scene.load.json(
-          key,
-          `${ROOT}${set.dir}/${folder}/animation.json${stamp(scene)}`,
-        );
-      }
-      if (!scene.load.isLoading()) {
-        if (enqueued) scene.load.start();
-        else tryBuild();
-      }
+      const set = index()?.[group]?.[name];
+      if (!set) return;
+      // A layered set's own clips are its bare body.
+      request(group, name, set.layers ? { ...set, dir: `${set.dir}/body` } : set);
+    },
+    // Clips of one gear look on a layered set, or null while it loads.
+    layer(setName, slot, look) {
+      const set = index()?.sets?.[setName],
+        name = `${setName}/${slot}/${look}`;
+      if (!set?.layers?.looks?.[slot]?.includes(look)) return null;
+      request("layers", name, { ...set, dir: `${set.dir}/${slot}/${look}`, layers: null });
+      return maps.layers.get(name)?.clips || null;
     },
   };
 }
@@ -193,11 +205,12 @@ function buildSet(scene, group, name, set) {
     if (!clips.idle) return null;
     return {
       name,
-      height: Math.round((set.height || 118) * GROUP_SCALE[group]),
+      height: Math.round((set.height || 118) * (GROUP_SCALE[group] || 1)),
       facing: set.facing || 1,
       // A single painted still: keep the procedural bob/tilt/lunge on it.
       still: !!set.still,
       flyer: !!set.flyer,
+      layers: group === "sets" ? set.layers || null : null,
       clips,
     };
   }
@@ -255,6 +268,7 @@ export function playSpriteSet(image, set, p, pose, time) {
   if (image.texture.key !== f.key || image.frame.name !== f.frame)
     image.setTexture(f.key, f.frame);
   image.setOrigin(clip.origin[0], clip.origin[1]);
+  image._clip = { state, index };
   const scale = set.height / clip.bodyPx;
   image._spriteScale = scale;
   // No authored frames for this state (e.g. walk on an idle+attack sheet):
@@ -321,4 +335,51 @@ export function playMonsterDeath(scene, image, set) {
   };
   show();
   return true;
+}
+
+// Paper-doll gear: stack each worn look over a layered set's bare body.
+// Every layer shares the body's cell size, anchor and frame timing, so it
+// takes the body's current frame index and copies its whole transform
+// (position, scale, flip, angle, tint, alpha). Call after all procedural
+// motion has been applied to the body image. `holder` keeps the images.
+export function playLayers(scene, holder, image, set, looks, registry) {
+  holder.layers ??= {
+    images: {},
+    destroy() {
+      Object.values(this.images).forEach((im) => im.destroy());
+      this.images = {};
+    },
+  };
+  const order = set?.layers?.order || [],
+    images = holder.layers.images;
+  for (const slot of Object.keys(images))
+    if (!order.includes(slot)) {
+      images[slot].destroy();
+      delete images[slot];
+    }
+  order.forEach((slot, k) => {
+    const clips = looks?.[slot] ? registry.layer(set.name, slot, looks[slot]) : null,
+      clip = clips?.[image._clip?.state] || clips?.idle;
+    let im = images[slot];
+    if (!clip) {
+      im?.setVisible(false);
+      return;
+    }
+    im ??= images[slot] = scene.add.image(0, 0, clip.frames[0].key, clip.frames[0].frame);
+    const f = clip.frames[Math.min(image._clip?.index || 0, clip.frames.length - 1)];
+    if (im.texture.key !== f.key || im.frame.name !== f.frame) im.setTexture(f.key, f.frame);
+    im.setOrigin(image.originX, image.originY)
+      .setPosition(image.x, image.y)
+      .setScale(image.scaleX, image.scaleY)
+      .setFlip(image.flipX, image.flipY)
+      .setAngle(image.angle)
+      .setAlpha(image.alpha)
+      .setBlendMode(image.blendMode)
+      .setVisible(image.visible)
+      .setDepth(image.depth + (k + 1) * 0.01);
+    if (image.isTinted) {
+      im.setTint(image.tintTopLeft);
+      im.tintFill = image.tintFill;
+    } else if (im.isTinted) im.clearTint();
+  });
 }

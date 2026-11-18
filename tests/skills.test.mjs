@@ -53,7 +53,8 @@ test("every class has three attack skills and a party buff, with distinct status
     assert.equal(CLASS_SKILLS[cls].length, 4);
     for (const s of kit.slice(1, 4)) {
       assert.ok(s.hits >= 2, `${cls} ${s.name} hits several times`);
-      assert.ok(STATUSES[s.status.type]);
+      // Each attack skill leaves a status or heals the party.
+      assert.ok(s.heal > 0 || STATUSES[s.status?.type], `${cls} ${s.name}`);
     }
     assert.ok(BUFFS[kit[4].buff]);
   }
@@ -153,5 +154,22 @@ test("a stunned hero can't swing", () => {
   world.attack(p, 0, t + 1.2);
   assert.ok(p.pending, "free again after the stun");
   void e;
+  world.returnTown(p);
+});
+
+test("priest heals the whole party and blessing regenerates", () => {
+  const p = create("priest", { class: "priest" });
+  const { i } = arena(p);
+  const t = Date.now() / 1000 + 80;
+  p.hp = 10;
+  cast(p, 2, t);
+  const heal = i.events.find((x) => x.kind === "heal" && x.targetId === p.id);
+  assert.ok(heal && heal.amount > 0, "skill 2 heals");
+  assert.equal(p.hp, 10 + heal.amount);
+  cast(p, 4, t + 2);
+  assert.ok(p.buffs.blessing);
+  const before = p.hp;
+  world.tick(0.02, t + 3);
+  assert.ok(p.hp > before, "blessing regen ticks");
   world.returnTown(p);
 });

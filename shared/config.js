@@ -37,6 +37,18 @@ export const CLASSES = {
     speed: 250,
     color: 0xbe9dff,
   },
+  // Holy support: mid range, heals the party and blesses it with regen.
+  priest: {
+    name: "พระ",
+    icon: "✚",
+    hp: 150,
+    mp: 130,
+    atk: 23,
+    def: 8,
+    range: 270,
+    speed: 250,
+    color: 0xffe08a,
+  },
 };
 export const ITEMS = {
   hp: { name: "ยาฟื้นฟู HP", icon: "🧪", price: 15 },

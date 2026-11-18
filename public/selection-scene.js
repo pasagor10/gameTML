@@ -2,7 +2,8 @@ import {
   queueSpriteSets,
   createSpriteRegistry,
   playSpriteSet,
-} from "/sprite-sets.js?v=0.17.0";
+  playLayers,
+} from "/sprite-sets.js?v=0.18.0";
 
 // The chosen hero rises from rest. Account and creation actions remain in game.js.
 export function createSelectionPreview() {
@@ -16,8 +17,11 @@ export function createSelectionPreview() {
   };
   let ready = false;
   const jobs = ["swordsman", "archer", "mage"];
+  // Classes outside the painted 3x2 sheets (the priest) show only their sprite set.
+  const sheeted = () => jobs.includes(selected.job);
   const frame = () =>
-    jobs.indexOf(selected.job) + (selected.gender === "female" ? 3 : 0);
+    Math.max(0, jobs.indexOf(selected.job)) + (selected.gender === "female" ? 3 : 0);
+  const holder = {};
   class SelectionScene extends Phaser.Scene {
     preload() {
       queueSpriteSets(this);
@@ -64,7 +68,7 @@ export function createSelectionPreview() {
       this.previewAt = this.time.now;
       this.selectionAt = this.time.now;
       this.standStarted = null;
-      this.resting.setFrame(frame()).setAlpha(reducedMotion.matches ? 0 : 1);
+      this.resting.setFrame(frame()).setAlpha(reducedMotion.matches || !sheeted() ? 0 : 1);
       this.hero
         .setTexture("selection-heroes", frame())
         .setDisplaySize(430, 430)
@@ -74,7 +78,10 @@ export function createSelectionPreview() {
       const set = selected.skins
         .map((k) => this.sprites.heroes.get(k))
         .find(Boolean);
-      if (!set && time - this.selectionAt < 900) return;
+      if (!set && (time - this.selectionAt < 900 || !sheeted())) {
+        holder.layers?.destroy();
+        return;
+      }
       this.standStarted ??= time;
       const t = reducedMotion.matches
         ? 1
@@ -106,7 +113,11 @@ export function createSelectionPreview() {
         .setAlpha(rise)
         .setPosition(300, 525 + (1 - rise) * 30)
         .setAngle(0);
-      this.resting.setAlpha(Math.max(0, 1 - rise * 1.6)).setY(525 - rise * 10);
+      if (set?.layers) playLayers(this, holder, this.hero, set, selected.looks, this.sprites);
+      else holder.layers?.destroy();
+      this.resting
+        .setAlpha(sheeted() ? Math.max(0, 1 - rise * 1.6) : 0)
+        .setY(525 - rise * 10);
       if (reducedMotion.matches) return;
       for (const m of this.motes) {
         m.dot.x = m.x + Math.sin(time * 0.0004 + m.phase) * 12;
@@ -149,8 +160,9 @@ export function createSelectionPreview() {
       gender,
       skins = [`${job}-${gender}`],
       identity = `${job}-${gender}`,
+      looks = null,
     ) {
-      const next = { job, gender, skins, identity };
+      const next = { job, gender, skins, identity, looks };
       if (JSON.stringify(next) === JSON.stringify(selected)) return;
       selected = next;
       if (ready) game.scene.getScenes()[0].select();

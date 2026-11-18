@@ -1359,7 +1359,7 @@ function resolveAttack(p, t) {
       ((e.x - p.x) * a.direction < -35 && skill !== 3)
     )
       continue;
-    if (p.class === "archer" && skill < 2 && hits > 0) continue;
+    if ((p.class === "archer" || p.class === "priest") && skill < 2 && hits > 0) continue;
     // Every strike of a skill rolls its own crit, like a stack of numbers.
     const mult =
         (t < (e.exposedUntil || 0) ? 1.5 : 1) *
@@ -1415,7 +1415,19 @@ function resolveAttack(p, t) {
     });
     if (e.hp <= 0) enemyDown(i, e, t);
   }
+  if (kit.heal) healParty(i, kit.heal, t);
   checkClear(i, t, p);
+}
+// Restores a share of max HP to every living hero in the instance.
+function healParty(i, share, t) {
+  for (const id of i.members) {
+    const m = live(id);
+    if (!m || m.hp <= 0) continue;
+    const amount = Math.min(maxHp(m) - m.hp, Math.round(maxHp(m) * share));
+    if (amount <= 0) continue;
+    m.hp += amount;
+    i.events.push({ id: randomUUID(), kind: "heal", targetId: m.id, x: m.x, y: m.y - 110, amount, at: t });
+  }
 }
 // A monster fell: count it, pay every hero in the instance, advance quests.
 function enemyDown(i, e, t) {
@@ -1971,6 +1983,15 @@ export function tick(dt, t = now()) {
     if (t - p.lastInput > 0.3) p.input = 0;
     const i = instances.get(p.instance);
     if (i && p.status) tickStatuses(i, p, t, true);
+    // Blessing: regen once a second while it lasts.
+    if (i && buffActive(p, "blessing", t) && t >= (p.regenAt || 0)) {
+      p.regenAt = t + 1;
+      const amount = Math.min(maxHp(p) - p.hp, Math.round(maxHp(p) * BUFFS.blessing.regen));
+      if (amount > 0) {
+        p.hp += amount;
+        i.events.push({ id: randomUUID(), kind: "heal", targetId: p.id, x: p.x, y: p.y - 110, amount, at: t });
+      }
+    }
     if (statusActive(p, "stun", t)) p.input = 0;
     if (p.auto && i) {
       if (t - (i.stageAt || 0) < STAGE_INTRO) {

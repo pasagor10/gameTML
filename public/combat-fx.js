@@ -406,6 +406,32 @@ export function createCombatFx(scene) {
           ring(hx, e.y, accent, 2.6, 380);
           blast(sparks, hx, e.y, 16, accent, { speed: [220, 560] });
         });
+    } else if (e.class === "priest") {
+      const reach = e.skill === 3 ? 0 : Math.min(range, 260) * 0.8,
+        hx = e.x + dir * reach,
+        size = [1, 1.3, 1.1, 2.2][e.skill || 0] * (e.skill ? k : 1);
+      flare(e.x + dir * 26, e.y - 30, 0xfff4c8, 0.7 * size, 220);
+      if (e.skill === 3) {
+        // Wheel of light around the priest.
+        ring(e.x, e.y + 40, color, 3.2 * k, 520, 0.3);
+        ring(e.x, e.y + 10, 0xffffff, 2.2 * k, 380);
+        for (const off of [-90, 90]) pillar(e.x + off, e.y + 50, color, 0.9, 0.7);
+      } else {
+        scene.time.delayedCall(90, () => {
+          pillar(hx, e.y + 50, 0xffffff, 1.1 * size, 0.55 * size);
+          pillar(hx, e.y + 50, color, 1, 0.9 * size);
+          ring(hx, e.y + 40, color, 1.6 * size, 340, 0.3);
+          blast(embers, hx, e.y + 30, 8 + 4 * (e.skill || 0), color, {
+            speed: [80, 240],
+            angle: { min: 240, max: 300 },
+          });
+        });
+      }
+      if (e.skill === 2) {
+        // Healing: a soft green-gold bloom on the caster.
+        ring(e.x, e.y + 40, 0x9dffb0, 2.6, 520, 0.3);
+        blast(embers, e.x, e.y + 40, 14, 0x9dffb0, { speed: [60, 200], angle: { min: 250, max: 290 } });
+      }
     } else if (e.class === "mage") {
       const size = [1, 1.4, 1.8, 2.4][e.skill || 0] * (e.skill ? k : 1);
       projectile(e.x + dir * 30, e.y, dir, 350, color, { size, ms: 420 });
