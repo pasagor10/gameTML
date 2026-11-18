@@ -80,7 +80,7 @@ export function updateHudFx(state) {
   bossBar.classList.toggle("hidden", !boss);
   if (boss) {
     const pct = Math.max(0, (boss.hp / boss.maxHp) * 100);
-    $("#boss-name").textContent = state.dungeon.night?.name || FLOORS[state.dungeon.floor - 1]?.boss || "";
+    $("#boss-name").textContent = state.dungeon.world?.name || state.dungeon.night?.name || FLOORS[state.dungeon.floor - 1]?.boss || "";
     $("#boss-fill").style.width = pct + "%";
     $("#boss-trail").style.width = pct + "%";
     $("#boss-hp").textContent = `${Math.ceil(boss.hp)} / ${boss.maxHp}`;

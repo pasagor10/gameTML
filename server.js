@@ -265,6 +265,7 @@ io.on("connection", (socket) => {
   execute("training:enter", (p) => world.beginTraining(p), 2);
   execute("dungeon:enter", (p, d) => world.beginDungeon(p, d.floor));
   execute("night:enter", (p) => world.beginNightCave(p), 2);
+  execute("worldboss:join", (p) => world.joinWorldBoss(p), 2);
   execute("dungeon:next", (p) => world.nextStage(p));
   execute("dungeon:explore", (p, d) => world.useDungeonSign(p, d), 5);
   execute("dungeon:leave", (p) => world.returnTown(p));

@@ -74,10 +74,12 @@ import {
   DUNGEON_ENERGY_MAX,
 } from "/shared/config.js";
 import { createParallax } from "/parallax.js?v=0.8.1";
-import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.3";
+import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.4";
 import { createCombatFx } from "/combat-fx.js?v=0.7.0";
 import { activeEffects, effectTint, effectRow, hudEffects } from "/status-ui.js?v=1";
 import { STATUSES, BUFFS } from "/shared/skills.js";
+import { WORLD_BOSS, worldInfo } from "/shared/world-boss.js";
+import { updateWorldBossHud, worldBossCountdown, clock as wbClock } from "/world-boss-ui.js?v=1";
 import {
   animateHeroBody,
   animateMonsterBody,
@@ -100,7 +102,11 @@ let lastQuestHash = "",
   lastTrackerHash = "";
 // Floor data for the current dungeon; the night cave stands in for a floor.
 const floorInfo = (d) =>
-  d?.night ? nightInfo(d.night) : FLOORS[(d?.floor || 1) - 1];
+  d?.world
+    ? worldInfo(d.world)
+    : d?.night
+      ? nightInfo(d.night)
+      : FLOORS[(d?.floor || 1) - 1];
 const questHash = (p) =>
   JSON.stringify([p.daily, p.bestiary, p.level, p.quest, state.area]);
 let job = "swordsman",
@@ -553,7 +559,11 @@ function loadingArrived(s) {
     const floor = floorInfo(d);
     set(
       ".loading-kicker",
-      d.night ? "ยามราตรี · ถ้ำลึกลับ" : "ชั้น " + d.floor + " / " + FLOORS.length,
+      d.world
+        ? "บอสโลก · ทุกคนร่วมกันตี"
+        : d.night
+          ? "ยามราตรี · ถ้ำลึกลับ"
+          : "ชั้น " + d.floor + " / " + FLOORS.length,
     );
     set(".loading-title", floor.name);
     set(
@@ -677,6 +687,7 @@ function enterGame() {
     if (scene?.ready) scene.applySnapshot(packet);
   });
   socket.on("chat:message", (packet) => addChat(packet));
+  socket.on("toast", (packet) => packet?.message && toast(packet.message));
   addChat({
     name: "ระบบ",
     message:
@@ -686,6 +697,11 @@ function enterGame() {
 }
 const forgeHash = (p) =>
   JSON.stringify([p.equipment, p.upgrade, p.enhancements, p.gold, p.inventory.ore]);
+let worldBossWasOpen = false;
+async function joinWorldBoss() {
+  if (activePanel) closeModal();
+  await emit("worldboss:join");
+}
 function skyText(sky, time) {
   if (!sky) return "";
   const left = Math.max(1, Math.ceil((sky.changeAt - time) / 60));
@@ -792,14 +808,18 @@ function updateHUD() {
       : "เมืองหน้าถ้ำหลวง";
   $("#stage-label").textContent = d?.training
     ? "สนามฝึก · ไม่มีรางวัล · สไลม์เกิดใหม่อัตโนมัติ"
-    : d?.night
+    : d?.world
+      ? `บอสโลก · ${d.world.name} · ร่วมกันตีกับผู้กล้าทุกคน`
+      : d?.night
       ? `ยามราตรี · บอสใหญ่ ${d.night.name} · พลังเทียบชั้น ${d.floor}`
       : d
       ? `ชั้น ${d.floor} / ${FLOORS.length} · ด่าน ${d.stage} / 3 · ${d.stage === 3 ? "BOSS STAGE" : d.stage === 2 ? "ELITE STAGE" : "MONSTER STAGE"}`
       : "เมืองกลาง · CH.1 · เขตปลอดภัย";
   $("#map-title").textContent = d?.training
     ? "สนามฝึกผู้พิทักษ์"
-    : d?.night
+    : d?.world
+      ? "ลานบอสโลก"
+      : d?.night
       ? "ถ้ำลึกลับ"
       : d
       ? "ถ้ำหลวง · ชั้น " + d.floor
@@ -812,10 +832,12 @@ function updateHUD() {
   $("#map-zone").textContent = d?.training
     ? "TRAINING · ไม่มีรางวัล"
     : d
-      ? d.night
+      ? d.world
+        ? `บอสโลก · ⏳ ${wbClock(state.worldBoss?.left || 0)}`
+        : d.night
         ? "ถ้ำลึกลับ · ยามราตรี"
         : `ชั้น ${d.floor} · ด่าน ${d.stage} / 3`
-      : `${energyText(p)} · ${skyText(state.sky, state.time)}`;
+      : `${energyText(p)} · ${skyText(state.sky, state.time)} · ${worldBossCountdown(state.worldBoss)}`;
   const energyBox = $("#dungeon-energy");
   if (energyBox) {
     const html = energyHeader(p, state.time);
@@ -958,6 +980,14 @@ function updateHUD() {
     button.textContent = remaining > 0 ? Math.ceil(remaining) : "";
   }
   updateHudFx(state);
+  updateWorldBossHud(state, joinWorldBoss);
+  // Call to arms when the world boss rises.
+  const wbOpen = !!state.worldBoss?.open;
+  if (wbOpen && !worldBossWasOpen && state.area === "town") {
+    toast(`👑 บอสโลก ${state.worldBoss.name} ปรากฏแล้ว! กดเข้าร่วมด้านบนเพื่อร่วมกันตี`);
+    sfx("roar", null, 0);
+  }
+  worldBossWasOpen = wbOpen;
   const hash = state.trade ? JSON.stringify(state.trade) : "";
   if (hash !== lastTrade) {
     if (state.trade) {
@@ -1087,7 +1117,11 @@ function showFloorResult(r) {
     row = (label, value, extra = "") =>
       `<div><dt>${label}</dt><dd>${value}${extra ? `<small>${extra}</small>` : ""}</dd></div>`;
   $("#result-title").textContent =
-    r.night ? "ถ้ำลึกลับ · " + r.night : "ชั้น " + r.floor + " · " + FLOORS[r.floor - 1].name;
+    r.world
+      ? "บอสโลก · " + r.world.name
+      : r.night
+        ? "ถ้ำลึกลับ · " + r.night
+        : "ชั้น " + r.floor + " · " + FLOORS[r.floor - 1].name;
   const rank = $("#floor-result .result-rank");
   rank.dataset.rank = r.rank;
   rank.querySelector("b").textContent = r.rank;
@@ -1096,6 +1130,13 @@ function showFloorResult(r) {
     row("กำจัด", r.defeated + " ตัว"),
     row("เสียเลือด", r.damage, "รอด " + r.survival + "%"),
     row("คะแนน", r.score.toLocaleString()),
+    r.world
+      ? row(
+          "อันดับความเสียหาย",
+          r.world.place ? `#${r.world.place} / ${r.world.heroes}` : "—",
+          Math.round((r.world.share || 0) * 100) + "% ของ HP บอส",
+        )
+      : "",
   ].join("");
   const loot = [
     `<span class="loot-chip">🪙 ${r.gold.toLocaleString()} ทอง</span>`,
@@ -2157,7 +2198,7 @@ class Adventure extends Phaser.Scene {
             (mset ? mset.height + 12 : e.boss ? 210 : 95) *
             (e.elite ? 1.25 : 1) *
             (traitOf(e).scale || 1) *
-            (e.night ? NIGHT_BOSS.scale : 1);
+            (e.world ? WORLD_BOSS.scale : e.night ? NIGHT_BOSS.scale : 1);
         const image = this.add
           .image(e.x, e.y, "monsters", types.indexOf(e.type))
           .setDisplaySize(size, size)
@@ -2418,6 +2459,12 @@ class Adventure extends Phaser.Scene {
         const target = this.actors.get(e.targetId)?.image;
         this.fx.ring(target?.x ?? e.x, (target?.y ?? e.y + 120) - 60, Phaser.Display.Color.HexStringToColor(b.color).color, 2.4, 480);
       }
+      return;
+    }
+    if (e.kind === "summon") {
+      this.floatBanner(e.x, e.y, "บอสโลกเรียกสมุน ×" + e.count + "!", "#ff9a8a", "#3a0a0a");
+      this.cameras.main.shake(260, 0.006);
+      sfx("roar", null, 0.2);
       return;
     }
     if (e.kind === "status") {
@@ -2791,7 +2838,7 @@ class Adventure extends Phaser.Scene {
             (mset.height + 12) *
             (e.elite ? 1.25 : 1) *
             (traitOf(e).scale || 1) *
-            (e.night ? NIGHT_BOSS.scale : 1);
+            (e.world ? WORLD_BOSS.scale : e.night ? NIGHT_BOSS.scale : 1);
         }
         playMonsterSet(m.image, mset, e, mpose, serverTime);
       }

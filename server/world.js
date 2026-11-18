@@ -27,6 +27,12 @@ import {
 } from "../shared/rpg.js";
 import { ACTIONS } from "../shared/motion.js";
 import {
+  WORLD_BOSS,
+  worldBossAt,
+  worldRanking,
+  worldReward,
+} from "../shared/world-boss.js";
+import {
   SKILL_KITS,
   STATUSES,
   BUFFS,
@@ -319,6 +325,215 @@ function nightRewards(i, m, t) {
 }
 // Daily quests use the real calendar even when combat runs on a test clock.
 const wallClock = () => Date.now() / 1000;
+
+// ---- World boss: one shared arena every hero online can join.
+// WORLD_BOSS_OFFSET (seconds) shifts its schedule, e.g. to test it now.
+const WB_OFFSET = Number(process.env.WORLD_BOSS_OFFSET) || 0;
+export const worldBossClock = () => wallClock() + WB_OFFSET;
+// { cycle, instanceId, endsAt, done: null|"killed"|"escaped", damage, names, joined }
+export let worldBoss = null;
+function openWorldBoss(sched) {
+  const id = randomUUID(),
+    i = {
+      id,
+      floor: WORLD_BOSS.floor,
+      stage: 3,
+      world: { name: sched.name, type: sched.type, tint: sched.tint, cycle: sched.cycle },
+      members: [],
+      enemies: [],
+      clear: false,
+      completed: false,
+      events: [],
+      rewards: {},
+      killCount: 0,
+      summoned: 0,
+    };
+  instances.set(id, i);
+  i.startedAt = now();
+  spawnStage(i);
+  worldBoss = {
+    cycle: sched.cycle,
+    instanceId: id,
+    endsAt: sched.endsAt,
+    done: null,
+    damage: new Map(),
+    names: new Map(),
+    joined: new Set(),
+  };
+  log(null, "worldboss:open", { cycle: sched.cycle, boss: sched.name });
+  return i;
+}
+// Keeps the schedule: opens the arena on time, lets the boss escape at the end.
+export function updateWorldBoss() {
+  const clock = worldBossClock(),
+    sched = worldBossAt(clock);
+  if (sched.open && worldBoss?.cycle !== sched.cycle) {
+    if (worldBoss) closeWorldBoss();
+    openWorldBoss(sched);
+  } else if (worldBoss && !worldBoss.done && clock >= worldBoss.endsAt) {
+    worldBoss.done = "escaped";
+    closeWorldBoss();
+  }
+}
+function closeWorldBoss() {
+  const i = instances.get(worldBoss.instanceId);
+  if (!i) return;
+  for (const id of [...i.members]) {
+    const m = live(id);
+    if (m) {
+      returnTown(m);
+      m.socket?.emit?.("toast", { message: `${i.world.name} หนีไปแล้ว… รอบหน้าลุยกันใหม่` });
+    }
+  }
+  instances.delete(i.id);
+}
+export function joinWorldBoss(p) {
+  const i = worldBoss && !worldBoss.done && instances.get(worldBoss.instanceId);
+  if (!i || i.completed) throw Error("ตอนนี้ยังไม่มีบอสโลก");
+  if (p.area !== "town") throw Error("กลับเมืองก่อนเข้าร่วม");
+  if (p.hp <= 0) throw Error("ฟื้นพลังก่อนเข้าร่วม");
+  const boss = i.enemies.find((e) => e.boss);
+  if (!boss) throw Error("บอสโลกพ่ายแพ้แล้ว");
+  // Every new hero makes the boss tougher, once per appearance.
+  if (!worldBoss.joined.has(p.id)) {
+    worldBoss.joined.add(p.id);
+    if (worldBoss.joined.size > 1) {
+      boss.maxHp += WORLD_BOSS.hpPerHero;
+      boss.hp += WORLD_BOSS.hpPerHero;
+    }
+  }
+  worldBoss.names.set(p.id, p.name);
+  if (!i.members.includes(p.id)) i.members.push(p.id);
+  i.rewards[p.id] ??= { gold: 0, exp: 0, ore: 0, items: [], damage: 0 };
+  enterInstance(p, i);
+  p.x = 320 + Math.round(Math.random() * 160);
+  return { message: `เข้าร่วมศึกบอสโลก · ${i.world.name}` };
+}
+function creditWorld(i, id, amount) {
+  if (!i.world || !worldBoss || worldBoss.instanceId !== i.id || !id) return;
+  worldBoss.damage.set(id, (worldBoss.damage.get(id) || 0) + amount);
+}
+// Guards pour out as the boss's health passes each mark.
+function worldSummons(i, t) {
+  const boss = i.enemies.find((e) => e.boss);
+  if (!boss) return;
+  while (
+    i.summoned < WORLD_BOSS.summonAt.length &&
+    boss.hp <= boss.maxHp * WORLD_BOSS.summonAt[i.summoned]
+  ) {
+    i.summoned++;
+    for (let n = 0; n < WORLD_BOSS.summonCount; n++) {
+      const entry = rosterEntry(i.floor, n + i.summoned),
+        mods = traitOf({ trait: entry.variant?.trait || null }),
+        max = Math.round((55 + i.floor * 24 + 3 * 14) * 2 * (mods.hp || 1)),
+        x = Math.max(200, Math.min(2200, boss.x + (n % 2 ? 1 : -1) * (120 + n * 70)));
+      i.enemies.push({
+        id: randomUUID(),
+        x,
+        y: WORLD.ground,
+        homeX: x,
+        homeY: WORLD.ground,
+        grounded: true,
+        hp: max,
+        maxHp: max,
+        type: entry.type,
+        variant: entry.variant?.name || null,
+        trait: entry.variant?.trait || null,
+        boss: false,
+        elite: true,
+        aggro: true,
+        speed: Math.round((85 + i.floor * 5 + 15) * (mods.speed || 1)),
+        spawnAt: t + n * 0.08,
+        attackCount: 0,
+        direction: -1,
+        attackAt: t,
+      });
+    }
+    i.events.push({
+      id: randomUUID(),
+      kind: "summon",
+      x: boss.x,
+      y: boss.y - 260,
+      count: WORLD_BOSS.summonCount,
+      at: t,
+    });
+  }
+}
+// The boss fell: pay everyone who hit it, by their share of the damage.
+function worldBossDown(i, t) {
+  worldBoss.done = "killed";
+  const boss = { maxHp: i.bossMaxHp || 1 },
+    ranking = worldRanking(worldBoss.damage, worldBoss.names, boss.maxHp);
+  i.ranking = ranking;
+  for (const r of ranking) {
+    const m = live(r.id);
+    if (!m) continue;
+    const pay = worldReward(r.place, r.share),
+      reward = (i.rewards[m.id] ??= { gold: 0, exp: 0, ore: 0, items: [], damage: 0 });
+    m.gold += pay.gold;
+    m.inventory.ore = (m.inventory.ore || 0) + pay.ore;
+    exp(m, pay.exp);
+    reward.gold += pay.gold;
+    reward.ore += pay.ore;
+    reward.exp += pay.exp;
+    const pool = bossLootCandidates(MAIN_FLOORS, m.class, m.ownedEquipment);
+    if (pool.length && Math.random() < pay.itemChance) {
+      const item = pool[Math.floor(Math.random() * pool.length)];
+      m.ownedEquipment.push(item);
+      reward.items.push(item);
+      if (m.instance === i.id)
+        i.events.push({
+          id: randomUUID(),
+          kind: "loot",
+          actorId: m.id,
+          x: i.lastDrop?.x ?? m.x,
+          y: i.lastDrop?.y ?? m.y - 110,
+          item,
+          rarity: GEAR[item].rarity,
+          at: t,
+        });
+    }
+    if (m.instance === i.id) {
+      questEvents(i, m, advanceQuests(m, wallClock(), "boss"), m.x, m.y - 160, t);
+    } else {
+      advanceQuests(m, wallClock(), "boss");
+      m.socket?.emit?.("toast", {
+        message: `บอสโลกพ่ายแพ้! อันดับ ${r.place} · +${pay.gold} ทอง · แร่ ×${pay.ore}`,
+      });
+    }
+    savePlayer(m);
+  }
+  log(null, "worldboss:down", { cycle: worldBoss.cycle, heroes: ranking.length });
+}
+// What a hero sees of the world boss, in town or in the arena.
+function worldBossView(p) {
+  const clock = worldBossClock(),
+    sched = worldBossAt(clock),
+    wb = worldBoss?.cycle === sched.cycle ? worldBoss : null,
+    i = wb && instances.get(wb.instanceId),
+    boss = i?.enemies.find((e) => e.boss),
+    maxHp = boss?.maxHp || i?.bossMaxHp || WORLD_BOSS.hp,
+    ranking = wb ? i?.ranking || worldRanking(wb.damage, wb.names, maxHp) : [],
+    me = ranking.find((r) => r.id === p.id);
+  return {
+    name: sched.name,
+    type: sched.type,
+    cycle: sched.cycle,
+    open: !!(wb && !wb.done && sched.open),
+    done: wb?.done || null,
+    left: Math.max(0, Math.round(sched.endsAt - clock)),
+    nextIn: Math.max(0, Math.round(sched.nextAt - clock)),
+    hp: boss ? Math.ceil(boss.hp) : 0,
+    maxHp,
+    heroes: wb?.joined.size || 0,
+    fighting: i?.members.length || 0,
+    ranking: ranking.slice(0, 5).map(({ id, name, damage, share, place }) => ({
+      id, name, damage, share, place,
+    })),
+    mine: me ? { damage: me.damage, share: me.share, place: me.place } : null,
+    joined: !!wb?.joined.has(p.id),
+  };
+}
 function questEvents(i, m, done, x, y, t) {
   for (const q of done)
     i.events.push({
@@ -763,9 +978,13 @@ function openInstance(members, floor, stage, extra = {}) {
   );
   instance.killCount = 0;
   spawnStage(instance);
-  for (const m of members) {
+  for (const m of members) enterInstance(m, instance);
+  return instance;
+}
+function enterInstance(m, instance) {
+  {
     m.area = "dungeon";
-    m.instance = id;
+    m.instance = instance.id;
     m.x = 380;
     m.y = 600;
     m.hp = maxHp(m);
@@ -782,7 +1001,6 @@ function openInstance(members, floor, stage, extra = {}) {
     m.jump = false;
     m.input = 0;
   }
-  return instance;
 }
 export function beginTraining(p) {
   ensureTown(p);
@@ -850,7 +1068,7 @@ function spawnStage(i) {
   i.streakUntil = 0;
   i.defeated = 0;
   i.lastDrop = null;
-  const count = dungeonEnemyCount(i.floor, i.stage);
+  const count = i.world ? 1 : dungeonEnemyCount(i.floor, i.stage);
   for (let n = 0; n < count; n++) {
     // Stage 3: the boss first, then its guards; other stages fill the arena.
     const boss = i.stage === 3 && n === 0,
@@ -859,7 +1077,9 @@ function spawnStage(i) {
       entry = boss ? null : rosterEntry(i.floor, slot + i.stage),
       trait = entry?.variant?.trait || null,
       mods = traitOf({ trait }),
-      base = boss
+      base = boss && i.world
+        ? WORLD_BOSS.hp
+        : boss
         ? Math.round(
             (300 + i.floor * 220 + i.floor * i.floor * 55) *
               1.2 *
@@ -877,9 +1097,11 @@ function spawnStage(i) {
       hp: max,
       maxHp: max,
       type: boss
-        ? i.night?.type || FLOORS[i.floor - 1].bossType
+        ? i.world?.type || i.night?.type || FLOORS[i.floor - 1].bossType
         : entry.type,
       night: boss && !!i.night,
+      world: boss && !!i.world,
+      power: boss ? (i.world ? WORLD_BOSS.damage : i.night ? NIGHT_BOSS.damage : 1) : 1,
       variant: entry?.variant?.name || null,
       trait,
       boss,
@@ -957,7 +1179,7 @@ export function nextStage(p) {
     if (!i.completed || !i.results) throw Error("รอสรุปผลก่อน");
     if (i.members.length > 1 && parties.get(p.party)?.leader !== p.id)
       throw Error("ให้หัวหน้าปาร์ตี้เลือกไปชั้นถัดไป");
-    if (i.night || i.floor >= FLOORS.length) return returnTown(p);
+    if (i.night || i.world || i.floor >= FLOORS.length) return returnTown(p);
     const members = i.members.map(live).filter(Boolean);
     if (members.some((m) => m.unlocked < i.floor + 1))
       throw Error("สมาชิกยังไม่ปลดล็อกชั้นถัดไป");
@@ -1006,7 +1228,7 @@ export function returnTown(p) {
     const i = instances.get(p.instance);
     if (i) {
       i.members = i.members.filter((id) => id !== p.id);
-      if (!i.members.length) instances.delete(i.id);
+      if (!i.members.length && !i.world) instances.delete(i.id);
     }
   }
   p.area = "town";
@@ -1158,8 +1380,10 @@ function resolveAttack(p, t) {
       }),
       amount = lines.reduce((n, l) => n + l.amount, 0),
       crit = lines.some((l) => l.crit);
+    if (e.boss) creditWorld(i, p.id, Math.min(amount, e.hp));
     e.hp -= amount;
     const status = e.hp > 0 && applyStatus(e, kit.status, lines[0].amount, t) ? kit.status.type : null;
+    if (status && e.status[status]) e.status[status].by = p.id;
     if (status && STATUSES[status].control) e.action = null;
     e.hitAt = t;
     e.aggro = true;
@@ -1272,6 +1496,10 @@ function enemyDown(i, e, t) {
 }
 // The last monster fell: clear the stage, and finish the run after a boss.
 function checkClear(i, t, p) {
+  if (i.world && !i.enemies.some((e) => e.boss && e.hp > 0)) {
+    i.bossMaxHp ??= i.enemies.find((e) => e.boss)?.maxHp;
+    i.enemies = [];
+  }
   i.enemies = i.enemies.filter((e) => e.hp > 0);
   if (!i.enemies.length) {
     if (!i.clear) i.clearedAt = t;
@@ -1280,8 +1508,8 @@ function checkClear(i, t, p) {
       i.completed = true;
       for (const id of i.members) {
         const m = live(id);
-        if (m && i.night) {
-          nightRewards(i, m, t);
+        if (m && (i.night || i.world)) {
+          if (i.night) nightRewards(i, m, t);
           savePlayer(m);
           continue;
         }
@@ -1354,6 +1582,7 @@ function checkClear(i, t, p) {
           savePlayer(m);
         }
       }
+      if (i.world) worldBossDown(i, t);
       const seconds = Math.max(0, Math.round(t - i.startedAt));
       i.results = Object.fromEntries(
         i.members.map((id) => {
@@ -1386,8 +1615,17 @@ function checkClear(i, t, p) {
                 m ? maxHp(m) : 100,
               ),
               night: i.night?.name || null,
+              world: i.world
+                ? {
+                    name: i.world.name,
+                    place: i.ranking?.find((r) => r.id === id)?.place || null,
+                    share: i.ranking?.find((r) => r.id === id)?.share || 0,
+                    heroes: i.ranking?.length || 0,
+                  }
+                : null,
               hasNext:
                 !i.night &&
+                !i.world &&
                 i.floor < FLOORS.length &&
                 i.members
                   .map(live)
@@ -1397,7 +1635,7 @@ function checkClear(i, t, p) {
           ];
         }),
       );
-      log(p.id, "boss:clear", { floor: i.floor, instance: i.id });
+      log(p?.id ?? null, "boss:clear", { floor: i.floor, instance: i.id });
     }
   }
 }
@@ -1613,6 +1851,7 @@ function tickStatuses(i, x, t, hero) {
     let amount = s.dps * s.stacks;
     if (hero) amount = Math.min(amount, x.hp - 1);
     if (amount <= 0) continue;
+    if (!hero && x.boss) creditWorld(i, s.by, Math.min(amount, x.hp));
     x.hp -= amount;
     i.events.push({
       id: randomUUID(),
@@ -1770,8 +2009,10 @@ export function tick(dt, t = now()) {
     physics(p, dt, t);
     p.mp = Math.min(maxMp(p), p.mp + dt * 2);
   }
+  updateWorldBoss();
   for (const i of instances.values()) {
     i.events = i.events.filter((e) => t - e.at < 1.2);
+    if (i.world && !i.clear) worldSummons(i, t);
     if (i.training && i.clear) {
       if (!i.respawnAt) i.respawnAt = t + 2.5;
       if (t >= i.respawnAt) spawnTraining(i);
@@ -1785,7 +2026,7 @@ export function tick(dt, t = now()) {
       }
       if (i.enemies.some((e) => e.hp <= 0)) {
         const m = i.members.map(live).find(Boolean);
-        if (m) checkClear(i, t, m);
+        if (m || i.world) checkClear(i, t, m);
         else i.enemies = i.enemies.filter((e) => e.hp > 0);
       }
     }
@@ -1853,7 +2094,7 @@ export function tick(dt, t = now()) {
                 dealDungeonDamage(
                   i,
                   target,
-                  Math.round((30 + i.floor * 6) * (e.night ? NIGHT_BOSS.damage : 1)),
+                  Math.round((30 + i.floor * 6) * (e.power || 1)),
                   e.id,
                   a.direction,
                   t,
@@ -1880,7 +2121,7 @@ export function tick(dt, t = now()) {
               i.training
                 ? 18
                 : e.boss
-                  ? Math.round((28 + i.floor * 6) * (e.night ? NIGHT_BOSS.damage : 1))
+                  ? Math.round((28 + i.floor * 6) * (e.power || 1))
                   : Math.round(
                       (15 + i.floor * 4) *
                         (e.elite ? 1.5 : 1) *
@@ -2041,6 +2282,7 @@ export function snapshot(p) {
           result: i.results?.[p.id] || null,
           training: !!i.training,
           night: i.night || null,
+          world: i.world || null,
           instanceId: i.id,
           enemies: i.enemies,
           hazards: i.hazards || [],
@@ -2057,6 +2299,7 @@ export function snapshot(p) {
         }
       : null,
     sky: skyNow(),
+    worldBoss: worldBossView(p),
     nightCleared: p.nightClear,
     shops: shopList(),
     party: party
