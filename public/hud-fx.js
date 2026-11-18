@@ -3,7 +3,7 @@
 import { hudEffects } from "/status-ui.js?v=1";
 import { ACTIONS } from "/shared/motion.js";
 import { FLOORS } from "/shared/config.js";
-import { sfx } from "/sound.js?v=20261118-combat2";
+import { sfx } from "/sound.js?v=20261118-audio1";
 
 const $ = (s) => document.querySelector(s);
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;

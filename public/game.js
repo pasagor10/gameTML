@@ -11,7 +11,7 @@ import {
   soundOn,
   setMusic,
   musicOn,
-} from "/sound.js?v=20261118-combat2";
+} from "/sound.js?v=20261118-audio1";
 import { TOWN_ANIMS, TOWN_LAYOUT, TOWN_PROPS } from "/shared/town-layout.js";
 import { createWorldDetails } from "/world-details.js?v=4";
 import {
@@ -74,7 +74,7 @@ import {
   DUNGEON_ENERGY_MAX,
 } from "/shared/config.js";
 import { createParallax } from "/parallax.js?v=0.8.1";
-import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.4";
+import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.5";
 import { createCombatFx } from "/combat-fx.js?v=0.8.1";
 import { activeEffects, effectTint, effectRow, hudEffects } from "/status-ui.js?v=1";
 import { STATUSES, BUFFS } from "/shared/skills.js";

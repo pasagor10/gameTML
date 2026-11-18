@@ -40,9 +40,9 @@ test('area recordings switch, fade, retry autoplay and respect music mute', asyn
     audio.unlockAudio();
     assert.equal(tracks[0].plays, 2);
     audio.music('dungeon');
-    assert.match(tracks[1].src, /dungeon.ogg$/);
+    assert.match(tracks[1].src, /battle.mp3$/);
     audio.music('boss');
-    assert.match(tracks[2].src, /boss.ogg$/);
+    assert.match(tracks[2].src, /boss-epic.ogg$/);
     timers.splice(0).forEach(fn => fn());
     assert.equal(tracks[0].paused, true);
     assert.equal(tracks[1].paused, true);

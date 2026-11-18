@@ -1,7 +1,7 @@
-// Game audio: local CC0 music recordings and synthesised WebAudio effects.
-// Track sources and license details: /assets/music/CREDITS.md
+// Game audio: local CC0 music and recorded CC0 combat sounds, layered with
+// synthesised WebAudio for punch. Sources and licenses: /assets/music/CREDITS.md
 //
-//   import { sfx, music, setSound, soundOn, unlockAudio } from "/sound.js?v=20261118-combat2";
+//   import { sfx, music, setSound, soundOn, unlockAudio } from "/sound.js?v=20261118-audio1";
 //   sfx("swing")            // one-shot effects, see SFX below
 //   music("town"|"dungeon"|"boss"|null)
 //
@@ -69,6 +69,49 @@ function init() {
   noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
   const n = noiseBuf.getChannelData(0);
   for (let i = 0; i < n.length; i++) n[i] = Math.random() * 2 - 1;
+  loadSamples();
+  return true;
+}
+
+// ---------- recorded samples ----------
+// Each group holds a few takes; one is picked at random per play, with a
+// slight pitch wobble so repeats never sound copy-pasted.
+const SAMPLES = {
+  swing: ["sw-swing1", "sw-swing2", "sw-swing3"],
+  slash: ["sw-slash1", "sw-slash2", "sw-slash3"],
+  blade: ["hit-blade1", "hit-blade2", "hit-blade3"],
+  clang: ["clang1", "clang2", "clang3"],
+  thud: ["hit-thud1", "hit-thud2", "hit-thud3"],
+  cast: ["cast1", "cast2", "cast3"],
+  fire: ["fire1", "fire2", "fire3", "fire4"],
+  die: ["die1", "die2", "die3"],
+  roar: ["roar1", "roar2", "roar3"],
+  coin: ["coin1", "coin2"],
+};
+const buffers = new Map();
+function loadSamples() {
+  for (const [group, names] of Object.entries(SAMPLES))
+    for (const name of names)
+      fetch(`/assets/sfx/${name}.mp3?v=1`)
+        .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject()))
+        .then((data) => ctx.decodeAudioData(data))
+        .then((buf) => {
+          if (!buffers.has(group)) buffers.set(group, []);
+          buffers.get(group).push(buf);
+        })
+        .catch(() => {}); // synth fallbacks cover a missing take
+}
+// Plays one take from a group; false when none is loaded yet.
+function sample(dest, group, { at = 0, vol = 1, rate = 1, wobble = 0.06 } = {}) {
+  const list = buffers.get(group);
+  if (!list?.length) return false;
+  const src = ctx.createBufferSource(),
+    g = ctx.createGain();
+  src.buffer = list[Math.floor(Math.random() * list.length)];
+  src.playbackRate.value = rate * (1 + (Math.random() * 2 - 1) * wobble);
+  g.gain.value = vol;
+  src.connect(g).connect(dest);
+  src.start(now() + at);
   return true;
 }
 
@@ -198,26 +241,31 @@ const rnd = (a, b) => a + Math.random() * (b - a);
 
 // ---------- effects ----------
 const SFX = {
-  // Hero attacks: one per class, and heavier skill variants.
+  // Hero attacks: recorded swings and casts with a synth layer for weight.
   swing() {
     const d = out(sfxBus, 0.08), pitch = rnd(0.9, 1.12);
+    if (sample(d, "swing", { vol: 0.9, rate: pitch })) {
+      osc(d, { type: "triangle", f: 240 * pitch, to: 80, dur: 0.12, vol: 0.07 });
+      return;
+    }
     noise(d, { dur: 0.18, vol: 0.36, f: 650 * pitch, to: 4200 * pitch, q: 0.7, attack: 0.035 });
-    noise(d, { at: 0.035, dur: 0.09, vol: 0.14, f: 6500, to: 1800, q: 0.5 });
     osc(d, { type: "triangle", f: 260 * pitch, to: 95, dur: 0.14, vol: 0.09 });
   },
   slash() {
-    const d = out(sfxBus, 0.16), pitch = rnd(0.94, 1.06);
-    noise(d, { dur: 0.27, vol: 0.48, f: 380 * pitch, to: 4800, q: 0.8, attack: 0.045 });
-    noise(d, { at: 0.09, dur: 0.16, vol: 0.24, f: 3800, to: 700 });
-    osc(d, { f: 155 * pitch, to: 42, at: 0.045, dur: 0.3, vol: 0.3 });
-    metal(d, { f: 780 * pitch, at: 0.07, dur: 0.22, vol: 0.024 });
+    const d = out(sfxBus, 0.18), pitch = rnd(0.94, 1.06);
+    const ok = sample(d, "slash", { vol: 0.95, rate: pitch });
+    sample(d, "swing", { vol: 0.7, rate: 0.75, at: 0.03 });
+    osc(d, { f: 150 * pitch, to: 40, at: 0.04, dur: 0.32, vol: 0.32 });
+    if (!ok) noise(d, { dur: 0.27, vol: 0.48, f: 380 * pitch, to: 4800, q: 0.8, attack: 0.045 });
   },
   arrow(at = 0) {
     if (typeof at !== "number") at = 0;
     const d = out(sfxBus, 0.07), pitch = rnd(0.94, 1.08);
-    osc(d, { type: "triangle", f: 420 * pitch, to: 115, at, dur: 0.12, vol: 0.15 });
-    noise(d, { at, dur: 0.045, vol: 0.21, f: 1700, type: "highpass" });
-    noise(d, { at: at + 0.025, dur: 0.2, vol: 0.22, f: 1800 * pitch, to: 6500, q: 1.1, attack: 0.025 });
+    // Bowstring twang: a plucked low note that bends down, then the swish.
+    osc(d, { type: "triangle", f: 330 * pitch, to: 140, at, dur: 0.16, vol: 0.2, attack: 0.002 });
+    osc(d, { type: "sine", f: 660 * pitch, to: 300, at, dur: 0.08, vol: 0.08, attack: 0.002 });
+    if (!sample(d, "swing", { at: at + 0.02, vol: 0.75, rate: 1.7 * pitch }))
+      noise(d, { at: at + 0.025, dur: 0.2, vol: 0.22, f: 1800 * pitch, to: 6500, q: 1.1, attack: 0.025 });
   },
   volley() {
     // Audio-clock offsets keep all three shots tight even on a busy frame.
@@ -225,36 +273,39 @@ const SFX = {
     osc(out(sfxBus, 0.14), { f: 125, to: 60, dur: 0.25, vol: 0.16 });
   },
   cast() {
-    const d = out(sfxBus, 0.22), pitch = rnd(0.97, 1.04);
+    const d = out(sfxBus, 0.25), pitch = rnd(0.97, 1.05);
+    if (sample(d, "cast", { vol: 0.75, rate: pitch })) return;
     noise(d, { dur: 0.19, vol: 0.18, f: 1000, to: 5500, q: 1.2, attack: 0.03 });
     osc(d, { f: 340 * pitch, to: 1000 * pitch, dur: 0.18, vol: 0.1, attack: 0.02 });
-    [1, 1.5, 2].forEach((r, i) => osc(d, { f: 620 * pitch * r, at: 0.035 + i * 0.025, dur: 0.23, vol: 0.045 }));
   },
   spell() {
-    const d = out(sfxBus, 0.28);
-    noise(d, { dur: 0.38, vol: 0.28, f: 450, to: 4500, q: 0.7, attack: 0.06 });
-    osc(d, { f: 210, to: 48, at: 0.06, dur: 0.42, vol: 0.32 });
-    [523, 784, 1047, 1568].forEach((f, i) => osc(d, { f, at: 0.04 + i * 0.035, dur: 0.38, vol: 0.045 }));
+    const d = out(sfxBus, 0.3);
+    const ok = sample(d, "fire", { vol: 0.95 });
+    sample(d, "cast", { vol: 0.5, rate: 0.8 });
+    osc(d, { f: 200, to: 45, at: 0.05, dur: 0.45, vol: 0.34 });
+    if (!ok) noise(d, { dur: 0.38, vol: 0.28, f: 450, to: 4500, q: 0.7, attack: 0.06 });
   },
-  // A short transient, low body and weapon-specific tail make contact readable.
+  // Contact: a recorded hit per weapon over a short synth punch.
   hit(arg = {}) {
     const d = out(sfxBus, 0.06), pitch = rnd(0.88, 1.12);
-    osc(d, { f: 185 * pitch, to: 55, dur: 0.12, vol: 0.32 });
-    noise(d, { dur: 0.045, vol: 0.38, f: 2400 * pitch, to: 650, q: 0.7 });
-    noise(d, { at: 0.018, dur: 0.12, vol: 0.17, f: 700, to: 180, type: "lowpass" });
-    if (arg?.class === "mage") {
-      osc(d, { f: 920 * pitch, to: 310, dur: 0.17, vol: 0.065 });
-      noise(d, { dur: 0.13, vol: 0.1, f: 4200, type: "highpass" });
-    } else if (arg?.class === "archer") {
-      osc(d, { type: "triangle", f: 650 * pitch, to: 170, dur: 0.065, vol: 0.08 });
-    } else metal(d, { f: 1050 * pitch, dur: 0.12, vol: 0.018 });
+    osc(d, { f: 170 * pitch, to: 50, dur: 0.12, vol: 0.3 });
+    noise(d, { dur: 0.035, vol: 0.3, f: 2600 * pitch, to: 700, q: 0.7 });
+    const cls = arg?.class;
+    if (cls === "mage") {
+      if (!sample(d, "fire", { vol: 0.45, rate: 1.5 * pitch })) noise(d, { dur: 0.13, vol: 0.1, f: 4200, type: "highpass" });
+    } else if (cls === "archer") {
+      if (!sample(d, "thud", { vol: 0.9, rate: pitch })) osc(d, { type: "triangle", f: 650 * pitch, to: 170, dur: 0.065, vol: 0.08 });
+    } else if (!sample(d, "blade", { vol: 0.9, rate: pitch })) metal(d, { f: 1050 * pitch, dur: 0.12, vol: 0.018 });
   },
+  // Crits ring out: the hit, a metal clang, a deep boom and a bright sparkle.
   crit(arg) {
     SFX.hit(arg);
-    const d = out(sfxBus, 0.16);
-    osc(d, { f: 105, to: 36, dur: 0.25, vol: 0.3 });
-    noise(d, { dur: 0.08, vol: 0.25, f: 3500, to: 900 });
-    [1175, 1568].forEach((f, i) => osc(d, { f, at: 0.02 + i * 0.035, dur: 0.19, vol: 0.045 }));
+    const d = out(sfxBus, 0.22);
+    sample(d, "clang", { vol: 0.75, rate: rnd(1.05, 1.25) });
+    sample(d, "thud", { vol: 0.8, rate: 0.6 });
+    osc(d, { f: 95, to: 32, dur: 0.32, vol: 0.42 });
+    noise(d, { dur: 0.09, vol: 0.28, f: 3800, to: 900 });
+    [1319, 1760].forEach((f, i) => osc(d, { f, at: 0.03 + i * 0.04, dur: 0.22, vol: 0.05 }));
   },
   hurt() {
     const d = out(sfxBus, 0.05);
@@ -264,12 +315,17 @@ const SFX = {
   },
   kill() {
     const d = out(sfxBus, 0.25);
+    if (sample(d, "die", { vol: 0.8, rate: rnd(0.95, 1.3) })) {
+      osc(d, { f: 1046, at: 0.12, dur: 0.25, vol: 0.05 }); // little reward ping
+      return;
+    }
     osc(d, { type: "square", f: 520, to: 90, dur: 0.28, vol: 0.05 });
     noise(d, { at: 0.04, dur: 0.35, vol: 0.4, f: 3000, to: 400, q: 0.6 });
     osc(d, { f: 1046, at: 0.12, dur: 0.25, vol: 0.05 }); // little reward ping
   },
   bossDown() {
     const d = out(sfxBus, 0.6);
+    sample(d, "roar", { vol: 1, rate: 0.55, wobble: 0 });
     osc(d, { f: 80, to: 30, dur: 1.4, vol: 0.6 });
     noise(d, { dur: 1.3, vol: 0.5, f: 1200, to: 120, type: "lowpass" });
     [523, 659, 784, 1047].forEach((f, i) =>
@@ -283,6 +339,10 @@ const SFX = {
   },
   roar() {
     const d = out(sfxBus, 0.5);
+    if (sample(d, "roar", { vol: 1, rate: 0.72 })) {
+      osc(d, { f: 60, to: 35, dur: 0.9, vol: 0.3, attack: 0.1 });
+      return;
+    }
     osc(d, {
       type: "sawtooth",
       f: 90,
@@ -319,6 +379,7 @@ const SFX = {
   // Rewards and UI.
   coin() {
     const d = out(sfxBus, 0.2);
+    if (sample(d, "coin", { vol: 0.6, rate: rnd(1, 1.15) })) return;
     osc(d, { f: 1568, dur: 0.12, vol: 0.08 });
     osc(d, { f: 2093, at: 0.07, dur: 0.3, vol: 0.08 });
   },
@@ -456,8 +517,8 @@ export function sfx(name, arg, gap = 0.03) {
 // Local recordings avoid third-party streaming dependencies during play.
 const TRACKS = {
   town: { src: "/assets/music/town.mp3", gain: 0.8 },
-  dungeon: { src: "/assets/music/dungeon.ogg", gain: 0.8 },
-  boss: { src: "/assets/music/boss.ogg", gain: 0.72 },
+  dungeon: { src: "/assets/music/battle.mp3", gain: 0.7 },
+  boss: { src: "/assets/music/boss-epic.ogg", gain: 0.75 },
 };
 const FADE = 1.2;
 
