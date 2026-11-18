@@ -10,7 +10,22 @@ import {
   ENHANCEMENT_BONUSES,
   enhancementLevel,
 } from "/shared/rpg.js";
-import { CLASSES, combatPower } from "/shared/config.js";
+import { CLASSES, combatPower, combatStats } from "/shared/config.js";
+import {
+  STAT_KEYS,
+  STAT_INFO,
+  STAT_MAX,
+  PRIMARY,
+  ATTACK_STATS,
+  LIGHTNING_AGI,
+  baseStats,
+  jobBonus,
+  raiseCost,
+  spentOn,
+  pointsAt,
+  buildOf,
+  resetCost,
+} from "/shared/stats.js";
 import { ACTIONS } from "/shared/motion.js";
 import { skillIcon } from "/skill-icons.js?v=3";
 const statNames = {
@@ -33,8 +48,9 @@ export function rpgPanel(p, area, tab = "inventory") {
     cls = CLASSES[p.class],
     owned = (p.ownedEquipment || []).filter((id) => GEAR[id]);
   const spec = SPECIALIZATIONS[p.class].find((s) => s.id === p.specialization);
-  const base = `<div class="rpg-summary"><span class="class-crest">${cls.icon}</span><div><small>ผู้กล้า · LEVEL ${p.level}</small><h3>${cls.name} <span>${spec?.name || "ยังไม่เลือกสายพัฒนา"}</span></h3></div><strong>${supplyArt("gold")} ${p.gold.toLocaleString()} <small>ทอง</small></strong></div><div class="rpg-tabs"><button data-rpg-tab="inventory" class="${tab === "inventory" ? "active" : ""}">อุปกรณ์ & กระเป๋า <kbd>I</kbd></button><button data-rpg-tab="class" class="${tab === "class" ? "active" : ""}">คลาส & สกิล <kbd>C</kbd></button></div>`;
+  const base = `<div class="rpg-summary"><span class="class-crest">${cls.icon}</span><div><small>ผู้กล้า · LEVEL ${p.level}</small><h3>${cls.name} <span>${spec?.name || "ยังไม่เลือกสายพัฒนา"}</span></h3></div><strong>${supplyArt("gold")} ${p.gold.toLocaleString()} <small>ทอง</small></strong></div><div class="rpg-tabs"><button data-rpg-tab="inventory" class="${tab === "inventory" ? "active" : ""}">อุปกรณ์ & กระเป๋า <kbd>I</kbd></button><button data-rpg-tab="class" class="${tab === "class" ? "active" : ""}">คลาส & สกิล <kbd>C</kbd></button><button data-rpg-tab="status" class="${tab === "status" ? "active" : ""}">สเตตัส${p.statPoints > 0 ? ` <b class="stat-badge">${p.statPoints}</b>` : ""} <kbd>K</kbd></button></div>`;
   if (tab === "class") return base + classPage(p, area, spec, cls);
+  if (tab === "status") return base + statusPage(p, area);
   return base + inventoryPage(p, area, stats, owned, spec, cls);
 }
 
@@ -317,7 +333,177 @@ function classPage(p, area, spec, cls) {
 </div>`;
 }
 
+// ---------------------------------------------------------------------------
+// Status page (Ragnarok style): six base stats raised with status points.
+// Raises are drafted here first, previewed, then sent in one confirm.
+let statDraft = {};
+let statDraftOwner = null;
+const draftedStats = (p) => {
+  const base = baseStats(p.attrs ? { attrs: p.attrs } : p);
+  return Object.fromEntries(STAT_KEYS.map((k) => [k, base[k] + (statDraft[k] || 0)]));
+};
+const draftCost = (p) => {
+  const base = baseStats({ attrs: p.attrs }),
+    next = draftedStats(p);
+  return STAT_KEYS.reduce((n, k) => n + spentOn(next[k]) - spentOn(base[k]), 0);
+};
+const pct = (v, digits = 1) => `${(v * 100).toFixed(digits).replace(/\.0$/, "")}%`;
+function derivedRows(p, now, next) {
+  const magic = PRIMARY[p.class] === "int",
+    hasDraft = Object.values(statDraft).some(Boolean),
+    perSec = (s) => (s.aspd / ACTIONS[0].cooldown).toFixed(2),
+    rows = [
+      [magic ? "MATK" : "ATK", (s) => s.atk],
+      ["DEF", (s) => s.def],
+      ["HP", (s) => s.hp],
+      ["MP", (s) => s.mp],
+      ["ASPD", (s) => `${s.aspd.toFixed(2)}× · ${perSec(s)}/วิ`, (s) => s.aspd],
+      ["FLEE", (s) => pct(s.flee), (s) => s.flee],
+      ["หลบสมบูรณ์", (s) => pct(s.perfect), (s) => s.perfect],
+      ["CRIT", (s) => pct(s.crit), (s) => s.crit],
+      ["ดาเมจคริ", (s) => pct(s.critDamage, 0), (s) => s.critDamage],
+      ["ร่ายเร็ว", (s) => "−" + pct(s.cast, 0), (s) => s.cast],
+      ...(p.class === "priest" ? [["พลังฮีล", (s) => "+" + pct(s.heal, 0), (s) => s.heal]] : []),
+      ...(p.class === "archer" ? [["ศรคู่", (s) => pct(s.double, 1), (s) => s.double]] : []),
+    ];
+  return rows
+    .map(([label, show, raw = show]) => {
+      const a = raw(now),
+        b = raw(next),
+        up = hasDraft && b > a;
+      return `<li class="${up ? "up" : ""}"><span>${label}</span><b>${show(now)}</b>${up ? `<em>→ ${show(next)}</em>` : ""}</li>`;
+    })
+    .join("");
+}
+function statusPage(p, area) {
+  if (statDraftOwner !== p.id) {
+    statDraft = {};
+    statDraftOwner = p.id;
+  }
+  const base = baseStats({ attrs: p.attrs }),
+    job = jobBonus(p),
+    next = draftedStats(p),
+    total = pointsAt(p.level),
+    spent = STAT_KEYS.reduce((n, k) => n + spentOn(base[k]), 0),
+    free = total - spent,
+    left = free - draftCost(p),
+    main = PRIMARY[p.class],
+    build = buildOf(p),
+    hasDraft = Object.values(statDraft).some(Boolean),
+    now = p.stats || combatStats(p),
+    preview = combatStats({ ...p, attrs: next }),
+    resetGold = resetCost(p);
+  const row = (k) => {
+    const info = STAT_INFO[k],
+      cost = raiseCost(next[k]),
+      can = next[k] < STAT_MAX && cost <= left,
+      tag =
+        k === main
+          ? `<i class="stat-tag main">สายหลัก</i>`
+          : ATTACK_STATS.includes(k)
+            ? `<i class="stat-tag off">ผิดสาย ×¼</i>`
+            : build.weights[k]
+              ? `<i class="stat-tag rec">แนะนำ</i>`
+              : "";
+    return `<div class="stat-row ${k === main ? "primary" : ""}" style="--stat:${info.color}">
+      <span class="stat-icon">${info.icon}</span>
+      <div class="stat-name"><strong>${info.name}</strong><small>${info.label}</small>${tag}</div>
+      <div class="stat-value"><b>${next[k]}</b>${job[k] ? `<small>+${job[k]}</small>` : ""}${statDraft[k] ? `<em>+${statDraft[k]}</em>` : ""}</div>
+      <small class="stat-cost" title="แต้มที่ใช้อัพขั้นถัดไป">${next[k] < STAT_MAX ? cost : "MAX"}</small>
+      <button class="stat-btn" data-stat-sub="${k}" ${statDraft[k] ? "" : "disabled"} aria-label="ลด ${info.name}">−</button>
+      <button class="stat-btn plus" data-stat-add="${k}" ${can ? "" : "disabled"} aria-label="เพิ่ม ${info.name}">+</button>
+      <p class="stat-help">${info.text}</p>
+    </div>`;
+  };
+  const weights = Object.entries(build.weights)
+    .sort((a, b) => b[1] - a[1])
+    .map(([k]) => STAT_INFO[k].name)
+    .join(" > ");
+  const lightning =
+    p.class === "archer"
+      ? `<p class="stat-note ${next.agi + job.agi >= LIGHTNING_AGI ? "on" : ""}">⚡ ศรสายฟ้าแลบ: AGI ${LIGHTNING_AGI}+ · คริแล้วยิงเร็วขึ้น 20% นาน 3 วิ</p>`
+      : "";
+  return `<div class="stat-win">
+  <section class="stat-alloc">
+    <header class="stat-points"><div><small>แต้มสเตตัสคงเหลือ</small><strong>${left}</strong><span>/ ${total} แต้ม (Lv.${p.level})</span></div>
+      <div class="stat-build"><small>บิลด์แนะนำ · ${build.name}</small><b>${weights}</b></div></header>
+    <div class="stat-rows">${STAT_KEYS.map(row).join("")}</div>
+    <footer class="stat-actions">
+      <button data-stat-auto ${free > 0 && !hasDraft ? "" : "disabled"}>✨ อัพตามสาย</button>
+      <button data-stat-cancel ${hasDraft ? "" : "disabled"}>ยกเลิก</button>
+      <button class="confirm" data-stat-confirm ${hasDraft ? "" : "disabled"}>ยืนยันอัพ</button>
+    </footer>
+    <p class="stat-hint">กด + เพื่อจองแต้ม (Shift = +10) แล้วกดยืนยัน · ยิ่งค่าสูงยิ่งใช้แต้มมาก · ตัวเลขสีฟ้าคือโบนัสอาชีพ</p>
+  </section>
+  <aside class="stat-derived">
+    <h4>ค่าสถานะ</h4>
+    <ul>${derivedRows(p, now, preview)}</ul>
+    ${lightning}
+    <button class="stat-reset" data-stat-reset ${area === "town" && spent > 0 ? "" : "disabled"}>↺ รีเซ็ตสเตตัส · ${resetGold ? `${resetGold.toLocaleString()} ทอง` : "ฟรีครั้งแรก"}</button>
+    ${area === "town" ? "" : `<small class="stat-hint">รีเซ็ตได้ในเมือง</small>`}
+  </aside>
+</div>`;
+}
+function bindStatusPage(root, p, handlers) {
+  if (!root.querySelector) return;
+  const reopen = () => handlers.open("status");
+  root.querySelectorAll("[data-stat-add]").forEach((b) => {
+    b.onclick = (e) => {
+      const k = b.dataset.statAdd;
+      for (let n = e.shiftKey ? 10 : 1; n > 0; n--) {
+        const next = draftedStats(p),
+          left = (p.statPoints ?? 0) - draftCost(p);
+        if (next[k] >= STAT_MAX || raiseCost(next[k]) > left) break;
+        statDraft[k] = (statDraft[k] || 0) + 1;
+      }
+      reopen();
+    };
+  });
+  root.querySelectorAll("[data-stat-sub]").forEach((b) => {
+    b.onclick = (e) => {
+      const k = b.dataset.statSub;
+      statDraft[k] = Math.max(0, (statDraft[k] || 0) - (e.shiftKey ? 10 : 1));
+      reopen();
+    };
+  });
+  const cancel = root.querySelector("[data-stat-cancel]");
+  if (cancel)
+    cancel.onclick = () => {
+      statDraft = {};
+      reopen();
+    };
+  const confirm = root.querySelector("[data-stat-confirm]");
+  if (confirm)
+    confirm.onclick = async () => {
+      confirm.disabled = true;
+      const adds = Object.fromEntries(Object.entries(statDraft).filter(([, n]) => n > 0));
+      statDraft = {};
+      await handlers.action("stats:raise", { adds });
+    };
+  const auto = root.querySelector("[data-stat-auto]");
+  if (auto)
+    auto.onclick = async () => {
+      auto.disabled = true;
+      await handlers.action("stats:auto", {});
+    };
+  const reset = root.querySelector("[data-stat-reset]");
+  if (reset) {
+    let armed = false;
+    reset.onclick = async () => {
+      if (!armed) {
+        armed = true;
+        reset.textContent = "กดอีกครั้งเพื่อยืนยันรีเซ็ต";
+        setTimeout(() => reset.isConnected && reopen(), 4000);
+        return;
+      }
+      reset.disabled = true;
+      statDraft = {};
+      await handlers.action("stats:reset", {});
+    };
+  }
+}
 export function bindRpgPanel(root, p, handlers) {
+  bindStatusPage(root, p, handlers);
   root.querySelectorAll("[data-pick-spec]").forEach((b) => {
     b.onclick = () => {
       pickedSpec = b.dataset.pickSpec;

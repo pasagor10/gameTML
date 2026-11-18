@@ -27,6 +27,15 @@ import {
 } from "../shared/rpg.js";
 import { ACTIONS } from "../shared/motion.js";
 import {
+  applyRaise,
+  autoPlan,
+  baseStats,
+  freePoints,
+  resetCost,
+  statEffects,
+  LIGHTNING,
+} from "../shared/stats.js";
+import {
   WORLD_BOSS,
   worldBossAt,
   worldRanking,
@@ -914,6 +923,8 @@ export function stored(p) {
     "daily",
     "bestiary",
     "nightClear",
+    "attrs",
+    "statResets",
   ];
   return {
     id: p.id,
@@ -1268,9 +1279,46 @@ function exp(p, n) {
   while (p.exp >= p.level * 80 && p.level < 40) {
     p.exp -= p.level * 80;
     p.level++;
+    // Auto play spends the new status points along the class build.
+    if (p.auto) autoStats(p, true);
     p.hp = maxHp(p);
     p.mp = maxMp(p);
   }
+}
+export const grantExp = exp;
+// Status points (shared/stats.js). Raises are { str: 2, agi: 1 }.
+export function raiseStats(p, adds) {
+  applyRaise(p, adds);
+  savePlayer(p);
+  return { message: "อัพสเตตัสแล้ว", attrs: baseStats(p), statPoints: freePoints(p) };
+}
+export function autoStats(p, quiet = false) {
+  const adds = autoPlan(p);
+  if (!Object.keys(adds).length) {
+    if (quiet) return null;
+    throw Error("แต้มสเตตัสไม่พอ");
+  }
+  applyRaise(p, adds);
+  if (!quiet) savePlayer(p);
+  return { message: "อัพสเตตัสตามสายแล้ว", adds };
+}
+export function resetStats(p) {
+  ensureTown(p);
+  const cost = resetCost(p);
+  if (p.gold < cost) throw Error(`รีเซ็ตต้องใช้ ${cost} ทอง`);
+  if (!Object.values(baseStats(p)).some((v) => v > 1)) throw Error("ยังไม่ได้อัพสเตตัส");
+  p.gold -= cost;
+  p.statResets = (p.statResets || 0) + 1;
+  p.attrs = null;
+  p.hp = Math.min(p.hp, maxHp(p));
+  p.mp = Math.min(p.mp, maxMp(p));
+  savePlayer(p);
+  log(p.id, "stats:reset", { cost });
+  return { message: cost ? `รีเซ็ตสเตตัสแล้ว (−${cost} ทอง)` : "รีเซ็ตสเตตัสฟรีแล้ว" };
+}
+// Attacks per second multiplier: AGI, plus the archer's lightning draw.
+function aspdOf(p, t) {
+  return combatStats(p).aspd * (t < (p.lightningUntil || 0) ? 1 + LIGHTNING.aspd : 1);
 }
 export function attack(p, skill = 0, t = now()) {
   if (
@@ -1285,10 +1333,16 @@ export function attack(p, skill = 0, t = now()) {
     return;
   const spec = ACTIONS[skill],
     i = instances.get(p.instance);
+  // AGI speeds up the basic attack (ASPD); DEX shortens a skill's cast.
+  const stats = combatStats(p),
+    tempo = skill ? 1 : aspdOf(p, t),
+    windup = skill ? spec.windup * (1 - stats.cast) : spec.windup / tempo,
+    recovery = spec.recovery / tempo,
+    cooldown = spec.cooldown / tempo;
   if (
     !i ||
     i.clear ||
-    t - (p.cooldowns[skill] || 0) < spec.cooldown ||
+    t - (p.cooldowns[skill] || 0) < cooldown ||
     p.mp < spec.mp
   )
     return;
@@ -1307,8 +1361,8 @@ export function attack(p, skill = 0, t = now()) {
     combo: p.combo,
     direction: p.direction,
     startedAt: t,
-    impactAt: t + spec.windup,
-    endsAt: t + spec.windup + spec.recovery,
+    impactAt: t + windup,
+    endsAt: t + windup + recovery,
   };
   p.pending = { ...p.action };
 }
@@ -1320,9 +1374,13 @@ function resolveAttack(p, t) {
     c = CLASSES[p.class],
     skill = a.skill;
   if (!i || i.clear || p.hp <= 0) return;
+  // Archer AGI: a basic shot may loose a second arrow (double strafe).
+  const twin = combatStats(p).double,
+    double = !skill && twin > 0 && Math.random() < twin;
   i.events.push({
     id: randomUUID(),
     kind: "attack",
+    double,
     actorId: p.id,
     x: p.x,
     y: p.y - 50,
@@ -1342,7 +1400,10 @@ function resolveAttack(p, t) {
     for (const id of i.members) {
       const m = live(id);
       if (!m || m.hp <= 0) continue;
-      m.buffs = { ...(m.buffs || {}), [kit.buff]: { until: t + kit.duration } };
+      m.buffs = {
+        ...(m.buffs || {}),
+        [kit.buff]: { until: t + kit.duration, power: 1 + combatStats(p).heal },
+      };
       i.events.push({
         id: randomUUID(),
         kind: "buff",
@@ -1357,9 +1418,11 @@ function resolveAttack(p, t) {
     return;
   }
   const range = combatStats(p).range + ACTIONS[skill].rangeBonus;
-  const critChance = BASE_CRIT + (buffActive(p, "focus", t) ? BUFFS.focus.crit : 0),
+  const stats = combatStats(p),
+    critChance = stats.crit + (buffActive(p, "focus", t) ? BUFFS.focus.crit : 0),
     rage = buffActive(p, "rage", t) ? 1 + BUFFS.rage.damage : 1;
-  let hits = 0;
+  let hits = 0,
+    anyCrit = false;
   for (const e of i.enemies) {
     if (
       e.hp <= 0 ||
@@ -1375,15 +1438,15 @@ function resolveAttack(p, t) {
         (traitOf(e).taken || 1) *
         (statusActive(e, "weaken", t) ? STATUSES.weaken.taken : 1) *
         rage,
-      lines = Array.from({ length: kit.hits }, () => {
+      lines = Array.from({ length: kit.hits * (double ? 2 : 1) }, () => {
         const crit = Math.random() < critChance;
         return {
           amount: Math.max(
             1,
             // ±8% spread so a stack never reads as one number repeated.
             Math.floor(
-              damage(combatStats(p).atk, i.floor * 5, kit.power) *
-                (crit ? 1.5 : 1) *
+              damage(stats.atk, i.floor * 5, kit.power) *
+                (crit ? stats.critDamage : 1) *
                 mult *
                 (0.92 + Math.random() * 0.16),
             ),
@@ -1393,6 +1456,7 @@ function resolveAttack(p, t) {
       }),
       amount = lines.reduce((n, l) => n + l.amount, 0),
       crit = lines.some((l) => l.crit);
+    anyCrit ||= crit;
     if (e.boss) creditWorld(i, p.id, Math.min(amount, e.hp));
     e.hp -= amount;
     const status = e.hp > 0 && applyStatus(e, kit.status, lines[0].amount, t) ? kit.status.type : null;
@@ -1420,11 +1484,18 @@ function resolveAttack(p, t) {
       crit,
       lines,
       status,
+      double,
       at: t,
     });
     if (e.hp <= 0) enemyDown(i, e, t);
   }
-  if (kit.heal) healParty(i, kit.heal, t);
+  // Archer AGI 40+: a crit quickens the next shots (lightning draw).
+  if (anyCrit && statEffects(p).lightning) {
+    if (t >= (p.lightningUntil || 0))
+      i.events.push({ id: randomUUID(), kind: "status", targetId: p.id, status: "lightning", x: p.x, y: p.y - 130, at: t });
+    p.lightningUntil = t + LIGHTNING.duration;
+  }
+  if (kit.heal) healParty(i, kit.heal * (1 + stats.heal), t);
   checkClear(i, t, p);
 }
 // Restores a share of max HP to every living hero in the instance.
@@ -1466,10 +1537,12 @@ function enemyDown(i, e, t) {
               : Math.round((4 + i.floor) * KILL_PAY) * (e.elite ? 2 : 1)) + bonus,
           gained = e.boss ? 110 : Math.round((e.elite ? 45 : 20) * KILL_PAY),
           reward = i.rewards?.[m.id];
-        m.gold += gold;
+        // LUK finds a little more gold.
+        const found = Math.round(gold * (1 + statEffects(m).gold));
+        m.gold += found;
         m.mp = Math.min(maxMp(m), m.mp + (bonus ? 4 : 0));
         if (reward) {
-          reward.gold += gold;
+          reward.gold += found;
           reward.exp += gained;
         }
         exp(m, gained);
@@ -1920,6 +1993,15 @@ function tickStatuses(i, x, t, hero) {
   }
 }
 // All damage and rewards stay authoritative, including environmental attacks.
+// AGI flee and LUK perfect dodge against a monster's swing (halved against
+// bosses). A dodge shows MISS over the hero.
+export function dodged(i, p, e, t, roll = Math.random()) {
+  const stats = combatStats(p),
+    chance = Math.min(0.4, stats.flee + stats.perfect) * (e.boss ? 0.5 : 1);
+  if (roll >= chance) return false;
+  i.events.push({ id: randomUUID(), kind: "miss", targetId: p.id, x: p.x, y: p.y - 95, at: t });
+  return true;
+}
 function dealDungeonDamage(i, p, base, actorId, direction, t, status = null) {
   const guard = buffActive(p, "barrier", t) ? 1 - BUFFS.barrier.guard : 1,
     amount = Math.max(1, Math.round(damage(base, combatStats(p).def) * guard));
@@ -2023,7 +2105,7 @@ export function tick(dt, t = now()) {
     // Blessing: regen once a second while it lasts.
     if (i && buffActive(p, "blessing", t) && t >= (p.regenAt || 0)) {
       p.regenAt = t + 1;
-      const amount = Math.min(maxHp(p) - p.hp, Math.round(maxHp(p) * BUFFS.blessing.regen));
+      const amount = Math.min(maxHp(p) - p.hp, Math.round(maxHp(p) * BUFFS.blessing.regen * (p.buffs.blessing.power || 1)));
       if (amount > 0) {
         p.hp += amount;
         i.events.push({ id: randomUUID(), kind: "heal", targetId: p.id, x: p.x, y: p.y - 110, amount, at: t });
@@ -2038,6 +2120,7 @@ export function tick(dt, t = now()) {
         const plan = autoBrain(p, i, t, {
           range: combatStats(p).range,
           mpMax: maxMp(p),
+          aspd: aspdOf(p, t),
           platforms: dungeonPlatforms(i.floor, i.stage, i.training),
         });
         p.input = plan.input;
@@ -2069,7 +2152,10 @@ export function tick(dt, t = now()) {
     resolveAttack(p, t);
     if (statusActive(p, "stun", t)) p.input = 0;
     physics(p, dt, t);
-    p.mp = Math.min(maxMp(p), p.mp + dt * 2);
+    // VIT and INT regenerate a little HP / MP every tick.
+    const fx = statEffects(p);
+    p.mp = Math.min(maxMp(p), p.mp + dt * (2 + fx.mpRegen));
+    if (fx.hpRegen) p.hp = Math.min(maxHp(p), p.hp + dt * fx.hpRegen);
   }
   updateWorldBoss();
   for (const i of instances.values()) {
@@ -2175,7 +2261,8 @@ export function tick(dt, t = now()) {
             });
           } else if (
             Math.abs(p.x - e.x) < (e.boss ? 130 : 100) &&
-            Math.abs(p.y - e.y) < 100
+            Math.abs(p.y - e.y) < 100 &&
+            !dodged(i, p, e, t)
           ) {
             const dealt = dealDungeonDamage(
               i,
@@ -2317,6 +2404,10 @@ export function snapshot(p) {
       specialization: p.specialization,
       stats,
       power: combatPower(stats),
+      attrs: baseStats(p),
+      statPoints: freePoints(p),
+      statResets: p.statResets || 0,
+      lightningUntil: p.lightningUntil || 0,
       upgrade: p.upgrade,
       enhancements: p.enhancements,
       energy: dungeonEnergy(p, t),

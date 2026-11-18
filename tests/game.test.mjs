@@ -768,12 +768,14 @@ test("specializations validate class and level, update combat stats and clamp he
   assert.throws(() => world.specialize(p, "ranger"));
   const before = combatStats(p);
   world.specialize(p, "guardian");
-  assert.equal(maxHp(p), before.hp + 35);
-  assert.equal(combatStats(p).def, before.def + 5);
+  // Guardian's job bonus adds VIT +3 / STR +2 on top of its +35 HP / +5 DEF.
+  assert.equal(maxHp(p), Math.round((before.hp + 35) * 1.03 + 9));
+  assert.equal(combatStats(p).def, before.def + 5 + 1);
   p.hp = maxHp(p);
   world.specialize(p, "duelist");
   assert.equal(p.hp, maxHp(p), "switching cannot retain HP above the new cap");
-  assert.equal(combatStats(p).atk, before.atk + 7);
+  // Duelist: +7 ATK and STR +3 from the job bonus (3 × 1.2 → +3).
+  assert.equal(combatStats(p).atk, before.atk + 7 + 3);
   assert.equal(loadCharacter(p.id).specialization, "duelist");
   world.beginDungeon(p, 1);
   assert.throws(() => world.specialize(p, "guardian"));

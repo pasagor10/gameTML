@@ -78,6 +78,8 @@ export function persist(p) {
       "daily",
       "bestiary",
       "nightClear",
+      "attrs",
+      "statResets",
     ].map((k) => [k, p[k]]),
   );
   db.prepare("UPDATE characters SET state=? WHERE id=?").run(

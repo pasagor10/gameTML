@@ -1,0 +1,104 @@
+/* Status window (rpg-ui.js statusPage): RO-style stat allocation on the jade
+   and gold hero panel. Left: six stats with +/−; right: derived stats. */
+.stat-win {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 14px;
+  align-items: start;
+  color: #f4ead2;
+  max-width: 920px;
+  margin: 0 auto;
+}
+.stat-alloc, .stat-derived {
+  border: 1px solid #e9c27a55;
+  border-radius: 10px;
+  background: linear-gradient(#0b2420e6, #071513e6);
+  box-shadow: inset 0 1px #ffe7a61f;
+  padding: 12px;
+}
+.stat-points {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 10px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #e9c27a33;
+}
+.stat-points small { display: block; font-size: 11px; color: #bfb398; }
+.stat-points strong { font-size: 30px; line-height: 1; color: #ffe7a6; text-shadow: 0 0 12px #e9c27a66; }
+.stat-points span { margin-left: 6px; font-size: 11px; color: #bfb398; }
+.stat-build { text-align: right; }
+.stat-build b { font-size: 13px; color: #9ff0b8; letter-spacing: .5px; }
+.stat-rows { display: grid; gap: 6px; }
+.stat-row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 76px 30px 30px 30px;
+  grid-template-areas: "icon name value cost sub add" "icon help help help help help";
+  align-items: center;
+  column-gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #0f2b27b0;
+  border: 1px solid #ffffff0d;
+  border-left: 3px solid var(--stat);
+}
+.stat-row.primary { background: linear-gradient(90deg, color-mix(in srgb, var(--stat) 18%, transparent), #0f2b27b0 60%); }
+.stat-icon { grid-area: icon; font-size: 20px; text-align: center; }
+.stat-name { grid-area: name; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; min-width: 0; }
+.stat-name strong { font-size: 15px; color: var(--stat); letter-spacing: 1px; }
+.stat-name small { font-size: 11px; color: #bfb398; }
+.stat-tag { font-style: normal; font-size: 10px; padding: 1px 6px; border-radius: 999px; }
+.stat-tag.main { background: #e9c27a; color: #3a2508; font-weight: 700; }
+.stat-tag.rec { background: #2c5a4b; color: #b9f3d3; }
+.stat-tag.off { background: #4a2a2a; color: #f0b3a8; }
+.stat-value { grid-area: value; text-align: right; white-space: nowrap; }
+.stat-value b { font-size: 18px; }
+.stat-value small { margin-left: 3px; font-size: 11px; color: #7fd8ff; }
+.stat-value em { margin-left: 3px; font-style: normal; font-size: 12px; color: #9ff0b8; font-weight: 700; }
+.stat-cost { grid-area: cost; text-align: center; font-size: 11px; color: #bfb398; }
+.stat-btn {
+  width: 30px; height: 30px; padding: 0;
+  font-size: 18px; font-weight: 700; line-height: 1;
+  color: #f4ead2; background: #163a33; border: 1px solid #e9c27a66; border-radius: 6px;
+  cursor: pointer;
+}
+.stat-btn[data-stat-sub] { grid-area: sub; }
+.stat-btn.plus { grid-area: add; color: #3a2508; background: linear-gradient(#ffe7a6, #d9a24a); border-color: #fff0bf; }
+.stat-btn:disabled { opacity: .3; cursor: default; filter: grayscale(1); }
+.stat-help { grid-area: help; margin: 2px 0 0; font-size: 11px; color: #a79d86; }
+.stat-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; flex-wrap: wrap; }
+.stat-actions button, .stat-reset {
+  padding: 7px 14px; font-size: 12px; font-weight: 700;
+  color: #d8cfb4; background: #0a1d1a; border: 1px solid #e9c27a66; border-radius: 999px; cursor: pointer;
+}
+.stat-actions .confirm { color: #3a2508; background: linear-gradient(#ffe7a6, #d9a24a); border-color: #fff0bf; }
+.stat-actions button:disabled, .stat-reset:disabled { opacity: .4; cursor: default; }
+.stat-hint { display: block; margin: 8px 0 0; font-size: 11px; color: #8f8670; }
+.stat-derived h4 { margin: 0 0 8px; font-size: 13px; color: #ffe7a6; letter-spacing: 1px; }
+.stat-derived ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+.stat-derived li { display: flex; align-items: baseline; gap: 6px; padding: 4px 6px; border-radius: 6px; font-size: 12px; }
+.stat-derived li:nth-child(odd) { background: #ffffff08; }
+.stat-derived li span { flex: 1; color: #bfb398; }
+.stat-derived li b { font-variant-numeric: tabular-nums; }
+.stat-derived li em { font-style: normal; color: #9ff0b8; font-weight: 700; }
+.stat-derived li.up { background: #2c5a4b55; }
+.stat-note { margin: 10px 0 0; padding: 6px 8px; font-size: 11px; color: #8f8670; border: 1px dashed #ffffff22; border-radius: 6px; }
+.stat-note.on { color: #ffe066; border-color: #ffe06688; background: #ffe0661a; }
+.stat-reset { width: 100%; margin-top: 12px; }
+.stat-badge {
+  display: inline-block; min-width: 16px; padding: 0 4px; margin-left: 2px;
+  font-size: 10px; line-height: 16px; text-align: center;
+  color: #3a2508; background: #ffe066; border-radius: 999px;
+}
+#top-menu button { position: relative; }
+#top-menu .menu-badge {
+  position: absolute; top: -4px; right: -4px;
+  min-width: 16px; padding: 0 4px; font-size: 10px; line-height: 16px; font-weight: 700;
+  color: #3a2508; background: #ffe066; border-radius: 999px; box-shadow: 0 0 8px #ffe066aa;
+}
+@media (max-width: 760px) {
+  .stat-win { grid-template-columns: 1fr; }
+  .stat-row { grid-template-columns: 28px minmax(0, 1fr) 62px 24px 30px 30px; column-gap: 5px; }
+  .stat-help { display: none; }
+}

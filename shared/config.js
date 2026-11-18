@@ -1,5 +1,7 @@
 import { SLOT_MACHINE } from "./slots.js";
 import { rpgBonuses } from "./rpg.js";
+import { statEffects } from "./stats.js";
+import { BASE_CRIT } from "./skills.js";
 import { townPlatforms, TOWN_SPOTS, TOWN_WIDTH } from "./town-layout.js";
 export const DUNGEON_ENERGY_MAX = 10;
 export const DUNGEON_ENERGY_INTERVAL = 30 * 60;
@@ -147,30 +149,54 @@ export const SHOP_SPOTS = (() => {
 // Walkable width of an area: the town is as long as its kit layout.
 export const areaWidth = (area) =>
   area === "town" ? WORLD.townWidth : WORLD.width;
-export const maxHp = (p) =>
-  CLASSES[p.class].hp + (p.level - 1) * 12 + (rpgBonuses(p).hp || 0);
-export const maxMp = (p) =>
-  CLASSES[p.class].mp + (p.level - 1) * 5 + (rpgBonuses(p).mp || 0);
+// Base stats (shared/stats.js) scale HP by VIT and MP by INT on top of the
+// class, level and gear numbers.
+export const maxHp = (p) => {
+  const fx = statEffects(p);
+  return Math.round(
+    (CLASSES[p.class].hp + (p.level - 1) * 12 + (rpgBonuses(p).hp || 0)) * (1 + fx.hpPct) + fx.hpFlat,
+  );
+};
+export const maxMp = (p) => {
+  const fx = statEffects(p);
+  return Math.round(
+    (CLASSES[p.class].mp + (p.level - 1) * 5 + (rpgBonuses(p).mp || 0)) * (1 + fx.mpPct) + fx.mpFlat,
+  );
+};
 export const damage = (atk, def, mult = 1) =>
   Math.max(1, Math.floor((atk * mult * 100) / (100 + def)));
 
 export function combatStats(p) {
   const c = CLASSES[p.class],
-    b = rpgBonuses(p);
+    b = rpgBonuses(p),
+    fx = statEffects(p);
   return {
-    atk: c.atk + (p.level - 1) * 3 + (b.atk || 0),
-    def: c.def + (b.def || 0),
+    atk: c.atk + (p.level - 1) * 3 + (b.atk || 0) + fx.atk,
+    def: c.def + (b.def || 0) + fx.def,
     speed: c.speed + (b.speed || 0),
-    range: c.range + (b.range || 0),
+    range: c.range + (b.range || 0) + fx.range,
     hp: maxHp(p),
     mp: maxMp(p),
+    // Ragnarok-style derived stats.
+    aspd: fx.aspd,
+    flee: fx.flee,
+    perfect: fx.perfect,
+    crit: BASE_CRIT + fx.crit,
+    critDamage: 1.5 + fx.critDamage,
+    cast: fx.cast,
+    heal: fx.heal,
+    double: fx.double,
   };
 }
 
 export function combatPower(stats) {
+  const crit = stats.crit ?? BASE_CRIT,
+    critDamage = stats.critDamage ?? 1.5,
+    // Expected damage per second relative to a plain Lv.1 hero.
+    tempo = (stats.aspd || 1) * (1 + (stats.double || 0)) * (1 + crit * (critDamage - 1)) / (1 + BASE_CRIT * 0.5);
   return Math.round(
-    stats.atk * 6 +
-      (stats.hp * (1 + stats.def / 100)) / 2 +
+    stats.atk * 6 * tempo +
+      (stats.hp * (1 + stats.def / 100)) / 2 / (1 - Math.min(0.4, (stats.flee || 0) + (stats.perfect || 0))) +
       stats.mp * 0.2 +
       stats.speed * 0.1 +
       stats.range * 0.05,

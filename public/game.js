@@ -24,7 +24,7 @@ import {
   rpgPanel,
   bindRpgPanel,
   gearShop,
-} from "/rpg-ui.js?v=9";
+} from "/rpg-ui.js?v=10";
 import {
   GEAR,
   RARITIES,
@@ -438,7 +438,7 @@ function modal(title, html, panel) {
   $("#modal .modal-box").scrollTop = 0;
   $("#modal").classList.toggle(
     "rpg-modal",
-    ["inventory", "class", "weapon"].includes(panel),
+    ["inventory", "class", "status", "weapon"].includes(panel),
   );
   $("#modal").classList.toggle("quest-modal", panel === "quest");
   $("#modal").classList.toggle("dungeon-modal", panel === "dungeon");
@@ -763,8 +763,20 @@ function updateHUD() {
     SPECIALIZATIONS[p.class].find((s) => s.id === p.specialization)?.name ||
     CLASSES[p.class].name;
   $("#exp-label").textContent = `${p.exp} / ${p.level * 80} EXP`;
-  if (["inventory", "class"].includes(activePanel)) {
+  // Unspent status points: a badge on the status menu button.
+  const statusMenu = $("#status-menu");
+  if (statusMenu) {
+    let badge = statusMenu.querySelector(".menu-badge");
+    if (p.statPoints > 0) {
+      badge ??= statusMenu.appendChild(document.createElement("i"));
+      badge.className = "menu-badge";
+      badge.textContent = p.statPoints;
+    } else badge?.remove();
+  }
+  if (["inventory", "class", "status"].includes(activePanel)) {
     const hash = JSON.stringify([
+      p.attrs,
+      p.statPoints,
       p.equipment,
       p.ownedEquipment,
       p.upgrade,
@@ -1343,13 +1355,15 @@ function showPanel(panel) {
       currentPlayer: () => state?.self,
       onSettled: () => { if (activePanel === "slots") showPanel("slots"); },
     });
-  } else if (panel === "inventory" || panel === "class") {
+  } else if (["inventory", "class", "status"].includes(panel)) {
     modal(
-      panel === "class" ? "เส้นทางผู้กล้า" : "อุปกรณ์และกระเป๋า",
+      { class: "เส้นทางผู้กล้า", status: "สเตตัสผู้กล้า" }[panel] || "อุปกรณ์และกระเป๋า",
       rpgPanel(p, state.area, panel),
       panel,
     );
     lastRpgPanelHash = JSON.stringify([
+      p.attrs,
+      p.statPoints,
       p.equipment,
       p.ownedEquipment,
       p.upgrade,
@@ -1371,7 +1385,8 @@ function showPanel(panel) {
       open: showPanel,
       action: async (event, data) => {
         const result = await emit(event, data);
-        if (result && event === "equipment:equip")
+        if (result && event.startsWith("stats:")) soundCue("equip");
+        else if (result && event === "equipment:equip")
           soundCue("equip", result.rarity);
         else if (
           result &&
@@ -1710,9 +1725,9 @@ addEventListener("keydown", (e) => {
     closeModal();
     return;
   }
-  if (state && !e.repeat && ["KeyI", "KeyC", "KeyL"].includes(e.code)) {
+  if (state && !e.repeat && ["KeyI", "KeyC", "KeyK", "KeyL"].includes(e.code)) {
     e.preventDefault();
-    const panel = { KeyI: "inventory", KeyC: "class", KeyL: "quest" }[e.code];
+    const panel = { KeyI: "inventory", KeyC: "class", KeyK: "status", KeyL: "quest" }[e.code];
     if (activePanel === panel) closeModal();
     else showPanel(panel);
     return;
@@ -2565,8 +2580,14 @@ class Adventure extends Phaser.Scene {
       sfx("roar", null, 0.2);
       return;
     }
+    if (e.kind === "miss") {
+      this.statusPop(e.x, e.y, { icon: "💨", name: "MISS", color: "#bfe9ff" }, e.targetId === state.self.id);
+      return;
+    }
     if (e.kind === "status") {
-      const st = STATUSES[e.status];
+      const st = e.status === "lightning"
+        ? { icon: "⚡", name: "ศรสายฟ้าแลบ", color: "#ffe066" }
+        : STATUSES[e.status];
       if (st) this.statusPop(e.x, e.y, st, e.targetId === state.self.id);
       return;
     }
@@ -2664,6 +2685,8 @@ class Adventure extends Phaser.Scene {
         monster || actor,
         e.targetId === state?.self.id,
       );
+      if (e.double && e.actorId === state?.self.id)
+        this.statusPop(e.x, e.y - 105, { icon: "➶", name: "ศรคู่", color: "#9ff0b8" }, false);
     } else {
       const cls = e.class || this.actors.get(e.actorId)?.target.class,
         kind = {
@@ -2678,6 +2701,8 @@ class Adventure extends Phaser.Scene {
         e.actorId === state?.self.id ? 0.02 : 0.1,
       );
       this.fx.attack(e);
+      // Double strafe: the second arrow follows right behind the first.
+      if (e.double) this.time.delayedCall(90, () => this.fx.attack(e));
     }
   }
   showDungeonSigns(area, signs) {

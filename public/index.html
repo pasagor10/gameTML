@@ -30,7 +30,8 @@
     <link rel="stylesheet" href="/actionbar.css?v=3" />
     <link rel="stylesheet" href="/touch.css?v=5" />
     <link rel="stylesheet" href="/hud-skin.css?v=5" />
-    <link rel="stylesheet" href="/inventory.css?v=8" />
+    <link rel="stylesheet" href="/inventory.css?v=9" />
+    <link rel="stylesheet" href="/status.css?v=1" />
     <link rel="stylesheet" href="/orientation.css?v=1" />
     <link rel="stylesheet" href="/sanctuary-select.css?v=3" />
     <link rel="stylesheet" href="/install.css?v=1" />
@@ -240,6 +241,9 @@
           ><button data-panel="inventory" title="อุปกรณ์"
             ><b><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M12 8V6a4 4 0 0 1 8 0v2" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M6 13a5 5 0 0 1 5-5h10a5 5 0 0 1 5 5v13a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3Z"/><path d="M11 18h10v5H11Z" fill="#0b1a17"/></svg></b
             ><span>อุปกรณ์</span></button
+          ><button data-panel="status" title="สเตตัส (K)" id="status-menu"
+            ><b><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 27V17h5v10Zm8.5 0V9h5v18ZM22 27V4h5v23Z"/></svg></b
+            ><span>สเตตัส</span></button
           ><button data-panel="quest" title="เควส"
             ><b><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 4h16a3 3 0 0 1 3 3v2h-4v18a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3Z"/><path d="M9 11h10M9 15h10M9 19h7" stroke="#0b1a17" stroke-width="2"/></svg></b
             ><span>เควส</span></button
@@ -471,7 +475,7 @@
     </div>
     <script src="/vendor/phaser.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <script type="module" src="/game.js?v=0.40.1"></script>
+    <script type="module" src="/game.js?v=0.41.0"></script>
     <script type="module" src="/orientation.js?v=1"></script>
   </body>
 </html>

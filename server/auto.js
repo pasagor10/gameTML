@@ -51,7 +51,7 @@ function threat(p, i, t) {
   return null;
 }
 
-export function autoBrain(p, i, t, { range, mpMax, platforms }) {
+export function autoBrain(p, i, t, { range, mpMax, platforms, aspd = 1 }) {
   const enemies = i.enemies.filter((e) => e.hp > 0);
   const plan = { input: 0, jump: false, skill: null, direction: p.direction };
   if (!enemies.length) {
@@ -116,7 +116,7 @@ export function autoBrain(p, i, t, { range, mpMax, platforms }) {
   // 4. Attack only when something is really in reach, with the right tool.
   const mp = p.mp,
     ready = (s) =>
-      t - (p.cooldowns[s] || 0) >= ACTIONS[s].cooldown && mp >= ACTIONS[s].mp,
+      t - (p.cooldowns[s] || 0) >= ACTIONS[s].cooldown / (s ? 1 : aspd) && mp >= ACTIONS[s].mp,
     count = (s) => hitsFor(p, enemies, s, range, dir).length,
     hitsTarget = (s) =>
       hitsFor(p, [target], s, range, dir).length > 0 ||
