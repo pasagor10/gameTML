@@ -341,7 +341,8 @@ function renderCards() {
         setTimeout(() => b.classList.remove("skill-previewing"), 800);
       }),
   );
-  $("#class-cards").innerHTML = JOBS.map(
+  // A class this browser's cached rules don't know yet stays hidden.
+  $("#class-cards").innerHTML = JOBS.filter((name) => CLASSES[name]).map(
     (name, i) =>
       `<button class="hero-card ${name === job ? "active" : ""}" data-class="${name}" aria-pressed="${name === job}" aria-label="เลือก${CLASSES[name].name}"><span class="hero-art" style="${lobbyHeroStyle(name, gender)}" aria-hidden="true"></span><span class="class-card-copy"><small>${eng[i]}</small><strong>${CLASSES[name].name}</strong><em>${heroDescriptions[name].role}</em></span><span class="class-order">0${i + 1}</span><span class="selected-mark" aria-hidden="true">◆</span></button>`,
   ).join("");
@@ -2995,7 +2996,8 @@ function cycleLobbyClass(direction) {
   }
   if (lobbyMode !== "create") return;
   if (lobbyCharacterId) resetLobbyCreation();
-  job = JOBS[(JOBS.indexOf(job) + direction + JOBS.length) % JOBS.length];
+  const jobs = JOBS.filter((name) => CLASSES[name]);
+  job = jobs[(jobs.indexOf(job) + direction + jobs.length) % jobs.length];
   renderCards();
   tone(550, 0.08);
 }

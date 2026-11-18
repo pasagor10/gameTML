@@ -188,10 +188,18 @@ app.post("/api/characters", (req, res) => {
     });
   }
 });
-app.use("/shared", express.static(path.resolve("shared")));
+// Code and data always revalidate (cheap 304s via ETag): modules import each
+// other by plain URL, so a stale cached copy of one (e.g. /shared/config.js
+// held for hours by the CDN's browser TTL) breaks a release. Art and audio
+// keep the short cache.
+const revalidate = (res, file) => {
+  if (/\.(js|mjs|json|css|html|webmanifest)$/.test(file)) res.setHeader("Cache-Control", "no-cache");
+};
+app.use("/shared", express.static(path.resolve("shared"), { setHeaders: revalidate }));
 app.use(
   express.static(path.resolve("public"), {
     maxAge: process.env.NODE_ENV === "production" ? "5m" : 0,
+    setHeaders: revalidate,
   }),
 );
 const io = new Server(server, {
