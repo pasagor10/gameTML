@@ -1,0 +1,546 @@
+/* In-game HUD skin: Lanna gold-framed panels on deep jade, icon menu,
+   location card and gold-rimmed thumb controls. Loaded after every other
+   HUD stylesheet; `body #game-screen` keeps it ahead of their selectors. */
+
+body #game-screen {
+  --corner-tl: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2230%22%20height%3D%2230%22%20viewBox%3D%220%200%2030%2030%22%3E%3Cg%20transform%3D%22%22%3E%3Cpath%20d%3D%22M3%2027V12Q3%203%2012%203h15%22%20fill%3D%22none%22%20stroke%3D%22%23e9c27a%22%20stroke-width%3D%222.2%22/%3E%3Cpath%20d%3D%22M7.5%2027V14q0-6.5%206.5-6.5h13%22%20fill%3D%22none%22%20stroke%3D%22%23e9c27a%22%20stroke-width%3D%221%22%20opacity%3D%22.55%22/%3E%3Cpath%20d%3D%22M8%208q4-1%205%203-4%201-5-3Z%22%20fill%3D%22%23ffe7a6%22/%3E%3Ccircle%20cx%3D%223%22%20cy%3D%2227%22%20r%3D%221.6%22%20fill%3D%22%23e9c27a%22/%3E%3Ccircle%20cx%3D%2227%22%20cy%3D%223%22%20r%3D%221.6%22%20fill%3D%22%23e9c27a%22/%3E%3C/g%3E%3C/svg%3E");
+  --corner-tr: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2230%22%20height%3D%2230%22%20viewBox%3D%220%200%2030%2030%22%3E%3Cg%20transform%3D%22scale%28-1%201%29%20translate%28-30%200%29%22%3E%3Cpath%20d%3D%22M3%2027V12Q3%203%2012%203h15%22%20fill%3D%22none%22%20stroke%3D%22%23e9c27a%22%20stroke-width%3D%222.2%22/%3E%3Cpath%20d%3D%22M7.5%2027V14q0-6.5%206.5-6.5h13%22%20fill%3D%22none%22%20stroke%3D%22%23e9c27a%22%20stroke-width%3D%221%22%20opacity%3D%22.55%22/%3E%3Cpath%20d%3D%22M8%208q4-1%205%203-4%201-5-3Z%22%20fill%3D%22%23ffe7a6%22/%3E%3Ccircle%20cx%3D%223%22%20cy%3D%2227%22%20r%3D%221.6%22%20fill%3D%22%23e9c27a%22/%3E%3Ccircle%20cx%3D%2227%22%20cy%3D%223%22%20r%3D%221.6%22%20fill%3D%22%23e9c27a%22/%3E%3C/g%3E%3C/svg%3E");
+  --corner-bl: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2230%22%20height%3D%2230%22%20viewBox%3D%220%200%2030%2030%22%3E%3Cg%20transform%3D%22scale%281%20-1%29%20translate%280%20-30%29%22%3E%3Cpath%20d%3D%22M3%2027V12Q3%203%2012%203h15%22%20fill%3D%22none%22%20stroke%3D%22%23e9c27a%22%20stroke-width%3D%222.2%22/%3E%3Cpath%20d%3D%22M7.5%2027V14q0-6.5%206.5-6.5h13%22%20fill%3D%22none%22%20stroke%3D%22%23e9c27a%22%20stroke-width%3D%221%22%20opacity%3D%22.55%22/%3E%3Cpath%20d%3D%22M8%208q4-1%205%203-4%201-5-3Z%22%20fill%3D%22%23ffe7a6%22/%3E%3Ccircle%20cx%3D%223%22%20cy%3D%2227%22%20r%3D%221.6%22%20fill%3D%22%23e9c27a%22/%3E%3Ccircle%20cx%3D%2227%22%20cy%3D%223%22%20r%3D%221.6%22%20fill%3D%22%23e9c27a%22/%3E%3C/g%3E%3C/svg%3E");
+  --corner-br: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2230%22%20height%3D%2230%22%20viewBox%3D%220%200%2030%2030%22%3E%3Cg%20transform%3D%22scale%28-1%20-1%29%20translate%28-30%20-30%29%22%3E%3Cpath%20d%3D%22M3%2027V12Q3%203%2012%203h15%22%20fill%3D%22none%22%20stroke%3D%22%23e9c27a%22%20stroke-width%3D%222.2%22/%3E%3Cpath%20d%3D%22M7.5%2027V14q0-6.5%206.5-6.5h13%22%20fill%3D%22none%22%20stroke%3D%22%23e9c27a%22%20stroke-width%3D%221%22%20opacity%3D%22.55%22/%3E%3Cpath%20d%3D%22M8%208q4-1%205%203-4%201-5-3Z%22%20fill%3D%22%23ffe7a6%22/%3E%3Ccircle%20cx%3D%223%22%20cy%3D%2227%22%20r%3D%221.6%22%20fill%3D%22%23e9c27a%22/%3E%3Ccircle%20cx%3D%2227%22%20cy%3D%223%22%20r%3D%221.6%22%20fill%3D%22%23e9c27a%22/%3E%3C/g%3E%3C/svg%3E");
+  --crest: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2264%22%20height%3D%2218%22%20viewBox%3D%220%200%2064%2018%22%3E%3Cpath%20d%3D%22M32%201l4%207-4%209-4-9Z%22%20fill%3D%22%23ffe7a6%22%20stroke%3D%22%238a6a33%22/%3E%3Cpath%20d%3D%22M2%2012q14%200%2022-6M62%2012q-14%200-22-6%22%20fill%3D%22none%22%20stroke%3D%22%23e9c27a%22%20stroke-width%3D%221.6%22/%3E%3Ccircle%20cx%3D%2224%22%20cy%3D%226%22%20r%3D%221.6%22%20fill%3D%22%23e9c27a%22/%3E%3Ccircle%20cx%3D%2240%22%20cy%3D%226%22%20r%3D%221.6%22%20fill%3D%22%23e9c27a%22/%3E%3C/svg%3E");
+  --jade: linear-gradient(165deg, #173a33f5, #0b201cf2 55%, #0e2622f5);
+  --gold: #e9c27a;
+  --gold-hi: #ffe7a6;
+  --gold-lo: #8a6a33;
+  --panel-shadow: 0 6px 18px #000b, 0 0 0 1px #00000088;
+}
+
+/* ---------- Shared frame ---------- */
+body #game-screen .profile-panel,
+body #game-screen #quests,
+body #game-screen #minimap {
+  background: var(--jade);
+  border: 2px solid var(--gold);
+  border-radius: 10px;
+  box-shadow:
+    inset 0 0 0 2px #06110f,
+    inset 0 0 0 3px #e9c27a44,
+    inset 0 1px 14px #ffe7a614,
+    var(--panel-shadow);
+  opacity: 1;
+}
+body #game-screen .profile-panel::before,
+body #game-screen #quests::before,
+body #game-screen #minimap::before {
+  content: "";
+  display: block;
+  position: absolute;
+  inset: -7px;
+  width: auto;
+  height: auto;
+  top: -7px;
+  background:
+    var(--corner-tl) top left / 30px no-repeat,
+    var(--corner-tr) top right / 30px no-repeat,
+    var(--corner-bl) bottom left / 30px no-repeat,
+    var(--corner-br) bottom right / 30px no-repeat;
+  border: 0;
+  box-shadow: none;
+  transform: none;
+  pointer-events: none;
+  z-index: 2;
+}
+body #game-screen .profile-panel::after,
+body #game-screen #minimap::after {
+  content: "";
+  display: block;
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  width: 64px;
+  height: 18px;
+  margin-left: -32px;
+  background: var(--crest) center / contain no-repeat;
+  border: 0;
+  box-shadow: none;
+  transform: none;
+  pointer-events: none;
+  z-index: 2;
+}
+body #game-screen #quests::after {
+  display: none;
+}
+
+/* ---------- Profile ---------- */
+body #game-screen .world-title {
+  display: none;
+}
+body #game-screen .profile-panel {
+  position: relative;
+  width: 300px;
+  padding: 10px 12px 10px 10px;
+  gap: 11px;
+  align-items: center;
+}
+body #game-screen #avatar {
+  width: 70px;
+  height: 74px;
+  border-radius: 7px;
+  border: 2px solid var(--gold);
+  box-shadow:
+    0 0 0 2px #06110f,
+    0 0 12px #ffc96b44,
+    inset 0 0 14px #000a;
+}
+body #game-screen .profile-info {
+  flex: 1;
+  min-width: 0;
+}
+body #game-screen .profile-info > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+body #game-screen .profile-info strong {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff6de;
+  text-shadow: 0 1px 2px #000;
+}
+body #game-screen #player-level {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 1px 10px;
+  color: #3a2508;
+  background: linear-gradient(#ffe7a6, #e0aa4c 55%, #b0732a);
+  border: 1px solid #fff0bf;
+  border-radius: 999px;
+  box-shadow: 0 2px 0 #4f3210;
+  text-shadow: 0 1px 0 #ffeec4;
+}
+body #game-screen .stat-bar {
+  height: 17px;
+  margin-bottom: 4px;
+  border-radius: 999px;
+  border: 1px solid #000;
+  background: #06110f;
+  box-shadow:
+    0 0 0 1px #e9c27a55,
+    inset 0 2px 4px #000c;
+  overflow: hidden;
+}
+body #game-screen .stat-bar i,
+body #game-screen .stat-bar .bar-trail {
+  border-radius: 999px;
+}
+body #game-screen .stat-bar.hp i {
+  background: linear-gradient(#ff8a7a, #d8323a 45%, #8f1620);
+  box-shadow: inset 0 1px 0 #ffd0c8aa;
+}
+body #game-screen .stat-bar.mp i {
+  background: linear-gradient(#9fe2ff, #2f8fe0 45%, #154f9a);
+  box-shadow: inset 0 1px 0 #e0f6ffaa;
+}
+body #game-screen .stat-bar span {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 15px;
+  color: #fff;
+  text-shadow: 0 1px 2px #000, 0 0 3px #000;
+}
+body #game-screen .exp-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 2px;
+}
+body #game-screen .exp-row > b {
+  font-size: 10px;
+  font-weight: 800;
+  color: #fff6de;
+  letter-spacing: 0.04em;
+}
+body #game-screen .stat-bar.exp {
+  flex: 1;
+  height: 9px;
+  margin: 0;
+  border-radius: 3px;
+}
+body #game-screen .stat-bar.exp i {
+  border-radius: 2px;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 6px, #06110f 6px 8px),
+    linear-gradient(#ffe7a6, #d9a24a);
+  box-shadow: 0 0 6px #ffcf6e88;
+}
+body #game-screen #exp-label {
+  font-size: 10px;
+  color: #d8cfb4;
+  white-space: nowrap;
+}
+body #game-screen .profile-meta {
+  display: none;
+}
+
+/* ---------- Quest card ---------- */
+body #game-screen #quests {
+  top: 140px;
+  left: 18px;
+  width: 270px;
+  padding: 10px 14px 10px 50px;
+  border-left-width: 2px;
+  cursor: pointer;
+}
+body #game-screen #quests .panel-tabs {
+  display: none;
+}
+body #game-screen .quest-badge {
+  position: absolute;
+  left: 13px;
+  top: 12px;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  font-style: normal;
+  font-size: 16px;
+  font-weight: 900;
+  color: #3a2508;
+  background: linear-gradient(#ffe7a6, #f0b43c 55%, #b9761e);
+  border: 1px solid #fff0bf;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px #06110f,
+    0 0 12px #ffc96b99;
+  animation: quest-badge 2.4s ease-in-out infinite;
+}
+@keyframes quest-badge {
+  50% { box-shadow: 0 0 0 2px #06110f, 0 0 20px #ffd36acc; }
+}
+body #game-screen #quests h3 {
+  margin: 0 0 3px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff6de;
+  text-shadow: 0 1px 2px #000;
+}
+body #game-screen #quests p {
+  margin: 0 0 7px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #b9c9bd;
+}
+body #game-screen #quests .quest-progress {
+  height: 7px;
+  margin: 0 0 5px;
+  border-radius: 999px;
+  background: #06110f;
+  box-shadow:
+    0 0 0 1px #e9c27a44,
+    inset 0 1px 3px #000;
+}
+body #game-screen #quests .quest-progress i {
+  border-radius: 999px;
+  background: linear-gradient(#ffe7a6, #e0a84c);
+  box-shadow: 0 0 8px #ffd36a;
+}
+body #game-screen #quests small {
+  font-size: 10px;
+  color: #d8cfb4;
+}
+
+/* ---------- Icon menu ---------- */
+body #game-screen #top-menu {
+  gap: 8px;
+}
+body #game-screen #top-menu button {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  border: 2px solid var(--gold);
+  background: linear-gradient(165deg, #1d443c, #0b201c);
+  box-shadow:
+    inset 0 0 0 2px #06110f,
+    inset 0 1px 0 #ffe7a644,
+    0 4px 10px #000a;
+  color: var(--gold-hi);
+  transition: transform 0.12s, filter 0.12s;
+}
+body #game-screen #top-menu button:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+body #game-screen #top-menu b {
+  display: block;
+  width: 28px;
+  height: 28px;
+  line-height: 0;
+}
+body #game-screen #top-menu b svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+  filter: drop-shadow(0 1px 0 #3a2508) drop-shadow(0 0 4px #ffc96b66);
+}
+body #game-screen #top-menu span {
+  position: absolute;
+  bottom: -17px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  white-space: nowrap;
+  color: #fff6de;
+  text-shadow: 0 1px 2px #000, 0 0 4px #000;
+  opacity: 0;
+  transition: opacity 0.15s;
+  pointer-events: none;
+}
+body #game-screen #top-menu button:hover span,
+body #game-screen #top-menu button:focus-visible span {
+  opacity: 1;
+}
+
+/* ---------- Location card ---------- */
+body #game-screen #minimap {
+  top: 84px;
+  width: 270px;
+  padding: 12px 14px 10px;
+}
+body #game-screen #minimap .map-frame {
+  display: none;
+}
+body #game-screen #minimap .map-head {
+  position: relative;
+  gap: 10px;
+  padding: 0 0 9px;
+  border-bottom: 1px solid #e9c27a55;
+  box-shadow: none;
+}
+body #game-screen #minimap .map-emblem {
+  width: 26px;
+  height: 30px;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  color: var(--gold-hi);
+}
+body #game-screen #minimap .map-emblem svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+  filter: drop-shadow(0 0 5px #ffc96b88);
+}
+body #game-screen #minimap #map-title {
+  font-size: 15px;
+}
+body #game-screen #minimap #map-zone {
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  color: #d8cfb4;
+}
+body #game-screen #minimap .map-temple {
+  flex: none;
+  width: 66px;
+  height: 30px;
+  fill: #e9c27a;
+  opacity: 0.75;
+  filter: drop-shadow(0 0 6px #ffc96b55);
+}
+/* Online pill sits on the card's top edge, clear of the rows. */
+body #game-screen #minimap #online-count {
+  position: absolute;
+  right: 4px;
+  top: -22px;
+  padding: 1px 7px;
+  font-size: 9px;
+  background: #06110f;
+  z-index: 3;
+}
+body #game-screen #minimap #dungeon-open,
+body #game-screen #minimap #training-open {
+  margin-top: 8px;
+  min-height: 0;
+  padding: 4px 2px;
+  gap: 10px;
+  color: #fff6de;
+  font-size: 14px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px #000;
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  box-shadow: none;
+}
+body #game-screen #minimap #dungeon-open::after {
+  display: none;
+}
+body #game-screen #minimap #dungeon-open:hover,
+body #game-screen #minimap #training-open:hover {
+  background: #ffe7a614;
+  transform: none;
+}
+body #game-screen #minimap #dungeon-open .map-btn-icon {
+  width: 24px;
+  height: 24px;
+  font-size: 15px;
+  font-weight: 900;
+  color: #3a2508;
+  background: linear-gradient(#ffe7a6, #f0b43c 55%, #b9761e);
+  border: 1px solid #fff0bf;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #ffc96b88;
+}
+body #game-screen #minimap .map-btn-go {
+  color: var(--gold);
+}
+body #game-screen #minimap #training-open {
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #b9c9bd;
+}
+body #game-screen #minimap #training-open .map-btn-icon {
+  width: 24px;
+  height: 20px;
+  background: none;
+  box-shadow: none;
+  color: var(--gold);
+}
+
+/* ---------- Touch: gold-rimmed thumb controls ---------- */
+@media (pointer: coarse) {
+  #joystick {
+    border: 3px solid #e9c27acc;
+    background: radial-gradient(circle, #0b201c66 55%, #173a33aa 72%);
+    box-shadow:
+      0 0 0 2px #06110f,
+      inset 0 0 26px #000a,
+      0 0 18px #ffc96b33;
+    opacity: 0.85;
+  }
+  #joystick::before {
+    content: "";
+    position: absolute;
+    inset: -14px;
+    background:
+      radial-gradient(circle at 50% 4px, var(--gold-hi) 3px, transparent 4px),
+      radial-gradient(circle at 50% calc(100% - 4px), var(--gold-hi) 3px, transparent 4px),
+      radial-gradient(circle at 4px 50%, var(--gold-hi) 3px, transparent 4px),
+      radial-gradient(circle at calc(100% - 4px) 50%, var(--gold-hi) 3px, transparent 4px);
+  }
+  #joystick i {
+    background: radial-gradient(circle at 35% 30%, #fff3cf, #e0aa4c 50%, #8d5a1e);
+    border: 2px solid #fff0bf;
+    box-shadow:
+      0 0 0 3px #06110f,
+      0 6px 14px #000c,
+      0 0 18px #ffd48688;
+  }
+  body #game-screen .hud-bottom .skillbar .skill {
+    border: 3px solid var(--gold);
+    background: radial-gradient(circle at 50% 35%, #1d443c, #08161a 75%) padding-box;
+    box-shadow:
+      0 0 0 2px #06110f,
+      0 5px 12px #000c,
+      inset 0 0 14px #000;
+    color: #fff;
+  }
+  body #game-screen .hud-bottom .skillbar .skill b {
+    filter: drop-shadow(0 0 6px currentColor);
+  }
+  body #game-screen .hud-bottom .skillbar .skill.blue { color: #7fd9ff; }
+  body #game-screen .hud-bottom .skillbar .skill.orange { color: #ff9a4a; }
+  body #game-screen .hud-bottom .skillbar .skill.violet { color: #c58bff; }
+  body #game-screen .hud-bottom .skillbar .skill.basic {
+    border-width: 4px;
+    color: #ffe7a6;
+    background: radial-gradient(circle at 50% 30%, #3b2a10, #0b0a06 75%) padding-box;
+    box-shadow:
+      0 0 0 3px #06110f,
+      0 0 0 6px #e9c27a66,
+      0 0 22px #ffc96b88,
+      0 6px 14px #000c;
+  }
+  body #game-screen .hud-bottom .skillbar .skill.jump,
+  body #game-screen .hud-bottom .skillbar .skill.recall,
+  body #game-screen .hud-bottom .skillbar .skill.auto,
+  body #game-screen .hud-bottom .skillbar [data-action="hp"] {
+    background: radial-gradient(circle at 50% 35%, #1d443c, #08161a 75%) padding-box;
+    color: #fff6de;
+  }
+  body #game-screen .hud-bottom .skillbar .skill.auto.on {
+    color: #3a2508;
+    background: radial-gradient(circle at 50% 35%, #ffe7a6, #c88a2e 75%) padding-box;
+    box-shadow:
+      0 0 0 2px #06110f,
+      0 0 18px #ffc96b;
+  }
+  body #game-screen .hud-bottom .skillbar .skill-cost {
+    bottom: -10px;
+    padding: 1px 7px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+    background: #06110fe6;
+    border: 1px solid #e9c27a88;
+    border-radius: 999px;
+  }
+  /* Phones: smaller frames so the playfield stays open. */
+  body #game-screen .profile-panel { width: 230px; padding: 7px 9px 7px 7px; gap: 8px; }
+  body #game-screen #avatar { width: 50px; height: 54px; }
+  body #game-screen .profile-info strong { font-size: 13px; }
+  body #game-screen .stat-bar { height: 14px; }
+  body #game-screen .stat-bar span { font-size: 10px; line-height: 12px; }
+  body #game-screen #quests { top: 104px; width: 210px; padding: 7px 10px 7px 40px; }
+  body #game-screen .quest-badge { left: 9px; top: 9px; width: 22px; height: 22px; font-size: 13px; }
+  body #game-screen #quests h3 { font-size: 12px; }
+  body #game-screen #quests:not(.open) p { display: none; }
+  body #game-screen #top-menu { gap: 5px; }
+  body #game-screen #top-menu button { width: 38px; height: 38px; border-radius: 8px; }
+  body #game-screen #top-menu b { width: 21px; height: 21px; }
+  body #game-screen #minimap { width: 200px; padding: 8px 10px 6px; top: 58px; }
+  body #game-screen #minimap .map-head,
+  body #game-screen #minimap .map-frame { display: flex; }
+  body #game-screen #minimap .map-frame { display: none; }
+  body #game-screen #minimap #map-title { font-size: 12px; }
+  body #game-screen #minimap .map-temple { width: 46px; height: 22px; }
+  body #game-screen #minimap .map-emblem { width: 20px; height: 24px; display: block; }
+  body #game-screen #minimap #map-zone { display: block; font-size: 9px; }
+  body #game-screen #minimap #online-count { display: none; }
+  body #game-screen #minimap #dungeon-open { font-size: 12px; margin-top: 5px; }
+  body #game-screen #minimap .map-btn-icon { display: grid; }
+  body #game-screen #minimap #training-open { display: none; }
+}
+/* mobile.css hides every svg in the map panel on phones: keep the pin and
+   temple in the location card. */
+@media (pointer: coarse) {
+  body #game-screen #minimap .map-head svg {
+    display: block;
+    margin: 0;
+    background: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
+  body #game-screen #minimap .map-emblem svg { width: 100%; height: 100%; }
+  body #game-screen #minimap #map-zone { white-space: nowrap; }
+  body #game-screen #quests { top: calc(var(--top, 8px) + 112px); }
+  body #game-screen #chat-toggle,
+  body #game-screen #chat { top: calc(var(--top, 8px) + 172px); }
+}
+@media (pointer: coarse) and (max-height: 420px) {
+  body #game-screen .profile-panel { width: 200px; }
+  body #game-screen #avatar { width: 42px; height: 46px; }
+  body #game-screen #quests { top: calc(var(--top, 8px) + 104px); width: 190px; }
+  body #game-screen #chat-toggle,
+  body #game-screen #chat { top: calc(var(--top, 8px) + 160px); }
+  body #game-screen #minimap { width: 190px; top: 52px; }
+  body #game-screen #minimap .map-head .map-temple { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body #game-screen .quest-badge { animation: none; }
+}

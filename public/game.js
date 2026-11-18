@@ -16,7 +16,7 @@ import {
   rpgPanel,
   bindRpgPanel,
   gearShop,
-} from "/rpg-ui.js?v=3";
+} from "/rpg-ui.js?v=6";
 import {
   GEAR,
   RARITIES,
@@ -26,7 +26,8 @@ import {
   heroSkins,
 } from "/shared/rpg.js";
 import { createTownNpcs, footGlow, outline } from "/town-npcs.js?v=6";
-import { marketHtml, shopManagerHtml, marketState } from "/market-ui.js?v=2";
+import { updateEnhanceAura, AURA_LEVEL } from "/enhance-aura.js?v=3";
+import { marketHtml, shopManagerHtml, marketState } from "/market-ui.js?v=5";
 import { sampleMotion } from "/shared/smoothing.js";
 import { ACTIONS } from "/shared/motion.js";
 import {
@@ -1117,7 +1118,7 @@ function showPanel(panel) {
   const btn = (data, label) => `<button ${data}>${label}</button>`;
   if (panel === "inventory" || panel === "class") {
     modal(
-      panel === "class" ? "เส้นทางผู้กล้า" : "อุปกรณ์ของผู้กล้า",
+      panel === "class" ? "เส้นทางผู้กล้า" : "อุปกรณ์และกระเป๋า",
       rpgPanel(p, state.area, panel),
       panel,
     );
@@ -2329,6 +2330,15 @@ class Adventure extends Phaser.Scene {
       a.footLight
         ?.setPosition(a.image.x, p.grounded ? p.y - 2 : 598)
         .setAlpha(p.hp <= 0 ? 0 : p.grounded ? 0.34 : 0.14);
+      // Max-enhanced weapon: golden aura at the feet (on the ground only).
+      updateEnhanceAura(
+        this,
+        a,
+        p.hp > 0 && !!weapon && p.upgrade >= AURA_LEVEL && p.grounded,
+        a.image.x,
+        p.y - 2,
+        time,
+      );
       if (p.grounded && !a.wasGrounded && p.hp > 0) {
         this.dust(a.image.x, p.y);
         a.landAt = time;

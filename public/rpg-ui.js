@@ -10,6 +10,7 @@ import {
 } from "/shared/rpg.js";
 import { CLASSES, combatPower } from "/shared/config.js";
 import { ACTIONS } from "/shared/motion.js";
+import { skillIcon } from "/skill-icons.js?v=1";
 const statNames = {
   atk: "ATK",
   def: "DEF",
@@ -23,22 +24,7 @@ export const statText = (stats) =>
     .map(([k, v]) => `${statNames[k]} +${v}`)
     .join(" · ") || "อุปกรณ์เริ่มต้น";
 let selected = null;
-// Tier 3 class advancement: unlocks at ADVANCE_LEVEL once a line is chosen.
-function advanceCard(p, area, spec) {
-  if (!spec) return "";
-  if (p.advanced)
-    return `<div class="advance-card done"><span>✦</span><div><small>ขั้นที่ 3 · เลื่อนขั้นแล้ว</small><h3>${spec.name} ขั้นสูง</h3><p>พลังสายพัฒนา ×2 · ชุดและออร่าขั้นสูง</p></div></div>`;
-  const ready = p.level >= ADVANCE_LEVEL && area === "town";
-  return `<div class="advance-card"><span>✧</span><div><small>ขั้นที่ 3 · เลื่อนขั้นอาชีพ</small><h3>${spec.name} ขั้นสูง</h3><p>พลังสายพัฒนา ×2 และเปลี่ยนเป็นชุดขั้นสูง</p></div><button data-advance ${ready ? "" : "disabled"}>${p.level < ADVANCE_LEVEL ? `ต้องการ Lv.${ADVANCE_LEVEL}` : area !== "town" ? "เลื่อนขั้นในเมือง" : "เลื่อนขั้น"}</button></div>`;
-}
 let bagFilter = "all";
-const bagFilters = [
-  ["all", "ทั้งหมด"],
-  ["weapon", "อาวุธ"],
-  ["armor", "เกราะ"],
-  ["charm", "เครื่องราง"],
-  ["boots", "รองเท้า"],
-];
 const rarity = (item) => `rarity-${item.rarity}`;
 export function rpgPanel(p, area, tab = "inventory") {
   const stats = p.stats,
@@ -46,85 +32,291 @@ export function rpgPanel(p, area, tab = "inventory") {
     owned = (p.ownedEquipment || []).filter((id) => GEAR[id]);
   const spec = SPECIALIZATIONS[p.class].find((s) => s.id === p.specialization);
   const base = `<div class="rpg-summary"><span class="class-crest">${cls.icon}</span><div><small>ผู้กล้า · LEVEL ${p.level}</small><h3>${cls.name} <span>${spec?.name || "ยังไม่เลือกสายพัฒนา"}</span></h3></div><strong>${supplyArt("gold")} ${p.gold.toLocaleString()} <small>ทอง</small></strong></div><div class="rpg-tabs"><button data-rpg-tab="inventory" class="${tab === "inventory" ? "active" : ""}">อุปกรณ์ & กระเป๋า <kbd>I</kbd></button><button data-rpg-tab="class" class="${tab === "class" ? "active" : ""}">คลาส & สกิล <kbd>C</kbd></button></div>`;
-  if (tab === "class")
-    return (
-      base +
-      `<div class="class-page"><div class="class-intro"><span>${cls.icon}</span><div><small>เส้นทางของผู้กล้า</small><h3>เลือกสไตล์การต่อสู้ของคุณ</h3><p>เลือกสายพัฒนาได้เมื่อเลเวล 3 · เปลี่ยนสายได้ฟรีในเมือง</p></div><b>${p.level >= 3 ? "ปลดล็อกแล้ว" : `อีก ${3 - p.level} เลเวล`}</b></div><div class="specialization-grid">${SPECIALIZATIONS[p.class].map((s) => `<article class="specialization ${s.id === p.specialization ? "chosen" : ""}"><span>${s.icon}</span><small>${s.role}</small><h3>${s.name}</h3><p>${s.description}</p><div class="stat-bonus">${statText(s.stats)}</div><button data-spec="${s.id}" ${p.level < 3 || area !== "town" || s.id === p.specialization ? "disabled" : ""}>${s.id === p.specialization ? "✓ สายที่เลือกอยู่" : p.level < 3 ? "ปลดล็อกเลเวล 3" : area !== "town" ? "กลับเมืองเพื่อเปลี่ยนสาย" : "เลือกสายนี้"}</button></article>`).join("")}</div>${advanceCard(p, area, spec)}<h4 class="rpg-section-title">สกิลประจำคลาส <span>Q / W / E</span></h4><div class="skill-codex">${CLASS_SKILLS[p.class].map((s, i) => `<article><b>${s.icon}</b><div><h4>${s.name} <kbd>${["Q", "W", "E"][i]}</kbd></h4><p>${s.detail}</p><small>${ACTIONS[i + 1].mp} MP · คูลดาวน์ ${ACTIONS[i + 1].cooldown} วินาที</small></div></article>`).join("")}</div></div>`
-    );
-  const visible = owned.filter(
-    (id) => bagFilter === "all" || GEAR[id].slot === bagFilter,
-  );
-  if (!visible.includes(selected)) selected = visible[0];
-  const item = GEAR[selected];
-  const equipped = item && p.equipment[item.slot] === selected;
-  const previous = item ? GEAR[p.equipment[item.slot]] : null;
-  const comparedStats = { ...stats };
-  if (item)
-    for (const key of new Set([
-      ...Object.keys(item.stats),
-      ...Object.keys(previous?.stats || {}),
-    ]))
-      comparedStats[key] =
-        (stats[key] || 0) +
-        (equipped
-          ? -(item.stats[key] || 0)
-          : (item.stats[key] || 0) - (previous?.stats[key] || 0));
-  if (item?.slot === "weapon" && p.upgrade) {
-    if (equipped) comparedStats.atk -= p.upgrade * 8;
-    else if (!previous) comparedStats.atk += p.upgrade * 8;
-  }
-  const currentPower = p.power ?? combatPower(stats);
-  const comparedPower = combatPower(comparedStats);
-  const deltas = item
-    ? [
-        ...new Set([
-          ...Object.keys(item.stats),
-          ...Object.keys(previous?.stats || {}),
-        ]),
-      ]
-        .map((key) => {
-          const delta = (comparedStats[key] || 0) - (stats[key] || 0);
-          return `<span class="${delta < 0 ? "negative" : delta > 0 ? "positive" : ""}">${statNames[key]} ${delta > 0 ? "+" : ""}${delta}</span>`;
-        })
-        .join("")
-    : "";
-  const canEquip =
-    item &&
-    (!item.class || item.class === p.class) &&
-    p.level >= item.level &&
-    area === "town";
-  return (
-    base +
-    `<div class="equipment-layout"><aside class="character-sheet"><div class="paper-hero"><div class="inventory-hero" style="${heroPortraitStyle(p)}"></div><small>${spec?.role || cls.name} · Lv.${p.level}</small></div><div class="power-score"><small>พลังรวม</small><strong>${currentPower.toLocaleString()}</strong></div><div class="character-stats">${Object.entries(
-      stats,
-    )
-      .map(([k, v]) => `<div><span>${statNames[k]}</span><b>${v}</b></div>`)
-      .join(
-        "",
-      )}</div><h4 class="rpg-section-title">กำลังสวมใส่</h4><div class="equipped-grid">${Object.entries(
-      SLOTS,
-    )
-      .map(([slot, name]) => {
-        const id = p.equipment[slot],
-          g = GEAR[id];
-        return `<button data-inspect="${id || ""}" ${g ? "" : "disabled"} class="equipped-slot ${g ? rarity(g) : ""}"><small>${name}</small><b>${g ? itemArt(id, g) : "+"}</b><span>${g?.name || "ช่องว่าง"}${slot === "weapon" && p.upgrade ? ` +${p.upgrade}` : ""}</span></button>`;
-      })
-      .join(
-        "",
-      )}</div></aside><section class="bag-content"><div class="bag-heading"><div><small>INVENTORY</small><h3>สัมภาระนักเดินทาง</h3></div><span>${owned.length} ชิ้น</span></div><div class="bag-filters" aria-label="ประเภทอุปกรณ์">${bagFilters.map(([id, label]) => `<button data-bag-filter="${id}" class="${bagFilter === id ? "active" : ""}" aria-pressed="${bagFilter === id}">${label}</button>`).join("")}</div><div class="gear-grid">${visible
-      .map((id) => {
-        const g = GEAR[id];
-        return `<button data-inspect="${id}" aria-label="${g.name} · ${RARITIES[g.rarity]} · เลเวล ${g.level}" aria-pressed="${selected === id}" title="${g.name}" class="gear-card ${rarity(g)} ${selected === id ? "selected" : ""}"><span class="gear-equipped">${p.equipment[g.slot] === id ? "◆" : ""}</span><b>${itemArt(id, g)}</b><strong>${g.name}</strong><small>${g.level}</small></button>`;
-      })
-      .join(
-        "",
-      )}${Array.from({ length: Math.max(0, 30 - visible.length) }, () => '<div class="bag-empty-slot" aria-hidden="true"><span>✧</span></div>').join("")}</div><div class="bag-grid-caption"><span>${visible.length} ชิ้นในหมวดนี้</span><span>เลือกช่องเพื่อเปรียบเทียบอุปกรณ์</span></div>${item ? `<div class="item-inspector ${rarity(item)}"><span class="item-large-icon">${itemArt(selected, item)}</span><div><small>${RARITIES[item.rarity]} · ${SLOTS[item.slot]}${item.floor ? ` · บอสชั้น ${item.floor}` : ""}</small><h3>${item.name}</h3><p>${statText(item.stats)}</p>${item.lore ? `<p class="item-lore">${item.lore}</p>` : ""}<div class="item-deltas">${equipped ? "เมื่อถอด" : "เมื่อสวม"} ${deltas || "ไม่มีค่าสถานะเปลี่ยน"}<span class="${comparedPower < currentPower ? "negative" : comparedPower > currentPower ? "positive" : ""}">พลัง ${currentPower.toLocaleString()} → ${comparedPower.toLocaleString()} (${comparedPower - currentPower >= 0 ? "+" : ""}${comparedPower - currentPower})</span></div></div><button data-equip="${selected}" data-slot="${item.slot}" ${!canEquip ? "disabled" : ""}>${equipped ? "ถอดออก" : area !== "town" ? "สวมใส่ในเมือง" : p.level < item.level ? `ต้องการ Lv.${item.level}` : item.class && item.class !== p.class ? "ไม่ตรงคลาส" : "สวมใส่"}</button></div>` : `<div class="bag-empty-detail">ไม่มีอุปกรณ์ในหมวดนี้ · เก็บของจากดันเจียนเพื่อเติมกระเป๋า</div>`}<h4 class="rpg-section-title">เสบียง & วัตถุดิบ</h4><div class="supply-row"><button data-use="hp" ${p.inventory.hp > 0 && p.hp > 0 && p.hp < stats.hp ? "" : "disabled"}><b>${supplyArt("hp")}</b><span>ยา HP <strong>×${p.inventory.hp}</strong><small>ฟื้นฟู 90 HP</small></span></button><button data-use="mp" ${p.inventory.mp > 0 && p.hp > 0 && p.mp < stats.mp ? "" : "disabled"}><b>${supplyArt("mp")}</b><span>ยา MP <strong>×${p.inventory.mp}</strong><small>ฟื้นฟู 80 MP</small></span></button><div><b>${supplyArt("ore")}</b><span>แร่จันทรา <strong>×${p.inventory.ore}</strong><small>ใช้ที่โรงตีอาวุธ</small></span></div></div><p class="hint">บอสแต่ละชั้นมีชุดของเฉพาะ · รอบแรกได้อาวุธประจำอาชีพ · ของซ้ำเมื่อสะสมครบเปลี่ยนเป็นแร่จันทรา</p></section></div>`
-  );
+  if (tab === "class") return base + classPage(p, area, spec, cls);
+  return base + inventoryPage(p, area, stats, owned, spec, cls);
 }
+
+// ---------------------------------------------------------------------------
+// Inventory page: hero card (gear slots around the hero, power, stats), the
+// bag grid (gear + supplies, filter tabs, sort), and an item detail card.
+const icon = (body) =>
+  `<svg viewBox="0 0 24 24" aria-hidden="true">${body}</svg>`;
+const statIcons = {
+  atk: icon('<path d="M4 20 15 9m-2-2 4-4 4 4-4 4M20 20 9 9m2-2L7 3 3 7l4 4"/>'),
+  def: icon('<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6Z"/>'),
+  hp: icon('<path d="M12 20s-8-5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 9c0 6-8 11-8 11Z"/>'),
+  mp: icon('<path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11Z"/>'),
+  speed: icon('<path d="M3 15c6 0 9-3 13-9 1 4 0 7-2 9h7c-4 4-9 5-18 3Z"/>'),
+  range: icon('<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/>'),
+};
+const filterIcons = {
+  all: icon('<path d="M4 4h7v7H4zm9 0h7v7h-7zM4 13h7v7H4zm9 0h7v7h-7z"/>'),
+  weapon: icon('<path d="m5 19 10-10m-2-2 5-4 2 2-4 5M5 19l-2 2m4-6 2 2"/>'),
+  armor: icon('<path d="M8 3 4 6v5l2 1v8h12v-8l2-1V6l-4-3-2 2h-4Z"/>'),
+  charm: icon('<path d="M12 3c-3 4-3 6 0 8 3-2 3-4 0-8Zm0 8v3m-4 0h8l-4 7Z"/>'),
+  boots: icon('<path d="M7 3h6v9l7 4v4H5V12Z"/>'),
+  supply: icon('<path d="M12 3 6 11l6 10 6-10Z"/><path d="M6 11h12"/>'),
+};
+const inventoryFilters = [
+  ["all", "ทั้งหมด"],
+  ["weapon", "อาวุธ"],
+  ["armor", "เกราะ"],
+  ["charm", "เครื่องราง"],
+  ["boots", "รองเท้า"],
+  ["supply", "วัตถุดิบ"],
+];
+const RARITY_RANK = { common: 0, rare: 1, epic: 2, legendary: 3 };
+const SLOT_RANK = { weapon: 0, armor: 1, charm: 2, boots: 3 };
+let bagSort = "rarity";
+const bagSorts = [
+  ["rarity", "ความหายาก (สูง → ต่ำ)"],
+  ["level", "เลเวล (สูง → ต่ำ)"],
+  ["slot", "ประเภทอุปกรณ์"],
+];
+const SUPPLIES = {
+  hp: { name: "ยา HP", text: "ฟื้นฟู 90 HP ทันที", rarity: "common" },
+  mp: { name: "ยา MP", text: "ฟื้นฟู 80 MP ทันที", rarity: "common" },
+  ore: {
+    name: "แร่จันทรา",
+    text: "วัตถุดิบตีบวกอาวุธ ใช้ที่โรงตีของลุงเหล็ก",
+    rarity: "rare",
+  },
+};
+
+function inventoryPage(p, area, stats, owned, spec, cls) {
+  // Gear stacks by id; supplies are their own cells.
+  const counts = new Map();
+  for (const id of owned) counts.set(id, (counts.get(id) || 0) + 1);
+  const gearIds = [...counts.keys()].sort((a, b) => {
+    const A = GEAR[a],
+      B = GEAR[b];
+    if (bagSort === "level") return B.level - A.level;
+    if (bagSort === "slot")
+      return SLOT_RANK[A.slot] - SLOT_RANK[B.slot] || B.level - A.level;
+    return (
+      RARITY_RANK[B.rarity] - RARITY_RANK[A.rarity] || B.level - A.level
+    );
+  });
+  const supplyIds = Object.keys(SUPPLIES).filter((k) => p.inventory[k] > 0);
+  const cells = [
+    ...(bagFilter === "supply"
+      ? []
+      : gearIds.filter((id) => bagFilter === "all" || GEAR[id].slot === bagFilter)),
+    ...(bagFilter === "all" || bagFilter === "supply"
+      ? supplyIds.map((k) => "supply:" + k)
+      : []),
+  ];
+  if (!cells.includes(selected)) selected = cells[0] ?? null;
+
+  const cell = (key) => {
+    const supply = key.startsWith("supply:") ? key.slice(7) : null,
+      g = supply ? SUPPLIES[supply] : GEAR[key],
+      count = supply ? p.inventory[supply] : counts.get(key),
+      worn = !supply && p.equipment[g.slot] === key;
+    return `<button data-inspect="${key}" aria-pressed="${selected === key}" title="${g.name}" class="inv-cell ${rarity(g)} ${selected === key ? "selected" : ""}">${worn ? '<i class="inv-worn" aria-label="สวมใส่อยู่">◆</i>' : ""}<b>${supply ? supplyArt(supply) : itemArt(key, g)}</b><small>${count}</small></button>`;
+  };
+  // Fill to whole rows of six, at least four rows.
+  const empty = Math.max(24, Math.ceil(cells.length / 6) * 6) - cells.length;
+
+  const slot = (name) => {
+    const id = p.equipment[name],
+      g = GEAR[id];
+    return `<button data-inspect="${id || ""}" ${g ? "" : "disabled"} class="inv-slot ${g ? rarity(g) : "empty"}" title="${g?.name || SLOTS[name]}"><b>${g ? itemArt(id, g) : filterIcons[name]}</b>${name === "weapon" && p.upgrade && g ? `<small>+${p.upgrade}</small>` : ""}</button>`;
+  };
+  const power = p.power ?? combatPower(stats);
+
+  return `<div class="inv2">
+  <aside class="inv-hero">
+    <header><span class="inv-crest">${cls.icon}</span><div><small>ผู้กล้า · LEVEL ${p.level}</small><h3>${cls.name} <em>${spec?.name || ""}</em></h3></div></header>
+    <div class="inv-stage">
+      <div class="inv-slots left">${slot("weapon")}${slot("armor")}</div>
+      <div class="inv-figure"><div class="inv-hero-art" style="${heroPortraitStyle(p)}"></div><i class="inv-pedestal"></i></div>
+      <div class="inv-slots right">${slot("charm")}${slot("boots")}</div>
+    </div>
+    <div class="inv-nameplate">${spec?.name || cls.name} · Lv.${p.level}</div>
+    <div class="inv-power"><span>${icon('<path d="M12 2 4 12l8 10 8-10Z"/>')}</span><small>พลังรวม</small><strong>${power.toLocaleString()}</strong></div>
+    <div class="inv-stats">${Object.entries(stats)
+      .map(
+        ([k, v]) =>
+          `<div><i>${statIcons[k] || ""}</i><span>${statNames[k]}</span><b>${v}</b></div>`,
+      )
+      .join("")}</div>
+  </aside>
+  <section class="inv-bag">
+    <header><h3>◈ INVENTORY ◈</h3><strong>${supplyArt("gold")} ${p.gold.toLocaleString()} <small>ทอง</small></strong></header>
+    <div class="inv-tabs">${inventoryFilters
+      .map(
+        ([id, label]) =>
+          `<button data-bag-filter="${id}" class="${bagFilter === id ? "active" : ""}" aria-pressed="${bagFilter === id}">${filterIcons[id]}<span>${label}</span></button>`,
+      )
+      .join("")}</div>
+    <div class="inv-grid">${cells.map(cell).join("")}${'<div class="inv-cell blank" aria-hidden="true"></div>'.repeat(empty)}</div>
+    <footer><label>${icon('<path d="M4 6h16M4 12h10M4 18h6"/>')}<span>เรียง:</span><select data-bag-sort>${bagSorts
+      .map(
+        ([id, label]) =>
+          `<option value="${id}" ${bagSort === id ? "selected" : ""}>${label}</option>`,
+      )
+      .join("")}</select></label><span>${cells.length} ช่อง · ${owned.length} อุปกรณ์</span></footer>
+  </section>
+  ${detailCard(p, area, stats, selected, counts)}
+</div>`;
+}
+
+function detailCard(p, area, stats, key, counts) {
+  if (!key)
+    return `<aside class="inv-detail empty"><p>ไม่มีของในหมวดนี้<br>เก็บของจากดันเจียนเพื่อเติมกระเป๋า</p></aside>`;
+  if (key.startsWith("supply:")) {
+    const id = key.slice(7),
+      s = SUPPLIES[id],
+      usable =
+        id !== "ore" &&
+        p.hp > 0 &&
+        (id === "hp" ? p.hp < stats.hp : p.mp < stats.mp);
+    return `<aside class="inv-detail ${rarity(s)}"><div class="inv-detail-art">${supplyArt(id)}</div><h3>${s.name}</h3><div class="inv-pills"><span>วัตถุดิบ</span><span class="rarity">${RARITIES[s.rarity]}</span></div><p class="inv-lore">${s.text}</p><div class="inv-detail-stats"><div><span>จำนวนในกระเป๋า</span><b>×${p.inventory[id]}</b></div></div>${id === "ore" ? "" : `<button class="inv-action" data-use="${id}" ${usable ? "" : "disabled"}>${usable ? "ใช้" : "พลังเต็มอยู่แล้ว"}</button>`}</aside>`;
+  }
+  const item = GEAR[key],
+    equipped = p.equipment[item.slot] === key,
+    previous = GEAR[p.equipment[item.slot]],
+    compared = { ...stats };
+  for (const k of new Set([
+    ...Object.keys(item.stats),
+    ...Object.keys(previous?.stats || {}),
+  ]))
+    compared[k] =
+      (stats[k] || 0) +
+      (equipped
+        ? -(item.stats[k] || 0)
+        : (item.stats[k] || 0) - (previous?.stats[k] || 0));
+  if (item.slot === "weapon" && p.upgrade) {
+    if (equipped) compared.atk -= p.upgrade * 8;
+    else if (!previous) compared.atk += p.upgrade * 8;
+  }
+  const now = p.power ?? combatPower(stats),
+    next = combatPower(compared),
+    diff = next - now;
+  const classOk = !item.class || item.class === p.class,
+    levelOk = p.level >= item.level,
+    canEquip = classOk && levelOk && area === "town";
+  const label = equipped
+    ? "ถอดออก"
+    : area !== "town"
+      ? "สวมใส่ในเมือง"
+      : !levelOk
+        ? `ต้องการ Lv.${item.level}`
+        : !classOk
+          ? "ไม่ตรงคลาส"
+          : "สวมใส่";
+  const check = (ok) => `<em class="${ok ? "ok" : "no"}">${ok ? "✓" : "✕"}</em>`;
+  return `<aside class="inv-detail ${rarity(item)}">
+    <div class="inv-detail-art">${itemArt(key, item)}</div>
+    <h3>${item.name}${item.slot === "weapon" && equipped && p.upgrade ? ` +${p.upgrade}` : ""}</h3>
+    <div class="inv-pills"><span>${SLOTS[item.slot]}${counts.get(key) > 1 ? ` ×${counts.get(key)}` : ""}</span><span class="rarity">ระดับ${RARITIES[item.rarity]}</span></div>
+    ${item.lore ? `<p class="inv-lore">${item.lore}</p>` : ""}
+    <h4>ค่าสถานะ</h4>
+    <div class="inv-detail-stats">${
+      Object.entries(item.stats)
+        .map(
+          ([k, v]) =>
+            `<div><i>${statIcons[k] || ""}</i><span>${statNames[k]}</span><b>+${v}</b></div>`,
+        )
+        .join("") || "<div><span>อุปกรณ์เริ่มต้น</span></div>"
+    }</div>
+    <h4>เงื่อนไขสวมใส่</h4>
+    <div class="inv-reqs">${item.class ? `<div>${check(classOk)}<span>อาชีพ: ${CLASSES[item.class].name}</span></div>` : ""}<div>${check(levelOk)}<span>เลเวลขั้นต่ำ: ${item.level}</span></div>${item.floor ? `<div><em class="ok">◆</em><span>ดรอปจากบอสชั้น ${item.floor}</span></div>` : ""}</div>
+    <div class="inv-compare ${diff > 0 ? "up" : diff < 0 ? "down" : ""}">${equipped ? "ถ้าถอด" : "ถ้าสวม"} พลัง ${now.toLocaleString()} → ${next.toLocaleString()} <b>${diff >= 0 ? "+" : ""}${diff}</b></div>
+    <button class="inv-action" data-equip="${key}" data-slot="${item.slot}" ${canEquip ? "" : "disabled"}>${filterIcons.armor}<span>${label}</span></button>
+  </aside>`;
+}
+// ---------------------------------------------------------------------------
+// Class & skills: hero on a pedestal, the path tree (class → two lines at
+// Lv.3 → advanced form at ADVANCE_LEVEL), and the class skill list. Picking a
+// node previews it; "ยืนยันเส้นทาง" applies the pick or the advancement.
+let pickedSpec = null;
+const lock = icon('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>');
+function classPage(p, area, spec, cls) {
+  const specs = SPECIALIZATIONS[p.class];
+  if (!specs.some((s) => s.id === pickedSpec)) pickedSpec = p.specialization;
+  const picked = specs.find((s) => s.id === pickedSpec),
+    town = area === "town",
+    tier = p.specialization ? (p.advanced ? 3 : 2) : 1;
+
+  const node = (s) => {
+    const current = s.id === p.specialization,
+      locked = p.level < 3;
+    return `<button data-pick-spec="${s.id}" class="path-node spec ${current ? "current" : ""} ${s.id === pickedSpec ? "picked" : ""} ${locked ? "locked" : ""}"><span class="path-emblem">${s.icon}</span><strong>${s.name}</strong><small>${current ? "ปัจจุบัน" : locked ? "Lv.3" : s.role}</small>${locked ? `<i class="path-lock">${lock}</i>` : ""}</button>`;
+  };
+  const advNode = (s) => {
+    const done = p.advanced && s.id === p.specialization,
+      open = p.level >= ADVANCE_LEVEL;
+    return `<div class="path-node adv ${done ? "current" : ""} ${open ? "" : "locked"}"><span class="path-emblem">✦</span><strong>${s.name}ขั้นสูง</strong><small>${done ? "เลื่อนขั้นแล้ว" : `Lv.${ADVANCE_LEVEL}`}</small>${open || done ? "" : `<i class="path-lock">${lock}</i>`}</div>`;
+  };
+
+  // What the confirm button does right now.
+  let action = "",
+    label = "ยืนยันเส้นทาง",
+    hint = "";
+  if (!town) hint = "เปลี่ยนเส้นทางได้เฉพาะในเมือง";
+  else if (p.level < 3) hint = `ปลดล็อกสายพัฒนาเมื่อ Lv.3 (อีก ${3 - p.level} เลเวล)`;
+  else if (pickedSpec && pickedSpec !== p.specialization) {
+    action = `data-spec="${pickedSpec}"`;
+    hint = p.specialization ? "เปลี่ยนสายได้ฟรีในเมือง" : "";
+  } else if (p.specialization && !p.advanced && p.level >= ADVANCE_LEVEL) {
+    action = "data-advance";
+    label = "เลื่อนขั้นอาชีพ";
+    hint = "พลังสายพัฒนา ×2 และชุดขั้นสูง";
+  } else if (!pickedSpec) hint = "เลือกสายพัฒนาจากแผนผัง";
+  else if (!p.advanced) hint = `เลื่อนขั้นได้เมื่อ Lv.${ADVANCE_LEVEL}`;
+  else hint = "เส้นทางนี้สมบูรณ์แล้ว";
+
+  const skills = [
+    { name: "โจมตีปกติ", detail: "คอมโบ 3 จังหวะ · ไม่ใช้ MP" },
+    ...CLASS_SKILLS[p.class],
+  ];
+  return `<div class="cls2">
+  <aside class="cls-hero">
+    <div class="cls-figure"><div class="cls-hero-art" style="${heroPortraitStyle(p)}"></div><i class="inv-pedestal"></i></div>
+    <div class="inv-nameplate">${spec?.name || cls.name} · Lv.${p.level}</div>
+    <div class="cls-role"><span>${spec?.icon || cls.icon}</span><div><strong>${spec?.role || cls.name}</strong><small>${spec?.description || "เลือกสายพัฒนาเมื่อ Lv.3 เพื่อปลดล็อกพลังเฉพาะทาง"}</small></div></div>
+  </aside>
+  <section class="cls-path">
+    <header><span>${icon('<path d="M4 20 15 9m-2-2 4-4 4 4-4 4M20 20 9 9m2-2L7 3 3 7l4 4"/>')}</span><div><h3>เส้นทางของผู้กล้า</h3><small>3 ขั้น: อาชีพเริ่มต้น → สายพัฒนา (Lv.3) → ขั้นสูง (Lv.${ADVANCE_LEVEL})</small></div><b class="cls-tier">ขั้นที่ ${tier}</b></header>
+    <div class="path-tree">
+      <div class="path-node root current"><span class="path-emblem">${cls.icon}</span><strong>${cls.name}</strong><small>${p.specialization ? "ขั้นที่ 1" : "ปัจจุบัน"}</small></div>
+      <svg class="path-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M0 50H4.5V24H9M4.5 50V76H9M56 24H65M56 76H65"/></svg>
+      <div class="path-col">${specs.map(node).join("")}</div>
+      <div class="path-col">${specs.map(advNode).join("")}</div>
+    </div>
+    ${picked ? `<div class="path-info"><span>${picked.icon}</span><div><strong>${picked.name} <em>${picked.role}</em></strong><small>${picked.description}</small></div><b>${statText(picked.stats)}${p.advanced && picked.id === p.specialization ? " · ×2" : ""}</b></div>` : `<div class="path-info empty">แตะสายพัฒนาในแผนผังเพื่อดูรายละเอียด</div>`}
+    <footer><button class="inv-action cls-confirm" ${action || "disabled"}>${icon('<path d="M4 20 15 9m-2-2 4-4 4 4-4 4M20 20 9 9m2-2L7 3 3 7l4 4"/>')}<span>${label}</span></button>${hint ? `<small>${hint}</small>` : ""}</footer>
+  </section>
+  <section class="cls-skills">
+    <header><span>${cls.icon}</span><h3>สกิลของ${spec?.name || cls.name}</h3></header>
+    ${skills
+      .map(
+        (sk, i) =>
+          `<article><b class="sk-icon sk-${i}">${skillIcon(p.class, i)}</b><div><h4>${sk.name}</h4><p>${sk.detail}</p><small>${i ? `${ACTIONS[i].mp} MP · คูลดาวน์ ${ACTIONS[i].cooldown} วิ` : "พื้นฐาน"}</small></div><kbd>${["J", "Q", "W", "E"][i]}</kbd></article>`,
+      )
+      .join("")}
+  </section>
+</div>`;
+}
+
 export function bindRpgPanel(root, p, handlers) {
+  root.querySelectorAll("[data-pick-spec]").forEach((b) => {
+    b.onclick = () => {
+      pickedSpec = b.dataset.pickSpec;
+      handlers.open("class");
+    };
+  });
   root.querySelectorAll("[data-bag-filter]").forEach((b) => {
     b.onclick = () => {
       bagFilter = b.dataset.bagFilter;
+      handlers.open("inventory");
+    };
+  });
+  root.querySelectorAll("[data-bag-sort]").forEach((sel) => {
+    sel.onchange = () => {
+      bagSort = sel.value;
       handlers.open("inventory");
     };
   });
@@ -135,7 +327,11 @@ export function bindRpgPanel(root, p, handlers) {
     (b) =>
       (b.onclick = () => {
         selected = b.dataset.inspect;
-        if (bagFilter !== "all" && GEAR[selected]?.slot !== bagFilter)
+        const supply = selected.startsWith("supply:");
+        if (
+          bagFilter !== "all" &&
+          (supply ? bagFilter !== "supply" : GEAR[selected]?.slot !== bagFilter)
+        )
           bagFilter = "all";
         handlers.open("inventory");
       }),
