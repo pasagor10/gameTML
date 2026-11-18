@@ -1,8 +1,8 @@
 import { SLOT_MACHINE } from "/shared/slots.js";
-import { slotPanelHtml, bindSlotPanel } from "/slots-ui.js?v=1";
+import { slotPanelHtml, bindSlotPanel } from "/slots-ui.js?v=2";
 import { heroPortraitStyle } from "/hero-appearance.js?v=2";
 import { skillIcon, potionIcon, autoIcon } from "/skill-icons.js?v=1";
-import { dungeonPlatforms } from "/shared/dungeons.js";
+import { dungeonPlatforms, withinDungeonSign } from "/shared/dungeons.js";
 import { supplyArt, itemArtPath } from "/item-art.js";
 import {
   sfx,
@@ -18,7 +18,7 @@ import {
   rpgPanel,
   bindRpgPanel,
   gearShop,
-} from "/rpg-ui.js?v=6";
+} from "/rpg-ui.js?v=7";
 import {
   GEAR,
   RARITIES,
@@ -26,11 +26,23 @@ import {
   CLASS_SKILLS,
   SPECIALIZATIONS,
   heroSkins,
+  SLOTS,
+  ENHANCEMENT_BONUSES,
+  enhancementLevel,
+  enhancementCost,
+  enhancementChance,
 } from "/shared/rpg.js";
-import { createTownNpcs, footGlow, createRim } from "/town-npcs.js?v=7";
+import { createTownNpcs, footGlow, createRim } from "/town-npcs.js?v=8";
 import { updateEnhanceAura, AURA_LEVEL } from "/enhance-aura.js?v=3";
-import { marketHtml, shopManagerHtml, marketState } from "/market-ui.js?v=5";
+import { marketHtml, shopManagerHtml, marketState } from "/market-ui.js?v=6";
 import { sampleMotion } from "/shared/smoothing.js";
+import {
+  questPanelHtml,
+  setQuestTab,
+  trackerHtml,
+  claimable,
+} from "/quest-ui.js?v=2";
+import { MONSTERS } from "/shared/quests.js";
 import { ACTIONS } from "/shared/motion.js";
 import {
   registerMotionAtlas,
@@ -38,7 +50,7 @@ import {
   animateSlime,
   monsterDeath,
 } from "/combat-visuals.js?v=0.3.1";
-import { createSelectionPreview } from "/selection-scene.js?v=0.8.0-sanctuary";
+import { createSelectionPreview } from "/selection-scene.js?v=0.8.1";
 import {
   CLASSES,
   ITEMS,
@@ -46,6 +58,7 @@ import {
   WORLD,
   areaWidth,
   combatStats,
+  DUNGEON_ENERGY_MAX,
 } from "/shared/config.js";
 import { createParallax } from "/parallax.js?v=0.7.0";
 import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.1";
@@ -62,12 +75,16 @@ import {
   playSpriteSet,
   playMonsterSet,
   playMonsterDeath,
-} from "/sprite-sets.js?v=0.16.2";
+} from "/sprite-sets.js?v=0.17.0";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 let lobbyCharacterId = null;
 let lobbyMode = "loading";
 let lastRpgPanelHash = "";
+let lastQuestHash = "",
+  lastTrackerHash = "";
+const questHash = (p) =>
+  JSON.stringify([p.daily, p.bestiary, p.level, p.quest, state.area]);
 let job = "swordsman",
   gender = "female",
   account = null,
@@ -371,6 +388,7 @@ function modal(title, html, panel) {
     "rpg-modal",
     ["inventory", "class", "weapon"].includes(panel),
   );
+  $("#modal").classList.toggle("quest-modal", panel === "quest");
   $("#modal").classList.toggle(
     "market-modal",
     ["market", "shop"].includes(panel),
@@ -644,6 +662,11 @@ function enterGame() {
     channel: "world",
   });
 }
+const forgeHash = (p) =>
+  JSON.stringify([p.equipment, p.upgrade, p.enhancements, p.gold, p.inventory.ore]);
+function energyText(p) {
+  return `พลังงาน ${p.energy?.points ?? DUNGEON_ENERGY_MAX} / ${DUNGEON_ENERGY_MAX}`;
+}
 function updateHUD() {
   const p = state.self,
     d = state.dungeon;
@@ -657,6 +680,8 @@ function updateHUD() {
     const hash = JSON.stringify([
       p.equipment,
       p.ownedEquipment,
+      p.upgrade,
+      p.enhancements,
       p.inventory,
       p.specialization,
       p.advanced,
@@ -668,6 +693,10 @@ function updateHUD() {
   } else if (activePanel === "weapon") {
     const hash = JSON.stringify([p.ownedEquipment, p.gold]);
     if (hash !== lastRpgPanelHash) showPanel("weapon");
+  } else if (activePanel === "forge") {
+    if (forgeHash(p) !== lastRpgPanelHash) showPanel("forge");
+  } else if (activePanel === "quest") {
+    if (questHash(p) !== lastQuestHash) showPanel("quest");
   } else if (activePanel === "market" || activePanel === "shop") {
     // Live stock and gold, but never yank an input out from under the typist.
     if (
@@ -752,7 +781,17 @@ function updateHUD() {
     ? "TRAINING · ไม่มีรางวัล"
     : d
       ? `ชั้น ${d.floor} · ด่าน ${d.stage} / 3`
-      : "CH.1 · เขตปลอดภัย";
+      : energyText(p);
+  const energyDetail = $("#dungeon-energy-detail");
+  if (energyDetail) {
+    const minutes = Math.max(1, Math.ceil(((p.energy?.nextAt ?? state.time) - state.time) / 60));
+    energyDetail.textContent = p.energy?.nextAt
+      ? `${energyText(p)} · ฟื้นอีก 1 แต้มในประมาณ ${minutes} นาที`
+      : energyText(p);
+    $$("[data-floor]:not([data-locked])").forEach((b) => {
+      b.disabled = p.energy?.points === 0;
+    });
+  }
   $("#minimap").classList.toggle("in-dungeon", !town);
   const dotAt = `translate(${mapX(p.x).toFixed(1)} ${mapY(p.y).toFixed(1)})`;
   $("#map-dot").setAttribute("transform", dotAt);
@@ -770,6 +809,18 @@ function updateHUD() {
         .join("")
     : "";
   setMapLayer("#map-npcs", npcDots);
+  const signs = d?.signs || [];
+  setMapLayer(
+    "#map-explore",
+    signs
+      .filter((sign) => !sign.collected)
+      .map((sign) => {
+        const x = mapX(sign.x).toFixed(1),
+          y = (mapY(sign.y) - 5).toFixed(1);
+        return `<path transform="translate(${x} ${y})" d="M0 -4L4 0L0 4L-4 0Z"/>`;
+      })
+      .join(""),
+  );
   const allyDots = state.players
     .map(
       (m) =>
@@ -814,6 +865,28 @@ function updateHUD() {
     d && !d.training
       ? `กำจัด ${d.defeated} / ${d.totalEnemies}${streak} · SPACE หลบพื้นเตือน`
       : `ดันเจียนที่พิชิต ${p.quest} / ${FLOORS.length}`;
+  const trackerHash = JSON.stringify(p.daily);
+  if (trackerHash !== lastTrackerHash) {
+    lastTrackerHash = trackerHash;
+    $("#daily-tracker").innerHTML = trackerHtml(p.daily);
+    const ready = claimable(p.daily);
+    $("#quests").classList.toggle("has-reward", ready > 0);
+    $(".quest-badge").textContent = ready ? String(ready) : "!";
+    $('#top-menu [data-panel="quest"]').classList.toggle("has-reward", ready > 0);
+  }
+  const explored = signs.filter((sign) => sign.collected).length;
+  const explore = $("#dungeon-explore");
+  explore.hidden = !d || d.training;
+  if (d?.stage === 1)
+    explore.textContent = explored
+      ? "เปิดเสบียงแล้ว"
+      : "สำรวจเสริม · เปิดเสบียงฟื้น HP / MP";
+  if (d?.stage === 2)
+    explore.textContent = explored === signs.length
+      ? "ไขผนึกรูนแล้ว"
+      : `สำรวจเสริม · รูน ${explored} / ${signs.length} · รับทองและแร่`;
+  if (d?.stage === 3)
+    explore.textContent = "หลบท่าทุบให้พลาดทั้งทีม แล้วตีสวนแรงขึ้น 50%";
   $("#quest-fill").style.width =
     (d && !d.training
       ? (d.defeated / Math.max(1, d.totalEnemies)) * 100
@@ -875,10 +948,20 @@ function updateHUD() {
 function nearby() {
   if (!state) return null;
   const p = state.self;
-  if (state.area === "dungeon")
+  if (state.area === "dungeon") {
+    const sign = !p.auto && state.dungeon.signs?.find(
+      (entry) => !entry.collected && withinDungeonSign(p, entry),
+    );
+    if (sign)
+      return {
+        id: "explore",
+        sign,
+        label: sign.id === "supplies" ? "เปิดกล่องเสบียง" : "เก็บรูนถ้ำ",
+      };
     return state.dungeon.clear && !state.dungeon.completed
       ? { id: "next", label: "เข้าสู่ด่านต่อไป" }
       : null;
+  }
   if (Math.abs(p.x - SLOT_MACHINE.x) <= SLOT_MACHINE.reach && Math.abs(p.y - SLOT_MACHINE.y) < 90)
     return { id: "slots", label: "ตู้สมบัติจันทรา · หมุน 1,000 ทอง" };
   const npc = WORLD.npcs.find(
@@ -893,10 +976,17 @@ function nearby() {
   return null;
 }
 function interact() {
+  if (!state || activePanel || state.self.hp <= 0) return;
   const n = nearby();
-  if (!n) return toast("คลิกที่ NPC ร้าน หรือประตูถ้ำได้เลย");
+  if (!n) return toast(state.dungeon
+    ? "เดินเข้าใกล้จุดสำรวจที่มีเครื่องหมายบนแผนที่"
+    : "คลิกที่ NPC ร้าน หรือประตูถ้ำได้เลย");
   if (n.id === "next") emit("dungeon:next");
-  else openTown(n.id);
+  else if (n.id === "explore") {
+    const { instanceId, floor, stage } = state.dungeon;
+    emit("dungeon:explore", { id: n.sign.id, instanceId, floor, stage })
+      .then((result) => result && soundCue("material"));
+  } else openTown(n.id);
 }
 // One way in for keyboard, mouse and touch: NPC id, "portal" or "shop:<id>".
 function openTown(id) {
@@ -977,6 +1067,7 @@ function showFloorResult(r) {
   ];
   $("#floor-result .result-loot").innerHTML = loot.join("");
   $("#result-next").hidden = !r.hasNext;
+  $("#result-next").textContent = "ชั้นถัดไป · ใช้ 1 พลังงาน ➜";
   $("#result-leave").textContent = r.hasNext
     ? "ออกกลับเมือง"
     : "รับชัยชนะ · กลับเมือง";
@@ -1145,6 +1236,8 @@ function showPanel(panel) {
     lastRpgPanelHash = JSON.stringify([
       p.equipment,
       p.ownedEquipment,
+      p.upgrade,
+      p.enhancements,
       p.inventory,
       p.specialization,
       p.advanced,
@@ -1194,28 +1287,66 @@ function showPanel(panel) {
         }),
     );
   } else if (panel === "forge") {
-    const chance =
-      p.upgrade < 3 ? 100 : p.upgrade < 6 ? 70 : p.upgrade < 9 ? 40 : 15;
+    if (state.area !== "town") return;
+    lastRpgPanelHash = forgeHash(p);
+    const slots = Object.entries(SLOTS).map(([slot, label]) => {
+      const item = GEAR[p.equipment[slot]],
+        level = enhancementLevel(p, slot),
+        { gold, ore } = enhancementCost(level);
+      const bonus = Object.entries(ENHANCEMENT_BONUSES[slot])
+        .map(([stat, value]) => `${stat.toUpperCase()} +${value}`).join(" · ");
+      const description = !item
+        ? "สวมอุปกรณ์ช่องนี้ก่อน"
+        : level >= 10
+          ? `${item.name} · ถึงระดับสูงสุด`
+          : `${item.name} · ${bonus} ต่อขั้น · สำเร็จ ${Math.round(enhancementChance(level) * 100)}% · ${gold} ทอง + แร่ ×${ore}`;
+      const disabled = !item || level >= 10 || p.gold < gold || p.inventory.ore < ore;
+      return row(item?.icon || "⚒", `${label} +${level}`, description,
+        btn(`data-enhance="${slot}" ${disabled ? "disabled" : ""}`, level >= 10 ? "เต็มแล้ว" : `ตี +${level + 1}`));
+    }).join("");
     modal(
-      "ลุงเหล็ก · โรงตีอาวุธ",
-      `<div style="text-align:center;font-size:60px;color:#ffe1a1">⚒</div><h3 style="text-align:center">อาวุธ +${p.upgrade} → +${Math.min(10, p.upgrade + 1)}</h3><p>โอกาสสำเร็จ ${chance}% · เพิ่มพลังโจมตี 8 ต่อระดับ · สูงสุด +10<br>ใช้ ${(p.upgrade + 1) * 30} ทอง + แร่จันทรา 1 ชิ้น<br>ไม่สำเร็จจะเสียทรัพยากร แต่ระดับเดิมคงอยู่</p><p>มี ${p.gold} ทอง · แร่จันทรา ${p.inventory.ore} ชิ้น</p><button id="enhance" class="primary-button">เสริมพลังอาวุธ</button>`,
+      "ลุงเหล็ก · โรงตีอุปกรณ์",
+      `<p>มี ${p.gold.toLocaleString()} ทอง · แร่จันทรา ${p.inventory.ore} ชิ้น</p>${slots}<p class="hint">ระดับตีบวกติดกับช่องอุปกรณ์ เปลี่ยนของในช่องเดิมแล้วใช้โบนัสต่อได้ ตีไม่สำเร็จจะเสียทองและแร่ แต่ระดับเท่าเดิม</p>`,
+      "forge",
     );
-    $("#enhance").onclick = async () => {
-      const r = await transaction("equipment:enhance");
-      if (r) {
-        closeModal();
-      }
-    };
+    $$("[data-enhance]").forEach((button) => {
+      button.onclick = async () => {
+        button.disabled = true;
+        await transaction("equipment:enhance", { slot: button.dataset.enhance });
+        button.disabled = false;
+      };
+    });
   } else if (panel === "elder" || panel === "quest") {
-    modal(
-      "ผู้ใหญ่คำ · เสียงเรียกจากขุนเขา",
-      `<p>“เจ้าได้ยินเสียงนั้นไหม… แสงจากหัวใจถ้ำกำลังปลุกผู้พิทักษ์ทั้งสิบ จงตามเสียงนั้นลงไปให้ถึงชั้นสุดท้าย”</p>${FLOORS.map((f, i) => row(["🦇", "🪨", "🐍", "🌿", "🔥", "❄", "⚡", "☽", "🐉", "✺"][i], "ชั้น " + (i + 1) + " · " + f.name, `${f.boss} · 3 ด่าน · ${p.quest > i ? "พิชิตแล้ว ✓" : "ยังไม่พิชิต"}`)).join("")}<button id="elder-heal" class="primary-button">พักฟื้น HP / MP เต็ม</button><p class="hint">พิชิตครบ 10 ชั้นเพื่อเปิดของตำนานทั้งหมด</p>`,
+    const scroll = $("#modal-body")?.scrollTop || 0,
+      same = activePanel === "quest";
+    lastQuestHash = questHash(p);
+    modal("ผู้ใหญ่คำ · ภารกิจผู้กล้า", questPanelHtml(p, state.time), "quest");
+    if (same) $("#modal-body").scrollTop = scroll;
+    $$("[data-quest-tab]").forEach(
+      (b) =>
+        (b.onclick = () => {
+          setQuestTab(b.dataset.questTab);
+          showPanel("quest");
+          $("#modal-body").scrollTop = 0;
+        }),
     );
-    $("#elder-heal").onclick = () => emit("player:heal");
+    $$("[data-claim]").forEach(
+      (b) =>
+        (b.onclick = async () => {
+          b.disabled = true;
+          const index = b.dataset.claim;
+          const r = await emit("quest:claim", {
+            index: index === "bonus" ? index : Number(index),
+          });
+          if (r) soundCue(index === "bonus" ? "loot" : "material", "epic");
+          else b.disabled = false;
+        }),
+    );
+    if ($("#elder-heal")) $("#elder-heal").onclick = () => emit("player:heal");
   } else if (panel === "dungeon") {
     modal(
       "ประตูถ้ำหลวง · เลือกดันเจียน",
-      `<p>แต่ละชั้นมี 3 ด่าน: มอนสเตอร์ → อีลิท → บอส<br>ปาร์ตี้สูงสุด 3 คน สมาชิกต้องกดพร้อมก่อนหัวหน้าเริ่ม</p><p class="hint">SPACE กระโดดหลบคริสตัลและบอสทุบพื้น · รอบแรกได้อาวุธประจำอาชีพแน่นอน · รอบต่อไปล่าชิ้นที่ยังไม่มี</p>${FLOORS.map(
+      `<p id="dungeon-energy-detail">${energyText(p)}</p><p>ใช้ 1 พลังงานต่อชั้นต่อคน ฟื้นเองทุก 30 นาที สนามฝึกเล่นฟรี</p><p>แต่ละชั้นมี 3 ด่าน: มอนสเตอร์ → อีลิท → บอส<br>ปาร์ตี้สูงสุด 3 คน สมาชิกต้องกดพร้อมก่อนหัวหน้าเริ่ม</p><p class="hint">SPACE กระโดดหลบคริสตัลและบอสทุบพื้น · รอบแรกได้อาวุธประจำอาชีพแน่นอน · เล่นซ้ำมีโอกาสได้อุปกรณ์สูงสุด 35%</p>${FLOORS.map(
         (f, i) => {
           const table = FLOOR_LOOT[i + 1];
           const featured = [table?.weapons[p.class], ...(table?.pool || [])]
@@ -1223,7 +1354,7 @@ function showPanel(panel) {
             .slice(0, 4)
             .map((id) => `${GEAR[id].icon} ${GEAR[id].name}`)
             .join(" · ");
-          return `<div class="dungeon-card"><h3>${String(i + 1).padStart(2, "0")} / ${f.name}</h3><p>บอส: ${f.boss} · 3 ด่าน · ${i === 0 ? "เริ่มต้นการผจญภัย" : "ผ่านชั้น " + i + " ก่อน"}</p><small>ของเด่น: ${featured}</small><button data-floor="${i + 1}" ${p.unlocked < i + 1 ? "disabled" : ""}>${p.unlocked < i + 1 ? "🔒 ยังไม่ปลดล็อก" : "เข้าสู่ดันเจียน ➜"}</button></div>`;
+          return `<div class="dungeon-card"><h3>${String(i + 1).padStart(2, "0")} / ${f.name}</h3><p>บอส: ${f.boss} · 3 ด่าน · ${i === 0 ? "เริ่มต้นการผจญภัย" : "ผ่านชั้น " + i + " ก่อน"}</p><small>ของเด่น: ${featured}</small><button data-floor="${i + 1}" ${p.unlocked < i + 1 ? "data-locked disabled" : p.energy?.points === 0 ? "disabled" : ""}>${p.unlocked < i + 1 ? "🔒 ยังไม่ปลดล็อก" : "ใช้ 1 พลังงาน ➜"}</button></div>`;
         },
       ).join("")}`,
     );
@@ -1446,9 +1577,9 @@ addEventListener("keydown", (e) => {
     closeModal();
     return;
   }
-  if (state && !e.repeat && ["KeyI", "KeyC"].includes(e.code)) {
+  if (state && !e.repeat && ["KeyI", "KeyC", "KeyL"].includes(e.code)) {
     e.preventDefault();
-    const panel = e.code === "KeyI" ? "inventory" : "class";
+    const panel = { KeyI: "inventory", KeyC: "class", KeyL: "quest" }[e.code];
     if (activePanel === panel) closeModal();
     else showPanel(panel);
     return;
@@ -1831,7 +1962,8 @@ class Adventure extends Phaser.Scene {
   }
   actor(p, stamp, reset = false) {
     let a = this.actors.get(p.id);
-    for (const skin of heroSkins(p)) this.sprites.want("sets", skin);
+    const skins = heroSkins(p);
+    this.sprites.wantHero(skins);
     if (!a) {
       const shadow = this.add
           .ellipse(p.x, p.y - 3, 65, 15, 0x102b3c, 0.35)
@@ -1893,6 +2025,7 @@ class Adventure extends Phaser.Scene {
       this.actors.set(p.id, a);
     }
     a.target = p;
+    a.skins = skins;
     if (reset || !a.history) a.history = [];
     a.history.push({ time: stamp, x: p.x, y: p.y, vx: p.vx || 0 });
     if (a.history.length > 8) a.history.shift();
@@ -1937,6 +2070,7 @@ class Adventure extends Phaser.Scene {
         a.image.y = s.self.y;
       });
     }
+    this.showDungeonSigns(area, s.dungeon?.signs || []);
     const all = [s.self, ...s.players],
       ids = new Set(all.map((p) => p.id));
     for (const p of all) this.actor(p, s.time, areaChanged);
@@ -2112,6 +2246,30 @@ class Adventure extends Phaser.Scene {
       onComplete: () => drop.destroy(),
     });
   }
+  floatBanner(x, y, label, color, stroke) {
+    const text = this.add
+      .text(x, y, label, {
+        fontFamily: "Noto Sans Thai",
+        fontSize: "22px",
+        fontStyle: "bold",
+        color,
+        stroke,
+        strokeThickness: 6,
+      })
+      .setOrigin(0.5)
+      .setDepth(46)
+      .setScale(0.6);
+    this.tweens.add({ targets: text, scale: 1, duration: 260, ease: "Back.Out" });
+    this.tweens.add({
+      targets: text,
+      y: y - 50,
+      alpha: 0,
+      delay: 1100,
+      duration: 900,
+      ease: "Cubic.In",
+      onComplete: () => text.destroy(),
+    });
+  }
   effect(e) {
     if (e.kind === "loot") {
       if (e.actorId === state.self.id) {
@@ -2160,9 +2318,28 @@ class Adventure extends Phaser.Scene {
     }
     if (e.kind === "material") {
       if (e.actorId === state.self.id) {
-        toast(`สะสมชุดชั้นนี้ครบแล้ว · ได้แร่จันทรา ×${e.amount}`);
+        toast(`รางวัลพิชิตบอส · ได้แร่จันทรา ×${e.amount}`);
         soundCue("material");
         this.showDrop(e, "drop-ore", "#9fe6ff", 48);
+      }
+      return;
+    }
+    if (e.kind === "quest") {
+      if (e.actorId === state.self.id) {
+        toast(`ภารกิจสำเร็จ · ${e.text} · กด L รับรางวัล`);
+        soundCue("material");
+        this.floatBanner(e.x, e.y, "ภารกิจสำเร็จ!", "#9ff5c8", "#0f3a2a");
+      }
+      return;
+    }
+    if (e.kind === "bestiary") {
+      if (e.actorId === state.self.id) {
+        const m = MONSTERS[e.type];
+        toast(
+          `สมุดล่ามอน · ${m.name} ${"★".repeat(e.stars)} · ${m.stat.toUpperCase()} +${m.per} ถาวร`,
+        );
+        soundCue("loot", "epic");
+        this.floatBanner(e.x, e.y, `${m.name} ${"★".repeat(e.stars)}`, "#ffd86b", "#4a2d00");
       }
       return;
     }
@@ -2231,11 +2408,49 @@ class Adventure extends Phaser.Scene {
       this.fx.attack(e);
     }
   }
+  showDungeonSigns(area, signs) {
+    const visible = signs.filter((sign) => !sign.collected);
+    const key = area + ":" + visible.map((sign) => sign.id).join(",");
+    if (key === this.dungeonSignKey) return;
+    this.dungeonSignKey = key;
+    this.dungeonSigns ??= this.add.graphics().setDepth(9);
+    const g = this.dungeonSigns;
+    g.clear();
+    for (const { x, y, id } of visible) {
+      g.fillStyle(0x54e4ce, 0.34);
+      g.fillEllipse(x, y - 3, 58, 14);
+      g.lineStyle(2, 0xbefef1, 0.9);
+      g.strokeEllipse(x, y - 3, 58, 14);
+      if (id === "supplies") {
+        g.fillStyle(0x5e4127);
+        g.fillRoundedRect(x - 20, y - 30, 40, 24, 4);
+        g.lineStyle(2, 0xffd990);
+        g.strokeRoundedRect(x - 20, y - 30, 40, 24, 4);
+        g.lineBetween(x - 20, y - 21, x + 20, y - 21);
+        g.fillStyle(0xffd990);
+        g.fillRect(x - 4, y - 24, 8, 9);
+      } else {
+        g.fillStyle(0x96ffed);
+        g.fillTriangle(x - 12, y - 29, x, y - 51, x + 12, y - 29);
+        g.fillStyle(0x429fbc);
+        g.fillTriangle(x - 12, y - 29, x, y - 13, x + 12, y - 29);
+      }
+    }
+  }
   drawDungeonHazards(time) {
     const g = this.telegraphs,
       d = state.dungeon;
     this.dangerHint.setVisible(false);
     if (!d || d.clear) return;
+    const exposed = d.enemies.find((e) => e.boss && time < e.exposedUntil);
+    if (exposed) {
+      g.lineStyle(3, 0x8ef6e5, 0.95);
+      g.strokeEllipse(exposed.x, exposed.y - 3, 156, 28);
+      this.dangerHint
+        .setVisible(true)
+        .setPosition(exposed.x, exposed.y - 160)
+        .setText("บอสเสียหลัก · ตีสวน +50%");
+    }
     const threats = [
       ...(d.hazards || []).map((h) => ({ ...h, crystal: true })),
       ...d.enemies
@@ -2312,11 +2527,10 @@ class Adventure extends Phaser.Scene {
     );
     for (const [id, a] of this.actors) {
       const p = a.target,
-        pose = animateHero(a.image, p, serverTime, this.knightAtlas),
         // Specialization costume when its art exists, else the class look.
-        spriteSet = heroSkins(p)
-          .map((k) => this.spriteSets.get(k))
-          .find(Boolean);
+        skin = a.skins.find((key) => this.spriteSets.has(key)),
+        spriteSet = this.spriteSets.get(skin),
+        pose = animateHero(a.image, p, serverTime, this.knightAtlas && !spriteSet);
       if (spriteSet) {
         playSpriteSet(a.image, spriteSet, p, pose, serverTime);
         if (!a.image._spriteStill) a.image.setAngle(0);

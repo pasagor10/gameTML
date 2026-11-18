@@ -143,6 +143,23 @@ export function climbStep(actor, target, platforms) {
     jump: inside,
   };
 }
+export function dungeonSigns(floor, stage) {
+  if (stage === 1)
+    return [{ id: "supplies", x: 1320, y: GROUND }];
+  if (stage !== 2) return [];
+  const ledges = dungeonPlatforms(floor, stage).filter((p) => !p.step);
+  return [
+    { id: "rune-1", x: 685, y: GROUND },
+    ...[1, ledges.length - 1].map((index, n) => {
+      const { x, y, w } = ledges[index];
+      return { id: `rune-${n + 2}`, x: x + w / 2, y };
+    }),
+  ];
+}
+
+export const withinDungeonSign = (player, sign) =>
+  Math.abs(player.x - sign.x) <= 82 && Math.abs(player.y - sign.y) <= 52;
+
 // Monsters per stage: deep floors fill the whole cave, the boss brings guards.
 export function dungeonEnemyCount(floor, stage) {
   if (stage === 3) return 1 + 2 + Math.floor(floor / 2);

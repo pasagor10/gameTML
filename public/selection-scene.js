@@ -2,7 +2,7 @@ import {
   queueSpriteSets,
   createSpriteRegistry,
   playSpriteSet,
-} from "/sprite-sets.js?v=0.16.2";
+} from "/sprite-sets.js?v=0.17.0";
 
 // The chosen hero rises from rest. Account and creation actions remain in game.js.
 export function createSelectionPreview() {

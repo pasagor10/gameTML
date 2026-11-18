@@ -7,6 +7,8 @@ import {
   SPECIALIZATIONS,
   CLASS_SKILLS,
   ADVANCE_LEVEL,
+  ENHANCEMENT_BONUSES,
+  enhancementLevel,
 } from "/shared/rpg.js";
 import { CLASSES, combatPower } from "/shared/config.js";
 import { ACTIONS } from "/shared/motion.js";
@@ -121,7 +123,8 @@ function inventoryPage(p, area, stats, owned, spec, cls) {
   const slot = (name) => {
     const id = p.equipment[name],
       g = GEAR[id];
-    return `<button data-inspect="${id || ""}" ${g ? "" : "disabled"} class="inv-slot ${g ? rarity(g) : "empty"}" title="${g?.name || SLOTS[name]}"><b>${g ? itemArt(id, g) : filterIcons[name]}</b>${name === "weapon" && p.upgrade && g ? `<small>+${p.upgrade}</small>` : ""}</button>`;
+    const level = enhancementLevel(p, name);
+    return `<button data-inspect="${id || ""}" ${g ? "" : "disabled"} class="inv-slot ${g ? rarity(g) : "empty"}" title="${g?.name || SLOTS[name]}"><b>${g ? itemArt(id, g) : filterIcons[name]}</b>${level && g ? `<small>+${level}</small>` : ""}</button>`;
   };
   const power = p.power ?? combatPower(stats);
 
@@ -177,6 +180,7 @@ function detailCard(p, area, stats, key, counts) {
   const item = GEAR[key],
     equipped = p.equipment[item.slot] === key,
     previous = GEAR[p.equipment[item.slot]],
+    level = enhancementLevel(p, item.slot),
     compared = { ...stats };
   for (const k of new Set([
     ...Object.keys(item.stats),
@@ -187,10 +191,9 @@ function detailCard(p, area, stats, key, counts) {
       (equipped
         ? -(item.stats[k] || 0)
         : (item.stats[k] || 0) - (previous?.stats[k] || 0));
-  if (item.slot === "weapon" && p.upgrade) {
-    if (equipped) compared.atk -= p.upgrade * 8;
-    else if (!previous) compared.atk += p.upgrade * 8;
-  }
+  const enhancementChange = equipped ? -level : previous ? 0 : level;
+  for (const [stat, points] of Object.entries(ENHANCEMENT_BONUSES[item.slot]))
+    compared[stat] += points * enhancementChange;
   const now = p.power ?? combatPower(stats),
     next = combatPower(compared),
     diff = next - now;
@@ -209,7 +212,7 @@ function detailCard(p, area, stats, key, counts) {
   const check = (ok) => `<em class="${ok ? "ok" : "no"}">${ok ? "✓" : "✕"}</em>`;
   return `<aside class="inv-detail ${rarity(item)}">
     <div class="inv-detail-art">${itemArt(key, item)}</div>
-    <h3>${item.name}${item.slot === "weapon" && equipped && p.upgrade ? ` +${p.upgrade}` : ""}</h3>
+    <h3>${item.name}${equipped && level ? ` +${level}` : ""}</h3>
     <div class="inv-pills"><span>${SLOTS[item.slot]}${counts.get(key) > 1 ? ` ×${counts.get(key)}` : ""}</span><span class="rarity">ระดับ${RARITIES[item.rarity]}</span></div>
     ${item.lore ? `<p class="inv-lore">${item.lore}</p>` : ""}
     <h4>ค่าสถานะ</h4>

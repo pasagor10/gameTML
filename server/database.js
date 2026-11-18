@@ -63,6 +63,8 @@ export function persist(p) {
       "gold",
       "inventory",
       "upgrade",
+      "enhancements",
+      "energy",
       "armor",
       "weapon",
       "level",
@@ -73,6 +75,8 @@ export function persist(p) {
       "ownedEquipment",
       "specialization",
       "advanced",
+      "daily",
+      "bestiary",
     ].map((k) => [k, p[k]]),
   );
   db.prepare("UPDATE characters SET state=? WHERE id=?").run(

@@ -24,6 +24,7 @@
 #game-screen #quests h3 { margin: 3px 0 5px; font-size:12px; }
 #game-screen #quests p { font-size:10px; margin: 4px 0 7px; line-height: 1.5; }
 #game-screen #quests small { font-size:9px; }
+#game-screen #quests #dungeon-explore:not([hidden]) { display:block; margin-top:4px; color:#8ef6e5; }
 #game-screen #quests .quest-progress { height:3px; margin: 6px 0; }
 #game-screen #minimap { top: 82px; right:18px; width: 190px; padding: 9px; opacity:.9; }
 #game-screen #minimap > div { font-size:10px; }

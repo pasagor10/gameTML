@@ -32,8 +32,8 @@
   "fallback": {
     "type": "png-atlas",
     "cellSize": [
-      221,
-      214
+      160,
+      155
     ],
     "pages": [
       {

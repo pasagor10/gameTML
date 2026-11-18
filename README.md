@@ -25,11 +25,14 @@ Choose one of 6 heroes (male/female × swordsman/archer/mage), name the characte
 
 - A/D or arrows: walk. Shift: run. Space: jump. F: interact.
 - J: normal attack. Q/W/E: skills. R: HP potion. T or Auto button: auto battle.
-- I: inventory. Touch controls and action buttons work on mobile.
+- I: inventory. L: quests (daily quests, monster book, journey). Touch controls and action buttons work on mobile.
+- Daily quests: 3 per character per day (reset at midnight Thailand time), rolled from unlocked floors. Claim each reward, then a bonus chest (+1 dungeon energy, or ore when energy is full). Practice kills never count. Definitions in `shared/quests.js`.
+- Monster book: lifetime kills per regular monster type; 50/200/1000 kills give 1–3 stars, each a permanent stat bonus for that character. Bosses are not counted.
 - Town includes quest elder/healing, potion seller, equipment seller and blacksmith.
 - Use the **สนามฝึก** button below the minimap for a private slime practice arena. Female swordsman uses the first full 32-frame motion sheet; slime uses 24 frames. Practice grants no gold/EXP/progression, potions are unlimited and slime respawns. Return to town to revive.
 - Attacks now have server-controlled windup/impact/recovery; moving away or jumping out of an enemy telegraph can avoid damage. Hit reactions interrupt a pending player attack. Three consecutive normal strikes alternate swing effects.
 - 10 dungeon floors × 3 stages, with six regular monster types and three current boss visual rigs reused across ten named bosses. Unlock later floors by beating the previous floor's boss.
+- Each dungeon floor costs 1 energy per character. Energy refills by 1 every 30 minutes up to 5, including while offline. The practice arena is free.
 - Auto combat runs on the server while connected, uses skills/potions, advances stages and returns to town after a floor.
 - Party: create/join through menu, max 3. Non-leaders mark ready; leader selects a floor unlocked by everyone.
 - Market: stock held in database escrow; offline shops continue selling. One shop per account, 5 physical slots in town.
@@ -46,6 +49,6 @@ Shared definitions live in `shared/config.js`; schema automatically migrates/ini
 
 This is the playable v0.2 foundation, **not every feature of the supplied full GDD/TDD**. Images are new game art based on the requested style. Female swordsman has a new 32-frame sheet (idle/walk/run/jump/attack/skill/hit/death, reverse death for revive), and slime has 24 frames (idle/move/attack/hit/death/spawn). The other five heroes and other monsters still use idle illustration art with code-driven effects; their full animation sheets remain pending. NPCs temporarily reuse hero art. Town and cave use single painted background layers; true multi-layer parallax and Tiled maps/ladders are pending. Three skills share class-based effect types; individual skill tuning remains preliminary.
 
-Equipment uses four slots (weapon, armor, charm and boots), shows power changes before equipping, and includes class-specific boss loot for all ten floors. Items are currently unique templates per character rather than independently rolled tradable instances; enhancement still applies to the equipped weapon level. Trading and player shops support HP/MP potions and ore. World/party chat are supported; private messages, reports/mutes, multiple channels, guilds and advanced quest rewards remain pending. Parties use public join + readiness rather than invitations. No 20–30-player load capacity claim: tests exercise three real Socket.IO clients and competing purchases, not a sustained load test.
+Equipment uses four slots (weapon, armor, charm and boots), shows power changes before equipping, and includes class-specific boss loot for all ten floors. Items are currently unique templates per character rather than independently rolled tradable instances. Each slot can be enhanced independently to +10, and its bonus applies when gear is equipped in that slot. Trading and player shops support HP/MP potions and ore. World/party chat are supported; private messages, reports/mutes, multiple channels, guilds and advanced quest rewards remain pending. Parties use public join + readiness rather than invitations. No 20–30-player load capacity claim: tests exercise three real Socket.IO clients and competing purchases, not a sustained load test.
 
 Original requirements: `docs/GDD.md`, `docs/TDD.md`. Supplied ZIP is preserved under `public/assets/placeholders/`, whose manifest explicitly states placeholder art. Generated artwork and prompts: `docs/ASSETS.md`. Deployment, backup and restore: `docs/DEPLOYMENT.md`.

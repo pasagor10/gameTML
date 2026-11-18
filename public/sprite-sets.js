@@ -17,6 +17,7 @@
 // states: idle, move, attack, hit, death, spawn.
 
 const ROOT = "/assets/sprites/";
+const clipKey = (set, folder) => `sprite:${set.dir}:${folder}`;
 const GROUPS = ["sets", "monsters", "npcs"];
 const MONSTER_STATES = ["idle", "move", "attack", "hit", "death", "spawn"];
 const NPC_STATES = ["idle", "talk"];
@@ -45,12 +46,11 @@ export function queueSpriteSets(scene) {
   // A set's animation.json queues its atlas pages on the same loader run.
   scene.load.on("filecomplete", (key, type, data) => {
     if (type !== "json" || !key.startsWith("sprite:")) return;
-    const [, group, name, folder] = key.split(":"),
-      set = scene.spriteSetIndex[group][name];
+    const [, dir, folder] = key.split(":");
     for (const page of data?.fallback?.pages || [])
       scene.load.image(
         `${key}:${page.file}`,
-        `${ROOT}${set.dir}/${folder}/${page.file}${stamp(scene)}`,
+        `${ROOT}${dir}/${folder}/${page.file}${stamp(scene)}`,
       );
   });
   // The index is tiny; always fetch it fresh. Its "version" busts the cache
@@ -124,13 +124,16 @@ function clipFrom(scene, key, manifest) {
 export function createSpriteRegistry(scene) {
   const maps = { sets: new Map(), monsters: new Map(), npcs: new Map() },
     requested = new Set(),
+    queuedClips = new Set(),
+    finished = new Set(),
     index = () => scene.spriteSetIndex || scene.cache.json.get("sprite-index");
   const tryBuild = () => {
     for (const id of requested) {
       const [group, name] = id.split("|");
-      if (maps[group].has(name)) continue;
+      if (finished.has(id)) continue;
       const set = buildSet(scene, group, name, index()?.[group]?.[name]);
       if (set) maps[group].set(name, set);
+      finished.add(id);
     }
   };
   scene.load.on("complete", tryBuild);
@@ -138,20 +141,34 @@ export function createSpriteRegistry(scene) {
     heroes: maps.sets,
     monsters: maps.monsters,
     npcs: maps.npcs,
+    wantHero(skins) {
+      for (const name of skins) {
+        if (!index()?.sets?.[name]) continue;
+        if (finished.has(`sets|${name}`) && !maps.sets.has(name)) continue;
+        this.want("sets", name);
+        return;
+      }
+    },
     want(group, name) {
       const id = `${group}|${name}`,
         set = index()?.[group]?.[name];
       if (requested.has(id) || !set) return;
       requested.add(id);
-      for (const folder of new Set(Object.values(set.actions || {}))) {
-        const key = `sprite:${group}:${name}:${folder}`;
-        if (!scene.cache.json.exists(key))
-          scene.load.json(
-            key,
-            `${ROOT}${set.dir}/${folder}/animation.json${stamp(scene)}`,
-          );
+      let enqueued = false;
+      for (const folder of Object.values(set.actions || {})) {
+        const key = clipKey(set, folder);
+        if (queuedClips.has(key) || scene.cache.json.exists(key)) continue;
+        queuedClips.add(key);
+        enqueued = true;
+        scene.load.json(
+          key,
+          `${ROOT}${set.dir}/${folder}/animation.json${stamp(scene)}`,
+        );
       }
-      if (!scene.load.isLoading()) scene.load.start();
+      if (!scene.load.isLoading()) {
+        if (enqueued) scene.load.start();
+        else tryBuild();
+      }
     },
   };
 }
@@ -169,7 +186,7 @@ function buildSet(scene, group, name, set) {
     for (const state of states) {
       const folder = set.actions?.[state];
       if (!folder) continue;
-      const key = `sprite:${group}:${name}:${folder}`,
+      const key = clipKey(set, folder),
         clip = clipFrom(scene, key, scene.cache.json.get(key));
       if (clip) clips[state] = clip;
     }

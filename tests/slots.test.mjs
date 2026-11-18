@@ -139,7 +139,7 @@ test("equipment matches the class, level and unlocked floors; duplicates convert
   assert.ok(loadCharacter(p.id).ownedEquipment.includes(result.item));
   const duplicate = spinSlotMachine(p, "gear-second-key", rngFor(8000), 13000);
   assert.equal(duplicate.item, "ore");
-  assert.equal(duplicate.qty, 20);
+  assert.equal(duplicate.qty, 7);
   assert.equal(duplicate.converted, true);
   const novice = hero({ level: 1, unlocked: 1 });
   const conversion = spinSlotMachine(
@@ -149,7 +149,7 @@ test("equipment matches the class, level and unlocked floors; duplicates convert
     10000,
   );
   assert.equal(conversion.item, "ore");
-  assert.equal(conversion.qty, 80);
+  assert.equal(conversion.qty, 20);
   assert.equal(conversion.converted, true);
 });
 test("another character cannot reuse a paid request id", () => {

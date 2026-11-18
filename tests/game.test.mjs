@@ -8,7 +8,7 @@ const dir = mkdtempSync(path.join(tmpdir(), "tml-engine-"));
 process.env.DB_PATH = path.join(dir, "test.sqlite");
 const { db, persist, loadCharacter } = await import("../server/database.js");
 const world = await import("../server/world.js");
-const { damage, WORLD, combatStats, combatPower, maxHp } =
+const { damage, WORLD, combatStats, combatPower, maxHp, DUNGEON_ENERGY_MAX, DUNGEON_ENERGY_INTERVAL } =
   await import("../shared/config.js");
 const { FLOOR_LOOT } = await import("../shared/rpg.js");
 function create(id, job = "swordsman") {
@@ -67,6 +67,7 @@ test("boss loot guarantees a class weapon, avoids duplicates, and power reflects
   assert.ok(after > before);
   const repeat = world.rollBossLoot(p, 1, false, () => 0);
   assert.equal(repeat, FLOOR_LOOT[1].pool[0]);
+  assert.equal(world.rollBossLoot(p, 1, false, () => 0.9), null);
   p.ownedEquipment.push(...FLOOR_LOOT[1].pool);
   assert.equal(
     world.rollBossLoot(p, 1, false, () => 0),
@@ -150,6 +151,7 @@ test("all classes clear 30 configured stages, unlocks persist and duplicate rewa
   for (const job of ["swordsman", "archer", "mage"]) {
     const p = create("clear-" + job, job);
     for (let floor = 1; floor <= 10; floor++) {
+      if (p.energy) p.energy.nextAt -= DUNGEON_ENERGY_INTERVAL;
       world.beginDungeon(p, floor);
       const i = world.instances.get(p.instance);
       for (let stage = 1; stage <= 3; stage++) {
@@ -356,6 +358,7 @@ test("every dungeon floor spawns its monsters inside the arena", async () => {
     floors = (await import("../shared/config.js")).FLOORS.length;
   p.unlocked = floors;
   for (let floor = 1; floor <= floors; floor++) {
+    if (p.energy) p.energy.nextAt -= DUNGEON_ENERGY_INTERVAL;
     world.beginDungeon(p, floor);
     const i = world.instances.get(p.instance);
     assert.equal(i.enemies.length, 8 + floor * 2);
@@ -514,6 +517,7 @@ test("boss slam locks its aim, supports jump dodges, and accelerates below half 
   i.clear = true;
   world.nextStage(p);
   const boss = i.enemies[0];
+  i.enemies = [boss];
   i.nextHazardAt = Infinity;
   p.x = boss.x - 200;
   world.tick(0.05, t);
@@ -525,24 +529,88 @@ test("boss slam locks its aim, supports jump dodges, and accelerates below half 
   p.x = aim + boss.action.radius + 30;
   world.tick(0.05, t + 0.96);
   assert.equal(p.hp, hp, "leaving captured aim avoids damage");
+  assert.ok(boss.exposedUntil > t + 3);
   world.tick(0.05, t + 1.4);
+  p.x = boss.x - 45;
+  p.direction = 1;
+  world.attack(p, 0, t + 1.4);
+  world.tick(0.05, t + 1.57);
+  const hit = i.events.find((e) => e.targetId === boss.id && e.actorId === p.id);
+  assert.equal(hit.amount, Math.floor(damage(combatStats(p).atk, 5) * (hit.crit ? 1.5 : 1) * 1.5));
+  assert.equal(boss.action, null, "boss cannot attack during the opening");
   boss.attackCount = 0;
   boss.attackAt = 0;
   p.x = boss.x - 200;
-  world.tick(0.05, t + 2);
+  world.tick(0.05, t + 3.6);
+  assert.equal(boss.action.kind, "slam");
   p.y = 455;
   p.vy = 0;
   p.grounded = false;
-  world.tick(0.05, t + 2.96);
+  world.tick(0.05, t + 4.56);
   assert.equal(p.hp, hp, "jumping avoids boss ground slam");
+  assert.ok(boss.exposedUntil > t + 6);
   boss.action = null;
   boss.hp = boss.maxHp / 2;
   boss.attackCount = 0;
-  boss.attackAt = t + 3;
+  boss.attackAt = t + 6;
+  p.y = WORLD.ground;
   p.x = boss.x - 200;
-  world.tick(0.05, t + 4.1);
+  world.tick(0.05, t + 7.1);
   assert.equal(boss.action.radius, 195, "enraged slam covers more ground");
   world.returnTown(p);
+});
+test("supplies and runes are optional, personal, range-checked, and reward only once", () => {
+  const a = create("explorer"),
+    b = create("exploring-ally");
+  world.partyAction(a, { action: "create" });
+  world.partyAction(b, { action: "join", target: a.party });
+  world.partyAction(b, { action: "ready" });
+  world.beginDungeon(a, 1);
+  const i = world.instances.get(a.instance);
+  const use = (p, sign, stage = i.stage) => world.useDungeonSign(p, {
+    id: sign.id, instanceId: i.id, floor: i.floor, stage,
+  });
+  const moveTo = (p, { x, y }) => Object.assign(p, { x, y });
+  const [supplies] = i.signs;
+  i.stageAt -= world.STAGE_INTRO + 1;
+  assert.throws(() => use(a, supplies), /เข้าใกล้/);
+  moveTo(a, supplies);
+  a.hp = 1;
+  a.mp = 0;
+  use(a, supplies);
+  assert.ok(a.hp > 1 && a.mp > 0);
+  assert.throws(() => use(a, supplies), /สำรวจจุดนี้แล้ว/);
+  assert.equal(world.snapshot(b).dungeon.signs[0].collected, false);
+  i.clear = true;
+  world.nextStage(a);
+  i.stageAt -= world.STAGE_INTRO + 1;
+  const [first, second, last] = i.signs;
+  const gold = a.gold,
+    ore = a.inventory.ore;
+  moveTo(a, first);
+  assert.throws(() => use(a, first, 1), /เข้าใกล้/);
+  a.auto = true;
+  assert.throws(() => use(a, first), /เข้าใกล้/);
+  a.auto = false;
+  use(a, first);
+  moveTo(a, second);
+  use(a, second);
+  assert.equal(a.gold, gold);
+  moveTo(a, last);
+  use(a, last);
+  assert.throws(() => use(a, last), /สำรวจจุดนี้แล้ว/);
+  assert.equal(a.gold, gold + 25);
+  assert.equal(a.inventory.ore, ore + 1);
+  assert.equal(loadCharacter(a.id).gold, gold + 25);
+  assert.equal(i.rewards[a.id].gold, 25);
+  assert.equal(i.rewards[b.id].gold, 0);
+  assert.ok(world.snapshot(a).dungeon.signs.every((sign) => sign.collected));
+  i.clear = true;
+  world.nextStage(a);
+  assert.equal(i.stage, 3, "ally can skip the optional exploration");
+  world.returnTown(a);
+  world.returnTown(b);
+  for (const p of [a, b]) world.players.delete(p.id);
 });
 test("consecutive kills award bonus gold and MP, resetting after the window", () => {
   const p = create("kill-streak", "mage");
@@ -572,8 +640,8 @@ test("consecutive kills award bonus gold and MP, resetting after the window", ()
       (e) => e.kind === "drop" && e.item === "gold" && e.actorId === p.id,
     ),
   );
-  assert.equal(p.gold - gold, 23, "two base rewards plus second-kill bonus");
-  assert.equal(i.events.find((e) => e.kind === "streak").bonus, 3);
+  assert.equal(p.gold - gold, 11, "two base rewards plus second-kill bonus");
+  assert.equal(i.events.find((e) => e.kind === "streak").bonus, 1);
   assert.equal(world.snapshot(p).dungeon.defeated, 2);
   const e = i.enemies[0];
   e.x = p.x + 30;
@@ -605,6 +673,79 @@ test("old saves retain purchased gear, upgrades, currency and bonuses during mig
   assert.equal(combatStats(saved).atk, 25 + 16 + 10);
   assert.equal(combatStats(saved).def, 25);
   assert.equal(maxHp(saved), 210);
+});
+test("all gear slots enhance independently and upgrades follow equipped slots", () => {
+  const p = create("enhance-all");
+  const gear = {
+    armor: "traveler_armor",
+    charm: "echo_charm",
+    boots: "wingstep_boots",
+  };
+  p.gold = 250;
+  p.level = 10;
+  assert.throws(() => world.enhance(p, "forge-empty-slot", "armor"), /สวมอุปกรณ์/);
+  for (const [slot, id] of Object.entries(gear)) {
+    p.ownedEquipment.push(id);
+    world.equip(p, slot, id);
+  }
+  const before = combatStats(p);
+  for (const slot of Object.keys(gear)) {
+    world.enhance(p, `forge-test-${slot}`, slot);
+    world.enhance(p, `forge-test-${slot}`, slot);
+  }
+  const after = combatStats(p);
+  assert.equal(p.upgrade, 0);
+  assert.equal(after.hp, before.hp + 8);
+  assert.equal(after.def, before.def + 3);
+  assert.equal(after.atk, before.atk + 1);
+  assert.equal(after.mp, before.mp + 4);
+  assert.equal(after.speed, before.speed + 2);
+  assert.equal(p.gold, 160);
+  assert.deepEqual(loadCharacter(p.id).enhancements, { armor: 1, charm: 1, boots: 1 });
+  world.equip(p, "armor", null);
+  assert.equal(p.enhancements.armor, 1);
+  assert.ok(combatStats(p).hp < before.hp);
+  world.equip(p, "armor", gear.armor);
+  assert.equal(combatStats(p).hp, after.hp);
+  world.players.delete(p.id);
+});
+test("dungeon energy regenerates offline, charges once per floor, and checks the whole party", () => {
+  const leader = create("energy-lead"),
+    ally = create("energy-ally"),
+    t = Date.now() / 1000;
+  world.partyAction(leader, { action: "create" });
+  world.partyAction(ally, { action: "join", target: leader.party });
+  world.partyAction(ally, { action: "ready" });
+  ally.energy = { points: 0, nextAt: t + 600 };
+  world.savePlayer(ally);
+  assert.throws(() => world.beginDungeon(leader, 1), /พลังงาน/);
+  assert.equal(world.snapshot(leader).self.energy.points, DUNGEON_ENERGY_MAX);
+  assert.equal(loadCharacter(leader.id).energy, undefined);
+  world.beginTraining(ally);
+  assert.equal(world.snapshot(ally).self.energy.points, 0);
+  world.returnTown(ally);
+  ally.energy.nextAt = t - DUNGEON_ENERGY_INTERVAL - 60;
+  world.savePlayer(ally);
+  const reloaded = world.makeRuntime(loadCharacter(ally.id), { emit() {} });
+  assert.equal(world.snapshot(reloaded).self.energy.points, 2);
+  world.beginDungeon(leader, 1);
+  assert.equal(loadCharacter(leader.id).energy.points, DUNGEON_ENERGY_MAX - 1);
+  assert.equal(loadCharacter(ally.id).energy.points, 1);
+  const i = world.instances.get(leader.instance);
+  i.clear = true;
+  world.nextStage(leader);
+  assert.equal(ally.energy.points, 1);
+  i.stage = 3;
+  i.clear = i.completed = true;
+  i.results = {};
+  ally.unlocked = leader.unlocked = 2;
+  world.nextStage(leader);
+  assert.equal(loadCharacter(ally.id).energy.points, 0);
+  assert.equal(loadCharacter(leader.id).energy.points, DUNGEON_ENERGY_MAX - 2);
+  for (const p of [leader, ally]) {
+    world.returnTown(p);
+    world.players.delete(p.id);
+  }
 });
 test("legacy equipment migrates; explicit gear changes stats and persists without duplicate charges", () => {
   const p = create("rpg-equipment");

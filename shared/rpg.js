@@ -1,3 +1,4 @@
+import { bestiaryBonuses } from "./quests.js";
 export const SLOTS = {
   weapon: "อาวุธ",
   armor: "เกราะ",
@@ -565,6 +566,20 @@ export const CLASS_SKILLS = {
     { name: "พายุดารา", icon: "✦", detail: "พายุกวาดรอบตัว · พลัง 250%" },
   ],
 };
+export const ENHANCEMENT_BONUSES = {
+  weapon: { atk: 8 },
+  armor: { hp: 8, def: 2 },
+  charm: { mp: 4, atk: 1 },
+  boots: { speed: 2, def: 1 },
+};
+export const enhancementLevel = (p, slot) =>
+  (slot === "weapon" ? p.upgrade : p.enhancements?.[slot]) || 0;
+export const enhancementChance = (level) =>
+  level < 3 ? 1 : level < 6 ? 0.7 : level < 9 ? 0.4 : 0.15;
+export const enhancementCost = (level) => ({
+  gold: (level + 1) * 30,
+  ore: 1 + Math.floor(level / 3),
+});
 export function initializeGear(p) {
   const starter = `starter_${p.class}`;
   p.ownedEquipment = [
@@ -582,6 +597,7 @@ export function initializeGear(p) {
     boots: null,
   };
   p.specialization ??= null;
+  p.enhancements ??= {};
   return p;
 }
 export function rpgBonuses(p) {
@@ -593,11 +609,21 @@ export function rpgBonuses(p) {
   for (const id of Object.values(equipment))
     for (const [key, value] of Object.entries(GEAR[id]?.stats || {}))
       stats[key] = (stats[key] || 0) + value;
+  for (const [slot, bonus] of Object.entries(ENHANCEMENT_BONUSES)) {
+    if (!equipment[slot] && !(slot === "weapon" && !p.equipment)) continue;
+    const level = enhancementLevel(p, slot);
+    if (!level) continue;
+    for (const [stat, points] of Object.entries(bonus))
+      stats[stat] = (stats[stat] || 0) + points * level;
+  }
   const spec = SPECIALIZATIONS[p.class]?.find((s) => s.id === p.specialization);
   // Tier 3 (advanced) doubles the specialization's bonus.
   const mult = spec && p.advanced ? 2 : 1;
   for (const [key, value] of Object.entries(spec?.stats || {}))
     stats[key] = (stats[key] || 0) + value * mult;
+  // Monster book stars are permanent, whatever is equipped.
+  for (const [key, value] of Object.entries(bestiaryBonuses(p.bestiary)))
+    stats[key] = (stats[key] || 0) + value;
   return stats;
 }
 // Class tiers: 1 = base class, 2 = specialization (Lv.3), 3 = advanced (Lv.20).

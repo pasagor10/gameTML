@@ -1,0 +1,413 @@
+/* Quest window (daily quests, monster book, journey) and the HUD tracker. */
+
+#modal.quest-modal .modal-box {
+  width: min(720px, 100%);
+}
+.quest-window {
+  --q-gold: #ffd486;
+  --q-line: #b88a4e;
+  --q-ok: #8ff0b8;
+}
+.quest-tabs {
+  display: flex;
+  gap: 6px;
+  margin: 0 0 12px;
+  border-bottom: 1px solid #b88a4e55;
+}
+.quest-tabs button {
+  position: relative;
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: 6px 6px 0 0;
+  background: transparent;
+  color: #9fb7c9;
+  font-size: 12px;
+  font-weight: 600;
+}
+.quest-tabs button.active {
+  color: #fff3d0;
+  border-color: #b88a4e88;
+  background: linear-gradient(#24405ccc, #13293fcc);
+  margin-bottom: -1px;
+}
+.quest-tabs em {
+  display: inline-grid;
+  place-items: center;
+  min-width: 17px;
+  height: 17px;
+  margin-left: 4px;
+  padding: 0 4px;
+  border-radius: 9px;
+  font-style: normal;
+  font-size: 10px;
+  color: #3a2508;
+  background: linear-gradient(#ffe7a6, #f0b43c);
+  box-shadow: 0 0 8px #ffc96b;
+}
+.quest-intro {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px;
+  font-style: italic;
+  color: #d8cfb4;
+}
+.quest-intro .reset {
+  font-style: normal;
+  font-size: 11px;
+  color: #81e1ff;
+}
+
+/* Daily quest cards */
+.daily-card,
+.daily-chest {
+  display: grid;
+  grid-template-columns: 52px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0;
+  padding: 10px 12px;
+  border: 1px solid #7895ac33;
+  border-radius: 8px;
+  background: #10253d99;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.daily-card.is-ready,
+.daily-chest.is-ready {
+  border-color: #ffd486aa;
+  box-shadow: 0 0 0 1px #ffd48633, 0 0 18px #ffc96b33 inset;
+}
+.daily-card.is-claimed,
+.daily-chest.is-claimed {
+  opacity: 0.55;
+}
+.daily-art {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
+  background: radial-gradient(circle at 50% 40%, #2b4a46, #08141a);
+  border: 1px solid #b88a4e66;
+  overflow: hidden;
+  font-size: 24px;
+  color: #ffd486;
+}
+.daily-main {
+  min-width: 0;
+}
+.daily-main strong {
+  display: block;
+  font-size: 13px;
+  color: #ffe1a1;
+}
+.daily-main small {
+  font-size: 11px;
+  color: #9cb9ce;
+}
+.daily-bar {
+  height: 6px;
+  margin: 6px 0;
+  border-radius: 999px;
+  background: #06110f;
+  box-shadow: 0 0 0 1px #e9c27a33, inset 0 1px 2px #000;
+  overflow: hidden;
+}
+.daily-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #e0a84c, #ffe7a6);
+  transition: width 0.4s ease;
+}
+.is-ready .daily-bar i,
+.stars-3 .daily-bar i {
+  background: linear-gradient(90deg, #4fcf8c, #b9ffd8);
+}
+.daily-reward {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.chip {
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #fff3d0;
+  background: #0b1a2bcc;
+  border: 1px solid #ffffff1a;
+}
+.chip-gold { color: #ffd486; }
+.chip-exp { color: #b7a6ff; }
+.chip-ore { color: #9fe6ff; }
+.chip-energy { color: #8ff0b8; }
+.chip-muted { color: #9fb7c9; font-weight: 400; }
+.daily-card button,
+.daily-chest button {
+  min-width: 92px;
+  padding: 8px 12px;
+  border: 1px solid #bc9a61;
+  border-radius: 6px;
+  background: #29455e;
+  color: #c9d6df;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.daily-card button:disabled,
+.daily-chest button:disabled {
+  cursor: default;
+  opacity: 0.8;
+}
+.daily-card button.claim,
+.daily-chest button.claim:not(:disabled) {
+  color: #3a2508;
+  font-weight: 700;
+  border-color: #fff0bf;
+  background: linear-gradient(#ffe7a6, #f0b43c 55%, #c48526);
+  animation: claim-glow 1.6s ease-in-out infinite;
+}
+.daily-card button.claimed,
+.daily-chest button.claimed {
+  color: #8ff0b8;
+  border-color: #4fcf8c66;
+  background: #0f2a22;
+}
+@keyframes claim-glow {
+  50% { box-shadow: 0 0 14px #ffc96bbb; }
+}
+.daily-chest {
+  margin-top: 14px;
+  border-style: dashed;
+  border-color: #b88a4e88;
+}
+.chest-art {
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
+  background:
+    linear-gradient(#0000 46%, #3a2508 46% 54%, #0000 54%),
+    linear-gradient(90deg, #0000 44%, #ffe7a6 44% 56%, #0000 56%),
+    linear-gradient(#c48526, #6d3f12);
+  border: 2px solid #ffd486;
+  box-shadow: inset 0 0 0 3px #4a2d0f;
+}
+.daily-chest.is-ready .chest-art {
+  animation: chest-hop 1.2s ease-in-out infinite;
+}
+@keyframes chest-hop {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  30% { transform: translateY(-4px) rotate(-4deg); }
+  60% { transform: translateY(0) rotate(3deg); }
+}
+
+/* Monster book */
+.book-summary {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  border: 1px solid #b88a4e66;
+  border-radius: 8px;
+  background: linear-gradient(120deg, #2a1f0d99, #10253d99);
+}
+.book-summary small {
+  display: block;
+  font-size: 10px;
+  color: #d2bf94;
+}
+.book-summary strong {
+  font-size: 26px;
+  color: #ffd486;
+  text-shadow: 0 0 10px #ffc96b66;
+}
+.book-summary strong span {
+  font-size: 13px;
+  color: #9fb7c9;
+}
+.book-total {
+  flex: 1;
+  min-width: 0;
+}
+.book-total > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+.mon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+.mon-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #7895ac33;
+  border-radius: 8px;
+  background: #10253d99;
+  text-align: center;
+}
+.mon-card.stars-1 { border-color: #b88a4e88; }
+.mon-card.stars-2 { border-color: #d0a7ffaa; }
+.mon-card.stars-3 {
+  border-color: #ffd486;
+  box-shadow: 0 0 14px #ffc96b44 inset;
+}
+.mon-frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 84px;
+  height: 84px;
+  margin-bottom: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 45%, #2b4a46, #07110f 70%);
+  border: 1px solid #b88a4e66;
+  overflow: hidden;
+}
+.mon-portrait {
+  display: block;
+  max-width: 88%;
+  max-height: 88%;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+}
+.mon-portrait.unseen {
+  filter: brightness(0) drop-shadow(0 0 1px #81e1ff88);
+  opacity: 0.7;
+}
+.mon-card strong {
+  font-size: 12px;
+  color: #ffe1a1;
+}
+.mon-card.is-unseen strong {
+  color: #6f8798;
+}
+.mon-stars {
+  font-size: 15px;
+  letter-spacing: 2px;
+  color: #ffd486;
+  text-shadow: 0 0 6px #ffc96b88;
+}
+.mon-card .daily-bar {
+  width: 100%;
+}
+.mon-card small {
+  font-size: 10px;
+  color: #9cb9ce;
+}
+.mon-card .mon-bonus {
+  color: #8ff0b8;
+}
+.mon-card p {
+  margin: 6px 0 0;
+  font-size: 10px;
+  line-height: 1.4;
+  color: #b9c9bd;
+}
+
+/* HUD tracker under the main quest card */
+#daily-tracker {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 6px 0 0;
+  border-top: 1px solid #e9c27a33;
+}
+#daily-tracker:empty {
+  display: none;
+}
+#daily-tracker li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  line-height: 1.7;
+  color: #d8cfb4;
+}
+#daily-tracker li i {
+  width: 12px;
+  font-style: normal;
+  text-align: center;
+  color: #b88a4e;
+}
+#daily-tracker li span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#daily-tracker li b {
+  font-weight: 600;
+  color: #fff3d0;
+}
+#daily-tracker li.ready {
+  color: #ffe7a6;
+}
+#daily-tracker li.ready i {
+  color: #3a2508;
+  border-radius: 50%;
+  background: #f0b43c;
+  font-weight: 900;
+}
+#daily-tracker li.claimed {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+#daily-tracker li.claimed i {
+  color: #8ff0b8;
+}
+body #game-screen #quests.has-reward .quest-badge {
+  animation: quest-badge-hot 0.9s ease-in-out infinite;
+}
+@keyframes quest-badge-hot {
+  50% {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 2px #06110f, 0 0 22px #ffd36a;
+  }
+}
+#top-menu [data-panel="quest"].has-reward {
+  position: relative;
+}
+#top-menu [data-panel="quest"].has-reward::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #ffb547;
+  box-shadow: 0 0 0 2px #06110f, 0 0 8px #ffb547;
+}
+
+@media (max-width: 900px), (max-height: 500px) {
+  body #game-screen #quests:not(.open) #daily-tracker li:not(.ready) {
+    display: none;
+  }
+  .daily-card,
+  .daily-chest {
+    grid-template-columns: 40px 1fr;
+  }
+  .daily-art,
+  .chest-art {
+    width: 40px;
+    height: 40px;
+  }
+  .daily-card > button,
+  .daily-chest > button {
+    grid-column: 1 / -1;
+  }
+  .mon-grid {
+    grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  }
+  .quest-tabs button {
+    padding: 7px 9px;
+    font-size: 11px;
+  }
+}

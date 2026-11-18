@@ -8,6 +8,8 @@ import {
   isElite,
   DUNGEON_ROSTERS,
   enemyStep,
+  dungeonSigns,
+  withinDungeonSign,
 } from "../shared/dungeons.js";
 import {
   GEAR,
@@ -18,8 +20,20 @@ import {
   initializeGear,
   ADVANCE_LEVEL,
   heroTier,
+  enhancementLevel,
+  enhancementChance,
+  enhancementCost,
 } from "../shared/rpg.js";
 import { ACTIONS } from "../shared/motion.js";
+import {
+  recordKill,
+  ensureDaily,
+  advanceQuests,
+  questReward,
+  questText,
+  questResetAt,
+  DAILY_BONUS,
+} from "../shared/quests.js";
 import { autoBrain } from "./auto.js";
 import { randomUUID } from "node:crypto";
 import { db, loadCharacter, persist, atomic, log } from "./database.js";
@@ -35,6 +49,8 @@ import {
   combatStats,
   combatPower,
   SHOP_SPOTS,
+  DUNGEON_ENERGY_MAX,
+  DUNGEON_ENERGY_INTERVAL,
 } from "../shared/config.js";
 export const players = new Map(),
   instances = new Map(),
@@ -80,6 +96,7 @@ export function sync(p) {
       gold: saved.gold,
       inventory: saved.inventory,
       upgrade: saved.upgrade,
+      enhancements: saved.enhancements,
       armor: saved.armor,
       weapon: saved.weapon,
       equipment: saved.equipment,
@@ -165,10 +182,11 @@ export function rollBossLoot(p, floor, firstClear, random = Math.random) {
   const candidates = bossLootCandidates(floor, p.class, p.ownedEquipment);
   if (!candidates.length) return null;
   const legendary = candidates.find((id) => GEAR[id].rarity === "legendary");
-  if (legendary && random() < 0.05) return legendary;
+  const roll = random();
+  if (legendary && roll < 0.03) return legendary;
+  if (roll >= 0.35) return null;
   const regular = candidates.filter((id) => id !== legendary);
-  const pool = regular.length ? regular : candidates;
-  return pool[Math.floor(random() * pool.length)];
+  return regular[Math.floor(random() * regular.length)] || null;
 }
 // Tier 3: a specialized hero at ADVANCE_LEVEL takes the advanced form.
 export function advanceClass(p) {
@@ -193,28 +211,94 @@ export function specialize(p, id) {
   savePlayer(p);
   return { message: "เลือกสายพัฒนาแล้ว" };
 }
-export function enhance(p, key) {
+export function enhance(p, key, slot = "weapon") {
   ensureTown(p);
+  if (!Object.hasOwn(SLOTS, slot)) throw Error("ช่องอุปกรณ์ไม่ถูกต้อง");
   const result = atomic(p.id, "enhance", key, () => {
     const c = loadCharacter(p.id),
-      cost = (c.upgrade + 1) * 30;
-    if (c.upgrade >= 10) throw Error("อุปกรณ์ถึง +10 แล้ว");
-    if (c.gold < cost || (c.inventory.ore || 0) < 1)
-      throw Error("ต้องมีทอง " + cost + " และแร่จันทรา 1 ชิ้น");
-    c.gold -= cost;
-    c.inventory.ore--;
-    const chance =
-        c.upgrade < 3 ? 1 : c.upgrade < 6 ? 0.7 : c.upgrade < 9 ? 0.4 : 0.15,
-      success = Math.random() < chance;
-    if (success) c.upgrade++;
+      level = enhancementLevel(c, slot),
+      cost = enhancementCost(level);
+    if (!c.equipment[slot]) throw Error("สวมอุปกรณ์ในช่องนี้ก่อน");
+    if (level >= 10) throw Error("อุปกรณ์ถึง +10 แล้ว");
+    if (c.gold < cost.gold || (c.inventory.ore || 0) < cost.ore)
+      throw Error(`ต้องมีทอง ${cost.gold} และแร่จันทรา ${cost.ore} ชิ้น`);
+    c.gold -= cost.gold;
+    c.inventory.ore -= cost.ore;
+    const success = Math.random() < enhancementChance(level);
+    if (success) {
+      if (slot === "weapon") c.upgrade = level + 1;
+      else c.enhancements[slot] = level + 1;
+    }
     persist(c);
     return {
-      message: success ? "ตีบวกสำเร็จ +" + c.upgrade : "ตีบวกไม่สำเร็จ ระดับเดิมคงอยู่",
+      message: success ? `${SLOTS[slot]} ตีบวกสำเร็จ +${level + 1}` : "ตีบวกไม่สำเร็จ ระดับเดิมคงอยู่",
       success,
     };
   });
   sync(p);
+  const done = advanceQuests(p, wallClock(), "enhance");
+  savePlayer(p);
+  if (done.length) result.message += " · ภารกิจสำเร็จ: " + questText(done[0]);
   return result;
+}
+// Daily quests use the real calendar even when combat runs on a test clock.
+const wallClock = () => Date.now() / 1000;
+function questEvents(i, m, done, x, y, t) {
+  for (const q of done)
+    i.events.push({
+      id: randomUUID(),
+      kind: "quest",
+      actorId: m.id,
+      text: questText(q),
+      x,
+      y,
+      at: t,
+    });
+}
+export function claimQuest(p, index) {
+  const t = wallClock(),
+    daily = ensureDaily(p, t);
+  if (index === "bonus") {
+    if (daily.bonusClaimed) throw Error("รับหีบรางวัลวันนี้แล้ว");
+    if (!daily.quests.every((q) => q.claimed))
+      throw Error("รับรางวัลภารกิจให้ครบทุกข้อก่อน");
+    daily.bonusClaimed = true;
+    const gold = DAILY_BONUS.goldPerLevel * p.level,
+      energy = dungeonEnergy(p, t);
+    let ore = DAILY_BONUS.ore,
+      extra = "+1 พลังงาน";
+    if (energy.points < DUNGEON_ENERGY_MAX) {
+      const points = energy.points + DAILY_BONUS.energy;
+      p.energy =
+        points >= DUNGEON_ENERGY_MAX
+          ? { points: DUNGEON_ENERGY_MAX, nextAt: null }
+          : { points, nextAt: energy.nextAt };
+    } else {
+      ore += 2;
+      extra = "พลังงานเต็มอยู่แล้ว แลกเป็นแร่ +2";
+    }
+    p.gold += gold;
+    p.inventory.ore = (p.inventory.ore || 0) + ore;
+    savePlayer(p);
+    return {
+      message: `เปิดหีบประจำวัน · +${gold} ทอง · แร่ ×${ore} · ${extra}`,
+      reward: { gold, ore },
+    };
+  }
+  if (!validInt(index, 0, daily.quests.length - 1)) throw Error("ไม่พบภารกิจ");
+  const q = daily.quests[index];
+  if (q.claimed) throw Error("รับรางวัลแล้ว");
+  if (q.progress < q.goal) throw Error("ภารกิจยังไม่สำเร็จ");
+  q.claimed = true;
+  const reward = questReward(q, p.level);
+  p.gold += reward.gold;
+  p.inventory.ore = (p.inventory.ore || 0) + reward.ore;
+  exp(p, reward.exp);
+  savePlayer(p);
+  return {
+    message: `รับรางวัล · +${reward.gold} ทอง · +${reward.exp} EXP · แร่ ×${reward.ore}`,
+    reward,
+  };
 }
 // Anything in the bag can go on sale: potions and ore by the stack, and any
 // owned gear that is not equipped (starter gear is bound to its class).
@@ -477,6 +561,7 @@ export function makeRuntime(c, socket) {
     auto: false,
     attackAt: 0,
     cooldowns: {},
+    bestiary: c.bestiary || {},
     lastInput: 0,
     lastSeq: -1,
     hp: maxHp(c),
@@ -490,6 +575,8 @@ export function stored(p) {
     "gold",
     "inventory",
     "upgrade",
+    "enhancements",
+    "energy",
     "armor",
     "weapon",
     "level",
@@ -500,6 +587,8 @@ export function stored(p) {
     "ownedEquipment",
     "specialization",
     "advanced",
+    "daily",
+    "bestiary",
   ];
   return {
     id: p.id,
@@ -511,6 +600,34 @@ export function stored(p) {
 export function savePlayer(p) {
   persist(stored(p));
 }
+function dungeonEnergy(p, t) {
+  const full = { points: DUNGEON_ENERGY_MAX, nextAt: null };
+  if (!p.energy || p.energy.points >= full.points) return full;
+  if (t < p.energy.nextAt) return p.energy;
+  const recovered = 1 + Math.floor((t - p.energy.nextAt) / DUNGEON_ENERGY_INTERVAL);
+  const points = p.energy.points + recovered;
+  return points >= full.points
+    ? full
+    : { points, nextAt: p.energy.nextAt + recovered * DUNGEON_ENERGY_INTERVAL };
+}
+function spendDungeonEnergy(members) {
+  const t = now();
+  const changes = members.map((p) => {
+    const current = dungeonEnergy(p, t);
+    if (current.points < 1) throw Error(`พลังงานของ ${p.name} ไม่พอ`);
+    return {
+      p,
+      energy: {
+        points: current.points - 1,
+        nextAt: current.nextAt ?? t + DUNGEON_ENERGY_INTERVAL,
+      },
+    };
+  });
+  db.transaction(() => {
+    for (const { p, energy } of changes) persist({ ...stored(p), energy });
+  })();
+  for (const { p, energy } of changes) p.energy = energy;
+}
 export function beginDungeon(p, floor) {
   if (!validInt(floor, 1, FLOORS.length)) throw Error("ชั้นไม่ถูกต้อง");
   const party = parties.get(p.party),
@@ -520,6 +637,7 @@ export function beginDungeon(p, floor) {
     throw Error("สมาชิกต้องอยู่เมืองและปลดล็อกชั้นนี้แล้ว");
   if (party && members.some((m) => m.id !== p.id && !party.ready.has(m.id)))
     throw Error("สมาชิกทุกคนต้องกดพร้อมก่อน");
+  spendDungeonEnergy(members);
   const id = randomUUID(),
     instance = {
       id,
@@ -665,6 +783,48 @@ function spawnStage(i) {
   }
   i.totalEnemies = i.enemies.length;
   i.events = [];
+  i.signs = dungeonSigns(i.floor, i.stage);
+  i.collectedSigns = new Map();
+}
+export function useDungeonSign(p, data) {
+  const i = instances.get(p.instance);
+  const sign = i?.signs?.find((entry) => entry.id === data?.id);
+  if (
+    !sign ||
+    i.id !== data.instanceId ||
+    i.floor !== data.floor ||
+    i.stage !== data.stage ||
+    !i.members.includes(p.id) ||
+    p.hp <= 0 ||
+    p.auto ||
+    now() - i.stageAt < STAGE_INTRO ||
+    !withinDungeonSign(p, sign)
+  )
+    throw Error("เข้าใกล้จุดสำรวจแล้วกดใช้งาน");
+
+  const collected = i.collectedSigns.get(p.id) || new Set();
+  if (collected.has(sign.id)) throw Error("สำรวจจุดนี้แล้ว");
+  let message;
+  if (i.stage === 1) {
+    p.hp = Math.min(maxHp(p), p.hp + Math.ceil(maxHp(p) * 0.35));
+    p.mp = Math.min(maxMp(p), p.mp + Math.ceil(maxMp(p) * 0.5));
+    message = "เปิดกล่องเสบียง · ฟื้น HP และ MP";
+  } else if (collected.size + 1 === i.signs.length) {
+    const gold = 20 + i.floor * 5;
+    const inventory = { ...p.inventory, ore: p.inventory.ore + 1 };
+    questEvents(i, p, advanceQuests(p, wallClock(), "rune"), sign.x ?? p.x, p.y - 150, now());
+    persist({ ...stored(p), gold: p.gold + gold, inventory });
+    p.gold += gold;
+    p.inventory = inventory;
+    i.rewards[p.id].gold += gold;
+    i.rewards[p.id].ore++;
+    message = `ไขผนึกรูนสำเร็จ · +${gold} ทอง · แร่ ×1`;
+  } else {
+    message = `เก็บรูน ${collected.size + 1} / ${i.signs.length}`;
+  }
+  collected.add(sign.id);
+  i.collectedSigns.set(p.id, collected);
+  return { message };
 }
 // The client shows a loading card for ~1.5 s (plus a 0.45 s fade) when the
 // stage changes, so heroes on auto and the monsters hold off until it clears.
@@ -684,13 +844,10 @@ export function nextStage(p) {
     if (i.members.length > 1 && parties.get(p.party)?.leader !== p.id)
       throw Error("ให้หัวหน้าปาร์ตี้เลือกไปชั้นถัดไป");
     if (i.floor >= FLOORS.length) return returnTown(p);
-    if (
-      i.members
-        .map(live)
-        .filter(Boolean)
-        .some((m) => m.unlocked < i.floor + 1)
-    )
+    const members = i.members.map(live).filter(Boolean);
+    if (members.some((m) => m.unlocked < i.floor + 1))
       throw Error("สมาชิกยังไม่ปลดล็อกชั้นถัดไป");
+    spendDungeonEnergy(members);
     i.floor++;
     i.stage = 0;
     i.completed = false;
@@ -843,7 +1000,7 @@ function resolveAttack(p, t) {
     const crit = Math.random() < 0.12,
       amount =
         damage(combatStats(p).atk, i.floor * 5, [1, 1.6, 2, 2.5][skill]) *
-        (crit ? 1.5 : 1);
+        (crit ? 1.5 : 1) * (t < (e.exposedUntil || 0) ? 1.5 : 1);
     e.hp -= Math.floor(amount);
     e.hitAt = t;
     e.aggro = true;
@@ -873,7 +1030,7 @@ function resolveAttack(p, t) {
       i.defeated = (i.defeated || 0) + 1;
       i.streak = t <= (i.streakUntil || 0) ? i.streak + 1 : 1;
       i.streakUntil = t + 5;
-      const bonus = Math.min(12, (i.streak - 1) * 3);
+      const bonus = Math.min(4, i.streak - 1);
       if (bonus)
         i.events.push({
           id: randomUUID(),
@@ -889,8 +1046,8 @@ function resolveAttack(p, t) {
         if (m && m.hp > 0) {
           const gold =
               (e.boss
-                ? 50 + i.floor * 20
-                : (8 + i.floor * 2) * (e.elite ? 3 : 1)) + bonus,
+                ? 28 + i.floor * 10
+                : (4 + i.floor) * (e.elite ? 2 : 1)) + bonus,
             gained = e.boss ? 110 : e.elite ? 45 : 20,
             reward = i.rewards?.[m.id];
           m.gold += gold;
@@ -909,7 +1066,7 @@ function resolveAttack(p, t) {
             item: "gold",
             at: t,
           });
-          if (e.elite || Math.random() < 0.4) {
+          if (Math.random() < (e.boss ? 0.5 : e.elite ? 0.35 : 0.12)) {
             m.inventory.ore++;
             if (i.rewards?.[m.id]) i.rewards[m.id].ore++;
             i.events.push({
@@ -922,6 +1079,25 @@ function resolveAttack(p, t) {
               at: t,
             });
           }
+          const wall = wallClock(),
+            done = advanceQuests(m, wall, "killAny");
+          if (!e.boss) {
+            done.push(...advanceQuests(m, wall, "kill", e.type));
+            const stars = recordKill(m, e.type);
+            if (stars)
+              i.events.push({
+                id: randomUUID(),
+                kind: "bestiary",
+                actorId: m.id,
+                type: e.type,
+                stars,
+                x: e.x,
+                y: e.y - 150,
+                at: t,
+              });
+          }
+          if (e.elite) done.push(...advanceQuests(m, wall, "elite"));
+          questEvents(i, m, done, e.x, e.y - 130, t);
           savePlayer(m);
         }
       }
@@ -941,8 +1117,8 @@ function resolveAttack(p, t) {
             FLOORS.length,
             Math.max(m.unlocked, i.floor + 1),
           );
-          m.gold += 80;
-          if (i.rewards?.[m.id]) i.rewards[m.id].gold += 80;
+          m.gold += 40;
+          if (i.rewards?.[m.id]) i.rewards[m.id].gold += 40;
           const item = rollBossLoot(m, i.floor, firstClear);
           if (item) {
             m.ownedEquipment.push(item);
@@ -958,7 +1134,7 @@ function resolveAttack(p, t) {
               at: t,
             });
           } else {
-            const ore = 2 + i.floor;
+            const ore = i.floor >= 6 ? 2 : 1;
             if (i.rewards?.[m.id]) i.rewards[m.id].ore += ore;
             m.inventory.ore = (m.inventory.ore || 0) + ore;
             i.events.push({
@@ -991,6 +1167,14 @@ function resolveAttack(p, t) {
             });
           }
           m.quest = Math.max(m.quest, i.floor);
+          questEvents(
+            i,
+            m,
+            advanceQuests(m, wallClock(), "boss"),
+            m.x,
+            m.y - 160,
+            t,
+          );
           savePlayer(m);
         }
       }
@@ -1405,13 +1589,15 @@ export function tick(dt, t = now()) {
         if (!a.resolved && t >= a.impactAt) {
           a.resolved = true;
           if (a.kind === "slam") {
+            let landed = false;
             for (const id of i.members) {
               const target = live(id);
               if (
                 target?.hp > 0 &&
                 Math.abs(target.x - a.x) < a.radius &&
                 Math.abs(target.y - WORLD.ground) < 65
-              )
+              ) {
+                landed = true;
                 dealDungeonDamage(
                   i,
                   target,
@@ -1420,7 +1606,9 @@ export function tick(dt, t = now()) {
                   a.direction,
                   t,
                 );
+              }
             }
+            if (!landed) e.exposedUntil = a.endsAt + 2.2;
             i.events.push({
               id: randomUUID(),
               kind: "eruption",
@@ -1450,6 +1638,7 @@ export function tick(dt, t = now()) {
         if (t >= a.endsAt) e.action = null;
         continue;
       }
+      if (t < (e.exposedUntil || 0)) continue;
       e.direction = Math.sign(distance) || 1;
       if (t - (e.hitAt || 0) < 0.14) continue;
       const enraged = e.boss && e.hp <= e.maxHp * 0.5;
@@ -1495,7 +1684,10 @@ export function tick(dt, t = now()) {
   for (const [id, tr] of trades) if (Date.now() > tr.expires) trades.delete(id);
 }
 export function snapshot(p) {
-  const i = instances.get(p.instance),
+  const t = now(),
+    stats = combatStats(p),
+    i = instances.get(p.instance),
+    collected = i?.collectedSigns?.get(p.id),
     party = parties.get(p.party),
     trade = [...trades.values()].find((t) => t.members.includes(p.id));
   const publicPlayer = (m) => ({
@@ -1526,24 +1718,28 @@ export function snapshot(p) {
     attackAt: m.attackAt,
   });
   return {
-    time: now(),
+    time: t,
     self: {
       ...publicPlayer(p),
       gold: p.gold,
       mp: p.mp,
-      maxMp: maxMp(p),
+      maxMp: stats.mp,
       exp: p.exp,
       inventory: p.inventory,
       equipment: p.equipment,
       ownedEquipment: p.ownedEquipment,
       specialization: p.specialization,
-      stats: combatStats(p),
-      power: combatPower(combatStats(p)),
+      stats,
+      power: combatPower(stats),
       upgrade: p.upgrade,
+      enhancements: p.enhancements,
+      energy: dungeonEnergy(p, t),
       weapon: p.weapon,
       armor: p.armor,
       unlocked: p.unlocked,
       quest: p.quest,
+      daily: { ...ensureDaily(p, wallClock()), resetAt: questResetAt(wallClock()) },
+      bestiary: p.bestiary || {},
       auto: p.auto,
       cooldowns: p.cooldowns,
     },
@@ -1564,6 +1760,11 @@ export function snapshot(p) {
           instanceId: i.id,
           enemies: i.enemies,
           hazards: i.hazards || [],
+          signs:
+            i.signs?.map((sign) => ({
+              ...sign,
+              collected: collected?.has(sign.id) ?? false,
+            })) || [],
           defeated: i.defeated || 0,
           totalEnemies: i.totalEnemies || i.enemies.length,
           streak: i.streak || 0,
