@@ -3,16 +3,16 @@
   "name": "attack",
   "artSource": "painted Lanna priest / articulated rig",
   "sourceSize": [
-    119.0,
-    165.0
+    155.0,
+    218.0
   ],
   "sourceAnchor": [
     48.0,
-    160.0
+    213.0
   ],
   "encodedAnchor": [
     96,
-    320
+    426
   ],
   "bodyHeightPx": 145,
   "frameCount": 6,
@@ -37,8 +37,8 @@
   "fallback": {
     "type": "png-atlas",
     "cellSize": [
-      238,
-      330
+      310,
+      436
     ],
     "pages": [
       {

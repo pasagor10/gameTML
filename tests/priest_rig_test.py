@@ -66,8 +66,41 @@ class PriestHandTests(unittest.TestCase):
                                 "free arm must not sweep behind the back")
                 self.assertGreater(hand[1] - shoulder[1], 38,
                                    "free elbow must hang relaxed instead of curling up")
-                self.assertLess(abs(s["arm_f"][2][0] - s["arm_f"][0][0]), 14,
-                                "staff-carrying arm must not use the running swing")
+            # The staff arm may be held out from the robe, but must stay put.
+            reach = [priest.skeleton(p)["arm_f"][2][0] - priest.skeleton(p)["arm_f"][0][0]
+                     for p in priest.priest_actions()[action][0]]
+            self.assertLess(max(reach) - min(reach), 6,
+                            "staff-carrying arm must not use the running swing")
+
+    def test_weapon_socket_sits_in_the_middle_of_the_painted_hand(self):
+        for gender in ("male", "female"):
+            art = priest.extract(self.sheet, gender, "novice")
+            wrist = art["joints"][5]
+            palm = art["palm"]
+            self.assertLess(palm[1], wrist[1] - 3, "grip must move up off the fingertips")
+            self.assertLess(abs(palm[0] - wrist[0]), 8)
+
+    def test_boots_stay_under_the_hem_in_every_action(self):
+        art = priest.extract(self.sheet, "male", "bishop")
+        for action, (poses, *_rest) in priest.priest_actions().items():
+            for frame, p in enumerate(poses):
+                with self.subTest(action=action, frame=frame):
+                    s = priest.skeleton(p)
+                    hem = priest.hem_centre(art, s, p)
+                    for leg in ("leg_f", "leg_b"):
+                        hip, _, foot = s[leg]
+                        top, sole = priest.boot_pose(hem[0] + hip[0], foot[0] - hip[0], foot[1])
+                        self.assertLessEqual(top[1], hem[1] + 1, "boot top must be hidden by the hem")
+                        self.assertLessEqual(abs(top[0] - hem[0]), 16, "boot must hang under the robe")
+
+    def test_gripping_hand_is_cut_from_the_sleeve_and_painted_with_the_staff(self):
+        for gender in ("male", "female"):
+            for branch in ("novice", "bishop", "templar"):
+                art = priest.extract(self.sheet, gender, branch)
+                fore = art["parts"]["fore-front"]
+                x, y = map(round, art["grip"]["fist"])
+                self.assertEqual(fore.getpixel((x, y))[3], 0, f"{gender} {branch}: open hand left on the sleeve")
+                self.assertGreater(min(art["grip"]["skin"]), 90)
 
     def test_carrier_arm_is_below_robe_and_free_arm_is_above_robe(self):
         for gender in ("male", "female"):

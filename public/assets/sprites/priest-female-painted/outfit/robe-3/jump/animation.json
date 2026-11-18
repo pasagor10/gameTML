@@ -3,16 +3,16 @@
   "name": "jump",
   "artSource": "painted Lanna priest / articulated rig",
   "sourceSize": [
-    130.0,
-    170.0
+    152.0,
+    182.0
   ],
   "sourceAnchor": [
     62.0,
-    162.0
+    174.0
   ],
   "encodedAnchor": [
     124,
-    324
+    348
   ],
   "bodyHeightPx": 145,
   "frameCount": 4,
@@ -29,8 +29,8 @@
   "fallback": {
     "type": "png-atlas",
     "cellSize": [
-      260,
-      340
+      304,
+      364
     ],
     "pages": [
       {

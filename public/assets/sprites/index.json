@@ -516,11 +516,12 @@
       },
       "layers": {
         "order": [
-          "weapon",
           "outfit",
+          "weapon",
           "head"
         ],
-        "weaponBehind": true,
+        "weaponFront": true,
+        "weaponArt": "rig",
         "looks": {
           "outfit": [
             "robe-1",
@@ -560,6 +561,12 @@
           "bishop-3": "hand/bishop",
           "templar-2": "hand/templar",
           "templar-3": "hand/templar"
+        },
+        "weapons": {
+          "bishop-2": "weapon/bishop",
+          "bishop-3": "weapon/bishop",
+          "templar-2": "weapon/templar",
+          "templar-3": "weapon/templar"
         },
         "painted": true
       }
@@ -582,11 +589,12 @@
       },
       "layers": {
         "order": [
-          "weapon",
           "outfit",
+          "weapon",
           "head"
         ],
-        "weaponBehind": true,
+        "weaponFront": true,
+        "weaponArt": "rig",
         "looks": {
           "outfit": [
             "robe-1",
@@ -626,6 +634,12 @@
           "bishop-3": "hand/bishop",
           "templar-2": "hand/templar",
           "templar-3": "hand/templar"
+        },
+        "weapons": {
+          "bishop-2": "weapon/bishop",
+          "bishop-3": "weapon/bishop",
+          "templar-2": "weapon/templar",
+          "templar-3": "weapon/templar"
         },
         "painted": true
       }
@@ -648,11 +662,12 @@
       },
       "layers": {
         "order": [
-          "weapon",
           "outfit",
+          "weapon",
           "head"
         ],
-        "weaponBehind": true,
+        "weaponFront": true,
+        "weaponArt": "rig",
         "looks": {
           "outfit": [
             "robe-1",
@@ -692,6 +707,12 @@
           "bishop-3": "hand/bishop",
           "templar-2": "hand/templar",
           "templar-3": "hand/templar"
+        },
+        "weapons": {
+          "bishop-2": "weapon/bishop",
+          "bishop-3": "weapon/bishop",
+          "templar-2": "weapon/templar",
+          "templar-3": "weapon/templar"
         },
         "painted": true
       }
@@ -714,11 +735,12 @@
       },
       "layers": {
         "order": [
-          "weapon",
           "outfit",
+          "weapon",
           "head"
         ],
-        "weaponBehind": true,
+        "weaponFront": true,
+        "weaponArt": "rig",
         "looks": {
           "outfit": [
             "robe-1",
@@ -758,6 +780,12 @@
           "bishop-3": "hand/bishop",
           "templar-2": "hand/templar",
           "templar-3": "hand/templar"
+        },
+        "weapons": {
+          "bishop-2": "weapon/bishop",
+          "bishop-3": "weapon/bishop",
+          "templar-2": "weapon/templar",
+          "templar-3": "weapon/templar"
         },
         "painted": true
       }
@@ -780,11 +808,12 @@
       },
       "layers": {
         "order": [
-          "weapon",
           "outfit",
+          "weapon",
           "head"
         ],
-        "weaponBehind": true,
+        "weaponFront": true,
+        "weaponArt": "rig",
         "looks": {
           "outfit": [
             "robe-1",
@@ -824,6 +853,12 @@
           "bishop-3": "hand/bishop",
           "templar-2": "hand/templar",
           "templar-3": "hand/templar"
+        },
+        "weapons": {
+          "bishop-2": "weapon/bishop",
+          "bishop-3": "weapon/bishop",
+          "templar-2": "weapon/templar",
+          "templar-3": "weapon/templar"
         },
         "painted": true
       }
@@ -846,11 +881,12 @@
       },
       "layers": {
         "order": [
-          "weapon",
           "outfit",
+          "weapon",
           "head"
         ],
-        "weaponBehind": true,
+        "weaponFront": true,
+        "weaponArt": "rig",
         "looks": {
           "outfit": [
             "robe-1",
@@ -890,6 +926,12 @@
           "bishop-3": "hand/bishop",
           "templar-2": "hand/templar",
           "templar-3": "hand/templar"
+        },
+        "weapons": {
+          "bishop-2": "weapon/bishop",
+          "bishop-3": "weapon/bishop",
+          "templar-2": "weapon/templar",
+          "templar-3": "weapon/templar"
         },
         "painted": true
       }
@@ -912,11 +954,12 @@
       },
       "layers": {
         "order": [
-          "weapon",
           "outfit",
+          "weapon",
           "head"
         ],
-        "weaponBehind": true,
+        "weaponFront": true,
+        "weaponArt": "rig",
         "looks": {
           "outfit": [
             "robe-1",
@@ -956,6 +999,12 @@
           "bishop-3": "hand/bishop",
           "templar-2": "hand/templar",
           "templar-3": "hand/templar"
+        },
+        "weapons": {
+          "bishop-2": "weapon/bishop",
+          "bishop-3": "weapon/bishop",
+          "templar-2": "weapon/templar",
+          "templar-3": "weapon/templar"
         },
         "painted": true
       }
@@ -978,11 +1027,12 @@
       },
       "layers": {
         "order": [
-          "weapon",
           "outfit",
+          "weapon",
           "head"
         ],
-        "weaponBehind": true,
+        "weaponFront": true,
+        "weaponArt": "rig",
         "looks": {
           "outfit": [
             "robe-1",
@@ -1022,6 +1072,12 @@
           "bishop-3": "hand/bishop",
           "templar-2": "hand/templar",
           "templar-3": "hand/templar"
+        },
+        "weapons": {
+          "bishop-2": "weapon/bishop",
+          "bishop-3": "weapon/bishop",
+          "templar-2": "weapon/templar",
+          "templar-3": "weapon/templar"
         },
         "painted": true
       }
@@ -1044,11 +1100,12 @@
       },
       "layers": {
         "order": [
-          "weapon",
           "outfit",
+          "weapon",
           "head"
         ],
-        "weaponBehind": true,
+        "weaponFront": true,
+        "weaponArt": "rig",
         "looks": {
           "outfit": [
             "robe-1",
@@ -1088,6 +1145,12 @@
           "bishop-3": "hand/bishop",
           "templar-2": "hand/templar",
           "templar-3": "hand/templar"
+        },
+        "weapons": {
+          "bishop-2": "weapon/bishop",
+          "bishop-3": "weapon/bishop",
+          "templar-2": "weapon/templar",
+          "templar-3": "weapon/templar"
         },
         "painted": true
       }
@@ -1110,11 +1173,12 @@
       },
       "layers": {
         "order": [
-          "weapon",
           "outfit",
+          "weapon",
           "head"
         ],
-        "weaponBehind": true,
+        "weaponFront": true,
+        "weaponArt": "rig",
         "looks": {
           "outfit": [
             "robe-1",
@@ -1154,6 +1218,12 @@
           "bishop-3": "hand/bishop",
           "templar-2": "hand/templar",
           "templar-3": "hand/templar"
+        },
+        "weapons": {
+          "bishop-2": "weapon/bishop",
+          "bishop-3": "weapon/bishop",
+          "templar-2": "weapon/templar",
+          "templar-3": "weapon/templar"
         },
         "painted": true
       }
@@ -1281,7 +1351,7 @@
       }
     }
   },
-  "version": "1795002799519730000",
+  "version": "1795004308604741000",
   "npcs": {
     "elder": {
       "dir": "npcs/elder",

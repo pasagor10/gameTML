@@ -3,15 +3,15 @@
   "name": "run",
   "artSource": "painted Lanna priest / articulated rig",
   "sourceSize": [
-    101.0,
+    104.0,
     170.0
   ],
   "sourceAnchor": [
-    37.0,
+    23.0,
     163.0
   ],
   "encodedAnchor": [
-    74,
+    46,
     326
   ],
   "bodyHeightPx": 145,
@@ -33,7 +33,7 @@
   "fallback": {
     "type": "png-atlas",
     "cellSize": [
-      202,
+      208,
       340
     ],
     "pages": [

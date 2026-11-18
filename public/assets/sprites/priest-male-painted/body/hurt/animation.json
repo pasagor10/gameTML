@@ -3,16 +3,16 @@
   "name": "hurt",
   "artSource": "painted Lanna priest / articulated rig",
   "sourceSize": [
-    116.0,
-    166.0
+    136.0,
+    173.0
   ],
   "sourceAnchor": [
     72.0,
-    160.0
+    167.0
   ],
   "encodedAnchor": [
     144,
-    320
+    334
   ],
   "bodyHeightPx": 145,
   "frameCount": 3,
@@ -28,8 +28,8 @@
   "fallback": {
     "type": "png-atlas",
     "cellSize": [
-      232,
-      332
+      272,
+      346
     ],
     "pages": [
       {
@@ -43,19 +43,19 @@
   "sockets": {
     "hand": [
       [
-        206.66,
-        158.69,
-        -61.35
+        203.86,
+        173.47,
+        -77.39
       ],
       [
-        201.13,
-        197.84,
-        -61.35
+        198.69,
+        210.25,
+        -77.39
       ],
       [
-        195.08,
-        211.86,
-        -61.35
+        193.34,
+        223.53,
+        -77.39
       ]
     ]
   }

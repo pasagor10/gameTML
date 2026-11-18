@@ -3,7 +3,7 @@
   "name": "idle",
   "artSource": "painted Lanna priest / articulated rig",
   "sourceSize": [
-    75.0,
+    98.0,
     167.0
   ],
   "sourceAnchor": [
@@ -31,7 +31,7 @@
   "fallback": {
     "type": "png-atlas",
     "cellSize": [
-      150,
+      196,
       334
     ],
     "pages": [

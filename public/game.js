@@ -1950,11 +1950,12 @@ class Adventure extends Phaser.Scene {
           const look = dress.looks?.[slot];
           if (!layers.looks?.[slot]?.includes(look)) continue;
           const parts = layers.parts?.[slot]?.[look];
-          for (const path of parts ? parts.map((p) => `${slot}/${look}/${p}`) : [`${slot}/${look}`])
+          const dir = slot === "weapon" ? layers.weapons?.[dress.looks?.outfit] || slot : slot;
+          for (const path of parts ? parts.map((p) => `${slot}/${look}/${p}`) : [`${dir}/${look}`])
             this.sprites.layer(skin, path);
         }
         const hand = layers.hands?.[dress.looks?.outfit] || layers.hand;
-        if (hand && !layers.weaponBehind) this.sprites.layer(skin, hand);
+        if (hand && !layers.weaponBehind && !layers.weaponFront) this.sprites.layer(skin, hand);
         if (dress.weapon) this.sprites.image(dress.weapon.url);
       }
     }

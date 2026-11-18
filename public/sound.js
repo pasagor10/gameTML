@@ -21,6 +21,7 @@ let ctx = null,
   activeTrack = null;
 const lastPlayed = new Map();
 let effectLevel = 1;
+const MASTER_LEVEL = 0.25;
 
 function readPref(key, fallback) {
   try {
@@ -45,7 +46,7 @@ function init() {
   comp.threshold.value = -16;
   comp.ratio.value = 4;
   master = ctx.createGain();
-  master.gain.value = enabled ? 0.9 : 0;
+  master.gain.value = enabled ? MASTER_LEVEL : 0;
   master.connect(comp).connect(ctx.destination);
   sfxBus = ctx.createGain();
   sfxBus.gain.value = 0.85;
@@ -129,7 +130,7 @@ export const musicOn = () => musicEnabled;
 export function setSound(on) {
   enabled = on;
   writePref("tml-sound", on);
-  if (ctx) master.gain.setTargetAtTime(on ? 0.9 : 0, ctx.currentTime, 0.05);
+  if (ctx) master.gain.setTargetAtTime(on ? MASTER_LEVEL : 0, ctx.currentTime, 0.05);
 }
 export function setMusic(on) {
   musicEnabled = on;

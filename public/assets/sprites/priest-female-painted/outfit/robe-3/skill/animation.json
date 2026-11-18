@@ -3,16 +3,16 @@
   "name": "skill",
   "artSource": "painted Lanna priest / articulated rig",
   "sourceSize": [
-    119.0,
-    164.0
+    154.0,
+    217.0
   ],
   "sourceAnchor": [
     48.0,
-    160.0
+    213.0
   ],
   "encodedAnchor": [
     96,
-    320
+    426
   ],
   "bodyHeightPx": 145,
   "frameCount": 7,
@@ -38,8 +38,8 @@
   "fallback": {
     "type": "png-atlas",
     "cellSize": [
-      238,
-      328
+      308,
+      434
     ],
     "pages": [
       {

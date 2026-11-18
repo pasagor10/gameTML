@@ -17,6 +17,7 @@ from PIL import Image, ImageDraw, ImageChops
 
 import hero_rig as rig
 import layered_rig as legacy
+import painted_staff as staff
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1] / "public/assets/sprites"
@@ -34,6 +35,20 @@ CONFIG = {
     ("female", "novice"): (0, 1, 320, 142, 426, 497, (275, 173), (246, 239), (228, 299), (367, 174), (391, 240), (411, 299)),
     ("female", "bishop"): (1, 1, 256, 151, 426, 496, (211, 179), (180, 243), (159, 304), (303, 180), (331, 247), (353, 304)),
     ("female", "templar"): (2, 1, 201, 145, 426, 497, (157, 172), (128, 238), (111, 299), (247, 171), (276, 239), (300, 299)),
+}
+
+
+# Outline of each figure's gripping (front) hand, relative to its registered
+# wrist point, starting where it leaves the sleeve. The painted hand hangs
+# open; it is cut from the sleeve and the staff layer paints a closed fist
+# in its place (painted_staff.py), so the staff is really held.
+HANDS = {
+    ("male", "novice"): [(-18, -26), (-3, -27), (4, -14), (13, -3), (16, 8), (12, 21), (2, 22), (-6, 12), (-12, 0), (-17, -12)],
+    ("male", "bishop"): [(-18, -28), (-3, -30), (4, -16), (13, -3), (15, 8), (12, 22), (2, 22), (-6, 12), (-12, 0), (-17, -14)],
+    ("male", "templar"): [(-16, -21), (2, -22), (6, -12), (15, 0), (17, 10), (12, 22), (2, 22), (-6, 12), (-12, 0), (-16, -10)],
+    ("female", "novice"): [(-18, -31), (-4, -33), (2, -22), (10, -12), (15, -2), (14, 8), (8, 10), (-2, 6), (-8, -2), (-14, -14)],
+    ("female", "bishop"): [(-16, -37), (-2, -39), (3, -28), (11, -16), (15, -4), (13, 6), (6, 7), (-3, 2), (-9, -8), (-14, -20)],
+    ("female", "templar"): [(-16, -30), (3, -30), (8, -20), (14, -6), (16, 6), (12, 12), (4, 10), (-4, 2), (-10, -8), (-15, -20)],
 }
 
 
@@ -71,16 +86,95 @@ def extract(sheet, gender, branch):
         (cx - 71, hem + 7), (cx - 96, hem - 9),
         (cx - 48, neck + 125), (cx - 43, neck + 90), (cx - 60, neck + 45)])
     parts = {"head": head, "torso": torso}
+    wrist = joints[5]
+    hand = [(wrist[0] + x, wrist[1] + y) for x, y in HANDS[(gender, branch)]]
     for side, (sh, elbow, wrist) in zip(("back", "front"), (joints[:3], joints[3:])):
         parts[f"upper-{side}"] = limb_mask(image, sh, elbow, 28, 26)
         # Extend past the wrist to retain fingers, but not back up the upper
         # arm: rotating that duplicated shoulder patch makes a second elbow.
         parts[f"fore-{side}"] = limb_mask(image, elbow, wrist, 29, 20, extend=0.46, start_extend=0.04)
         parts[f"hand-{side}"] = limb_mask(image, wrist, (wrist[0], wrist[1] + 25), 12, 10, extend=0.1)
+    # The staff layer paints the gripping hand; the sleeve keeps only the arm.
+    cut = Image.new("L", image.size, 255)
+    ImageDraw.Draw(cut).polygon(hand, fill=0, outline=0, width=3)
+    fore = parts["fore-front"]
+    fore.putalpha(ImageChops.multiply(fore.getchannel("A"), cut))
     for side, x in (("back", cx - 45), ("front", cx + 45)):
         parts[f"boot-{side}"] = polygon_mask(image, [(x - 35, hem + 2), (x + 35, hem + 2),
             (x + 40, ground + 3), (x - 35, ground + 3)])
-    return dict(parts=parts, cx=cx, neck=neck, hem=hem, ground=ground, joints=joints)
+    return dict(parts=parts, cx=cx, neck=neck, hem=hem, ground=ground, joints=joints,
+                palm=palm_centre(image, joints[5]), grip=hand_grip(image, hand))
+
+
+def hand_grip(image, hand):
+    """Where the painted fist goes, in source pixels: the cuff it grows out
+    of, the fist centre (a little past the middle of the open hand) and the
+    hand's skin colour."""
+    cuff = ((hand[0][0] + hand[1][0]) / 2, (hand[0][1] + hand[1][1]) / 2)
+    mid = (sum(x for x, _ in hand) / len(hand), sum(y for _, y in hand) / len(hand))
+    fist = (cuff[0] + (mid[0] - cuff[0]) * 0.9, cuff[1] + (mid[1] - cuff[1]) * 0.9)
+    mask = Image.new("L", image.size, 0)
+    ImageDraw.Draw(mask).polygon(hand, fill=255)
+    pixels = [px for px, m in zip(image.getdata(), mask.getdata())
+              if m and px[3] > 200 and px[0] > 170 and px[0] > px[1] > px[2]]
+    pixels.sort(key=sum)
+    lit = pixels[len(pixels) // 3:]  # skip finger-gap shadows
+    skin = tuple(round(sum(px[i] for px in lit) / len(lit)) for i in range(3))
+    return dict(cuff=cuff, fist=fist, skin=skin)
+
+
+def palm_centre(image, wrist):
+    """Middle of the painted gripping hand: the mean of its skin pixels.
+
+    The registered wrist point sits low on the fingers, so a weapon socketed
+    there only grazes the fingertips. Gold trim is excluded by requiring the
+    blue channel of a warm skin tone."""
+    xs = ys = n = 0
+    for y in range(wrist[1] - 30, wrist[1] + 26):
+        for x in range(wrist[0] - 26, wrist[0] + 26):
+            r, g, b, a = image.getpixel((x, y))
+            if a > 200 and r > 150 and r > g + 10 and g > b and b > 0.55 * r:
+                xs, ys, n = xs + x, ys + y, n + 1
+    if n <= 40:
+        return wrist
+    # Shaded fingers fail the colour test, pulling the mean toward the back
+    # of the hand; meet the low wrist point halfway for the hand's middle.
+    return (xs / n * 0.55 + wrist[0] * 0.45, ys / n * 0.55 + wrist[1] * 0.45)
+
+
+def limb_point_rig(point, a, b, dest_a, dest_b):
+    """Rig-space position of a source pixel of a limb piece (paint_limb's map
+    before the whole-body transform)."""
+    sa = math.atan2(b[1] - a[1], b[0] - a[0])
+    da = math.atan2(dest_b[1] - dest_a[1], dest_b[0] - dest_a[0])
+    scale = math.dist(dest_a, dest_b) / math.dist(a, b)
+    c, s = math.cos(da - sa), math.sin(da - sa)
+    vx, vy = (point[0] - a[0]) * scale, (point[1] - a[1]) * scale
+    return dest_a[0] + vx * c - vy * s, dest_a[1] + vx * s + vy * c
+
+
+def limb_point(point, a, b, dest_a, dest_b, p):
+    """Where a source pixel of a limb piece lands in the cell."""
+    return tx(limb_point_rig(point, a, b, dest_a, dest_b), p)
+
+
+def palm_rig(art, s):
+    """Rig-space centre of the gripping fist for skeleton s."""
+    _, elbow, wrist = art["joints"][3:]
+    _, dest_elbow, dest_wrist = s["arm_f"]
+    return limb_point_rig(art["grip"]["fist"], elbow, wrist, dest_elbow, dest_wrist)
+
+
+def grip_rig(art, s):
+    """The fist to paint with the staff: cuff and fist centre in rig space,
+    its size and the hand's skin colour."""
+    _, elbow, wrist = art["joints"][3:]
+    _, dest_elbow, dest_wrist = s["arm_f"]
+    k = math.dist(dest_elbow, dest_wrist) / math.dist(elbow, wrist)
+    g = art["grip"]
+    return dict(cuff=limb_point_rig(g["cuff"], elbow, wrist, dest_elbow, dest_wrist),
+                fist=limb_point_rig(g["fist"], elbow, wrist, dest_elbow, dest_wrist),
+                radius=14 * k, skin=g["skin"])
 
 
 def priest_actions():
@@ -114,11 +208,17 @@ def run_pose(a):
     s, lift = math.sin(a), abs(math.sin(a))
     return rig.pose(
         dy=-lift * 6 + 2, lean=0.18 + lift * 0.03, tilt=-0.03 + lift * 0.04,
-        hipF=0.16 + s * 0.42, hipB=0.16 - s * 0.42,
-        kneeF=0.15 + max(0.0, -s) * 0.6, kneeB=0.15 + max(0.0, s) * 0.6,
-        shF=0.3 + s * 0.03, elF=0.02,
+        hipF=0.2 + s * 0.36, hipB=0.2 - s * 0.36,
+        kneeF=0.12 + max(0.0, -s) * 0.4, kneeB=0.12 + max(0.0, s) * 0.4,
+        shF=0.46 + s * 0.03, elF=0.0,
         shB=0.12 - s * 0.15, elB=0.1 + lift * 0.08,
         weapon=0.12, wave=math.sin(a * 2) * 1.6)
+
+
+def staff_angle(p):
+    """Hand-to-tip direction: the shared rig's, stood a little more upright
+    since the priest grips a long staff rather than a short wand."""
+    return legacy.weapon_angle(p) - 0.28
 
 
 def skeleton(p):
@@ -165,14 +265,42 @@ def paint_limb(target, art, name, a, b, dest_a, dest_b, p):
     paint(target, art["parts"][name], a, dest_a, scale, da - sa, p)
 
 
+BOOT = 19.0       # boot length in rig px, hem to sole
+BOOT_REACH = 10.0  # furthest a sole may step from under its hip
+BOOT_TILT = 0.4    # most a boot leans (radians)
+
+
+def hem_centre(art, s, p):
+    """Rig-space middle of the robe hem: the torso is painted from the neck,
+    leaning by -lean, exactly as outfit_frame paints it."""
+    lean, drop = p["lean"], (art["hem"] - art["neck"]) * SCALE
+    return (s["neck"][0] + math.sin(lean) * drop, s["neck"][1] + math.cos(lean) * drop)
+
+
+def boot_pose(x, step, sole_y):
+    """Top and sole of a boot hanging at hem x-position `x`.
+
+    The legs are hidden by the robe, so a boot hung off the knee swings out
+    and floats beside the hem. Instead every boot keeps its length, steps
+    `step` (clamped to BOOT_REACH) from under the hem, leans at most
+    BOOT_TILT and pivots from under the hem, so its top never shows."""
+    fx = x + max(-BOOT_REACH, min(BOOT_REACH, step))
+    fy = max(sole_y, -14.0)
+    tilt = max(-BOOT_TILT, min(BOOT_TILT, math.asin(max(-1.0, min(1.0, (fx - x) * 0.7 / BOOT)))))
+    return (fx - BOOT * math.sin(tilt), fy - BOOT * math.cos(tilt)), (fx, fy)
+
+
 def body_frame(art, s, p, hand_only=False):
     out = Image.new("RGBA", ENCODED)
     for side, arm_key, leg_key, joints in (("back", "arm_b", "leg_b", art["joints"][:3]),
                                            ("front", "arm_f", "leg_f", art["joints"][3:])):
         if not hand_only:
-            knee, foot = s[leg_key][1:]
+            hip, _, foot = s[leg_key]
             x = art["cx"] + (-45 if side == "back" else 45)
-            paint_limb(out, art, f"boot-{side}", (x, art["hem"] + 3), (x, art["ground"]), knee, foot, p)
+            # Boots hang under the robe's hem, which leans with the torso.
+            hem = hem_centre(art, s, p)
+            top, sole = boot_pose(hem[0] + hip[0], foot[0] - hip[0], foot[1])
+            paint_limb(out, art, f"boot-{side}", (x, art["hem"] + 3), (x, art["ground"]), top, sole, p)
         # Compatibility grip overlay, using precisely the sleeve's affine map.
         # Painted far-arm sets skip this overlay at runtime: that palm is
         # already in the sleeve below the robe, not above the near/free arm.
@@ -260,6 +388,9 @@ def write_clip(folder, action, frames, durations, loop, hit_frame, sockets=None,
     (folder / "animation.json").write_text(json.dumps(clip, indent=2) + "\n")
 
 
+BRANCHES = ("novice", "bishop", "templar")
+
+
 def source_look(look):
     return "bishop" if look.startswith("bishop") or look in ("hood", "mitre") else "templar" if look.startswith("templar") else "novice"
 
@@ -277,12 +408,19 @@ def export(gender, sheet, preview_only=False, arms_only=False, selected_actions=
         bodies, sockets = [], []
         hands = {look: [] for look in LOOKS}
         outfits, heads = {look: [] for look in LOOKS}, {look: [] for look in HEADS}
-        weapons = {look: [] for look in legacy.WEAPONS}
+        # Staff + painted fist per outfit family, since each family's sleeve
+        # ends in a slightly different place ("bishop/staff-2"); the bare look
+        # name is the novice one.
+        weapons = {f"{branch}/{look}" if branch != "novice" else look: []
+                   for branch in BRANCHES for look in legacy.WEAPONS}
         for p in poses:
             s = skeleton(p)
             bodies.append(body_frame(art["novice"], s, p))
-            x, y = tx(s["arm_f"][2], p)
-            sockets.append([round(x * RESOLUTION, 2), round(y * RESOLUTION, 2), round(math.degrees(legacy.weapon_angle(p) + p["rot"]), 2)])
+            # The weapon sits in the middle of the novice palm (the body
+            # clip's sockets are shared by every outfit).
+            palm = palm_rig(art["novice"], s)
+            x, y = tx(palm, p)
+            sockets.append([round(x * RESOLUTION, 2), round(y * RESOLUTION, 2), round(math.degrees(staff_angle(p) + p["rot"]), 2)])
             outfit_cache, hand_cache = {}, {}
             for look in LOOKS:
                 branch = source_look(look)
@@ -296,19 +434,19 @@ def export(gender, sheet, preview_only=False, arms_only=False, selected_actions=
                 hands[look].append(hand_cache[branch])
             for look in HEADS:
                 heads[look].append(head_frame(art[source_look(look)], s, p, look.endswith("-3")))
-            # Backwards-compatible weapon fallback while an equipped icon loads.
-            rig.CELL, rig.ANCHOR = CELL, ANCHOR
-            for look in weapons:
-                cv = rig.Canvas(p["rot"], p["dx"], p["dy"])
-                for _, _, fn in legacy.weapon_pieces(look, gender, p, s):
-                    fn(cv)
-                weapons[look].append(cv.im.resize(ENCODED, Image.Resampling.LANCZOS))
+            # The worn staff, painted to match the character and held at the
+            # palm a little below its middle (painted_staff.py).
+            angle = staff_angle(p)
+            place = lambda q: tuple(v * RESOLUTION for v in tx(q, p))
+            for branch in BRANCHES:
+                grip = grip_rig(art[branch], s)
+                for look in legacy.WEAPONS:
+                    key = f"{branch}/{look}" if branch != "novice" else look
+                    weapons[key].append(staff.staff_frame(look, grip["fist"], angle, place, ENCODED, RESOLUTION, grip=grip))
         if not preview_only:
             for frame in bodies + [f for group in (hands, outfits, heads, weapons) for frames in group.values() for f in frames]:
                 clean(frame)
-            # The weapon fallback is left out of the box: it only shows while
-            # the equipped item's own picture loads.
-            box = crop_box(bodies + [f for group in (hands, outfits, heads) for frames in group.values() for f in frames])
+            box = crop_box(bodies + [f for group in (hands, outfits, heads, weapons) for frames in group.values() for f in frames])
             clip = dict(durations=durations, loop=loop, hit_frame=hit_frame, box=box)
             write_clip(base / "body" / action, action, bodies, sockets=sockets, **clip)
             write_clip(base / "hand" / action, action, hands["robe-1"], **clip)
@@ -322,9 +460,10 @@ def export(gender, sheet, preview_only=False, arms_only=False, selected_actions=
         if action == "idle":
             gallery = Image.new("RGBA", (ENCODED[0] * 5, ENCODED[1]), (0, 0, 0, 0))
             for n, look in enumerate(("robe-1", "bishop-2", "bishop-3", "templar-2", "templar-3")):
-                frame = weapons["staff-1"][0].copy()
-                frame.alpha_composite(bodies[0])
+                frame = bodies[0].copy()
                 frame.alpha_composite(outfits[look][0])
+                branch = source_look(look)
+                frame.alpha_composite(weapons["staff-1" if branch == "novice" else f"{branch}/staff-1"][0])
                 frame.alpha_composite(heads["hair" if look == "robe-1" else look][0])
                 gallery.alpha_composite(frame, (n * ENCODED[0], 0))
                 box = frame.getbbox()
@@ -333,9 +472,11 @@ def export(gender, sheet, preview_only=False, arms_only=False, selected_actions=
                 portrait.save(base / f"portrait-{look}.webp", "WEBP", quality=94)
             gallery.save(base / "preview.png")
     entry = dict(dir=base.name, height=125, facing=1, portrait="portrait-robe-1.webp", source="painted Lanna source, articulated interchangeable layers",
-        actions=legacy.ACTION_FOLDERS, layers=dict(order=["weapon", "outfit", "head"], weaponBehind=True,
+        actions=legacy.ACTION_FOLDERS, layers=dict(order=["outfit", "weapon", "head"], weaponFront=True, weaponArt="rig",
             looks=dict(outfit=LOOKS, head=HEADS, weapon=list(legacy.WEAPONS)),
-            parts={}, hand="hand", hands={look: f"hand/{source_look(look)}" for look in LOOKS}, painted=True))
+            parts={}, hand="hand", hands={look: f"hand/{source_look(look)}" for look in LOOKS},
+            weapons={look: f"weapon/{source_look(look)}" for look in LOOKS if source_look(look) != "novice"},
+            painted=True))
     return entry
 
 

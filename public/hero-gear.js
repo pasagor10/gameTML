@@ -1,7 +1,9 @@
 // What a layered (paper-doll) hero wears, resolved from its equipment:
 //   looks   outfit / head / weapon shape tier (shared/appearance.js)
 //   tints   the armour picture's main / trim / gem colours for the cloth
-//   weapon  the weapon's own item picture, held in the hand
+//   weapon  the weapon's own item picture, held in the hand (unless the set
+//           draws its own staff: layers.weaponArt "rig")
+//   weaponGlow  the weapon picture's accent colour, for the held glow
 // public/sprite-sets.js playLayers() draws it.
 import { GEAR } from "/shared/rpg.js";
 import { heroLooks } from "/shared/appearance.js";
@@ -53,9 +55,13 @@ export function gearDress(p, set) {
     looks,
     // Painted heads hold the face and hair: leave them their own colours.
     tints: { outfit: tints, head: layers.painted ? {} : tints },
+    // Sets with weaponArt "rig" hold their own drawn staff (looks.weapon),
+    // which suits the character better than the ornate item picture.
     weapon:
-      url && HOLD[kind]
-        ? { url, ...HOLD[kind], glow: toTint(palette[artKey(url)]?.gem) }
+      url && HOLD[kind] && layers.weaponArt !== "rig"
+        ? { url, ...HOLD[kind] }
         : null,
+    // Either way the held weapon glows in its item picture's accent colour.
+    weaponGlow: toTint(palette[artKey(url)]?.gem),
   };
 }

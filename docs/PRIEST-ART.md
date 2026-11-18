@@ -33,17 +33,30 @@ registration before changing the shared rig or any other class.
   (blended halfway to white, then multiplied); painted heads keep their own
   colours. The held weapon picture glows in its own palette `gem` colour.
 - `gearDress()` resolves the equipped weapon to its actual inventory image.
-  `playLayers()` positions it on the current frame's hand socket. Painted
-  priests set `weaponBehind`: the staff is below the robe, and the gripping
-  arm is painted below the robe. The free arm is painted above the robe.
+  `playLayers()` positions it on the current frame's hand socket. The socket
+  is the middle of the painted palm. Painted priests set `weaponFront`: the
+  staff is drawn over the outfit and the gripping hand, under the head. The
+  gripping arm is painted below the robe, the free arm above it.
   These depth roles do not swap when facing left. Switching weapons does
   not require new art.
+- Painted priests set `weaponArt: "rig"`: they hold their own painted staff
+  (`tools/sprite-rig/painted_staff.py`, one finial per gear tier: lotus,
+  ring, sun, flame) instead of the ornate item picture, gripped a little
+  below its middle and glowing in the equipped item picture's accent colour.
+- The gripping hand is cut from the sleeve (`HANDS` outlines in the
+  exporter) and the staff layer paints a closed fist around the shaft in the
+  hand's own skin colour. Each outfit family has its own staff folder
+  (`layers.weapons`: `weapon/bishop/…`, `weapon/templar/…`, novice at
+  `weapon/…`) so the fist meets that family's cuff.
+- Boots hang from the robe hem, which leans with the torso (`hem_centre()`,
+  `boot_pose()`): fixed length, a limited step and tilt, tops always under
+  the hem, in every action.
 - `layers.hands` selects the palm overlay belonging to each outfit. Its
   affine transform is identical to the front sleeve, including during a
   walk/run swing. The base body contains boots only; it must not draw a
   second, independently rotated pair of hands beneath the outfit.
-  These compatibility overlays are skipped for `weaponBehind` sets so that
-  a far gripping hand is never repeated on top of the free/near arm.
+  These compatibility overlays are skipped for `weaponFront` (and
+  `weaponBehind`) sets, so no palm is drawn over the staff.
 - Each action is cropped to one box shared by every layer of that action
   (`crop_box()`), with `encodedAnchor` and sockets shifted to match, and saved
   as WebP q86/method 6. This keeps a priest download near 1 MB instead of

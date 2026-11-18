@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "3.0",
+  "name": "attack",
+  "artSource": "painted Lanna priest / articulated rig",
+  "sourceSize": [
+    155.0,
+    218.0
+  ],
+  "sourceAnchor": [
+    48.0,
+    213.0
+  ],
+  "encodedAnchor": [
+    96,
+    426
+  ],
+  "bodyHeightPx": 145,
+  "frameCount": 6,
+  "durationsMs": [
+    60,
+    70,
+    70,
+    80,
+    90,
+    100
+  ],
+  "durationSeconds": 0.47,
+  "loop": false,
+  "sampling": "linear",
+  "events": [
+    {
+      "name": "hit",
+      "frame": 3,
+      "atMs": 200
+    }
+  ],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      310,
+      436
+    ],
+    "pages": [
+      {
+        "file": "attack-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 6,
+        "columns": 6
+      }
+    ]
+  }
+}

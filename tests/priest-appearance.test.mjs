@@ -14,7 +14,9 @@ test("every priest vocation and advancement has distinct painted art for both ge
   for (const gender of ["male", "female"]) {
     const set = index.sets[`priest-${gender}`];
     assert.equal(set.layers.painted, true);
-    assert.equal(set.layers.weaponBehind, true);
+    assert.equal(set.layers.weaponFront, true);
+    assert.equal(set.layers.weaponBehind, undefined);
+    assert.equal(set.layers.weaponArt, "rig");
     const hashes = new Set();
     for (const specialization of [null, "bishop", "templar"])
       for (const advanced of specialization ? [false, true] : [false]) {
@@ -45,7 +47,7 @@ test("class and advancement preserve the equipped weapon tier and player costume
   assert.equal(heroLooks({ ...p, costume: { head: "circlet" } }, available).head, "circlet");
 });
 
-test("painted priest resolves each equipped item's own art, washes the outfit in the armour colour and glows the weapon in its own", async () => {
+test("painted priest holds its own drawn staff glowing in the item's colour and washes the outfit in the armour colour", async () => {
   let source = readFileSync(new URL("../public/hero-gear.js", import.meta.url), "utf8");
   for (const [from, to] of [["/shared/rpg.js", "../shared/rpg.js"],
     ["/shared/appearance.js", "../shared/appearance.js"], ["/item-art.js", "../public/item-art.js"]])
@@ -62,17 +64,23 @@ test("painted priest resolves each equipped item's own art, washes the outfit in
   const set = index.sets["priest-female"],
     p = { class: "priest", specialization: "templar", advanced: true,
       equipment: { armor: "traveler_armor" } };
-  const paths = [];
+  const glows = [];
   for (const weapon of ["starter_priest", "dawn_scepter", "floor_10_priest_weapon"]) {
     const dress = gearDress({ ...p, equipment: { ...p.equipment, weapon } }, set);
-    paths.push(dress.weapon.url);
     assert.equal(dress.looks.outfit, "templar-3");
     // traveler_armor is armor-1 (main #8c3633), softened halfway to white.
     assert.deepEqual(dress.tints.outfit, { main: 0xc69b99 });
     assert.deepEqual(dress.tints.head, {});
-    assert.equal(typeof dress.weapon.glow, "number");
+    // The priest holds its own drawn staff, not the ornate item picture...
+    assert.equal(dress.weapon, null);
+    assert.ok(set.layers.looks.weapon.includes(dress.looks.weapon));
+    glows.push(dress.weaponGlow);
   }
-  assert.deepEqual(paths, ["/assets/items/staff-0.webp", "/assets/items/staff-2.webp", "/assets/items/staff-11.webp"]);
+  // ...glowing in each item picture's own accent colour.
+  assert.deepEqual(glows, [0xecb96a, 0xeaa357, 0xebb19a]);
+  const other = gearDress({ class: "priest", equipment: { weapon: "dawn_scepter" } },
+    { layers: { looks: set.layers.looks } });
+  assert.equal(other.weapon.url, "/assets/items/staff-2.webp", "sets without weaponArt still hold the picture");
 });
 
 test("a replaced weapon image follows the animated hand in both facing directions", () => {
@@ -108,12 +116,11 @@ test("a replaced weapon image follows the animated hand in both facing direction
   assert.deepEqual(weapon.position, [160, 223]);
   assert.deepEqual(weapon.flip, [true, false]);
   assert.equal(weapon.angle, -35);
-  set.layers.weaponBehind = true;
+  set.layers.weaponFront = true;
   set.layers.hand = "hand";
-  registry.layer = () => { throw Error("far gripping palm must not be placed over the body"); };
+  registry.layer = () => { throw Error("a palm overlay must not cover the staff held in front of it"); };
   playLayers(scene, holder, image, set, dress("staff-2"), registry);
-  assert.ok(weapon.depth < image.depth + 0.005, "staff must remain below robe and near arm in either facing");
-  assert.ok(weapon.depth > image.depth, "staff must not fall behind the scene when the base sprite is at depth zero");
+  assert.ok(weapon.depth > image.depth + 0.0005, "staff is drawn over the body and the gripping hand");
 });
 
 test("the hand overlay follows the selected outfit instead of keeping the novice palm", () => {

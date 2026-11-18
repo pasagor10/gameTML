@@ -405,6 +405,13 @@ export function playLayers(scene, holder, image, set, dress, registry) {
       im.setTint(tint);
     } else if (im.isTinted) im.clearTint();
   };
+  // weaponBehind: under the whole body (above the base sprite only).
+  // weaponFront: over the outfit and its gripping hand, under the head.
+  const layerWeapon = (im) => {
+    if (layers.weaponBehind) im.setDepth(image.depth + 0.002);
+    else if (layers.weaponFront)
+      im.setDepth((images.outfit?.depth ?? image.depth) + 0.0025);
+  };
   if (layers) {
     for (const slot of ["outfit", "head"]) {
       const look = dress?.looks?.[slot],
@@ -444,22 +451,29 @@ export function playLayers(scene, holder, image, set, dress, registry) {
         .setFlip(flip, false)
         .setAngle((flip ? -deg : deg) + image.angle);
       finish(im, null);
-      if (layers.weaponBehind) im.setDepth(image.depth + 0.002);
-      glowWeapon(scene, im, w.glow, image);
+      layerWeapon(im);
+      glowWeapon(scene, im, dress.weaponGlow, image);
     } else if (!(dress?.weapon && layers.painted)) {
-      // Painted sets wait for the item picture rather than downloading a
-      // whole fallback weapon atlas for a moment's use.
+      // The set's own drawn weapon look. Painted sets showing an item
+      // picture don't download this atlas just to fill the moment it loads.
       const look = dress?.looks?.weapon;
       if (look && layers.looks?.weapon?.includes(look)) {
-        place("weapon", registry.layer(set.name, `weapon/${look}`));
-        if (layers.weaponBehind && used.has("weapon")) images.weapon.setDepth(image.depth + 0.002);
+        // Per-outfit weapon folders (layers.weapons) carry a painted fist
+        // fitted to that outfit's sleeve.
+        const dir = layers.weapons?.[dress?.looks?.outfit] || "weapon";
+        place("weapon", registry.layer(set.name, `${dir}/${look}`));
+        if (used.has("weapon")) {
+          layerWeapon(images.weapon);
+          glowWeapon(scene, images.weapon, dress.weaponGlow, image);
+        }
       }
     }
     // Optional near-hand grip overlay for sets that need one.
     const hand = layers.hands?.[dress?.looks?.outfit] || layers.hand;
-    // Painted far-arm sets already paint the gripping palm below the robe.
-    // Repeating it here would bring that far hand back above the near arm.
-    if (hand && !layers.weaponBehind) place("hand", registry.layer(set.name, hand));
+    // Painted sets paint the gripping palm in the outfit itself: an overlay
+    // would either repeat the far hand over the near arm (weaponBehind) or
+    // cover the staff held in front of the palm (weaponFront).
+    if (hand && !layers.weaponBehind && !layers.weaponFront) place("hand", registry.layer(set.name, hand));
   }
   for (const key of Object.keys(images))
     if (!used.has(key)) {
