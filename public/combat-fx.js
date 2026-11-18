@@ -291,11 +291,11 @@ export function createCombatFx(scene) {
     y,
     dir,
     tint,
-    { scale = 1, angle = 0, flipY = false, ms = 230 } = {},
+    { scale = 1, angle = 0, flipY = false, ms = 230, core = 0.8, alpha = 0.95 } = {},
   ) => {
     for (const [s, t, a] of [
-      [scale, tint, 0.95],
-      [scale * 0.82, 0xffffff, 0.8],
+      [scale, tint, alpha],
+      [scale * 0.82, 0xffffff, core],
     ]) {
       const img = sprite("cfx-slash2", x, y, t)
         .setFlipX(dir < 0)
@@ -582,6 +582,106 @@ export function createCombatFx(scene) {
     }
   }
 
+  // Swordsman basic attack: a three-step blade combo (the server's combo 0/1/2).
+  //   0  diagonal down-cut with a trailing afterimage and a spark shower
+  //   1  rising up-cut that throws sparks skyward
+  //   2  cross finisher: an X of cuts, a sword wave flying forward,
+  //      a ground shockwave, shake and a zoom punch
+  // Every swing glints on the blade and rings the ground at the feet; a long
+  // chain of swings heats the steel toward the accent colour.
+  function bladeCombo(e, dir, color, accent, tier, range) {
+    const combo = e.combo || 0,
+      heat = Math.min(1, (e.chain || 0) / 6),
+      steel = heat > 0.3 ? mix(color, accent === color ? 0xffd27a : accent, heat) : color,
+      hot = mix(steel, 0xffffff, 0.5),
+      grow = 1 + (tier - 1) * 0.12,
+      hx = e.x + dir * range * 0.36,
+      hy = e.y + 6,
+      feet = e.y + 48;
+    // Blade glint at the hand and a step ring where the lead foot lands.
+    flare(e.x + dir * 22, e.y - 8, steel, 0.3 + combo * 0.08, 150);
+    ring(e.x - dir * 4, feet, steel, 0.9 + combo * 0.25, 260, 0.22);
+    // Speed lines streaking forward along the swing.
+    const lines = combo === 2 ? 5 : 3;
+    for (let n = 0; n < lines; n++) {
+      const y = e.y - 24 + (n / Math.max(1, lines - 1)) * 48,
+        line = sprite("cfx-spark2", e.x - dir * 10, y, n % 2 ? hot : steel, 35)
+          .setFlipX(dir < 0)
+          .setScale(0.8, 0.4)
+          .setAlpha(0.9);
+      scene.tweens.add({
+        targets: line,
+        x: line.x + dir * (90 + n * 12),
+        scaleX: 1.3,
+        alpha: 0,
+        duration: 170,
+        delay: n * 12,
+        ease: "Quad.out",
+        onComplete: () => line.destroy(),
+      });
+    }
+    // A cut plus its ghost, a beat behind and a little wider.
+    // Only the lead cut keeps a bright white core, so stacked cuts stay coloured.
+    // Cuts blend additively: only the lead cut is fully opaque with a white
+    // core, ghosts and crossing cuts stay faint so the stack keeps its colour.
+    const cut = (angle, flipY, scale, delay = 0, alpha = 0.4, core = 0.12) =>
+      scene.time.delayedCall(delay, () =>
+        slash(hx, hy, dir, steel, { scale: scale * grow, angle, flipY, ms: 240, core, alpha }),
+      );
+    const sparkShower = (x, y, tint, n, angle) =>
+      blast(sparks, x, y, n, tint, { speed: [220, 560], angle });
+
+    if (combo === 0) {
+      cut(-42, false, 1.1, 0, 0.9, 0.35);
+      cut(-32, false, 1.22, 45);
+      sparkShower(hx + dir * 20, hy + 10, hot, 10,
+        dir > 0 ? { min: 10, max: 70 } : { min: 110, max: 170 });
+      flare(hx + dir * 24, hy, hot, 0.7, 180);
+    } else if (combo === 1) {
+      cut(44, true, 1.1, 0, 0.9, 0.35);
+      cut(54, true, 1.22, 45);
+      sparkShower(hx + dir * 16, hy - 10, hot, 12, { min: 235, max: 305 });
+      blast(embers, hx, hy, 6, steel, { speed: [160, 360], angle: { min: 240, max: 300 } });
+      ring(hx + dir * 20, hy - 6, steel, 1.3, 260, 0.55);
+    } else {
+      // The cross: two crossing cuts, then the big horizontal sweep.
+      cut(-48, false, 1.05, 0, 0.6, 0.1);
+      cut(48, true, 1.05, 40, 0.6, 0.1);
+      cut(0, false, 1.35, 90, 0.85, 0.25);
+      scene.time.delayedCall(90, () => {
+        flare(hx + dir * 30, hy, steel, 0.6, 180);
+        ring(hx + dir * 20, hy, steel, 1.8, 340);
+        ring(hx + dir * 10, feet, accent, 2.6, 420, 0.25);
+        sparkShower(hx + dir * 20, hy, hot, 18, undefined);
+        blast(embers, hx, feet - 6, 10, steel, { speed: [120, 300], angle: { min: 220, max: 320 } });
+        shake(100, 0.004);
+        punch(0.03, 80);
+        // Sword wave: a crescent of force that keeps flying past the target.
+        const wave = sprite("cfx-slash2", hx, hy, steel, 36)
+          .setFlipX(dir < 0)
+          .setScale(0.7 * grow, 0.9 * grow)
+          .setAlpha(0.6);
+        const core = sprite("cfx-slash2", hx, hy, hot, 37)
+          .setFlipX(dir < 0)
+          .setScale(0.55 * grow, 0.7 * grow)
+          .setAlpha(0.25);
+        scene.tweens.add({
+          targets: [wave, core],
+          x: hx + dir * (150 + (tier - 1) * 40),
+          alpha: 0,
+          scaleY: 1.2 * grow,
+          duration: 300,
+          ease: "Quad.out",
+          onComplete: () => {
+            wave.destroy();
+            core.destroy();
+          },
+        });
+        if (tier >= 3) pillar(hx + dir * 30, feet + 2, accent, 0.8, 0.6);
+      });
+    }
+  }
+
   // Class tier (1 base, 2 specialization, 3 advanced) grows every skill:
   // bigger shapes, extra projectiles/slashes, an accent colour, and at
   // tier 3 rune circles, pillars of light and a second shockwave.
@@ -733,8 +833,9 @@ export function createCombatFx(scene) {
           flare(hx, e.y, 0xffffff, 2, 260);
           shake(120, 0.004);
         });
+    } else if (e.class === "swordsman" && !e.skill) {
+      bladeCombo(e, dir, color, accent, tier, range);
     } else if (!e.skill) {
-      // Three-hit combo: down-cut, up-cut, then a wide horizontal finisher.
       const combo = e.combo || 0;
       slash(e.x + dir * range * 0.32, e.y + 6, dir, color, {
         scale: (combo === 2 ? 1.35 : 1.1) * (1 + (tier - 1) * 0.12),
