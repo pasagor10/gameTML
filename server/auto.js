@@ -125,7 +125,7 @@ export function autoBrain(p, i, t, { range, mpMax, platforms }) {
     reserve = mpMax * 0.25; // keep enough for a big skill when it matters
   // Party buff first when a fight is on and nobody has it.
   const buff = skillOf(p.class, 4).buff;
-  if (ready(4) && (p.buffs?.[buff]?.until || 0) <= t && (big || count(3) >= 2) && mp - ACTIONS[4].mp >= reserve * 0.5)
+  if (ready(4) && (p.buffs?.[buff]?.until || 0) <= t && (big ? hitsTarget(3) : count(3) >= 2) && mp - ACTIONS[4].mp >= reserve * 0.5)
     plan.skill = 4;
   else if (ready(3) && hitsTarget(3) && (count(3) >= 3 || big)) plan.skill = 3;
   else if (ready(2) && hitsTarget(2) && (count(2) >= 2 || big)) plan.skill = 2;

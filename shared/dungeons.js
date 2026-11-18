@@ -217,8 +217,9 @@ export const withinDungeonSign = (player, sign) =>
 export function dungeonEnemyCount(floor, stage) {
   // Deep floors stay at floor-12 crowd size; their variants make them harder.
   const crowd = Math.min(floor, 12);
-  if (stage === 3) return 1 + 2 + Math.floor(crowd / 2);
-  return 8 + crowd * 2 + (stage === 2 ? 2 : 0);
+  // Fewer but tougher monsters (see MONSTER_HP in server/world.js).
+  if (stage === 3) return 1 + 2 + Math.floor(crowd / 3);
+  return 6 + crowd + (stage === 2 ? 1 : 0);
 }
 // Every few monsters is an elite pack leader with more health and bite.
 export const isElite = (floor, stage, n) =>

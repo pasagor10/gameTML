@@ -361,7 +361,7 @@ test("every dungeon floor spawns its monsters inside the arena", async () => {
     if (p.energy) p.energy.nextAt -= DUNGEON_ENERGY_INTERVAL;
     world.beginDungeon(p, floor);
     const i = world.instances.get(p.instance);
-    assert.equal(i.enemies.length, 8 + Math.min(floor, 12) * 2);
+    assert.equal(i.enemies.length, 6 + Math.min(floor, 12));
     for (const e of i.enemies)
       assert.ok(
         e.x >= 70 && e.x <= WORLD.width - 70,
@@ -645,7 +645,7 @@ test("consecutive kills award bonus gold and MP, resetting after the window", ()
       (e) => e.kind === "drop" && e.item === "gold" && e.actorId === p.id,
     ),
   );
-  assert.equal(p.gold - gold, 11, "two base rewards plus second-kill bonus");
+  assert.equal(p.gold - gold, 19, "two base rewards (9 each) plus second-kill bonus");
   assert.equal(i.events.find((e) => e.kind === "streak").bonus, 1);
   assert.equal(world.snapshot(p).dungeon.defeated, 2);
   const e = i.enemies[0];

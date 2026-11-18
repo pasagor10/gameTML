@@ -66,7 +66,7 @@ test("deeper floors field more monsters spread across the whole arena", () => {
   for (let floor = 1; floor <= 10; floor++) {
     for (const stage of [1, 2]) {
       const count = dungeonEnemyCount(floor, stage);
-      assert.ok(count >= 10);
+      assert.ok(count >= 7);
       if (floor > 1) assert.ok(count > dungeonEnemyCount(floor - 1, stage));
       const xs = Array.from(
         { length: count },

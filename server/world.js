@@ -323,6 +323,10 @@ function nightRewards(i, m, t) {
   }
   questEvents(i, m, advanceQuests(m, wallClock(), "boss"), m.x, m.y - 160, t);
 }
+// Monsters are tougher and fewer: each has this much more HP, and each kill
+// pays this much more so a run still earns about the same.
+const MONSTER_HP = 2.5,
+  KILL_PAY = 1.8;
 // Daily quests use the real calendar even when combat runs on a test clock.
 const wallClock = () => Date.now() / 1000;
 
@@ -1085,7 +1089,7 @@ function spawnStage(i) {
               1.2 *
               (i.night ? NIGHT_BOSS.hp : 1),
           )
-        : 55 + i.floor * 24 + i.stage * 14,
+        : (55 + i.floor * 24 + i.stage * 14) * MONSTER_HP,
       max = Math.round(base * (elite ? 2.2 : 1) * (mods.hp || 1)),
       spot = dungeonSpawn(i.floor, i.stage, slot, boss, count);
     i.enemies.push({
@@ -1438,8 +1442,8 @@ function enemyDown(i, e, t) {
         const gold =
             (e.boss
               ? 28 + i.floor * 10
-              : (4 + i.floor) * (e.elite ? 2 : 1)) + bonus,
-          gained = e.boss ? 110 : e.elite ? 45 : 20,
+              : Math.round((4 + i.floor) * KILL_PAY) * (e.elite ? 2 : 1)) + bonus,
+          gained = e.boss ? 110 : Math.round((e.elite ? 45 : 20) * KILL_PAY),
           reward = i.rewards?.[m.id];
         m.gold += gold;
         m.mp = Math.min(maxMp(m), m.mp + (bonus ? 4 : 0));
@@ -2051,11 +2055,11 @@ export function tick(dt, t = now()) {
       }
       // Monsters guard their spot until a hero comes close, then call the pack.
       if (!e.aggro && !i.training) {
-        const reach = e.type === "bat" ? 480 : 400;
+        const reach = e.type === "bat" ? 340 : 280;
         if (Math.abs(p.x - e.x) < reach && Math.abs(p.y - e.y) < 280) {
           e.aggro = true;
           for (const o of i.enemies)
-            if (!o.aggro && Math.abs(o.x - e.x) < 260) o.aggro = true;
+            if (!o.aggro && Math.abs(o.x - e.x) < 130) o.aggro = true;
         }
       }
       if (!e.aggro && !i.training) {
