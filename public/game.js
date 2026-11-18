@@ -8,7 +8,8 @@ import { slotPanelHtml, bindSlotPanel } from "/slots-ui.js?v=2";
 import { heroPortraitStyle } from "/hero-appearance.js?v=2";
 import { skillIcon, potionIcon, manaPotionIcon, autoIcon } from "/skill-icons.js?v=4";
 import { dungeonPlatforms, withinDungeonSign } from "/shared/dungeons.js";
-import { supplyArt, itemArtPath } from "/item-art.js";
+import { supplyArt, itemArtPath, costumeArtPath } from "/item-art.js";
+import { COSTUME_ITEMS } from "/shared/costumes.js";
 import {
   sfx,
   music,
@@ -24,7 +25,7 @@ import {
   rpgPanel,
   bindRpgPanel,
   gearShop,
-} from "/rpg-ui.js?v=11";
+} from "/rpg-ui.js?v=14";
 import {
   GEAR,
   RARITIES,
@@ -40,7 +41,7 @@ import {
 } from "/shared/rpg.js";
 import { createTownNpcs, footGlow, createRim } from "/town-npcs.js?v=10";
 import { updateEnhanceAura, AURA_LEVEL } from "/enhance-aura.js?v=3";
-import { marketHtml, shopManagerHtml, marketState } from "/market-ui.js?v=7";
+import { marketHtml, shopManagerHtml, marketState } from "/market-ui.js?v=8";
 import { sampleMotion } from "/shared/smoothing.js";
 import {
   questPanelHtml,
@@ -68,7 +69,7 @@ import {
   animateSlime,
   monsterDeath,
 } from "/combat-visuals.js?v=0.3.1";
-import { createSelectionPreview } from "/selection-scene.js?v=0.11.0";
+import { createSelectionPreview } from "/selection-scene.js?v=0.12.1";
 import {
   CLASSES,
   ITEMS,
@@ -99,8 +100,8 @@ import {
   playMonsterSet,
   playMonsterDeath,
   playLayers,
-} from "/sprite-sets.js?v=0.20.0";
-import { gearDress } from "/hero-gear.js?v=1";
+} from "/sprite-sets.js?v=0.21.0";
+import { gearDress } from "/hero-gear.js?v=3";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 observeHudLayout($("#game-screen"));
@@ -439,7 +440,7 @@ function modal(title, html, panel) {
   $("#modal .modal-box").scrollTop = 0;
   $("#modal").classList.toggle(
     "rpg-modal",
-    ["inventory", "class", "status", "weapon"].includes(panel),
+    ["inventory", "class", "status", "wardrobe", "weapon"].includes(panel),
   );
   $("#modal").classList.toggle("quest-modal", panel === "quest");
   $("#modal").classList.toggle("dungeon-modal", panel === "dungeon");
@@ -774,7 +775,7 @@ function updateHUD() {
       badge.textContent = p.statPoints;
     } else badge?.remove();
   }
-  if (["inventory", "class", "status"].includes(activePanel)) {
+  if (["inventory", "class", "status", "wardrobe"].includes(activePanel)) {
     const hash = JSON.stringify([
       p.attrs,
       p.statPoints,
@@ -785,6 +786,7 @@ function updateHUD() {
       p.inventory,
       p.specialization,
       p.advanced,
+      p.skin,
       p.level,
       p.gold,
       state.area,
@@ -1201,7 +1203,7 @@ function showFloorResult(r) {
     r.ore ? `<span class="loot-chip">⛏ แร่ ×${r.ore}</span>` : "",
     ...r.items.map(
       (id) =>
-        `<span class="loot-chip rare" data-rarity="${escape(GEAR[id]?.rarity || "")}">🎁 ${escape(GEAR[id]?.name || id)}</span>`,
+        `<span class="loot-chip rare" data-rarity="${escape((GEAR[id] || COSTUME_ITEMS[id])?.rarity || "")}">${COSTUME_ITEMS[id] ? "👗" : "🎁"} ${escape((GEAR[id] || COSTUME_ITEMS[id])?.name || id)}</span>`,
     ),
   ];
   $("#floor-result .result-loot").innerHTML = loot.join("");
@@ -1366,9 +1368,9 @@ function showPanel(panel) {
       currentPlayer: () => state?.self,
       onSettled: () => { if (activePanel === "slots") showPanel("slots"); },
     });
-  } else if (["inventory", "class", "status"].includes(panel)) {
+  } else if (["inventory", "class", "status", "wardrobe"].includes(panel)) {
     modal(
-      { class: "เส้นทางผู้กล้า", status: "สเตตัสผู้กล้า" }[panel] || "อุปกรณ์และกระเป๋า",
+      { class: "เส้นทางผู้กล้า", status: "สเตตัสผู้กล้า", wardrobe: "ตู้ชุดผู้กล้า" }[panel] || "อุปกรณ์และกระเป๋า",
       rpgPanel(p, state.area, panel),
       panel,
     );
@@ -1382,6 +1384,7 @@ function showPanel(panel) {
       p.inventory,
       p.specialization,
       p.advanced,
+      p.skin,
       p.level,
       p.gold,
       state.area,
@@ -1651,11 +1654,11 @@ function showTrade() {
       `<p>รายการรุ่น ${t.revision} · การแก้ไขจะยกเลิกการยืนยันทั้งสองฝ่าย</p>${t.members
         .map((id) => {
           const o = t.offers[id];
-          return `<div class="trade-offer"><b>${escape(t.names[id])}${id === p.id ? " (คุณ)" : ""}</b><p>${o.gold} ทอง + ${ITEMS[o.item].name} ×${o.qty}</p><small>${t.confirmed.includes(id) ? "✓ ยืนยันรอบแรกแล้ว" : "ยังไม่ยืนยัน"} ${t.final.includes(id) ? "· ✓ ยืนยันสุดท้ายแล้ว" : ""}</small></div>`;
+          return `<div class="trade-offer"><b>${escape(t.names[id])}${id === p.id ? " (คุณ)" : ""}</b><p>${o.gold} ทอง + ${(ITEMS[o.item] || COSTUME_ITEMS[o.item])?.name || o.item} ×${o.qty}</p><small>${t.confirmed.includes(id) ? "✓ ยืนยันรอบแรกแล้ว" : "ยังไม่ยืนยัน"} ${t.final.includes(id) ? "· ✓ ยืนยันสุดท้ายแล้ว" : ""}</small></div>`;
         })
         .join(
           "",
-        )}<label>ทองที่เสนอ<input id="trade-gold" type="number" min="0" value="${me.gold}"></label><label>ไอเทม<select id="trade-item">${["ore", "hp", "mp"].map((i) => `<option value="${i}" ${me.item === i ? "selected" : ""}>${ITEMS[i].name} · มี ${p.inventory[i]}</option>`).join("")}</select></label><label>จำนวน<input id="trade-qty" type="number" min="0" value="${me.qty}"></label><div class="trade-actions"><button id="trade-offer" class="secondary-button">อัปเดตข้อเสนอ</button><button id="trade-confirm" class="primary-button">${t.confirmed.length === 2 ? "ยืนยันรอบสุดท้าย" : "ยืนยันรายการรอบแรก"}</button></div><button id="trade-cancel" class="text-button">ยกเลิกการแลกเปลี่ยน</button>`,
+        )}<label>ทองที่เสนอ<input id="trade-gold" type="number" min="0" value="${me.gold}"></label><label>ไอเทม<select id="trade-item">${["ore", "hp", "mp", ...Object.keys(COSTUME_ITEMS).filter((i) => p.inventory[i] > 0 || me.item === i)].map((i) => `<option value="${i}" ${me.item === i ? "selected" : ""}>${(ITEMS[i] || COSTUME_ITEMS[i]).name} · มี ${p.inventory[i] || 0}</option>`).join("")}</select></label><label>จำนวน<input id="trade-qty" type="number" min="0" value="${me.qty}"></label><div class="trade-actions"><button id="trade-offer" class="secondary-button">อัปเดตข้อเสนอ</button><button id="trade-confirm" class="primary-button">${t.confirmed.length === 2 ? "ยืนยันรอบสุดท้าย" : "ยืนยันรายการรอบแรก"}</button></div><button id="trade-cancel" class="text-button">ยกเลิกการแลกเปลี่ยน</button>`,
       "trade",
     );
     $("#trade-offer").onclick = () =>
@@ -2564,6 +2567,23 @@ class Adventure extends Phaser.Scene {
     }
     if (e.kind === "drop") {
       if (e.actorId === state.self.id) this.showDrop(e, `drop-${e.item}`);
+      return;
+    }
+    if (e.kind === "costume") {
+      const c = COSTUME_ITEMS[e.item];
+      if (c && e.actorId === state.self.id) {
+        toast(`ได้รับชุดแต่งกาย ${c.name} [${RARITIES[c.rarity]}] · สวมได้ที่ตู้ชุด หรือนำไปขายในตลาด`);
+        soundCue("loot", c.rarity);
+        const key = `costume-${e.item}`,
+          color = { rare: "#79d9f2", epic: "#d0a7ff", legendary: "#ffc35d" }[c.rarity],
+          show = () => this.showDrop(e, key, color, 92);
+        if (this.textures.exists(key)) show();
+        else {
+          this.load.image(key, costumeArtPath(e.item));
+          this.load.once(`filecomplete-image-${key}`, show);
+          if (!this.load.isLoading()) this.load.start();
+        }
+      }
       return;
     }
     if (e.kind === "material") {

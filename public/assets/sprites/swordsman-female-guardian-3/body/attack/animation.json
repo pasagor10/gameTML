@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "3.0",
+  "name": "attack",
+  "artSource": "pixel sheet swordsman-female-tier3.webp",
+  "sourceSize": [
+    64,
+    54
+  ],
+  "encodedAnchor": [
+    32,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    70,
+    80,
+    100,
+    130
+  ],
+  "durationSeconds": 0.38,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 150
+    }
+  ],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      64,
+      54
+    ],
+    "pages": [
+      {
+        "file": "attack-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        49.22,
+        39.48,
+        -75
+      ],
+      [
+        53.77,
+        32.04,
+        -140
+      ],
+      [
+        54.83,
+        33.27,
+        -5
+      ],
+      [
+        48.92,
+        37.53,
+        -55
+      ]
+    ]
+  }
+}

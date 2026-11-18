@@ -75,6 +75,8 @@ function clipFrom(scene, key, manifest) {
     const texKey = `${key}:${page.file}`;
     if (!scene.textures.exists(texKey)) return null;
     const tex = scene.textures.get(texKey);
+    // Pixel-art sets keep hard pixel edges when scaled up.
+    if (manifest.sampling === "nearest") tex.setFilter(1);
     for (let k = 0; k < page.frameCount; k++) {
       const name = `f${page.firstFrame + k}`,
         col = k % page.columns,
@@ -452,7 +454,9 @@ export function playLayers(scene, holder, image, set, dress, registry) {
       icon = dress?.weapon && sock ? registry.image(dress.weapon.url) : null;
     if (icon) {
       // The weapon's item picture: butt bottom-left, tip top-right, so it
-      // points at -45° unrotated. Flipping mirrors around the frame middle.
+      // points at -45° unrotated. Upright pixel pictures (tip up) point at
+      // -90° and show at the body's own pixel scale. Flipping mirrors around
+      // the frame middle.
       used.add("weapon-icon");
       const w = dress.weapon,
         flip = image.flipX,
@@ -461,21 +465,35 @@ export function playLayers(scene, holder, image, set, dress, registry) {
         lx = ((flip ? cw - sock[0] : sock[0]) - image.originX * cw) * image.scaleX,
         ly = (sock[1] - image.originY * ch) * image.scaleY,
         r = image.rotation,
-        tex = scene.textures.get(icon).getSourceImage(),
-        gx = 0.1 + 0.8 * w.grip,
-        gy = 0.9 - 0.8 * w.grip,
-        deg = sock[2] + 45;
+        texture = scene.textures.get(icon),
+        tex = texture.getSourceImage(),
+        gx = w.upright ? 0.5 : 0.1 + 0.8 * w.grip,
+        gy = w.upright ? w.grip : 0.9 - 0.8 * w.grip,
+        deg = sock[2] + (w.upright ? 90 : 45);
+      if (w.upright && texture._pixel !== true) {
+        texture.setFilter(1);
+        texture._pixel = true;
+      }
       let im = images["weapon-icon"];
       im ??= images["weapon-icon"] = scene.add.image(0, 0, icon);
       if (im.texture.key !== icon) im.setTexture(icon);
       im.setOrigin(flip ? 1 - gx : gx, gy)
         .setPosition(image.x + lx * Math.cos(r) - ly * Math.sin(r), image.y + lx * Math.sin(r) + ly * Math.cos(r))
-        .setScale((w.length * Math.abs(image.scaleY)) / (tex.width * 0.8 * Math.SQRT2))
+        .setScale(
+          w.upright
+            ? Math.abs(image.scaleY)
+            : (w.length * Math.abs(image.scaleY)) / (tex.width * 0.8 * Math.SQRT2),
+        )
         .setFlip(flip, false)
         .setAngle((flip ? -deg : deg) + image.angle);
       finish(im, null);
       layerWeapon(im);
-      glowWeapon(scene, im, dress.weaponGlow, image);
+      // The glow pass resamples the picture smoothly: pixel art goes without.
+      if (!w.upright) glowWeapon(scene, im, dress.weaponGlow, image);
+      else if (im._glow) {
+        im.preFX?.clear();
+        im._glow = null;
+      }
     } else if (!(dress?.weapon && layers.painted)) {
       // The set's own drawn weapon look. Painted sets showing an item
       // picture don't download this atlas just to fill the moment it loads.

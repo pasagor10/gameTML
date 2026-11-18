@@ -1,3 +1,4 @@
+import { COSTUME_ITEMS } from "../shared/costumes.js";
 // Artwork indices follow the supplied sheets, left to right, top to bottom.
 const artwork = {
   starter_swordsman: ["sword", 0],
@@ -43,10 +44,37 @@ export function itemArtPath(id, item) {
   }
   return art ? `/assets/items/${art[0]}-${art[1]}.webp` : null;
 }
+// Pixel heroes (index.json layers.heldArt "pixel") hold small upright
+// pixel swords cut from tools/sprite-rig/source/pixel/swords.webp
+// (slice_pixel_swords.py), not the big item pictures.
+const heldSwords = {
+  starter_swordsman: 0,
+  guardian_weapon: 1,
+  nightfang_blade: 8,
+  stoneheart_blade: 7,
+  serpent_blade: 15,
+  moon_blade: 24,
+  floor_4_swordsman_weapon: 18,
+  floor_5_swordsman_weapon: 6,
+  floor_6_swordsman_weapon: 12,
+  floor_7_swordsman_weapon: 28,
+  floor_8_swordsman_weapon: 29,
+  floor_9_swordsman_weapon: 22,
+  floor_10_swordsman_weapon: 26,
+};
+export function heldArtPath(id) {
+  const index = heldSwords[id];
+  return index === undefined ? null : `/assets/items/held/sword-${index}.webp`;
+}
 function image([group, index], name) {
   return `<img class="item-art" src="/assets/items/${group}-${index}.webp" alt="${escape(name)}" width="80" height="80" loading="lazy" decoding="async">`;
 }
+// A costume item shows the costume's own pixel portrait.
+export const costumeArtPath = (id) =>
+  COSTUME_ITEMS[id] ? `/assets/sprites/female-costume-${COSTUME_ITEMS[id].costume}/portrait.webp` : null;
 export function supplyArt(id) {
+  if (COSTUME_ITEMS[id])
+    return `<img class="item-art costume-art" src="${costumeArtPath(id)}" alt="${escape(COSTUME_ITEMS[id].name)}" width="80" height="80" loading="lazy" decoding="async">`;
   const art = {
     hp: ["supply", 0],
     mp: ["supply", 1],

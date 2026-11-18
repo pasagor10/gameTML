@@ -26,6 +26,7 @@ import {
   enhancementCost,
 } from "../shared/rpg.js";
 import { ACTIONS } from "../shared/motion.js";
+import { costumeOf, ownsCostume, isCostumeItem, COSTUME_ITEMS, rollCostumeDrop } from "../shared/costumes.js";
 import {
   applyRaise,
   autoPlan,
@@ -130,10 +131,15 @@ export function invalidateShops() {
 export function live(id) {
   return [...players.values()].find((p) => p.id === id);
 }
+// A worn costume comes off once its last copy is sold, traded or thrown away.
+function dropUnownedSkin(c) {
+  if (c.skin && !ownsCostume(c, c.skin)) c.skin = null;
+}
 export function sync(p) {
   const saved = loadCharacter(p.id);
   if (saved)
     Object.assign(p, {
+      skin: saved.skin ?? null,
       gold: saved.gold,
       inventory: saved.inventory,
       upgrade: saved.upgrade,
@@ -205,8 +211,9 @@ export function discardItem(p, id, key) {
       if (index < 0) throw Error("ไม่มีอุปกรณ์นี้");
       c.ownedEquipment.splice(index, 1);
     } else {
-      if (!["hp", "mp", "ore"].includes(id) || !(c.inventory[id] > 0)) throw Error("ไม่มีไอเทมนี้");
+      if (!(["hp", "mp", "ore"].includes(id) || isCostumeItem(id)) || !(c.inventory[id] > 0)) throw Error("ไม่มีไอเทมนี้");
       c.inventory[id] -= 1;
+      dropUnownedSkin(c);
     }
     persist(c);
     return { message: "ทิ้งไอเทม 1 ชิ้นแล้ว" };
@@ -273,6 +280,14 @@ export function specialize(p, id) {
   p.mp = Math.min(p.mp, maxMp(p));
   savePlayer(p);
   return { message: "เลือกสายพัฒนาแล้ว" };
+}
+// Wear a costume (shared/costumes.js) over the class look, or null to take it off.
+export function wearCostume(p, id) {
+  if (id != null && !costumeOf(p, id)) throw Error("ชุดนี้สวมได้เฉพาะตัวละครหญิง");
+  if (id != null && !ownsCostume(p, id)) throw Error("ยังไม่มีชุดนี้ · เก็บได้จากบอสในดันเจียน");
+  p.skin = id ?? null;
+  savePlayer(p);
+  return { message: id ? `สวม${costumeOf(p, id).name}แล้ว` : "กลับเป็นชุดอาชีพแล้ว" };
 }
 export function enhance(p, key, slot = "weapon") {
   ensureTown(p);
@@ -636,7 +651,7 @@ function grantEnergy(p, t, amount) {
 
 // Anything in the bag can go on sale: potions and ore by the stack, and any
 // owned gear that is not equipped (starter gear is bound to its class).
-const SHOP_STOCK = ["hp", "mp", "ore"],
+const SHOP_STOCK = ["hp", "mp", "ore", ...Object.keys(COSTUME_ITEMS)],
   SHOP_LIMIT = 12;
 // Stalls opened on the old, shorter town map move to the current free spots.
 db.transaction(() => {
@@ -667,6 +682,7 @@ function takeStock(c, item, qty) {
     );
   if (SHOP_STOCK.includes(item)) c.inventory[item] -= qty;
   else c.ownedEquipment = c.ownedEquipment.filter((id) => id !== item);
+  dropUnownedSkin(c);
 }
 function giveStock(c, item, qty) {
   if (SHOP_STOCK.includes(item))
@@ -705,7 +721,7 @@ function addListing(p, shopId, listing) {
   );
   return id;
 }
-const stockName = (item) => ITEMS[item]?.name || GEAR[item]?.name || item;
+const stockName = (item) => ITEMS[item]?.name || COSTUME_ITEMS[item]?.name || GEAR[item]?.name || item;
 export function createShop(p, { name, item, price, qty, listings, key }) {
   ensureTown(p);
   const stock = listings ?? [{ item, qty, price }];
@@ -872,6 +888,7 @@ export function potion(p, type = "hp", t = now()) {
 }
 export function makeRuntime(c, socket) {
   initializeGear(c);
+  dropUnownedSkin(c);
   return {
     ...c,
     socket,
@@ -925,6 +942,7 @@ export function stored(p) {
     "nightClear",
     "attrs",
     "statResets",
+    "skin",
   ];
   return {
     id: p.id,
@@ -1677,6 +1695,22 @@ function checkClear(i, t, p) {
               at: t,
             });
           }
+          // Costumes drop for every hero (anyone can sell or trade them).
+          const costume = rollCostumeDrop(i.floor);
+          if (costume) {
+            m.inventory[costume] = (m.inventory[costume] || 0) + 1;
+            i.rewards?.[m.id]?.items.push(costume);
+            i.events.push({
+              id: randomUUID(),
+              kind: "costume",
+              actorId: m.id,
+              x: i.lastDrop?.x ?? m.x,
+              y: i.lastDrop?.y ?? m.y - 110,
+              item: costume,
+              rarity: COSTUME_ITEMS[costume].rarity,
+              at: t,
+            });
+          }
           m.quest = Math.max(m.quest, i.floor);
           questEvents(
             i,
@@ -1852,10 +1886,10 @@ export function tradeAction(
       !t.accepted ||
       !validInt(gold, 0, 1000000) ||
       !validInt(qty, 0, 999) ||
-      !["hp", "mp", "ore"].includes(item)
+      !(["hp", "mp", "ore"].includes(item) || isCostumeItem(item))
     )
       throw Error("ข้อเสนอไม่ถูกต้อง");
-    if (p.gold < gold || p.inventory[item] < qty) throw Error("ทรัพย์สินไม่พอ");
+    if (p.gold < gold || (p.inventory[item] || 0) < qty) throw Error("ทรัพย์สินไม่พอ");
     t.offers[p.id] = { gold, item, qty };
     t.revision++;
     t.confirmed = [];
@@ -1878,7 +1912,7 @@ export function tradeAction(
             throw Error("ผู้เล่นไม่พร้อม");
           for (const c of chars) {
             const o = t.offers[c.id];
-            if (c.gold < o.gold || c.inventory[o.item] < o.qty)
+            if (c.gold < o.gold || (c.inventory[o.item] || 0) < o.qty)
               throw Error("ทรัพย์สินเปลี่ยนไป");
           }
           for (let n = 0; n < 2; n++) {
@@ -1890,6 +1924,7 @@ export function tradeAction(
             c.inventory[o.item] -= o.qty;
             other.inventory[o.item] = (other.inventory[o.item] || 0) + o.qty;
           }
+          chars.forEach(dropUnownedSkin);
           chars.forEach(persist);
           log(p.id, "trade:complete", {
             id: t.id,
@@ -2377,6 +2412,7 @@ export function snapshot(p) {
     gender: m.gender,
     specialization: m.specialization || null,
     advanced: !!m.advanced,
+    skin: m.skin || null,
     x: m.x,
     y: m.y,
     direction: m.direction,

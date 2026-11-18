@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "walk",
+  "artSource": "pixel sheet swordsman-female-tier3.webp",
+  "sourceSize": [
+    64,
+    54
+  ],
+  "encodedAnchor": [
+    32,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    140,
+    140,
+    140,
+    140
+  ],
+  "durationSeconds": 0.56,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      64,
+      54
+    ],
+    "pages": [
+      {
+        "file": "walk-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        49.25,
+        36.16,
+        -58
+      ],
+      [
+        47.44,
+        35.92,
+        -64
+      ],
+      [
+        46.53,
+        36.26,
+        -58
+      ],
+      [
+        44.47,
+        36.34,
+        -64
+      ]
+    ]
+  }
+}

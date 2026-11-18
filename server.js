@@ -302,6 +302,7 @@ io.on("connection", (socket) => {
   execute("equipment:equip", (p, d) => world.equip(p, d.slot, d.id));
   execute("class:specialize", (p, d) => world.specialize(p, d.id));
   execute("class:advance", (p) => world.advanceClass(p), 3);
+  execute("costume:wear", (p, d) => world.wearCostume(p, typeof d?.id === "string" ? d.id : null), 3);
   execute("stats:raise", (p, d) => world.raiseStats(p, d.adds), 5);
   execute("stats:auto", (p) => world.autoStats(p), 3);
   execute("stats:reset", (p) => world.resetStats(p), 2);

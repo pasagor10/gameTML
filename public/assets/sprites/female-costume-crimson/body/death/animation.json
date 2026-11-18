@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "death",
+  "artSource": "pixel sheet swordsman-female-tier1.webp",
+  "sourceSize": [
+    59,
+    55
+  ],
+  "encodedAnchor": [
+    33,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    140,
+    160,
+    180,
+    400
+  ],
+  "durationSeconds": 0.88,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      59,
+      55
+    ],
+    "pages": [
+      {
+        "file": "death-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        42.04,
+        38.6,
+        -40
+      ],
+      [
+        29.67,
+        39.67,
+        -10
+      ],
+      [
+        31.8,
+        37.34,
+        5
+      ],
+      [
+        51.29,
+        48.19,
+        0
+      ]
+    ]
+  }
+}

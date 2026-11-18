@@ -1,7 +1,7 @@
 /* Equipment & bag: Lanna gold frames on jade, three columns — hero card,
    bag grid, item detail. Scoped to the inventory modal; loaded last. */
 
-body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) {
+body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) {
   --corner-tl: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2230%22%20height%3D%2230%22%20viewBox%3D%220%200%2030%2030%22%3E%3Cg%20transform%3D%22%22%3E%3Cpath%20d%3D%22M3%2027V12Q3%203%2012%203h15%22%20fill%3D%22none%22%20stroke%3D%22%23e9c27a%22%20stroke-width%3D%222.2%22/%3E%3Cpath%20d%3D%22M7.5%2027V14q0-6.5%206.5-6.5h13%22%20fill%3D%22none%22%20stroke%3D%22%23e9c27a%22%20stroke-width%3D%221%22%20opacity%3D%22.55%22/%3E%3Cpath%20d%3D%22M8%208q4-1%205%203-4%201-5-3Z%22%20fill%3D%22%23ffe7a6%22/%3E%3Ccircle%20cx%3D%223%22%20cy%3D%2227%22%20r%3D%221.6%22%20fill%3D%22%23e9c27a%22/%3E%3Ccircle%20cx%3D%2227%22%20cy%3D%223%22%20r%3D%221.6%22%20fill%3D%22%23e9c27a%22/%3E%3C/g%3E%3C/svg%3E");
   --corner-tr: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2230%22%20height%3D%2230%22%20viewBox%3D%220%200%2030%2030%22%3E%3Cg%20transform%3D%22scale%28-1%201%29%20translate%28-30%200%29%22%3E%3Cpath%20d%3D%22M3%2027V12Q3%203%2012%203h15%22%20fill%3D%22none%22%20stroke%3D%22%23e9c27a%22%20stroke-width%3D%222.2%22/%3E%3Cpath%20d%3D%22M7.5%2027V14q0-6.5%206.5-6.5h13%22%20fill%3D%22none%22%20stroke%3D%22%23e9c27a%22%20stroke-width%3D%221%22%20opacity%3D%22.55%22/%3E%3Cpath%20d%3D%22M8%208q4-1%205%203-4%201-5-3Z%22%20fill%3D%22%23ffe7a6%22/%3E%3Ccircle%20cx%3D%223%22%20cy%3D%2227%22%20r%3D%221.6%22%20fill%3D%22%23e9c27a%22/%3E%3Ccircle%20cx%3D%2227%22%20cy%3D%223%22%20r%3D%221.6%22%20fill%3D%22%23e9c27a%22/%3E%3C/g%3E%3C/svg%3E");
   --corner-bl: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2230%22%20height%3D%2230%22%20viewBox%3D%220%200%2030%2030%22%3E%3Cg%20transform%3D%22scale%281%20-1%29%20translate%280%20-30%29%22%3E%3Cpath%20d%3D%22M3%2027V12Q3%203%2012%203h15%22%20fill%3D%22none%22%20stroke%3D%22%23e9c27a%22%20stroke-width%3D%222.2%22/%3E%3Cpath%20d%3D%22M7.5%2027V14q0-6.5%206.5-6.5h13%22%20fill%3D%22none%22%20stroke%3D%22%23e9c27a%22%20stroke-width%3D%221%22%20opacity%3D%22.55%22/%3E%3Cpath%20d%3D%22M8%208q4-1%205%203-4%201-5-3Z%22%20fill%3D%22%23ffe7a6%22/%3E%3Ccircle%20cx%3D%223%22%20cy%3D%2227%22%20r%3D%221.6%22%20fill%3D%22%23e9c27a%22/%3E%3Ccircle%20cx%3D%2227%22%20cy%3D%223%22%20r%3D%221.6%22%20fill%3D%22%23e9c27a%22/%3E%3C/g%3E%3C/svg%3E");
@@ -15,7 +15,7 @@ body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status
 }
 
 /* ---------- Frame and title banner ---------- */
-body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) .modal-box {
+body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) .modal-box {
   position: relative;
   width: min(1180px, calc(100vw - 28px));
   max-height: calc(100vh - 28px);
@@ -29,7 +29,7 @@ body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status
     inset 0 0 0 3px #e9c27a3a,
     0 20px 60px #000d;
 }
-body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) .modal-box::before {
+body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) .modal-box::before {
   content: "";
   position: absolute;
   inset: -8px;
@@ -46,10 +46,10 @@ body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status
   pointer-events: none;
   z-index: 3;
 }
-body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) .modal-box::after {
+body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) .modal-box::after {
   display: none;
 }
-body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) .modal-box > header {
+body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) .modal-box > header {
   position: relative;
   justify-content: center;
   padding: 0;
@@ -59,7 +59,7 @@ body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status
   border: 0;
   z-index: 4;
 }
-body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) .modal-box > header > div {
+body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) .modal-box > header > div {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -74,8 +74,8 @@ body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status
     0 6px 16px #000b,
     0 0 20px #ffc96b33;
 }
-body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) .modal-box > header > div::before,
-body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) .modal-box > header > div::after {
+body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) .modal-box > header > div::before,
+body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) .modal-box > header > div::after {
   content: "";
   position: absolute;
   top: 50%;
@@ -84,9 +84,9 @@ body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status
   margin-top: -15px;
   background: var(--crest) center / contain no-repeat;
 }
-body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) .modal-box > header > div::before { left: -30px; transform: rotate(-90deg); }
-body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) .modal-box > header > div::after { right: -30px; transform: rotate(90deg); }
-body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) header h2 {
+body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) .modal-box > header > div::before { left: -30px; transform: rotate(-90deg); }
+body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) .modal-box > header > div::after { right: -30px; transform: rotate(90deg); }
+body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) header h2 {
   order: -1;
   margin: 0;
   font-size: 24px;
@@ -97,14 +97,14 @@ body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status
   color: transparent;
   filter: drop-shadow(0 2px 0 #000);
 }
-body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) header small {
+body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) header small {
   display: block;
   margin-top: 1px;
   font-size: 9px;
   letter-spacing: 0.22em;
   color: #d8cfb4;
 }
-body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) #modal-close {
+body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) #modal-close {
   position: fixed;
   top: 18px;
   right: 22px;
@@ -121,22 +121,22 @@ body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status
   box-shadow: 0 0 0 2px #06110f, 0 4px 12px #000b;
   z-index: 20;
 }
-body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) #modal-body {
+body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) #modal-body {
   padding: 0 18px 16px;
   max-height: calc(100vh - 90px);
   overflow: auto;
 }
-body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) .rpg-summary {
+body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) .rpg-summary {
   display: none;
 }
-body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) .rpg-tabs {
+body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) .rpg-tabs {
   display: flex;
   justify-content: center;
   gap: 8px;
   margin: 2px 0 12px;
   border: 0;
 }
-body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) .rpg-tabs button {
+body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) .rpg-tabs button {
   padding: 6px 16px;
   font-size: 12px;
   font-weight: 700;
@@ -145,7 +145,7 @@ body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status
   border: 1px solid #e9c27a55;
   border-radius: 999px;
 }
-body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) .rpg-tabs button.active {
+body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) .rpg-tabs button.active {
   color: #3a2508;
   background: linear-gradient(#ffe7a6, #d9a24a);
   border-color: #fff0bf;
@@ -671,15 +671,15 @@ body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status
 }
 /* Phones in landscape: compact three columns, hero art trimmed. */
 @media (max-height: 500px) {
-  body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) .modal-box { max-height: calc(100vh - 10px); }
-  body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) .modal-box > header { margin-top: -14px; }
-  body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) header h2 { font-size: 16px; }
-  body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) header small { display: none; }
-  body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) .modal-box > header > div { padding: 3px 34px; }
-  body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) #modal-close { top: 8px; right: 10px; width: 34px; height: 34px; font-size: 20px; }
-  body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) #modal-body { padding: 0 10px 8px; max-height: calc(100vh - 44px); }
-  body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) .rpg-tabs { margin: 0 0 6px; }
-  body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) .rpg-tabs button { padding: 3px 10px; font-size: 10px; }
+  body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) .modal-box { max-height: calc(100vh - 10px); }
+  body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) .modal-box > header { margin-top: -14px; }
+  body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) header h2 { font-size: 16px; }
+  body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) header small { display: none; }
+  body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) .modal-box > header > div { padding: 3px 34px; }
+  body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) #modal-close { top: 8px; right: 10px; width: 34px; height: 34px; font-size: 20px; }
+  body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) #modal-body { padding: 0 10px 8px; max-height: calc(100vh - 44px); }
+  body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) .rpg-tabs { margin: 0 0 6px; }
+  body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) .rpg-tabs button { padding: 3px 10px; font-size: 10px; }
   .inv2 { grid-template-columns: 190px minmax(0, 1fr) 190px; gap: 8px; }
   .inv-hero, .inv-bag, .inv-detail { padding: 8px; }
   .inv-hero > header h3 { font-size: 14px; }
@@ -748,7 +748,7 @@ body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status
 .inv-worn {
   z-index: 1;
 }
-body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) .inv-bag > footer select {
+body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) .inv-bag > footer select {
   width: auto;
   height: auto;
   min-height: 0;
@@ -760,7 +760,7 @@ body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status
   box-shadow: none;
 }
 @media (max-height: 500px) {
-  body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"]) .inv-bag > footer select { font-size: 11px; }
+  body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) .inv-bag > footer select { font-size: 11px; }
 }
 
 /* =====================================================================
@@ -1161,3 +1161,34 @@ button.path-node { cursor: pointer; }
 .inv-versus tr.up td:last-child { color: #7ff0a8; }
 .inv-versus tr.down td:last-child { color: #ff8a7a; }
 .inv-versus tr.up td:nth-child(3) { color: #c9ffd9; }
+
+/* Wardrobe tab: costume cards with the pixel portrait. */
+.wardrobe-note { margin: 0 0 12px; color: #c9bfa6; font-size: 13px; }
+.wardrobe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
+.wardrobe-card {
+  display: grid; justify-items: center; gap: 4px; padding: 10px 8px 9px;
+  border: 1px solid #6b5a3a; border-radius: 10px;
+  background: linear-gradient(#2a2433, #1b1722); color: #f3e6c4; cursor: pointer;
+}
+.wardrobe-card i {
+  width: 84px; height: 104px;
+  background: center bottom / contain no-repeat;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 4px 5px #0009);
+}
+.wardrobe-card b { font-size: 13px; }
+.wardrobe-card small { font-size: 11px; color: #bfae86; }
+.wardrobe-card:hover:not(:disabled) { border-color: #e3bb62; transform: translateY(-1px); }
+.wardrobe-card.worn { opacity: 1; filter: none; border-color: #e3bb62; box-shadow: 0 0 0 1px #e3bb62 inset, 0 0 14px #e3bb6240; cursor: default; }
+.wardrobe-card.worn small { color: #e3bb62; }
+@media (max-height: 500px) {
+  .wardrobe-grid { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 6px; }
+  .wardrobe-card i { width: 60px; height: 70px; }
+}
+.wardrobe-card.locked { cursor: default; border-style: dashed; border-color: #4a4134; }
+.wardrobe-card.locked i { filter: grayscale(1) brightness(0.35); }
+.wardrobe-card.locked b { color: #8f846c; }
+.wardrobe-card.rarity-epic:not(.locked):not(.worn) { border-color: #8d6cc4; }
+.wardrobe-card.rarity-legendary:not(.locked):not(.worn) { border-color: #d9a441; }
+.item-art.costume-art { object-fit: contain; image-rendering: pixelated; }
+.rpg-modal .wardrobe-card.worn:disabled, .wardrobe-card.worn:disabled { opacity: 1; filter: none; }

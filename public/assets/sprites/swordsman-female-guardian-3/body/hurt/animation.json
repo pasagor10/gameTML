@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "hurt",
+  "artSource": "pixel sheet swordsman-female-tier3.webp",
+  "sourceSize": [
+    64,
+    54
+  ],
+  "encodedAnchor": [
+    32,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    70,
+    90,
+    90,
+    110
+  ],
+  "durationSeconds": 0.36,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      64,
+      54
+    ],
+    "pages": [
+      {
+        "file": "hurt-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        49.7,
+        33.21,
+        -95
+      ],
+      [
+        45.02,
+        39.41,
+        -110
+      ],
+      [
+        45.64,
+        41.45,
+        -90
+      ],
+      [
+        48.18,
+        37.56,
+        -70
+      ]
+    ]
+  }
+}

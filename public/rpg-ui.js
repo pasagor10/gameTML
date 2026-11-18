@@ -1,4 +1,5 @@
-import { heroPortraitStyle } from "/hero-appearance.js?v=2";
+import { heroPortraitStyle, heroPortraitUrl } from "/hero-appearance.js?v=2";
+import { costumesOf, canWearCostumes, ownsCostume, COSTUME_ITEMS, costumeItem } from "/shared/costumes.js";
 import { itemArt, supplyArt } from "/item-art.js";
 import {
   GEAR,
@@ -50,10 +51,30 @@ export function rpgPanel(p, area, tab = "inventory") {
     cls = CLASSES[p.class],
     owned = (p.ownedEquipment || []).filter((id) => GEAR[id]);
   const spec = SPECIALIZATIONS[p.class].find((s) => s.id === p.specialization);
-  const base = `<div class="rpg-summary"><span class="class-crest">${cls.icon}</span><div><small>ผู้กล้า · LEVEL ${p.level}</small><h3>${cls.name} <span>${spec?.name || "ยังไม่เลือกสายพัฒนา"}</span></h3></div><strong>${supplyArt("gold")} ${p.gold.toLocaleString()} <small>ทอง</small></strong></div><div class="rpg-tabs"><button data-rpg-tab="inventory" class="${tab === "inventory" ? "active" : ""}">อุปกรณ์ & กระเป๋า <kbd>I</kbd></button><button data-rpg-tab="class" class="${tab === "class" ? "active" : ""}">คลาส & สกิล <kbd>C</kbd></button><button data-rpg-tab="status" class="${tab === "status" ? "active" : ""}">สเตตัส${p.statPoints > 0 ? ` <b class="stat-badge">${p.statPoints}</b>` : ""} <kbd>K</kbd></button></div>`;
+  const base = `<div class="rpg-summary"><span class="class-crest">${cls.icon}</span><div><small>ผู้กล้า · LEVEL ${p.level}</small><h3>${cls.name} <span>${spec?.name || "ยังไม่เลือกสายพัฒนา"}</span></h3></div><strong>${supplyArt("gold")} ${p.gold.toLocaleString()} <small>ทอง</small></strong></div><div class="rpg-tabs"><button data-rpg-tab="inventory" class="${tab === "inventory" ? "active" : ""}">อุปกรณ์ & กระเป๋า <kbd>I</kbd></button><button data-rpg-tab="class" class="${tab === "class" ? "active" : ""}">คลาส & สกิล <kbd>C</kbd></button><button data-rpg-tab="status" class="${tab === "status" ? "active" : ""}">สเตตัส${p.statPoints > 0 ? ` <b class="stat-badge">${p.statPoints}</b>` : ""} <kbd>K</kbd></button>${costumesOf(p).length ? `<button data-rpg-tab="wardrobe" class="${tab === "wardrobe" ? "active" : ""}">ตู้ชุด</button>` : ""}</div>`;
+  if (tab === "wardrobe") return base + wardrobePage(p);
   if (tab === "class") return base + classPage(p, area, spec, cls);
   if (tab === "status") return base + statusPage(p, area);
   return base + inventoryPage(p, area, stats, owned, spec, cls);
+}
+
+// ---------------------------------------------------------------------------
+// Wardrobe: costumes worn over the class look (shared/costumes.js). Looks
+// only; stats stay with the equipment.
+function wardrobePage(p) {
+  const card = (id, name, rarityName) => {
+    const url = heroPortraitUrl({ ...p, skin: id }),
+      worn = (p.skin || null) === id,
+      owned = id === null || ownsCostume(p, id),
+      count = id === null ? 0 : p.inventory?.[costumeItem(id)] || 0;
+    return `<button class="wardrobe-card ${worn ? "worn" : ""} ${owned ? "" : "locked"} ${rarityName ? `rarity-${rarityName}` : ""}" data-wear="${id ?? ""}" ${worn || !owned ? "disabled" : ""}><i style="${id === null ? heroPortraitStyle({ ...p, skin: null }) : url ? `background-image:url('${url}')` : ""}"></i><b>${name}</b><small>${worn ? "สวมอยู่" : owned ? `สวมชุดนี้${count > 1 ? ` · มี ×${count}` : ""}` : "ยังไม่มี · ดรอปจากบอส"}</small></button>`;
+  };
+  const list = costumesOf(p),
+    have = list.filter((c) => ownsCostume(p, c.id)).length;
+  return `<div class="wardrobe"><p class="wardrobe-note">สะสมแล้ว ${have} / ${list.length} ชุด · เก็บชุดได้จากบอสในดันเจียน ยิ่งลึกยิ่งดรอปบ่อย · ชุดซ้ำวางขายในตลาดหรือแลกกับผู้เล่นอื่นได้ · ไม่มีผลกับสเตตัส</p><div class="wardrobe-grid">${card(null, "ชุดตามอาชีพ")}${[...list]
+    .sort((a, b) => ownsCostume(p, b.id) - ownsCostume(p, a.id))
+    .map((c) => card(c.id, c.name, c.rarity))
+    .join("")}</div></div>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -76,6 +97,7 @@ const filterIcons = {
   charm: icon('<path d="M12 3c-3 4-3 6 0 8 3-2 3-4 0-8Zm0 8v3m-4 0h8l-4 7Z"/>'),
   boots: icon('<path d="M7 3h6v9l7 4v4H5V12Z"/>'),
   supply: icon('<path d="M12 3 6 11l6 10 6-10Z"/><path d="M6 11h12"/>'),
+  costume: icon('<path d="M9 3h6l4 4-3 2v12H8V9L5 7Z"/>'),
 };
 const inventoryFilters = [
   ["all", "ทั้งหมด"],
@@ -84,6 +106,7 @@ const inventoryFilters = [
   ["charm", "เครื่องราง"],
   ["boots", "รองเท้า"],
   ["supply", "วัตถุดิบ"],
+  ["costume", "ชุด"],
 ];
 const RARITY_RANK = { common: 0, rare: 1, epic: 2, legendary: 3 };
 const SLOT_RANK = { weapon: 0, armor: 1, charm: 2, boots: 3 };
@@ -102,6 +125,17 @@ const SUPPLIES = {
     rarity: "rare",
   },
 };
+
+// Supplies and costume items share the stack cells and detail card.
+const supplyInfo = (id) =>
+  SUPPLIES[id] ||
+  (COSTUME_ITEMS[id] && {
+    name: COSTUME_ITEMS[id].name,
+    text: "ชุดแต่งกาย สวมได้กับตัวละครหญิงทุกอาชีพ ไม่มีผลกับสเตตัส · ขายในตลาดหรือแลกเปลี่ยนได้",
+    rarity: COSTUME_ITEMS[id].rarity,
+    costume: COSTUME_ITEMS[id].costume,
+  });
+const stackFilter = (id) => (COSTUME_ITEMS[id] ? "costume" : "supply");
 
 function inventoryPage(p, area, stats, owned, spec, cls) {
   // Gear stacks by id; supplies are their own cells.
@@ -124,21 +158,21 @@ function inventoryPage(p, area, stats, owned, spec, cls) {
       RARITY_RANK[B.rarity] - RARITY_RANK[A.rarity] || B.level - A.level
     );
   });
-  const supplyIds = Object.keys(SUPPLIES).filter((k) => p.inventory[k] > 0);
+  const supplyIds = [...Object.keys(SUPPLIES), ...Object.keys(COSTUME_ITEMS)].filter((k) => p.inventory[k] > 0);
   const cells = [
-    ...(bagFilter === "supply"
+    ...(bagFilter === "supply" || bagFilter === "costume"
       ? []
       : gearIds.filter((id) => bagFilter === "all" || GEAR[id].slot === bagFilter)),
-    ...(bagFilter === "all" || bagFilter === "supply"
-      ? supplyIds.map((k) => "supply:" + k)
-      : []),
+    ...supplyIds
+      .filter((k) => bagFilter === "all" || stackFilter(k) === bagFilter)
+      .map((k) => "supply:" + k),
   ];
   const worn = Object.values(p.equipment || {}).filter(Boolean);
   if (!cells.includes(selected) && !worn.includes(selected)) selected = cells[0] ?? null;
 
   const cell = (key) => {
     const supply = key.startsWith("supply:") ? key.slice(7) : null,
-      g = supply ? SUPPLIES[supply] : GEAR[key],
+      g = supply ? supplyInfo(supply) : GEAR[key],
       count = supply ? p.inventory[supply] : counts.get(key);
     // Same picture, different tier: the level tag tells them apart.
     return `<button data-inspect="${key}" aria-pressed="${selected === key}" title="${g.name}${supply ? "" : ` · Lv.${g.level}`}" class="inv-cell ${rarity(g)} ${selected === key ? "selected" : ""}">${supply ? "" : `<em class="inv-lv">Lv.${g.level}</em>`}<b>${supply ? supplyArt(supply) : itemArt(key, g)}</b><small>${count}</small></button>`;
@@ -217,6 +251,11 @@ function compareRows(item, worn, wornId) {
     <div class="inv-versus"><div class="inv-versus-head"><span class="${rarity(worn)}">${itemArt(wornId, worn)}</span><small>${worn.name} · Lv.${worn.level}</small></div>
     <table><thead><tr><th></th><th>ใส่อยู่</th><th>ชิ้นนี้</th><th></th></tr></thead><tbody>${rows.join("") || '<tr><td colspan="4">ไม่มีค่าสถานะ</td></tr>'}</tbody></table></div>`;
 }
+function costumeAction(p, id) {
+  if (!canWearCostumes(p)) return `<button class="inv-action" disabled>สวมได้เฉพาะตัวละครหญิง</button>`;
+  if (p.skin === id) return `<button class="inv-action" data-wear="">ถอดชุด</button>`;
+  return `<button class="inv-action" data-wear="${id}">สวมชุดนี้</button>`;
+}
 function discardButton(id, allowed) {
   return `<button class="inv-discard" data-discard="${id}" ${allowed ? "" : "disabled"}>ทิ้ง 1 ชิ้น</button>`;
 }
@@ -225,12 +264,13 @@ function detailCard(p, area, stats, key, counts) {
     return `<aside class="inv-detail empty"><p>ไม่มีของในหมวดนี้<br>เก็บของจากดันเจียนเพื่อเติมกระเป๋า</p></aside>`;
   if (key.startsWith("supply:")) {
     const id = key.slice(7),
-      s = SUPPLIES[id],
+      s = supplyInfo(id),
       usable =
+        !s.costume &&
         id !== "ore" &&
         p.hp > 0 &&
         (id === "hp" ? p.hp < stats.hp : p.mp < stats.mp);
-    return `<aside class="inv-detail ${rarity(s)}"><div class="inv-detail-art">${supplyArt(id)}</div><h3>${s.name}</h3><div class="inv-pills"><span>วัตถุดิบ</span><span class="rarity">${RARITIES[s.rarity]}</span></div><p class="inv-lore">${s.text}</p><div class="inv-detail-stats"><div><span>จำนวนในกระเป๋า</span><b>×${p.inventory[id]}</b></div></div><div class="inv-detail-actions">${id === "ore" ? "" : `<button class="inv-action" data-use="${id}" ${usable ? "" : "disabled"}>${usable ? "ใช้" : "พลังเต็มอยู่แล้ว"}</button>`}${discardButton(id, area === "town")}</div></aside>`;
+    return `<aside class="inv-detail ${rarity(s)}"><div class="inv-detail-art">${supplyArt(id)}</div><h3>${s.name}</h3><div class="inv-pills"><span>${s.costume ? "ชุดแต่งกาย" : "วัตถุดิบ"}</span><span class="rarity">${RARITIES[s.rarity]}</span></div><p class="inv-lore">${s.text}</p><div class="inv-detail-stats"><div><span>จำนวนในกระเป๋า</span><b>×${p.inventory[id]}</b></div></div><div class="inv-detail-actions">${s.costume ? costumeAction(p, s.costume) : id === "ore" ? "" : `<button class="inv-action" data-use="${id}" ${usable ? "" : "disabled"}>${usable ? "ใช้" : "พลังเต็มอยู่แล้ว"}</button>`}${discardButton(id, area === "town")}</div></aside>`;
   }
   const item = GEAR[key],
     equipped = p.equipment[item.slot] === key,
@@ -576,7 +616,7 @@ export function bindRpgPanel(root, p, handlers) {
         const supply = selected.startsWith("supply:");
         if (
           bagFilter !== "all" &&
-          (supply ? bagFilter !== "supply" : GEAR[selected]?.slot !== bagFilter)
+          (supply ? bagFilter !== stackFilter(selected.slice(7)) : GEAR[selected]?.slot !== bagFilter)
         )
           bagFilter = "all";
         handlers.open("inventory");
@@ -606,6 +646,11 @@ export function bindRpgPanel(root, p, handlers) {
               ? null
               : b.dataset.equip,
         })),
+  );
+  root.querySelectorAll("[data-wear]").forEach(
+    (b) =>
+      (b.onclick = () =>
+        handlers.action("costume:wear", { id: b.dataset.wear || null })),
   );
   root
     .querySelectorAll("[data-advance]")

@@ -1,5 +1,6 @@
 import { SKILL_KITS } from "./skills.js";
 import { bestiaryBonuses } from "./quests.js";
+import { costumeSet } from "./costumes.js";
 export const SLOTS = {
   weapon: "อาวุธ",
   armor: "เกราะ",
@@ -736,10 +737,13 @@ export const ADVANCE_LEVEL = 20;
 export const heroTier = (p) => (p?.specialization ? (p.advanced ? 3 : 2) : 1);
 // Sprite set names to try, most specific first: the costume of this
 // specialization and tier, then the lower tier, then the plain class look.
+// A worn costume (p.skin, shared/costumes.js) comes before all of them.
 export function heroSkins(p) {
   const base = `${p.class}-${p.gender}`,
-    tier = heroTier(p);
-  if (tier === 1) return [base];
-  const spec = `${base}-${p.specialization}`;
-  return tier === 3 ? [`${spec}-3`, `${spec}-2`, base] : [`${spec}-2`, base];
+    tier = heroTier(p),
+    worn = costumeSet(p),
+    spec = `${base}-${p.specialization}`,
+    skins =
+      tier === 1 ? [base] : tier === 3 ? [`${spec}-3`, `${spec}-2`, base] : [`${spec}-2`, base];
+  return worn ? [worn, ...skins] : skins;
 }

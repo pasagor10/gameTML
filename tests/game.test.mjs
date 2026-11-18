@@ -1121,3 +1121,27 @@ test('online roster includes names across maps and drops disconnected players', 
   assert.equal(world.onlineRoster().some(p => p.id === b.id), false);
   world.disconnect(a); world.players.delete(a.id);
 });
+test("costumes: owned to wear, female only, sold through shops and taken off with the last copy", () => {
+  const a = create("costume-a"),
+    b = create("costume-b", "mage");
+  for (const p of [a, b]) {
+    p.gender = "female";
+    world.savePlayer(p);
+  }
+  assert.throws(() => world.wearCostume(a, "5"), /ยังไม่มีชุดนี้/);
+  a.inventory.costume_5 = 1;
+  world.savePlayer(a);
+  world.wearCostume(a, "5");
+  assert.equal(a.skin, "5");
+  assert.equal(loadCharacter(a.id).skin, "5");
+  const shop = world.createShop(a, { name: "Wardrobe", item: "costume_5", qty: 1, price: 100, key: "request-costume-shop" });
+  assert.equal(a.skin, null, "selling the last copy takes the costume off");
+  assert.equal(a.inventory.costume_5, 0);
+  world.buyShop(b, { id: shop.id, key: "request-costume-buy" });
+  assert.equal(b.inventory.costume_5, 1);
+  world.wearCostume(b, "5");
+  assert.equal(b.skin, "5", "any female class can wear it");
+  b.gender = "male";
+  assert.throws(() => world.wearCostume(b, "5"), /เฉพาะตัวละครหญิง/);
+  world.closeShop(a, "request-costume-close");
+});

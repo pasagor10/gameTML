@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "3.0",
+  "name": "skill",
+  "artSource": "pixel sheet costume-7.webp",
+  "sourceSize": [
+    55,
+    53
+  ],
+  "encodedAnchor": [
+    31,
+    50
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    90,
+    110,
+    120,
+    170
+  ],
+  "durationSeconds": 0.49,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 200
+    }
+  ],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      55,
+      53
+    ],
+    "pages": [
+      {
+        "file": "skill-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        44.68,
+        43.67,
+        -30
+      ],
+      [
+        49.85,
+        37.58,
+        -160
+      ],
+      [
+        46.44,
+        15.47,
+        -95
+      ],
+      [
+        42.36,
+        40.24,
+        -50
+      ]
+    ]
+  }
+}

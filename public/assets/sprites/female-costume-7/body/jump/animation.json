@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "jump",
+  "artSource": "pixel sheet costume-7.webp",
+  "sourceSize": [
+    55,
+    53
+  ],
+  "encodedAnchor": [
+    31,
+    50
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    120,
+    120,
+    120,
+    120
+  ],
+  "durationSeconds": 0.48,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      55,
+      53
+    ],
+    "pages": [
+      {
+        "file": "jump-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        41.05,
+        47.95,
+        -50
+      ],
+      [
+        40.47,
+        35.51,
+        -70
+      ],
+      [
+        41.67,
+        33.55,
+        -80
+      ],
+      [
+        43.23,
+        38.15,
+        -45
+      ]
+    ]
+  }
+}

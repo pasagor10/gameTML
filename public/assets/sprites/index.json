@@ -81,20 +81,27 @@
       "showcase": "showcase.webp"
     },
     "swordsman-female": {
-      "dir": "swordsman-female-painted",
+      "dir": "swordsman-female",
       "height": 112,
       "facing": 1,
-      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (swordsman-female-tier1.webp), weapon drawn in the front fist",
       "actions": {
+        "idle": "idle",
         "walk": "walk",
         "run": "run",
-        "hit": "hurt",
-        "death": "death",
-        "idle": "idle",
+        "jump": "jump",
         "attack": "attack",
-        "skill": "skill"
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
       },
-      "showcase": "showcase.webp"
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "archer-male-ranger-2": {
       "dir": "archer-male-ranger-2",
@@ -244,8 +251,8 @@
       "dir": "swordsman-female-duelist-2",
       "height": 112,
       "facing": 1,
-      "source": "4x8 sheet swordsman-female-duelist-2.png",
       "portrait": "portrait.webp",
+      "source": "pixel art sheet (swordsman-female-tier2.webp), weapon drawn in the front fist",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -256,14 +263,19 @@
         "hit": "hurt",
         "death": "death"
       },
-      "showcase": "showcase.webp"
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "swordsman-female-duelist-3": {
       "dir": "swordsman-female-duelist-3",
       "height": 112,
       "facing": 1,
-      "source": "4x8 sheet swordsman-female-duelist-3.png",
       "portrait": "portrait.webp",
+      "source": "pixel art sheet (swordsman-female-tier3.webp), weapon drawn in the front fist",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -274,14 +286,19 @@
         "hit": "hurt",
         "death": "death"
       },
-      "showcase": "showcase.webp"
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "swordsman-female-guardian-2": {
       "dir": "swordsman-female-guardian-2",
       "height": 112,
       "facing": 1,
-      "source": "4x8 sheet swordsman-female-guardian-2.png",
       "portrait": "portrait.webp",
+      "source": "pixel art sheet (swordsman-female-tier2.webp), weapon drawn in the front fist",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -292,14 +309,19 @@
         "hit": "hurt",
         "death": "death"
       },
-      "showcase": "showcase.webp"
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "swordsman-female-guardian-3": {
       "dir": "swordsman-female-guardian-3",
       "height": 112,
       "facing": 1,
-      "source": "4x8 sheet swordsman-female-guardian-3.png",
       "portrait": "portrait.webp",
+      "source": "pixel art sheet (swordsman-female-tier3.webp), weapon drawn in the front fist",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -310,7 +332,12 @@
         "hit": "hurt",
         "death": "death"
       },
-      "showcase": "showcase.webp"
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "mage-female-arcanist-2": {
       "dir": "mage-female-arcanist-2",
@@ -1257,6 +1284,190 @@
         },
         "painted": true
       }
+    },
+    "female-costume-crimson": {
+      "dir": "female-costume-crimson",
+      "height": 112,
+      "facing": 1,
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (swordsman-female-tier1.webp), weapon drawn in the front fist",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
+    },
+    "female-costume-1": {
+      "dir": "female-costume-1",
+      "height": 112,
+      "facing": 1,
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (costume-1.webp), weapon drawn in the front fist",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
+    },
+    "female-costume-2": {
+      "dir": "female-costume-2",
+      "height": 112,
+      "facing": 1,
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (costume-2.webp), weapon drawn in the front fist",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
+    },
+    "female-costume-3": {
+      "dir": "female-costume-3",
+      "height": 112,
+      "facing": 1,
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (costume-3.webp), weapon drawn in the front fist",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
+    },
+    "female-costume-4": {
+      "dir": "female-costume-4",
+      "height": 112,
+      "facing": 1,
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (costume-4.webp), weapon drawn in the front fist",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
+    },
+    "female-costume-5": {
+      "dir": "female-costume-5",
+      "height": 112,
+      "facing": 1,
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (costume-5.webp), weapon drawn in the front fist",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
+    },
+    "female-costume-6": {
+      "dir": "female-costume-6",
+      "height": 112,
+      "facing": 1,
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (costume-6.webp), weapon drawn in the front fist",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
+    },
+    "female-costume-7": {
+      "dir": "female-costume-7",
+      "height": 112,
+      "facing": 1,
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (costume-7.webp), weapon drawn in the front fist",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     }
   },
   "monsters": {
@@ -1381,7 +1592,7 @@
       }
     }
   },
-  "version": 1795028801481215000,
+  "version": 1795033230097089000,
   "npcs": {
     "elder": {
       "dir": "npcs/elder",

@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "death",
+  "artSource": "pixel sheet costume-5.webp",
+  "sourceSize": [
+    55,
+    53
+  ],
+  "encodedAnchor": [
+    29,
+    50
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    140,
+    160,
+    180,
+    400
+  ],
+  "durationSeconds": 0.88,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      55,
+      53
+    ],
+    "pages": [
+      {
+        "file": "death-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        34.75,
+        39.55,
+        -40
+      ],
+      [
+        34.71,
+        22.89,
+        -10
+      ],
+      [
+        41.54,
+        46.93,
+        5
+      ],
+      [
+        44.08,
+        47.56,
+        0
+      ]
+    ]
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "jump",
+  "artSource": "pixel sheet swordsman-female-tier1.webp",
+  "sourceSize": [
+    59,
+    55
+  ],
+  "encodedAnchor": [
+    33,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    120,
+    120,
+    120,
+    120
+  ],
+  "durationSeconds": 0.48,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      59,
+      55
+    ],
+    "pages": [
+      {
+        "file": "jump-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        33.71,
+        31.64,
+        -50
+      ],
+      [
+        45.78,
+        34.22,
+        -70
+      ],
+      [
+        45.83,
+        32.08,
+        -80
+      ],
+      [
+        45.31,
+        48.71,
+        -45
+      ]
+    ]
+  }
+}

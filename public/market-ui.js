@@ -2,12 +2,16 @@
 import { itemArt, supplyArt } from "/item-art.js";
 import { GEAR, SLOTS, RARITIES } from "/shared/rpg.js";
 import { ITEMS, CLASSES } from "/shared/config.js";
-import { statText } from "/rpg-ui.js?v=11";
+import { COSTUME_ITEMS } from "/shared/costumes.js";
+import { statText } from "/rpg-ui.js?v=14";
 
-const STACKS = ["hp", "mp", "ore"];
+// Stacks sell by count: supplies, and costumes (shared/costumes.js).
+const STACKS = ["hp", "mp", "ore", ...Object.keys(COSTUME_ITEMS)];
+const isCostume = (id) => !!COSTUME_ITEMS[id];
 const FILTERS = [
   ["all", "ทั้งหมด"],
   ["supply", "ยา & วัตถุดิบ"],
+  ["costume", "ชุดแต่งกาย"],
   ["weapon", "อาวุธ"],
   ["armor", "เกราะ"],
   ["accessory", "เครื่องราง & รองเท้า"],
@@ -34,22 +38,26 @@ export const marketState = {
 };
 
 const isStack = (id) => STACKS.includes(id);
-const info = (id) => (isStack(id) ? ITEMS[id] : GEAR[id]);
+const info = (id) => (isStack(id) ? ITEMS[id] || COSTUME_ITEMS[id] : GEAR[id]);
 const art = (id) => (isStack(id) ? supplyArt(id) : itemArt(id, GEAR[id]));
 const group = (id) =>
-  isStack(id)
+  isCostume(id)
+    ? "costume"
+    : isStack(id)
     ? "supply"
     : GEAR[id]?.slot === "weapon" || GEAR[id]?.slot === "armor"
       ? GEAR[id].slot
       : "accessory";
 function detail(id) {
+  if (isCostume(id))
+    return `ชุดแต่งกาย · ${RARITIES[COSTUME_ITEMS[id].rarity]} · สวมได้กับตัวละครหญิงทุกอาชีพ`;
   if (isStack(id)) return "ของใช้ · ซื้อเป็นกองได้";
   const g = GEAR[id];
   const cls = g.class ? " · " + (CLASSES[g.class]?.name || g.class) : "";
   return `${RARITIES[g.rarity]} · ${SLOTS[g.slot]} · Lv.${g.level}${cls} · ${statText(g.stats, g.attrs)}`;
 }
 export function suggestPrice(id) {
-  if (isStack(id)) return ITEMS[id].price;
+  if (isStack(id)) return info(id).price;
   const g = GEAR[id];
   return g.price
     ? Math.round(g.price * 0.8)
@@ -88,7 +96,7 @@ export function marketHtml(state) {
         qty = Math.min(l.qty, Math.max(1, m.buyQty[l.id] || 1)),
         total = qty * l.price,
         poor = p.gold < total,
-        rarity = isStack(l.item) ? "" : `rarity-${it.rarity}`;
+        rarity = isStack(l.item) && !isCostume(l.item) ? "" : `rarity-${it.rarity}`;
       const stepper = isStack(l.item)
         ? `<div class="qty-step"><button data-buy-step="${l.id}" data-d="-1" ${qty <= 1 ? "disabled" : ""}>−</button><b>${qty}</b><button data-buy-step="${l.id}" data-d="1" ${qty >= l.qty ? "disabled" : ""}>+</button><button data-buy-max="${l.id}" class="qty-max">สูงสุด</button></div>`
         : "";
@@ -129,7 +137,7 @@ export function shopManagerHtml(state) {
     ? stock
         .map((s) => {
           const it = info(s.id);
-          return `<button class="stock-pick ${s.id === m.pick ? "active" : ""} ${isStack(s.id) ? "" : "rarity-" + it.rarity}" data-pick="${s.id}" ${s.locked ? "disabled" : ""} title="${esc(it.name)}">${art(s.id)}<small>${s.locked ? "สวมอยู่" : isStack(s.id) ? "×" + s.have : esc(it.name)}</small></button>`;
+          return `<button class="stock-pick ${s.id === m.pick ? "active" : ""} ${isStack(s.id) && !isCostume(s.id) ? "" : "rarity-" + it.rarity}" data-pick="${s.id}" ${s.locked ? "disabled" : ""} title="${esc(it.name)}">${art(s.id)}<small>${s.locked ? "สวมอยู่" : isStack(s.id) ? "×" + s.have : esc(it.name)}</small></button>`;
         })
         .join("")
     : `<p class="market-empty">กระเป๋าว่าง · ลงดันเจียนหาของมาขายก่อน</p>`;
@@ -139,5 +147,5 @@ export function shopManagerHtml(state) {
   const head = shop
     ? `<div class="shop-stats"><div><small>ร้าน</small><strong>${esc(shop.name)}</strong></div><div><small>ขายไปแล้ว</small><strong>${shop.sold || 0} ชิ้น</strong></div><div><small>รายได้รวม</small><strong>${(shop.earned || 0).toLocaleString()} ◈</strong></div></div><h4 class="rpg-section-title">กำลังวางขาย <span>${shop.listings?.length || 0} / 12</span></h4>${listed || `<p class="market-empty">ขายหมดแล้ว! วางของเพิ่มได้ด้านล่าง</p>`}`
     : `<p>ตั้งได้หนึ่งร้านต่อบัญชี · ร้านเปิดขายต่อแม้ออกจากเกม · ของที่วางขายจะถูกเก็บเข้าร้านจนกว่าจะขายหรือเก็บคืน</p>`;
-  return `${head}<h4 class="rpg-section-title">${shop ? "วางขายเพิ่ม" : "เลือกของที่จะขาย"} <span>ยา แร่ และอุปกรณ์ที่ไม่ได้สวม</span></h4><div class="stock-grid">${picker}</div>${form}<div class="shop-foot"><button id="back-market" class="text-button">← กลับตลาด</button>${shop ? `<button id="close-shop" class="text-button danger">ปิดร้านและเก็บของทั้งหมดคืน</button>` : ""}</div>`;
+  return `${head}<h4 class="rpg-section-title">${shop ? "วางขายเพิ่ม" : "เลือกของที่จะขาย"} <span>ยา แร่ ชุดแต่งกาย และอุปกรณ์ที่ไม่ได้สวม</span></h4><div class="stock-grid">${picker}</div>${form}<div class="shop-foot"><button id="back-market" class="text-button">← กลับตลาด</button>${shop ? `<button id="close-shop" class="text-button danger">ปิดร้านและเก็บของทั้งหมดคืน</button>` : ""}</div>`;
 }

@@ -80,6 +80,7 @@ export function persist(p) {
       "nightClear",
       "attrs",
       "statResets",
+      "skin",
     ].map((k) => [k, p[k]]),
   );
   db.prepare("UPDATE characters SET state=? WHERE id=?").run(
