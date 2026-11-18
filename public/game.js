@@ -1,3 +1,7 @@
+import { heroPortraitStyle } from "/hero-appearance.js?v=2";
+import { skillIcon, potionIcon, autoIcon } from "/skill-icons.js?v=1";
+import { dungeonPlatforms } from "/shared/dungeons.js";
+import { supplyArt, itemArtPath } from "/item-art.js";
 import {
   sfx,
   music,
@@ -5,18 +9,24 @@ import {
   soundOn,
   setMusic,
   musicOn,
-} from "/sound.js?v=1";
+} from "/sound.js?v=20261118-combat2";
 import { TOWN_ANIMS, TOWN_LAYOUT, TOWN_PROPS } from "/shared/town-layout.js";
 import { createWorldDetails } from "/world-details.js?v=3";
-import { rpgPanel, bindRpgPanel, gearShop } from "/rpg-ui.js?v=1";
+import {
+  rpgPanel,
+  bindRpgPanel,
+  gearShop,
+} from "/rpg-ui.js?v=3";
 import {
   GEAR,
   RARITIES,
   FLOOR_LOOT,
   CLASS_SKILLS,
   SPECIALIZATIONS,
+  heroSkins,
 } from "/shared/rpg.js";
 import { createTownNpcs } from "/town-npcs.js?v=3";
+import { marketHtml, shopManagerHtml, marketState } from "/market-ui.js?v=2";
 import { sampleMotion } from "/shared/smoothing.js";
 import { ACTIONS } from "/shared/motion.js";
 import {
@@ -25,7 +35,7 @@ import {
   animateSlime,
   monsterDeath,
 } from "/combat-visuals.js?v=0.3.1";
-import { createSelectionPreview } from "/selection-scene.js?v=0.6.1";
+import { createSelectionPreview } from "/selection-scene.js?v=0.7.0-archer1";
 import {
   CLASSES,
   ITEMS,
@@ -86,8 +96,8 @@ const JOBS = ["swordsman", "archer", "mage"],
 function frame(c, g) {
   return JOBS.indexOf(c) + (g === "female" ? 3 : 0);
 }
-function heroStyle(c, g) {
-  return `background-position:${JOBS.indexOf(c) * 50}% ${g === "female" ? 100 : 0}%`;
+function heroStyle(c, g, hero) {
+  return heroPortraitStyle(hero || { class: c, gender: g });
 }
 function escape(s) {
   return String(s ?? "").replace(
@@ -125,6 +135,7 @@ function syncSoundButton() {
   $("#sound").textContent = muted ? "♫ เปิดเสียง" : "♫ ปิดเสียง";
 }
 syncSoundButton();
+music("town");
 $("#sound").onclick = () => {
   setSound(!soundOn());
   syncSoundButton();
@@ -157,7 +168,7 @@ async function refreshAccount() {
     ? characters
         .map(
           (c) =>
-            `<button data-resume="${c.id}" class="saved-hero"><span class="saved-portrait hero-art" style="${lobbyHeroStyle(c.class, c.gender)}"></span><span><strong>${escape(c.name)}</strong><small>${CLASSES[c.class].name}</small></span><b>Lv.${c.level}</b></button>`,
+            `<button data-resume="${c.id}" class="saved-hero"><span class="saved-portrait hero-art" style="${lobbyHeroStyle(c.class, c.gender, c)}"></span><span><strong>${escape(c.name)}</strong><small>${CLASSES[c.class].name}</small></span><b>Lv.${c.level}</b></button>`,
         )
         .join("")
     : '<p class="empty-roster">ยังไม่มีผู้กล้าในบัญชีนี้<br><span>เลือกคลาสแล้วสร้างตำนานแรกของคุณ</span></p>';
@@ -255,7 +266,7 @@ function renderCards() {
   $("#selected-class").textContent = saved?.name || c.name;
   $("#selected-epithet").textContent = detail.title;
   $("#selected-lore").textContent = detail.lore;
-  $(".hero-fallback").style.cssText = lobbyHeroStyle(job, gender);
+  $(".hero-fallback").style.cssText = lobbyHeroStyle(job, gender, saved);
   $("#hero-stats").innerHTML =
     `<div class="class-identity"><span>${c.icon}</span><div><h3>${c.name}</h3><p class="class-role">${detail.role}</p></div></div><div class="stats-heading"><span>${saved ? "ค่าสถานะปัจจุบัน" : "ค่าสถานะเริ่มต้น"}</span><small>ATTRIBUTES</small></div>${[
       ["HP", "พลังชีวิต", c.hp, saved ? c.hp : 180],
@@ -285,7 +296,11 @@ function renderCards() {
     b.setAttribute("aria-pressed", String(b.dataset.gender === gender));
     b.classList.toggle("active", b.dataset.gender === gender);
   });
-  selectionPreview?.setHero(job, gender);
+  selectionPreview?.setHero(
+    job,
+    gender,
+    saved ? heroSkins(saved) : [`${job}-${gender}`],
+  );
   $$("[data-class]").forEach(
     (b) =>
       (b.onclick = () => {
@@ -342,6 +357,7 @@ $("#start").onclick = async () => {
 function modal(title, html, panel) {
   if ($("#modal").classList.contains("hidden")) sfx("open");
   activePanel = panel || "modal";
+  $("#modal").dataset.panel = activePanel;
   keys.clear();
   touchDirection = 0;
   $("#modal-title").textContent = title;
@@ -351,6 +367,10 @@ function modal(title, html, panel) {
     "rpg-modal",
     ["inventory", "class", "weapon"].includes(panel),
   );
+  $("#modal").classList.toggle(
+    "market-modal",
+    ["market", "shop"].includes(panel),
+  );
   if (socket?.connected)
     socket.emit("player:input", { direction: 0, seq: ++seq, jump: false });
 }
@@ -358,6 +378,7 @@ function closeModal() {
   if (activePanel !== null || !$("#modal").classList.contains("hidden"))
     sfx("close");
   activePanel = null;
+  marketState.shop = null;
   $("#modal").classList.add("hidden");
   keys.clear();
 }
@@ -425,7 +446,102 @@ $("#story-next").onclick = () => {
   else enterGame();
 };
 $("#story-skip").onclick = enterGame;
-function emit(event, data = {}) {
+// Travel between town, floors and stages behind a short loading screen so the
+// jump never feels instant: fade in, swap the scene, hold, then fade out.
+const TRAVEL = new Set([
+  "dungeon:enter",
+  "dungeon:next",
+  "dungeon:leave",
+  "training:enter",
+]);
+const TIPS = [
+  "SPACE กระโดดหลบวงเตือนบนพื้นและบอสทุบพื้น",
+  "★ หัวหน้าฝูงเลือดหนา แต่ให้ทองและแร่มากกว่า",
+  "มอนเฝ้าที่ของมัน ค่อยๆ ดึงทีละกลุ่มจะปลอดภัยกว่า",
+  "เคลียร์เร็วและเสียเลือดน้อย = แรงก์ SSS",
+  "กด R ดื่มยา HP ได้ทันทีระหว่างสู้",
+  "ฆ่าต่อเนื่องภายใน 5 วินาทีได้โบนัสทองเพิ่ม",
+];
+const loader = { shownAt: 0, arrived: false, timers: [] };
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+function showLoading() {
+  const el = $("#area-loading");
+  loader.timers.forEach(clearTimeout);
+  loader.timers = [];
+  if (el.classList.contains("hidden") || el.classList.contains("leaving")) {
+    loader.shownAt = performance.now();
+    loader.arrived = false;
+    $("#area-loading .loading-kicker").textContent = "";
+    $("#area-loading .loading-title").textContent = "กำลังเดินทาง…";
+    $("#area-loading .loading-sub").textContent = "";
+    $("#area-loading .loading-dots").innerHTML = "";
+    $("#area-loading .loading-tip").textContent =
+      "เคล็ดลับ · " + TIPS[Math.floor(Math.random() * TIPS.length)];
+    // Restart the bar so every trip fills from empty.
+    const bar = $("#area-loading .loading-bar");
+    bar.classList.remove("run");
+    void bar.offsetWidth;
+    bar.classList.add("run");
+  }
+  el.classList.remove("hidden", "leaving");
+}
+function hideLoading(delay = 0) {
+  loader.timers.push(
+    setTimeout(() => {
+      const el = $("#area-loading");
+      el.classList.add("leaving");
+      loader.timers.push(setTimeout(() => el.classList.add("hidden"), 450));
+    }, delay),
+  );
+}
+// Called by the scene when the area really changed: name it, then reveal.
+function loadingArrived(s) {
+  showLoading();
+  loader.arrived = true;
+  const d = s.dungeon,
+    set = (sel, text) => ($("#area-loading " + sel).textContent = text);
+  if (s.area === "town") {
+    set(".loading-kicker", "กลับสู่ความปลอดภัย");
+    set(".loading-title", "เมืองหน้าถ้ำหลวง");
+    set(".loading-sub", "พักฟื้น ซื้อของ และเตรียมตัวลงถ้ำอีกครั้ง");
+  } else if (d?.training) {
+    set(".loading-kicker", "ลานฝึกซ้อม");
+    set(".loading-title", "สนามฝึก");
+    set(".loading-sub", "ซ้อมท่าได้ไม่จำกัด ไม่เสียความคืบหน้า");
+  } else if (d) {
+    const floor = FLOORS[d.floor - 1];
+    set(".loading-kicker", "ชั้น " + d.floor + " / " + FLOORS.length);
+    set(".loading-title", floor.name);
+    set(
+      ".loading-sub",
+      d.stage === 3 ? "ด่านบอส · " + floor.boss : "ด่าน " + d.stage + " / 3",
+    );
+    $("#area-loading .loading-dots").innerHTML = [1, 2, 3]
+      .map(
+        (n) =>
+          `<i class="${n < d.stage ? "done" : n === d.stage ? "now" : ""}${n === 3 ? " boss" : ""}"></i>`,
+      )
+      .join("");
+  }
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  hideLoading(
+    Math.max(reduced ? 300 : 900, 1500 - (performance.now() - loader.shownAt)),
+  );
+}
+async function emit(event, data = {}) {
+  if (!TRAVEL.has(event)) return send(event, data);
+  showLoading();
+  await wait(380);
+  const result = await send(event, data);
+  // A failed trip, or one that stays in the same area, must not leave it up.
+  if (!result) hideLoading();
+  else
+    loader.timers.push(
+      setTimeout(() => !loader.arrived && hideLoading(), 2500),
+    );
+  return result;
+}
+function send(event, data = {}) {
   return new Promise((resolve) => {
     if (!socket?.connected) {
       toast("กำลังเชื่อมต่อเซิร์ฟเวอร์", true);
@@ -451,7 +567,7 @@ async function transaction(event, data = {}) {
   if (!result) return result;
   if (event === "equipment:enhance")
     soundCue(result.success ? "enhance-success" : "enhance-fail");
-  else if (event === "equipment:buy" || event === "npc:buy")
+  else if (["equipment:buy", "npc:buy", "shop:buy"].includes(event))
     soundCue("buy", result.rarity);
   return result;
 }
@@ -540,16 +656,36 @@ function updateHUD() {
   } else if (activePanel === "weapon") {
     const hash = JSON.stringify([p.ownedEquipment, p.gold]);
     if (hash !== lastRpgPanelHash) showPanel("weapon");
+  } else if (activePanel === "market" || activePanel === "shop") {
+    // Live stock and gold, but never yank an input out from under the typist.
+    if (
+      marketHash() !== lastMarketHash &&
+      !$("#modal-body").contains(document.activeElement)
+    )
+      showPanel(activePanel);
   }
   CLASS_SKILLS[p.class].forEach((skill, i) => {
     const button = $(`[data-action="skill${i + 1}"]`);
-    button.querySelector("b").textContent = skill.icon;
+    if (button.dataset.iconClass !== p.class) {
+      button.querySelector("b").innerHTML = skillIcon(p.class, i + 1);
+      button.dataset.iconClass = p.class;
+    }
     button.querySelector("small").textContent = skill.name;
     button.dataset.tip = `${skill.name} · ${skill.detail} · ${ACTIONS[i + 1].mp} MP · ${ACTIONS[i + 1].cooldown}s`;
     button.setAttribute("aria-label", button.dataset.tip);
     button.querySelector(".skill-cost").textContent = ACTIONS[i + 1].mp + " MP";
   });
-  $("#avatar").style.cssText = heroStyle(p.class, p.gender);
+  const basicAttack = $('[data-action="attack"]');
+  if (basicAttack.dataset.iconClass !== p.class) {
+    basicAttack.querySelector("b").innerHTML = skillIcon(p.class, 0);
+    basicAttack.dataset.iconClass = p.class;
+  }
+  if (!$("#auto-button").dataset.iconReady) {
+    $('[data-action="hp"] b').innerHTML = potionIcon;
+    $("#auto-button b").innerHTML = autoIcon;
+    $("#auto-button").dataset.iconReady = "1";
+  }
+  $("#avatar").style.cssText = heroStyle(p.class, p.gender, p);
   $("#hp-fill").style.width = (p.hp / p.maxHp) * 100 + "%";
   $("#mp-fill").style.width = (p.mp / p.maxMp) * 100 + "%";
   $("#hp-label").textContent = `HP ${Math.ceil(p.hp)} / ${p.maxHp}`;
@@ -558,6 +694,14 @@ function updateHUD() {
   $("#hp-potions").textContent = d?.training
     ? "ยา HP ∞"
     : "ยา HP ×" + p.inventory.hp;
+  const potionButton = $('[data-action="hp"]');
+  potionButton.dataset.count = d?.training ? "∞" : String(p.inventory.hp);
+  potionButton.disabled =
+    p.hp <= 0 || p.hp >= p.maxHp || (!d?.training && p.inventory.hp <= 0);
+  potionButton.title =
+    p.inventory.hp <= 0 && !d?.training
+      ? "ยาหมด · ซื้อเพิ่มได้ที่ร้านยา"
+      : "ยา HP · ฟื้นฟู 90 HP (R)";
   $("#training-open").disabled = state.area !== "town";
   $$(
     [
@@ -597,7 +741,14 @@ function updateHUD() {
   $("#map-platforms").setAttribute(
     "d",
     "M8 52H211" +
-      (state.area === "town" ? WORLD.platforms : WORLD.dungeonPlatforms)
+      (state.area === "town"
+        ? WORLD.platforms
+        : dungeonPlatforms(
+            state?.dungeon?.floor,
+            state?.dungeon?.stage,
+            state?.dungeon?.training,
+          )
+      )
         .map(
           (q) =>
             `M${8 + (q.x / mapW) * 200} ${52 - ((WORLD.ground - q.y) / 450) * 43}h${(q.w / mapW) * 200}`,
@@ -605,6 +756,7 @@ function updateHUD() {
         .join(""),
   );
   $("#auto-button").classList.toggle("on", p.auto);
+  $("#auto-button").setAttribute("aria-pressed", String(!!p.auto));
   $("#auto-button small").textContent = p.auto ? "เปิด" : "ปิด";
   $("#quest-description").textContent = d?.training
     ? "ฝึกเดิน กระโดด ฟัน และ Q/W/E · หลบเมื่อสไลม์ขึ้นวงเตือน"
@@ -627,10 +779,12 @@ function updateHUD() {
     (d && !d.training
       ? (d.defeated / Math.max(1, d.totalEnemies)) * 100
       : (p.quest / FLOORS.length) * 100) + "%";
+  const result = d?.completed ? d.result : null;
   $("#stage-clear").classList.toggle(
     "hidden",
-    !d?.clear || d?.training || p.hp <= 0 || p.auto,
+    !d?.clear || d?.training || p.hp <= 0 || p.auto || !!result,
   );
+  showFloorResult(result);
   $("#next-stage").textContent =
     d?.stage === 3 ? "รับชัยชนะ · กลับเมือง ➜" : "เข้าสู่ด่านต่อไป ➜";
   $("#death").classList.toggle("hidden", p.hp > 0);
@@ -671,12 +825,21 @@ function updateHUD() {
     !nearest || activePanel !== null || p.hp <= 0,
   );
   if (nearest) $("#context-hint span").textContent = nearest.label;
+  // Touch: the hint becomes a tappable button only while there is a target.
+  $("#mobile-interact").classList.toggle(
+    "hidden",
+    !nearest || activePanel !== null || p.hp <= 0,
+  );
+  if (nearest && $("#mobile-interact span").textContent !== nearest.label)
+    $("#mobile-interact span").textContent = nearest.label;
 }
 function nearby() {
   if (!state) return null;
   const p = state.self;
   if (state.area === "dungeon")
-    return state.dungeon.clear ? { id: "next", label: "เข้าสู่ด่านต่อไป" } : null;
+    return state.dungeon.clear && !state.dungeon.completed
+      ? { id: "next", label: "เข้าสู่ด่านต่อไป" }
+      : null;
   const npc = WORLD.npcs.find(
     (n) =>
       Math.abs(n.x - p.x) < 105 && Math.abs((n.y ?? WORLD.ground) - p.y) < 90,
@@ -685,18 +848,30 @@ function nearby() {
   if (Math.abs(p.x - WORLD.portal) < 140)
     return { id: "portal", label: "เข้าสู่ดันเจียนถ้ำหลวง" };
   const shop = state.shops.find((s) => Math.abs(s.x - p.x) < 65);
-  if (shop) return { id: "market", label: "เลือกซื้อของจากร้านผู้เล่น" };
+  if (shop) return { id: "shop:" + shop.id, label: "ร้าน " + shop.name };
   return null;
 }
 function interact() {
   const n = nearby();
-  if (!n) return toast("เข้าใกล้ NPC หรือประตู แล้วกด F");
+  if (!n) return toast("คลิกที่ NPC ร้าน หรือประตูถ้ำได้เลย");
   if (n.id === "next") emit("dungeon:next");
-  else if (n.id === "portal") showPanel("dungeon");
-  else {
+  else openTown(n.id);
+}
+// One way in for keyboard, mouse and touch: NPC id, "portal" or "shop:<id>".
+function openTown(id) {
+  if (!state || state.area !== "town") return;
+  if (id === "portal") return showPanel("dungeon");
+  if (id === "market") return showPanel("market");
+  if (id.startsWith("shop:")) {
+    const shop = state.shops.find((s) => s.id === id.slice(5));
+    if (!shop) return;
     sfx("talk");
-    showPanel(n.id);
+    if (shop.owner === state.self.id) return showPanel("shop");
+    marketState.shop = shop.id;
+    return showPanel("market");
   }
+  sfx("talk");
+  showPanel(id);
 }
 function action(name) {
   if (!state || activePanel) return;
@@ -719,6 +894,48 @@ $("#training-open").onclick = async () => {
   if (r) closeModal();
 };
 $("#next-stage").onclick = () => emit("dungeon:next");
+$("#result-next").onclick = () => emit("dungeon:next");
+$("#result-leave").onclick = () => emit("dungeon:leave");
+// End-of-floor summary: time, score, loot and an SSS–C rank, built once per clear.
+let shownResult = "";
+function showFloorResult(r) {
+  const panel = $("#floor-result"),
+    key = r ? state.dungeon.instanceId + ":" + r.floor : "";
+  panel.classList.toggle("hidden", !r);
+  if (key === shownResult) return;
+  shownResult = key;
+  if (!r) return;
+  const clock = (s) =>
+      Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"),
+    row = (label, value, extra = "") =>
+      `<div><dt>${label}</dt><dd>${value}${extra ? `<small>${extra}</small>` : ""}</dd></div>`;
+  $("#result-title").textContent =
+    "ชั้น " + r.floor + " · " + FLOORS[r.floor - 1].name;
+  const rank = $("#floor-result .result-rank");
+  rank.dataset.rank = r.rank;
+  rank.querySelector("b").textContent = r.rank;
+  $("#floor-result .result-stats").innerHTML = [
+    row("เวลา", clock(r.seconds), "เป้า " + clock(r.par)),
+    row("กำจัด", r.defeated + " ตัว"),
+    row("เสียเลือด", r.damage, "รอด " + r.survival + "%"),
+    row("คะแนน", r.score.toLocaleString()),
+  ].join("");
+  const loot = [
+    `<span class="loot-chip">🪙 ${r.gold.toLocaleString()} ทอง</span>`,
+    `<span class="loot-chip">✦ ${r.exp} EXP</span>`,
+    r.ore ? `<span class="loot-chip">⛏ แร่ ×${r.ore}</span>` : "",
+    ...r.items.map(
+      (id) =>
+        `<span class="loot-chip rare" data-rarity="${escape(GEAR[id]?.rarity || "")}">🎁 ${escape(GEAR[id]?.name || id)}</span>`,
+    ),
+  ];
+  $("#floor-result .result-loot").innerHTML = loot.join("");
+  $("#result-next").hidden = !r.hasNext;
+  $("#result-leave").textContent = r.hasNext
+    ? "ออกกลับเมือง"
+    : "รับชัยชนะ · กลับเมือง";
+  if (["SSS", "SS", "S"].includes(r.rank)) sfx("levelUp", null, 0);
+}
 $("#revive").onclick = () => emit("dungeon:leave");
 $("#town-return").onclick = () => {
   if (state?.area === "town") {
@@ -734,6 +951,130 @@ $("#town-return").onclick = () => {
     };
   }
 };
+let lastMarketHash = "";
+const marketHash = () =>
+  JSON.stringify([
+    state.shops,
+    state.self.gold,
+    state.self.inventory,
+    state.self.ownedEquipment,
+    state.self.equipment,
+  ]);
+function bindMarket(panel) {
+  const m = marketState,
+    again = () => showPanel(panel);
+  if (panel === "market") {
+    $$("[data-market-filter]").forEach(
+      (b) => (b.onclick = () => ((m.filter = b.dataset.marketFilter), again())),
+    );
+    const listing = (id) =>
+      state.shops.flatMap((s) => s.listings || []).find((l) => l.id === id);
+    $$("[data-buy-step]").forEach(
+      (b) =>
+        (b.onclick = () => {
+          const id = b.dataset.buyStep,
+            l = listing(id);
+          m.buyQty[id] = Math.max(
+            1,
+            Math.min(l?.qty || 1, (m.buyQty[id] || 1) + Number(b.dataset.d)),
+          );
+          again();
+        }),
+    );
+    $$("[data-buy-max]").forEach(
+      (b) =>
+        (b.onclick = () => {
+          const id = b.dataset.buyMax,
+            l = listing(id);
+          if (!l) return;
+          m.buyQty[id] = Math.max(
+            1,
+            Math.min(l.qty, Math.floor(state.self.gold / l.price)),
+          );
+          again();
+        }),
+    );
+    $$("[data-listing-buy]").forEach(
+      (b) =>
+        (b.onclick = async () => {
+          const id = b.dataset.listingBuy;
+          b.disabled = true;
+          const r = await transaction("shop:buy", {
+            id,
+            qty: m.buyQty[id] || 1,
+          });
+          if (r) m.buyQty[id] = 1;
+          setTimeout(again, 120);
+        }),
+    );
+    $("#open-own-shop").onclick = () => showPanel("shop");
+    if ($("#market-all"))
+      $("#market-all").onclick = () => ((m.shop = null), again());
+    return;
+  }
+  $$("[data-pick]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        if (m.pick !== b.dataset.pick) {
+          m.pick = b.dataset.pick;
+          m.qty = 1;
+          m.price = null;
+        }
+        again();
+      }),
+  );
+  const total = () => {
+    const btn = $("#sell-confirm");
+    if (btn)
+      btn.textContent =
+        btn.textContent.replace(/ · รวม .*$/, "") +
+        ` · รวม ${(m.qty * m.price).toLocaleString()} ◈`;
+  };
+  if ($("#sell-qty"))
+    $("#sell-qty").oninput = (e) => {
+      m.qty = Math.max(1, Math.floor(Number(e.target.value) || 1));
+      total();
+    };
+  if ($("#sell-price"))
+    $("#sell-price").oninput = (e) => {
+      m.price = Math.max(1, Math.floor(Number(e.target.value) || 1));
+      total();
+    };
+  if ($("#sell-shop-name"))
+    $("#sell-shop-name").oninput = (e) => (m.name = e.target.value);
+  if ($("#sell-confirm"))
+    $("#sell-confirm").onclick = async () => {
+      const mine = state.shops.some((s) => s.owner === state.self.id),
+        listing = { item: m.pick, qty: m.qty, price: m.price };
+      $("#sell-confirm").disabled = true;
+      const r = mine
+        ? await transaction("shop:list", listing)
+        : await transaction("shop:create", {
+            name: m.name.trim() || "ร้านของ " + state.self.name,
+            listings: [listing],
+          });
+      if (r) {
+        m.pick = null;
+        m.qty = 1;
+        m.price = null;
+      }
+      setTimeout(again, 120);
+    };
+  $$("[data-unlist]").forEach(
+    (b) =>
+      (b.onclick = async () => {
+        b.disabled = true;
+        await transaction("shop:unlist", { id: b.dataset.unlist });
+        setTimeout(again, 120);
+      }),
+  );
+  $("#back-market").onclick = () => showPanel("market");
+  if ($("#close-shop"))
+    $("#close-shop").onclick = async () => {
+      const r = await transaction("shop:close");
+      if (r) setTimeout(again, 120);
+    };
+}
 function showPanel(panel) {
   if (!state) return;
   const p = state.self;
@@ -761,7 +1102,11 @@ function showPanel(panel) {
         const result = await emit(event, data);
         if (result && event === "equipment:equip")
           soundCue("equip", result.rarity);
-        else if (result && event === "class:specialize") soundCue("equip");
+        else if (
+          result &&
+          ["class:specialize", "class:advance"].includes(event)
+        )
+          soundCue("equip");
       },
     });
   } else if (panel === "weapon") {
@@ -782,7 +1127,7 @@ function showPanel(panel) {
       panel === "potion" ? ["hp", "mp"] : ["weapon", "armor", "ore"];
     modal(
       panel === "potion" ? "มีรา · ร้านปรุงยา" : "อริน · อาวุธและอุปกรณ์",
-      `<p>ยินดีต้อนรับผู้กล้า · ทองของเจ้า ${p.gold}</p>${items.map((id) => row(ITEMS[id].icon, ITEMS[id].name, id === "weapon" ? "เพิ่ม ATK 10 · สวมให้อัตโนมัติ" : id === "armor" ? "เพิ่ม HP 30 · ป้องกันเพิ่ม" : id === "ore" ? "วัตถุดิบตีบวก" : "ใช้ฟื้นฟูระหว่างต่อสู้", btn(`data-buy="${id}"`, ITEMS[id].price + " ◈"))).join("")}`,
+      `<p>ยินดีต้อนรับผู้กล้า · ทองของเจ้า ${p.gold}</p>${items.map((id) => row(supplyArt(id) || ITEMS[id].icon, ITEMS[id].name, id === "weapon" ? "เพิ่ม ATK 10 · สวมให้อัตโนมัติ" : id === "armor" ? "เพิ่ม HP 30 · ป้องกันเพิ่ม" : id === "ore" ? "วัตถุดิบตีบวก" : "ใช้ฟื้นฟูระหว่างต่อสู้", btn(`data-buy="${id}"`, ITEMS[id].price + " ◈"))).join("")}`,
     );
     $$("[data-buy]").forEach(
       (b) =>
@@ -835,47 +1180,17 @@ function showPanel(panel) {
           if (r) closeModal();
         }),
     );
-  } else if (panel === "market") {
+  } else if (panel === "market" || panel === "shop") {
+    lastMarketHash = marketHash();
+    const scroll = $("#modal-body")?.scrollTop || 0,
+      same = activePanel === panel;
     modal(
-      "ตลาดนักเดินทาง",
-      `<p>ร้านค้าจากผู้เล่นจริง · ไอเทมถูกเก็บเข้าร้านบนเซิร์ฟเวอร์</p>${state.shops.length ? state.shops.map((s) => row(ITEMS[s.item]?.icon, s.name, `${s.ownerName} · ${ITEMS[s.item]?.name} · เหลือ ${s.qty}`, btn(`data-shop-buy="${s.id}"`, s.price + " ◈"))).join("") : "<p>ยังไม่มีร้านค้า ลองตั้งร้านแรกของเมืองได้เลย</p>"}<button id="open-own-shop" class="primary-button">ตั้งร้านของฉัน</button>`,
+      panel === "market" ? "ตลาดนักเดินทาง" : "ร้านค้าของฉัน",
+      panel === "market" ? marketHtml(state) : shopManagerHtml(state),
+      panel,
     );
-    $$("[data-shop-buy]").forEach(
-      (b) =>
-        (b.onclick = async () => {
-          b.disabled = true;
-          const r = await transaction("shop:buy", { id: b.dataset.shopBuy });
-          if (r) closeModal();
-          else b.disabled = false;
-        }),
-    );
-    $("#open-own-shop").onclick = () => showPanel("shop");
-  } else if (panel === "shop") {
-    const existing = state.shops.find((s) => s.owner === p.id);
-    if (existing) {
-      modal(
-        "ร้านค้าของฉัน",
-        `<h3>${escape(existing.name)}</h3><p>${ITEMS[existing.item]?.name} · เหลือ ${existing.qty} · ราคา ${existing.price} ทอง<br>ร้านเปิดต่อเมื่อออกจากเกมได้</p><button id="close-shop" class="primary-button">ปิดร้านและรับสินค้าที่เหลือคืน</button>`,
-      );
-      $("#close-shop").onclick = async () => {
-        const r = await transaction("shop:close");
-        if (r) closeModal();
-      };
-    } else {
-      modal(
-        "ตั้งร้านในเมือง",
-        `<p>ตั้งได้หนึ่งร้านต่อบัญชี ร้านยังขายได้เมื่อออกจากเกม · ไอเทมวางขายจะออกจากกระเป๋า</p><label>ชื่อร้าน<input id="shop-name" maxlength="35" placeholder="ร้านของผู้กล้า"></label><label>สินค้า<select id="shop-item">${["hp", "mp", "ore"].map((id) => `<option value="${id}">${ITEMS[id].name} · มี ${p.inventory[id]}</option>`).join("")}</select></label><label>จำนวน<input id="shop-qty" type="number" value="1" min="1" max="999"></label><label>ราคาต่อชิ้น (Gold)<input id="shop-price" type="number" value="20" min="1" max="100000"></label><button id="create-shop" class="primary-button">เปิดร้าน</button>`,
-      );
-      $("#create-shop").onclick = async () => {
-        const r = await transaction("shop:create", {
-          name: $("#shop-name").value.trim(),
-          item: $("#shop-item").value,
-          qty: Number($("#shop-qty").value),
-          price: Number($("#shop-price").value),
-        });
-        if (r) closeModal();
-      };
-    }
+    if (same) $("#modal-body").scrollTop = scroll;
+    bindMarket(panel);
   } else if (panel === "party") {
     const party = state.party;
     modal(
@@ -947,6 +1262,7 @@ function showPanel(panel) {
       phaser?.loop.sleep();
       $("#game-screen").classList.add("hidden");
       $("#landing").classList.remove("hidden");
+      music("town");
       closeModal();
       refreshAccount();
     };
@@ -1104,23 +1420,75 @@ addEventListener("blur", () => {
   touchDirection = 0;
   touchAttack = false;
 });
-const touchMoves = new Map();
-const updateTouch = () => {
-  touchDirection = [...touchMoves.values()].at(-1) || 0;
-};
-$$("[data-direction]").forEach((b) => {
-  b.onpointerdown = (e) => {
-    e.preventDefault();
-    b.setPointerCapture(e.pointerId);
-    touchMoves.set(e.pointerId, Number(b.dataset.direction));
-    updateTouch();
+// Floating joystick (MOBA style): it appears under the thumb anywhere in the
+// zone. Tilt walks, full tilt runs, a flick upward jumps once per flick.
+let touchRun = false;
+{
+  const zone = $("#joystick-zone"),
+    base = $("#joystick"),
+    knob = base.querySelector("i");
+  let stick = null;
+  const release = () => {
+    stick = null;
+    touchDirection = 0;
+    touchRun = false;
+    knob.style.transform = "";
+    base.classList.remove("active");
+    base.style.left = base.style.top = "";
   };
+  const steer = (e) => {
+    const radius = base.offsetWidth / 2,
+      dx = e.clientX - stick.x,
+      dy = e.clientY - stick.y,
+      len = Math.hypot(dx, dy) || 1,
+      k = Math.min(1, radius / len),
+      nx = (dx * k) / radius,
+      ny = (dy * k) / radius;
+    knob.style.transform = `translate(${dx * k}px, ${dy * k}px)`;
+    touchDirection = Math.abs(nx) > 0.25 ? Math.sign(nx) : 0;
+    touchRun = Math.abs(nx) > 0.7;
+    if (ny < -0.6 && !stick.flicked) {
+      stick.flicked = true;
+      jumpQueued = true;
+    } else if (ny > -0.3) stick.flicked = false;
+  };
+  zone.addEventListener("pointerdown", (e) => {
+    if (stick) return;
+    e.preventDefault();
+    try {
+      zone.setPointerCapture(e.pointerId);
+    } catch {} // capture is a nicety; never let it block the stick
+    const r = zone.getBoundingClientRect(),
+      half = base.offsetWidth / 2,
+      x = Math.max(half, Math.min(r.width - half, e.clientX - r.left)),
+      y = Math.max(half, Math.min(r.height - half, e.clientY - r.top));
+    base.style.left = x - half + "px";
+    base.style.top = y - half + "px";
+    base.classList.add("active");
+    stick = { id: e.pointerId, x: r.left + x, y: r.top + y, flicked: false };
+    steer(e);
+  });
+  zone.addEventListener("pointermove", (e) => {
+    if (stick?.id === e.pointerId) steer(e);
+  });
   for (const n of ["pointerup", "pointercancel", "lostpointercapture"])
-    b.addEventListener(n, (e) => {
-      touchMoves.delete(e.pointerId);
-      updateTouch();
-    });
+    zone.addEventListener(n, (e) => stick?.id === e.pointerId && release());
+  addEventListener("blur", release);
+}
+// Touch buttons fire on press (no 300 ms click delay) and swallow the
+// click that follows, so a tap never casts or drinks twice.
+$$("[data-action]").forEach((b) => {
+  b.addEventListener("pointerdown", (e) => {
+    if (e.pointerType === "mouse") return;
+    b.touchedAt = Date.now();
+    if (b.dataset.action !== "attack") action(b.dataset.action);
+  });
+  b.onclick = () => {
+    if (Date.now() - (b.touchedAt || 0) < 700) return;
+    action(b.dataset.action);
+  };
 });
+$("#touch-recall").onclick = () => $("#town-return").click();
 const attackButton = $('[data-action="attack"]');
 attackButton.addEventListener("pointerdown", (e) => {
   attackButton.setPointerCapture(e.pointerId);
@@ -1149,8 +1517,9 @@ setInterval(() => {
     direction,
     seq: ++seq,
     jump: jumpQueued && !activePanel,
-    running:
-      !!touchDirection || keys.has("ShiftLeft") || keys.has("ShiftRight"),
+    running: touchDirection
+      ? touchRun
+      : keys.has("ShiftLeft") || keys.has("ShiftRight"),
   });
   jumpQueued = false;
   if ((keys.has("KeyJ") || touchAttack) && !activePanel && !focused)
@@ -1187,6 +1556,19 @@ class Adventure extends Phaser.Scene {
       "far-treeline",
     ])
       this.load.image(`town-${key}`, kit(key));
+    for (const [id, item] of Object.entries(GEAR)) {
+      const path = itemArtPath(id, item);
+      if (path) this.load.image(`item-${id}`, path);
+    }
+    for (const id of ["gold", "ore"])
+      this.load.image(
+        `drop-${id}`,
+        `/assets/items/supply-${id === "gold" ? 2 : 3}.webp`,
+      );
+    this.load.image(
+      "player-market-stall",
+      "/assets/town-kit/player-market-stall.png?v=1",
+    );
     this.load.image("cave", "/assets/cave.png");
     this.load.image("knight-motion", "/assets/animations/knight-female.png");
     this.load.image("slime-motion", "/assets/animations/slime.png");
@@ -1259,6 +1641,20 @@ class Adventure extends Phaser.Scene {
       })
       .setOrigin(0.5)
       .setDepth(12);
+    // Click or tap NPCs, the cave gate and stalls to open them directly.
+    this.hoverRing = this.add
+      .ellipse(0, WORLD.ground + 4, 120, 26, 0xffe6a5, 0.28)
+      .setStrokeStyle(2, 0xffe6a5, 0.9)
+      .setDepth(2)
+      .setVisible(false);
+    this.hotspots = [
+      ...WORLD.npcs.map((n) =>
+        this.hotspot(n.x, n.y ?? WORLD.ground, 110, 175, () => openTown(n.id)),
+      ),
+      this.hotspot(WORLD.portal, WORLD.portalY + 85, 150, 240, () =>
+        openTown("portal"),
+      ),
+    ];
     this.makePlatforms();
     this.cameras.main.centerOn(380, this.camY ?? 340);
     this.scale.on("resize", () => this.resize());
@@ -1290,10 +1686,34 @@ class Adventure extends Phaser.Scene {
     this.cameras.main.setBounds(0, -100, areaWidth(state?.area), 950);
     this.parallax?.resize();
   }
+  hotspot(x, bottom, w, h, open) {
+    const zone = this.add
+      .zone(x, bottom, w, h)
+      .setOrigin(0.5, 1)
+      .setInteractive({ useHandCursor: true });
+    zone.on("pointerover", () => {
+      if (state?.area !== "town") return;
+      this.hoverRing.setPosition(x, Math.min(bottom, WORLD.ground) + 4);
+      this.hoverRing.setVisible(true);
+    });
+    zone.on("pointerout", () => this.hoverRing.setVisible(false));
+    zone.on("pointerdown", () => {
+      if (state?.area !== "town" || activePanel || state.self.hp <= 0) return;
+      this.hoverRing.setVisible(false);
+      open();
+    });
+    return zone;
+  }
   makePlatforms() {
     this.decor.clear();
     const cave = state?.area === "dungeon";
-    for (const p of cave ? WORLD.dungeonPlatforms : WORLD.platforms) {
+    for (const p of cave
+      ? dungeonPlatforms(
+          state?.dungeon?.floor,
+          state?.dungeon?.stage,
+          state?.dungeon?.training,
+        )
+      : WORLD.platforms) {
       // Town ledges are painted into the architecture; collisions use WORLD.
       if (!cave) continue;
       this.decor.fillStyle(0x152e40, 0.28);
@@ -1308,7 +1728,9 @@ class Adventure extends Phaser.Scene {
         this.decor.lineStyle(1, cave ? 0x93b9da : 0xc8bd91, 0.55);
         this.decor.lineBetween(x + 4, p.y + 10, x + 27, p.y + 10);
       }
-      this.decor.fillStyle(cave ? 0x95b3db : 0x83b952);
+      this.decor.fillStyle(
+        cave ? FLOORS[(state?.dungeon?.floor || 1) - 1].color : 0x83b952,
+      );
       this.decor.fillRoundedRect(p.x - 3, p.y, p.w + 6, 9, 4);
       for (let x = p.x + 6; x < p.x + p.w; x += 13) {
         this.decor.fillStyle(cave ? 0xb6d8f1 : 0xb3d96d, 0.9);
@@ -1326,7 +1748,7 @@ class Adventure extends Phaser.Scene {
   }
   actor(p, stamp, reset = false) {
     let a = this.actors.get(p.id);
-    this.sprites.want("sets", `${p.class}-${p.gender}`);
+    for (const skin of heroSkins(p)) this.sprites.want("sets", skin);
     if (!a) {
       const shadow = this.add
           .ellipse(p.x, p.y - 3, 65, 15, 0x102b3c, 0.35)
@@ -1400,6 +1822,7 @@ class Adventure extends Phaser.Scene {
           s.dungeon.stage;
     const areaChanged = area !== this.lastArea;
     if (areaChanged) {
+      loadingArrived(s);
       const fromTown = this.lastArea === "town";
       this.lastArea = area;
       const town = s.area === "town";
@@ -1414,6 +1837,8 @@ class Adventure extends Phaser.Scene {
       );
       this.lookX = 0;
       this.npcs.forEach((n) => n.setVisible(town));
+      this.hotspots.forEach((z) => (z.input.enabled = town));
+      this.hoverRing.setVisible(false);
       this.portalLabel.setVisible(town);
       this.portal.setVisible(town);
       this.portalGlow.setVisible(town);
@@ -1450,7 +1875,9 @@ class Adventure extends Phaser.Scene {
       if (!m) {
         this.sprites.want("monsters", e.type);
         const mset = this.monsterSets.get(e.type),
-          size = mset ? mset.height + 12 : e.boss ? 210 : 95;
+          size =
+            (mset ? mset.height + 12 : e.boss ? 210 : 95) *
+            (e.elite ? 1.25 : 1);
         const image = this.add
           .image(e.x, e.y, "monsters", types.indexOf(e.type))
           .setDisplaySize(size, size)
@@ -1460,7 +1887,9 @@ class Adventure extends Phaser.Scene {
           .text(
             e.x,
             e.y - size - 15,
-            e.boss ? FLOORS[s.dungeon.floor - 1].boss : "",
+            e.boss
+              ? FLOORS[s.dungeon.floor - 1].boss
+              : `${e.elite ? "★ หัวหน้า " : ""}${["ค้างคาวถ้ำ", "ศิลาผา", "วารี", "รากไพร", "เพลิง", "เหมันต์", "อัสนี", "เงา", "มังกร", "จันทรา"][s.dungeon.floor - 1]} · ${{ slime: "สไลม์", bat: "ค้างคาว", boar: "หมูป่า", mushroom: "เห็ดพิษ", wolf: "หมาป่า", goblin: "ก็อบลิน", golem: "โกเลม", serpent: "อสรพิษ" }[e.type] || e.type}`,
             {
               fontFamily: "Noto Sans Thai",
               fontSize: "14px",
@@ -1482,7 +1911,9 @@ class Adventure extends Phaser.Scene {
         time: s.time,
         x: e.x,
         y: e.y,
-        vx: e.moving ? e.direction * (e.boss ? 75 : 90) : 0,
+        vx: e.moving
+          ? e.direction * (e.boss ? 75 : e.aggro === false ? 30 : e.speed || 90)
+          : 0,
       });
       if (m.history.length > 8) m.history.shift();
     }
@@ -1508,33 +1939,84 @@ class Adventure extends Phaser.Scene {
       if (seen.size > 500) seen = new Set([...seen].slice(-200));
       this.effect(e);
     }
-    const sh = JSON.stringify(s.shops.map((v) => [v.id, v.qty]));
+    const sh = JSON.stringify(s.shops.map((v) => [v.id, v.x, v.name, v.qty]));
     if (sh !== this.lastShops) {
       this.shopObjects.forEach((o) => o.destroy());
       this.shopObjects = [];
       for (const shop of s.shops) {
-        const roof = this.add.graphics().setDepth(4);
-        roof.fillStyle(0x6b4155);
-        roof.fillRect(shop.x - 42, 550, 84, 38);
-        roof.fillStyle(0xdd9fb8);
-        roof.fillTriangle(shop.x - 58, 550, shop.x, 505, shop.x + 58, 550);
-        roof.lineStyle(3, 0xe9c587);
-        roof.strokeRect(shop.x - 42, 550, 84, 38);
+        const shadow = this.add
+          .ellipse(shop.x, WORLD.ground - 3, 132, 18, 0x172d22, 0.28)
+          .setDepth(3);
+        const stall = this.add
+          .image(shop.x, WORLD.ground + 1, "player-market-stall")
+          .setOrigin(0.5, 1)
+          .setDisplaySize(152, 127)
+          .setDepth(4);
         const label = this.add
-          .text(shop.x, 487, shop.name, {
+          .text(shop.x, WORLD.ground - 141, shop.name, {
             fontFamily: "Noto Sans Thai",
             fontSize: "10px",
+            align: "center",
+            wordWrap: { width: 138 },
+            backgroundColor: "#243a32dd",
+            padding: { x: 7, y: 4 },
             color: "#fff2cd",
             stroke: "#193851",
             strokeThickness: 3,
           })
           .setOrigin(0.5)
           .setDepth(14);
-        this.shopObjects.push(roof, label);
+        this.shopObjects.push(
+          shadow,
+          stall,
+          label,
+          this.hotspot(shop.x, WORLD.ground, 152, 127, () =>
+            openTown("shop:" + shop.id),
+          ),
+        );
       }
       this.lastShops = sh;
     }
-    this.shopObjects.forEach((o) => o.setVisible(s.area === "town"));
+    this.shopObjects.forEach((o) => {
+      o.setVisible(s.area === "town");
+      if (o.input) o.input.enabled = s.area === "town";
+    });
+  }
+  // Size says how much a drop matters: gold and ore are small pops that fade
+  // fast; gear grows and lingers with its rarity.
+  showDrop(e, key, color = "#ffd578", size = 34) {
+    if (!this.textures.exists(key)) return;
+    const big = size >= 60;
+    const glow = this.add.circle(
+      0,
+      0,
+      size * 0.4,
+      Phaser.Display.Color.HexStringToColor(color).color,
+      big ? 0.22 : 0.12,
+    );
+    const icon = this.add.image(0, 0, key).setDisplaySize(size, size);
+    const drop = this.add.container(e.x, e.y, [glow, icon]).setDepth(44);
+    this.tweens.add({
+      targets: drop,
+      y: e.y - (big ? 40 : 22),
+      duration: big ? 450 : 320,
+      ease: "Back.Out",
+    });
+    this.tweens.add({
+      targets: glow,
+      alpha: big ? 0.45 : 0.25,
+      scale: big ? 1.4 : 1.2,
+      duration: 650,
+      yoyo: true,
+      repeat: big ? 3 : 0,
+    });
+    this.tweens.add({
+      targets: drop,
+      alpha: 0,
+      delay: big ? 2400 : 700,
+      duration: big ? 600 : 350,
+      onComplete: () => drop.destroy(),
+    });
   }
   effect(e) {
     if (e.kind === "loot") {
@@ -1550,20 +2032,21 @@ class Adventure extends Phaser.Scene {
           epic: "#d0a7ff",
           legendary: "#ffc35d",
         }[item.rarity];
+        this.showDrop(
+          e,
+          `item-${e.item}`,
+          color,
+          { common: 64, rare: 76, epic: 88, legendary: 104 }[item.rarity] ?? 64,
+        );
         const text = this.add
-          .text(
-            e.x,
-            e.y,
-            `${item.icon} ${item.name}\n${RARITIES[item.rarity]}`,
-            {
-              align: "center",
-              fontFamily: "Noto Sans Thai",
-              fontSize: item.rarity === "legendary" ? "20px" : "16px",
-              color,
-              stroke: "#07131e",
-              strokeThickness: 5,
-            },
-          )
+          .text(e.x, e.y - 60, `${item.name}\n${RARITIES[item.rarity]}`, {
+            align: "center",
+            fontFamily: "Noto Sans Thai",
+            fontSize: item.rarity === "legendary" ? "20px" : "16px",
+            color,
+            stroke: "#07131e",
+            strokeThickness: 5,
+          })
           .setOrigin(0.5)
           .setDepth(45);
         this.tweens.add({
@@ -1577,10 +2060,15 @@ class Adventure extends Phaser.Scene {
       }
       return;
     }
+    if (e.kind === "drop") {
+      if (e.actorId === state.self.id) this.showDrop(e, `drop-${e.item}`);
+      return;
+    }
     if (e.kind === "material") {
       if (e.actorId === state.self.id) {
         toast(`สะสมชุดชั้นนี้ครบแล้ว · ได้แร่จันทรา ×${e.amount}`);
         soundCue("material");
+        this.showDrop(e, "drop-ore", "#9fe6ff", 48);
       }
       return;
     }
@@ -1617,7 +2105,15 @@ class Adventure extends Phaser.Scene {
       if (e.amount < 0) {
         if (e.targetId === state?.self.id) sfx("hurt", null, 0.08);
         else sfx("hit", null, 0.12);
-      } else sfx(e.crit ? "crit" : "hit", null, mine ? 0.04 : 0.12);
+      } else
+        sfx(
+          e.crit ? "crit" : "hit",
+          {
+            class: e.class || this.actors.get(e.actorId)?.target.class,
+            volume: mine ? 1 : 0.35,
+          },
+          mine ? 0.04 : 0.12,
+        );
       const monster = this.monsters.get(e.targetId),
         actor = this.actors.get(e.targetId);
       this.fx.hit(
@@ -1635,7 +2131,7 @@ class Adventure extends Phaser.Scene {
         }[cls] || ["swing", "slash"];
       sfx(
         kind[e.skill ? 1 : 0],
-        null,
+        { volume: e.actorId === state?.self.id ? 1 : 0.35 },
         e.actorId === state?.self.id ? 0.02 : 0.1,
       );
       this.fx.attack(e);
@@ -1723,7 +2219,10 @@ class Adventure extends Phaser.Scene {
     for (const [id, a] of this.actors) {
       const p = a.target,
         pose = animateHero(a.image, p, serverTime, this.knightAtlas),
-        spriteSet = this.spriteSets.get(`${p.class}-${p.gender}`);
+        // Specialization costume when its art exists, else the class look.
+        spriteSet = heroSkins(p)
+          .map((k) => this.spriteSets.get(k))
+          .find(Boolean);
       if (spriteSet) {
         playSpriteSet(a.image, spriteSet, p, pose, serverTime);
         if (!a.image._spriteStill) a.image.setAngle(0);
@@ -1833,13 +2332,21 @@ class Adventure extends Phaser.Scene {
         // A set that finished loading after spawn: adopt its size.
         if (!m.setSized) {
           m.setSized = true;
-          m.size = mset.height + 12;
+          m.size = (mset.height + 12) * (e.elite ? 1.25 : 1);
         }
         playMonsterSet(m.image, mset, e, mpose, serverTime);
       }
       const point = sampleMotion(m.history, serverTime - 0.08);
       m.image.setPosition(point.x, point.y);
       animateMonsterBody(m, e, serverTime, time, this.slimeAtlas);
+      if (serverTime - (e.hitAt || 0) > 0.18 && !state.dungeon?.training) {
+        m.image.setTint(
+          [
+            0xe5d5ff, 0xddd0b8, 0xafffe0, 0xc8efa9, 0xffb18a, 0xbdeaff,
+            0xffe7a3, 0xcab1ef, 0xffc0a3, 0xd4d4ff,
+          ][state.dungeon.floor - 1],
+        );
+      }
       this.fx.applyKick(m, m.image);
       if (e.boss)
         m.label.setText(
@@ -1856,7 +2363,7 @@ class Adventure extends Phaser.Scene {
       if (m.barHp !== e.hp || m.barLag !== m.lagHp) {
         m.barHp = e.hp;
         m.barLag = m.lagHp;
-        const w = e.boss ? 120 : 70,
+        const w = e.boss ? 120 : e.elite ? 90 : 70,
           top = -m.size + 4,
           pct = (v) => Math.max(0, v / e.maxHp);
         m.bar.clear();
@@ -1864,7 +2371,7 @@ class Adventure extends Phaser.Scene {
         m.bar.fillRoundedRect(-w / 2 - 2, top - 2, w + 4, 9, 4);
         m.bar.fillStyle(0xfff1c4, 0.95);
         m.bar.fillRoundedRect(-w / 2, top, w * pct(m.lagHp), 5, 2);
-        m.bar.fillStyle(e.boss ? 0xdd5fb8 : 0xff6b4a);
+        m.bar.fillStyle(e.boss ? 0xdd5fb8 : e.elite ? 0xffc340 : 0xff6b4a);
         m.bar.fillRoundedRect(-w / 2, top, w * pct(e.hp), 5, 2);
         m.bar.fillStyle(0xffffff, 0.35);
         m.bar.fillRect(-w / 2 + 1, top + 1, Math.max(0, w * pct(e.hp) - 2), 1);
@@ -1985,6 +2492,6 @@ addEventListener("keydown", (e) => {
 $("#creation-back").onclick = () => {
   if (characters.length) $("[data-resume]")?.click();
 };
-function lobbyHeroStyle(c, g) {
-  return heroStyle(c, g);
+function lobbyHeroStyle(c, g, hero) {
+  return heroStyle(c, g, hero);
 }

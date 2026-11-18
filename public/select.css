@@ -1,0 +1,754 @@
+/* ==================================================================
+   Hero select, game style. One full-screen grid that never scrolls on
+   desktop or a phone held sideways:
+     top bar · [slots | hero stage | stats] · [status | stage | START]
+   Portrait phones stack the same pieces and scroll, START stays pinned.
+   Loaded after lobby.css; `body #landing…[data-lobby-mode]` out-ranks even
+   its mode-specific phone rules.
+   ================================================================== */
+body #landing.game-lobby[data-lobby-mode] {
+  --gap: clamp(10px, 1.8vw, 28px);
+  --panel: linear-gradient(160deg, #1d3a48e6, #0a1823f2 45%, #08141df5);
+  --frame: #c9ac6d;
+  --gold: #f5d58c;
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns:
+    clamp(190px, 22vw, 300px) minmax(0, 1fr)
+    clamp(220px, 25vw, 330px);
+  grid-template-rows: clamp(46px, 8.5vh, 70px) minmax(0, 1fr) clamp(
+      60px,
+      12vh,
+      96px
+    );
+  column-gap: var(--gap);
+  padding: 0 calc(var(--gap) + env(safe-area-inset-right))
+    env(safe-area-inset-bottom) calc(var(--gap) + env(safe-area-inset-left));
+  box-sizing: border-box;
+}
+body #landing.game-lobby[data-lobby-mode].hidden {
+  display: none;
+}
+
+/* ---------- Top bar ---------- */
+body #landing.game-lobby[data-lobby-mode] .landing-header {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  height: auto;
+  padding: 0;
+  margin: 0 calc(-1 * var(--gap));
+  padding: 0 var(--gap);
+  border-bottom: 1px solid #e8ca8833;
+  background: linear-gradient(180deg, #020a12ee, #020a1288 70%, transparent);
+  display: flex;
+  align-items: center;
+}
+body #landing.game-lobby[data-lobby-mode] .brand {
+  gap: 8px;
+}
+body #landing.game-lobby[data-lobby-mode] .brand > span {
+  font-size: clamp(18px, 3.4vh, 28px);
+}
+body #landing.game-lobby[data-lobby-mode] .brand > div {
+  font-size: clamp(14px, 2.6vh, 21px);
+  line-height: 1.1;
+}
+body #landing.game-lobby[data-lobby-mode] .brand b {
+  font-size: 1.3em;
+}
+body #landing.game-lobby[data-lobby-mode] .brand small {
+  font-size: 6px;
+}
+/* The chapter chip becomes the screen title. */
+body #landing.game-lobby[data-lobby-mode] .lobby-chapter {
+  font-size: 0;
+  gap: 0;
+}
+body #landing.game-lobby[data-lobby-mode] .lobby-chapter::before {
+  content: "◆  เลือกผู้กล้า  ◆";
+  font:
+    clamp(13px, 2.4vh, 18px) "Chonburi",
+    serif;
+  letter-spacing: 1px;
+  color: var(--gold);
+  text-shadow: 0 2px 8px #000;
+  white-space: nowrap;
+}
+body #landing.game-lobby[data-lobby-mode] .lobby-chapter > i,
+body #landing.game-lobby[data-lobby-mode] .lobby-chapter span {
+  display: none;
+}
+body #landing.game-lobby[data-lobby-mode] #sound {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border-color: #e8ca8866;
+  font-size: 11px;
+}
+
+/* ---------- Grid placement ---------- */
+body #landing.game-lobby[data-lobby-mode] .lobby-layout {
+  display: contents;
+}
+body #landing.game-lobby[data-lobby-mode] .lobby-panel {
+  position: relative;
+  inset: auto;
+  width: auto;
+  max-height: none;
+  min-height: 0;
+  margin: var(--gap) 0 0;
+  padding: clamp(10px, 1.6vh, 18px);
+  align-self: stretch;
+  overflow: auto;
+  background: var(--panel);
+  border: 1px solid #c9ac6d77;
+  border-radius: 10px;
+  box-shadow:
+    0 16px 40px #0008,
+    inset 0 0 0 1px #ffffff0d,
+    inset 0 1px 0 #ffe9b322;
+  transform: none;
+}
+body #landing.game-lobby[data-lobby-mode] .lobby-panel::before {
+  display: none;
+}
+body #landing.game-lobby[data-lobby-mode] .lobby-roster {
+  grid-column: 1;
+  grid-row: 2;
+}
+body #landing.game-lobby[data-lobby-mode] .lobby-details {
+  grid-column: 3;
+  grid-row: 2;
+}
+body #landing.game-lobby[data-lobby-mode] .hero-showcase {
+  grid-column: 2;
+  grid-row: 2 / 4;
+  position: relative;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  inset: auto;
+  transform: none;
+}
+body #landing.game-lobby[data-lobby-mode] .lobby-entry {
+  display: contents;
+}
+body #landing.game-lobby[data-lobby-mode] .landing-footer {
+  display: none;
+}
+
+/* ---------- Panel headings ---------- */
+body #landing.game-lobby[data-lobby-mode] .lobby-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 clamp(6px, 1.2vh, 12px);
+  padding: 0 0 clamp(6px, 1.2vh, 10px);
+  border-bottom: 1px solid #e8ca8826;
+}
+body #landing.game-lobby[data-lobby-mode] .lobby-panel-title > span {
+  font-size: clamp(14px, 2.4vh, 20px);
+  color: var(--gold);
+}
+body #landing.game-lobby[data-lobby-mode] .lobby-panel-title small {
+  font-size: 8px;
+  letter-spacing: 2px;
+}
+body #landing.game-lobby[data-lobby-mode] .lobby-panel-title h1,
+body #landing.game-lobby[data-lobby-mode] .lobby-panel-title h2 {
+  font-size: clamp(14px, 2.6vh, 20px);
+  margin: 0;
+  line-height: 1.3;
+}
+body #landing.game-lobby[data-lobby-mode] .lobby-panel-title > b {
+  font-size: clamp(16px, 3vh, 26px);
+}
+
+/* ---------- Left: save slots ---------- */
+body #landing.game-lobby[data-lobby-mode] .roster-divider {
+  margin: 4px 0 6px;
+}
+body #landing.game-lobby[data-lobby-mode] #saved-characters {
+  display: grid;
+  gap: clamp(6px, 1vh, 9px);
+}
+body #landing.game-lobby[data-lobby-mode] .saved-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 0;
+  padding: 6px 10px 6px 6px;
+  border: 1px solid #7895ac55;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #13293ad9, #0b1a26d9);
+  text-align: left;
+  transition:
+    transform 0.15s,
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+body #landing.game-lobby[data-lobby-mode] .saved-hero:hover {
+  transform: translateX(3px);
+  border-color: #e8ca8899;
+}
+body #landing.game-lobby[data-lobby-mode] .saved-hero.active {
+  border-color: var(--gold);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--lobby-glow) 38%, #13293a),
+    #0b1a26e6 80%
+  );
+  box-shadow:
+    0 0 0 1px #f5d58c66,
+    0 0 18px color-mix(in srgb, var(--lobby-glow) 45%, transparent);
+}
+body #landing.game-lobby[data-lobby-mode] .saved-hero.active::after {
+  content: "▶";
+  position: absolute;
+  right: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: var(--gold);
+  text-shadow: 0 0 8px var(--gold);
+}
+body #landing.game-lobby[data-lobby-mode] .saved-portrait {
+  width: clamp(38px, 7vh, 56px);
+  height: clamp(38px, 7vh, 56px);
+  border-radius: 8px;
+  border: 1px solid #e8ca8855;
+  background-color: #0a1520;
+  box-shadow: inset 0 0 10px #000a;
+}
+body #landing.game-lobby[data-lobby-mode] .saved-hero strong {
+  display: block;
+  font-size: clamp(12px, 2vh, 15px);
+  color: #fff3d6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+body #landing.game-lobby[data-lobby-mode] .saved-hero small {
+  font-size: 10px;
+  color: #9fb8c8;
+}
+body #landing.game-lobby[data-lobby-mode] .saved-hero > b {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #00000066;
+  border: 1px solid #e8ca8866;
+  font-size: 11px;
+  color: var(--gold);
+}
+body #landing.game-lobby[data-lobby-mode] .new-hero {
+  width: 100%;
+  margin-top: clamp(6px, 1vh, 9px);
+  padding: clamp(8px, 1.6vh, 13px);
+  border: 1px dashed #e8ca8877;
+  border-radius: 8px;
+  background: #0b1a2699;
+  color: #e8ca88;
+  font-size: 12px;
+}
+body #landing.game-lobby[data-lobby-mode] .new-hero:disabled {
+  opacity: 0.45;
+}
+body #landing.game-lobby[data-lobby-mode] #account-open {
+  margin: 8px auto 0;
+  font-size: 10px;
+}
+
+/* ---------- Centre: hero stage ---------- */
+body #landing.game-lobby[data-lobby-mode] .showcase-location {
+  top: clamp(4px, 1.4vh, 14px);
+}
+body #landing.game-lobby[data-lobby-mode] .showcase-location span {
+  display: none;
+}
+body #landing.game-lobby[data-lobby-mode] #hero-preview {
+  inset: clamp(18px, 6vh, 56px) 0 clamp(70px, 17vh, 140px);
+  width: auto;
+}
+/* Glowing pedestal under the hero's feet. */
+body #landing.game-lobby[data-lobby-mode] .hero-showcase::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: clamp(58px, 14vh, 118px);
+  width: min(70%, 340px);
+  aspect-ratio: 4 / 1;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse,
+    color-mix(in srgb, var(--lobby-glow) 55%, transparent),
+    color-mix(in srgb, var(--lobby-glow) 14%, transparent) 55%,
+    transparent 72%
+  );
+  box-shadow: 0 0 40px color-mix(in srgb, var(--lobby-glow) 30%, transparent);
+  animation: pedestal 3.2s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 0;
+}
+@keyframes pedestal {
+  to {
+    opacity: 0.65;
+    transform: translateX(-50%) scale(1.06);
+  }
+}
+body #landing.game-lobby[data-lobby-mode] .hero-caption {
+  bottom: clamp(8px, 2vh, 20px);
+  width: 100%;
+}
+body #landing.game-lobby[data-lobby-mode] .hero-caption::before {
+  margin-bottom: 2px;
+}
+body #landing.game-lobby[data-lobby-mode] .hero-caption > small {
+  display: inline-block;
+  padding: 2px 12px;
+  border-radius: 999px;
+  background: #00000066;
+  border: 1px solid color-mix(in srgb, var(--lobby-accent) 50%, transparent);
+  font-size: clamp(8px, 1.4vh, 10px);
+}
+body #landing.game-lobby[data-lobby-mode] .hero-caption h2 {
+  font-size: clamp(24px, 6vh, 46px);
+  line-height: 1.35;
+}
+body #landing.game-lobby[data-lobby-mode] .hero-caption p {
+  font-size: clamp(9px, 1.6vh, 12px);
+}
+body #landing.game-lobby[data-lobby-mode] .hero-cycle {
+  top: 42%;
+  width: clamp(36px, 7vh, 52px);
+  height: clamp(36px, 7vh, 52px);
+  border-radius: 50%;
+  border: 1px solid #e8ca8866;
+  background: #06121ccc;
+  font-size: clamp(26px, 5vh, 38px);
+  line-height: 1;
+  opacity: 0.9;
+  box-shadow: 0 6px 16px #0008;
+}
+body #landing.game-lobby[data-lobby-mode] .hero-cycle.next {
+  background: #06121ccc;
+}
+/* Pose previews: a slim icon column on the stage's right edge. */
+body #landing.game-lobby[data-lobby-mode] .preview-actions {
+  left: auto;
+  right: 0;
+  top: auto;
+  bottom: clamp(64px, 15vh, 128px);
+  transform: none;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+}
+body #landing.game-lobby[data-lobby-mode] .preview-actions > span {
+  display: none;
+}
+body #landing.game-lobby[data-lobby-mode] .preview-actions button {
+  width: clamp(30px, 5.4vh, 38px);
+  height: clamp(30px, 5.4vh, 38px);
+  border-radius: 50%;
+  font-size: clamp(13px, 2.4vh, 17px);
+}
+/* Gender only matters while creating a hero. */
+body
+  #landing.game-lobby[data-lobby-mode][data-lobby-mode="roster"]
+  .lobby-gender {
+  display: none;
+}
+body #landing.game-lobby[data-lobby-mode] .lobby-gender {
+  top: clamp(26px, 6vh, 50px);
+  border-radius: 999px;
+}
+
+/* ---------- Right: stats card ---------- */
+body #landing.game-lobby[data-lobby-mode] .lobby-details .class-identity {
+  margin-bottom: clamp(6px, 1.2vh, 12px);
+}
+body #landing.game-lobby[data-lobby-mode] .lobby-details .attribute {
+  margin: clamp(4px, 0.9vh, 9px) 0;
+}
+body #landing.game-lobby[data-lobby-mode] .lobby-details .attribute-track {
+  height: 6px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+body #landing.game-lobby[data-lobby-mode] .lobby-details .attribute-track i {
+  border-radius: 6px;
+  background: linear-gradient(90deg, #d79a3a, #ffe6a5);
+  box-shadow: 0 0 8px #ffd48688;
+}
+body #landing.game-lobby[data-lobby-mode] .lobby-skills button {
+  padding: clamp(4px, 0.8vh, 8px) 8px;
+}
+
+/* ---------- Bottom: status and the big START ---------- */
+body #landing.game-lobby[data-lobby-mode] .entry-status {
+  grid-column: 1;
+  grid-row: 3;
+  position: relative;
+  z-index: 6;
+  align-self: center;
+  min-width: 0;
+}
+body #landing.game-lobby[data-lobby-mode] .entry-status strong {
+  font-size: clamp(12px, 2.1vh, 15px);
+}
+body #landing.game-lobby[data-lobby-mode] .entry-status p {
+  margin: 0;
+  font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+body #landing.game-lobby[data-lobby-mode] .identity-row {
+  grid-column: 3;
+  grid-row: 3;
+  position: relative;
+  z-index: 6; /* above the hero stage, which reaches into this row */
+  align-self: center;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  min-width: 0;
+}
+body #landing.game-lobby[data-lobby-mode] .identity-row label {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+body
+  #landing.game-lobby[data-lobby-mode][data-lobby-mode="roster"]
+  .identity-row
+  label {
+  display: none;
+}
+/* Picking an existing hero: START takes the whole slot. */
+body #landing.game-lobby[data-lobby-mode][data-lobby-mode="roster"] #start {
+  flex: 1 0 auto;
+}
+body #landing.game-lobby[data-lobby-mode] .identity-row label {
+  min-width: 96px;
+}
+body #landing.game-lobby[data-lobby-mode] .identity-row label > span {
+  display: none;
+}
+body #landing.game-lobby[data-lobby-mode] #character-name {
+  width: 100%;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+body #landing.game-lobby[data-lobby-mode] #start {
+  position: relative;
+  flex: 0 0 auto;
+  min-width: 0;
+  height: clamp(44px, 8.6vh, 64px);
+  margin: 0;
+  padding: 0 clamp(16px, 2vw, 28px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  overflow: hidden;
+  border: 2px solid #fff3cf;
+  border-radius: 10px;
+  clip-path: polygon(
+    12px 0,
+    100% 0,
+    100% calc(100% - 12px),
+    calc(100% - 12px) 100%,
+    0 100%,
+    0 12px
+  );
+  background: linear-gradient(180deg, #ffe9a6, #e6b154 52%, #b9802a);
+  color: #2b1b06;
+  font:
+    clamp(15px, 2.8vh, 21px) "Chonburi",
+    serif;
+  letter-spacing: 1px;
+  box-shadow:
+    0 0 26px #ffcd6b88,
+    inset 0 -4px 0 #8a5b1a;
+  animation: start-pulse 2.2s ease-in-out infinite;
+}
+body #landing.game-lobby[data-lobby-mode] #start b {
+  font-size: 1.2em;
+}
+/* Light sweep across the button. */
+body #landing.game-lobby[data-lobby-mode] #start::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 35%,
+    #ffffffaa 50%,
+    transparent 65%
+  );
+  transform: translateX(-120%);
+  animation: start-shine 3s ease-in-out infinite;
+}
+body #landing.game-lobby[data-lobby-mode] #start:disabled {
+  filter: grayscale(0.8) brightness(0.7);
+  animation: none;
+}
+@keyframes start-pulse {
+  50% {
+    box-shadow:
+      0 0 40px #ffcd6bcc,
+      inset 0 -4px 0 #8a5b1a;
+  }
+}
+@keyframes start-shine {
+  60%,
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+/* ---------- Phone held sideways / short windows ---------- */
+@media (max-height: 520px) and (orientation: landscape) {
+  body #landing.game-lobby[data-lobby-mode] {
+    grid-template-columns:
+      clamp(170px, 24vw, 230px) minmax(0, 1fr)
+      clamp(190px, 27vw, 250px);
+    grid-template-rows: 40px minmax(0, 1fr) 58px;
+    --gap: 10px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .brand small,
+  body #landing.game-lobby[data-lobby-mode] .showcase-location,
+  body #landing.game-lobby[data-lobby-mode] .hero-caption::before,
+  body #landing.game-lobby[data-lobby-mode] .hero-caption p,
+  body #landing.game-lobby[data-lobby-mode] .roster-divider,
+  body #landing.game-lobby[data-lobby-mode] #account-open,
+  body #landing.game-lobby[data-lobby-mode] .lobby-adventure,
+  body #landing.game-lobby[data-lobby-mode] .stats-heading,
+  body #landing.game-lobby[data-lobby-mode] .lobby-skills small,
+  body #landing.game-lobby[data-lobby-mode] .entry-status p {
+    display: none;
+  }
+  body #landing.game-lobby[data-lobby-mode] .lobby-panel {
+    margin-top: 8px;
+    padding: 8px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .lobby-panel-title {
+    margin-bottom: 6px;
+    padding-bottom: 5px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .lobby-panel-title small {
+    display: none;
+  }
+  body #landing.game-lobby[data-lobby-mode] .saved-hero {
+    padding: 4px 8px 4px 4px;
+    gap: 8px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .saved-portrait {
+    width: 34px;
+    height: 34px;
+  }
+  /* Undo lobby.css's old ≤760px phone rules: one slot per row, full stat
+     rows, and keep the hero's name under the stage. */
+  body #landing.game-lobby[data-lobby-mode] #saved-characters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  body #landing.game-lobby[data-lobby-mode] .saved-hero strong {
+    max-width: none;
+    font-size: 12px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .saved-hero small {
+    font-size: 10px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .saved-hero > b {
+    font-size: 10px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .lobby-details .attribute {
+    display: block;
+    width: auto;
+    margin-right: 0;
+  }
+  body #landing.game-lobby[data-lobby-mode] .hero-caption {
+    display: block;
+  }
+  /* Class picker while creating: three slim rows. */
+  body #landing.game-lobby[data-lobby-mode] #class-cards {
+    gap: 5px;
+  }
+  body #landing.game-lobby[data-lobby-mode] #class-cards .hero-card {
+    min-height: 0;
+    padding: 4px 8px 4px 4px;
+  }
+  body #landing.game-lobby[data-lobby-mode] #class-cards .hero-art {
+    width: 34px;
+    height: 34px;
+  }
+  body #landing.game-lobby[data-lobby-mode] #class-cards small,
+  body #landing.game-lobby[data-lobby-mode] .class-card-copy em,
+  body #landing.game-lobby[data-lobby-mode] .class-order {
+    display: none;
+  }
+  body #landing.game-lobby[data-lobby-mode] #creation-back {
+    margin-top: 6px;
+    padding: 6px;
+    font-size: 11px;
+  }
+  body #landing.game-lobby[data-lobby-mode] #start {
+    padding: 0 14px;
+  }
+  /* Creating on a short screen: name + START share the stage's foot. */
+  body
+    #landing.game-lobby[data-lobby-mode][data-lobby-mode="create"]
+    .identity-row {
+    grid-column: 2 / 4;
+    padding-left: 12%;
+  }
+  body
+    #landing.game-lobby[data-lobby-mode][data-lobby-mode="create"]
+    .hero-caption {
+    display: none;
+  }
+  body
+    #landing.game-lobby[data-lobby-mode][data-lobby-mode="create"]
+    .preview-actions {
+    bottom: 64px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .class-identity span {
+    font-size: 18px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .class-identity h3 {
+    font-size: 14px;
+    margin: 0;
+  }
+  body #landing.game-lobby[data-lobby-mode] .lobby-details .attribute {
+    margin: 3px 0;
+    font-size: 10px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .lobby-skills {
+    display: flex;
+    gap: 4px;
+    margin-top: 6px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .lobby-skills button {
+    flex: 1;
+    min-width: 0;
+    padding: 4px;
+    justify-content: center;
+  }
+  body #landing.game-lobby[data-lobby-mode] .lobby-skills button div,
+  body #landing.game-lobby[data-lobby-mode] .lobby-skills button > b {
+    display: none;
+  }
+  body #landing.game-lobby[data-lobby-mode] #hero-preview {
+    inset: 6px 0 64px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .hero-showcase::after {
+    bottom: 50px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .hero-caption {
+    bottom: 4px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .preview-actions {
+    flex-direction: row;
+    left: 50%;
+    right: auto;
+    bottom: 40px;
+    transform: translateX(-50%);
+    gap: 4px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .preview-actions button {
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .hero-caption > small {
+    display: none;
+  }
+  body #landing.game-lobby[data-lobby-mode] .hero-caption h2 {
+    font-size: 24px;
+    line-height: 1.3;
+  }
+  body #landing.game-lobby[data-lobby-mode] .lobby-gender {
+    top: 4px;
+  }
+}
+
+/* ---------- Portrait phones: stack and scroll, START pinned ---------- */
+@media (max-width: 760px) and (orientation: portrait) {
+  body #landing.game-lobby[data-lobby-mode] {
+    position: relative;
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 52px 46dvh auto auto auto;
+    padding-bottom: calc(84px + env(safe-area-inset-bottom));
+  }
+  body #landing.game-lobby[data-lobby-mode] .hero-showcase {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  body #landing.game-lobby[data-lobby-mode] .lobby-roster {
+    grid-column: 1;
+    grid-row: 3;
+  }
+  body #landing.game-lobby[data-lobby-mode] .lobby-details {
+    grid-column: 1;
+    grid-row: 4;
+  }
+  body #landing.game-lobby[data-lobby-mode] .entry-status {
+    grid-column: 1;
+    grid-row: 5;
+    margin: 12px 0;
+  }
+  body #landing.game-lobby[data-lobby-mode] .lobby-chapter {
+    display: none;
+  }
+  /* Slots scroll sideways like a card strip. */
+  body #landing.game-lobby[data-lobby-mode] #saved-characters {
+    display: flex;
+    overflow-x: auto;
+    gap: 8px;
+    padding-bottom: 4px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .saved-hero {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 150px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .saved-hero.active::after {
+    display: none;
+  }
+  body #landing.game-lobby[data-lobby-mode] .preview-actions {
+    flex-direction: row;
+    top: 30px;
+    bottom: auto;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+  }
+  body #landing.game-lobby[data-lobby-mode] .identity-row {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    z-index: 20;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  body #landing.game-lobby[data-lobby-mode] #start,
+  body #landing.game-lobby[data-lobby-mode] #start::after,
+  body #landing.game-lobby[data-lobby-mode] .hero-showcase::after {
+    animation: none;
+  }
+}

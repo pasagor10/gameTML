@@ -39,31 +39,6 @@ body {
   display: none;
 }
 
-/* ---------- Touch landscape: show the touch controls too ---------- */
-@media (pointer: coarse) and (orientation: landscape) {
-  #mobile-controls {
-    position: absolute;
-    left: calc(16px + env(safe-area-inset-left));
-    bottom: calc(18px + env(safe-area-inset-bottom));
-    display: flex;
-    gap: 10px;
-  }
-  #mobile-controls button {
-    width: 54px;
-    height: 54px;
-    border-radius: 50%;
-    background: #193955cc;
-    border: 2px solid #bfa774;
-    color: #ffe1a2;
-    font-size: 20px;
-    touch-action: none;
-    user-select: none;
-  }
-  #keyboard-help {
-    display: none;
-  }
-}
-
 /* ---------- Portrait phones ---------- */
 @media (max-width: 700px) and (orientation: portrait) {
   #game-screen {
@@ -285,151 +260,7 @@ body {
     padding: 8px;
   }
 
-  /* ---- Thumb controls ---- */
-  #mobile-controls {
-    display: block;
-    position: absolute;
-    left: calc(var(--pad) + env(safe-area-inset-left));
-    bottom: var(--bottom);
-    width: 150px;
-    height: 150px;
-  }
-  #mobile-controls button {
-    position: absolute;
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, #2f5a80e6, #12283ee6);
-    border: 2px solid #d9b46a;
-    box-shadow:
-      0 4px 0 #0a1626,
-      0 6px 12px #0009;
-    color: #ffe1a2;
-    font-size: 24px;
-    touch-action: none;
-    user-select: none;
-  }
-  #mobile-controls button:active {
-    transform: translateY(3px);
-    box-shadow: 0 1px 0 #0a1626;
-  }
-  #mobile-controls [data-direction="-1"] {
-    left: 0;
-    bottom: 0;
-  }
-  #mobile-controls [data-direction="1"] {
-    left: 76px;
-    bottom: 0;
-  }
-  #mobile-jump {
-    left: 76px;
-    bottom: 80px;
-    width: 58px !important;
-    height: 58px !important;
-  }
-  #mobile-interact {
-    left: 6px;
-    bottom: 84px;
-    width: 52px !important;
-    height: 52px !important;
-    font-size: 17px !important;
-    font-weight: 700;
-  }
-
-  /* Skills: attack big under the right thumb, others in an arc. */
-  .skillbar {
-    position: absolute;
-    right: calc(var(--pad) + env(safe-area-inset-right));
-    bottom: var(--bottom);
-    width: 200px;
-    height: 200px;
-    display: block;
-  }
-  .skillbar .skill {
-    position: absolute;
-    width: 54px;
-    height: 54px;
-    border-radius: 50%;
-  }
-  .skillbar .skill b {
-    font-size: 24px;
-  }
-  .skillbar .skill > span,
-  .skillbar .skill small {
-    display: none;
-  }
-  .skillbar .skill i {
-    border-radius: 50%;
-    font-size: 18px;
-  }
-  .skillbar .skill.basic {
-    right: 0;
-    bottom: 0;
-    width: 80px;
-    height: 80px;
-  }
-  .skillbar .skill.basic b {
-    font-size: 36px;
-  }
-  .skillbar [data-action="skill1"] {
-    right: 92px;
-    bottom: 4px;
-  }
-  .skillbar [data-action="skill2"] {
-    right: 78px;
-    bottom: 74px;
-  }
-  .skillbar [data-action="skill3"] {
-    right: 8px;
-    bottom: 92px;
-  }
-  .skillbar [data-action="hp"] {
-    right: 146px;
-    bottom: 64px;
-    width: 46px;
-    height: 46px;
-  }
-  .skillbar [data-action="hp"] small {
-    display: block;
-    bottom: -13px;
-    font-size: 9px;
-  }
-  .skillbar .auto {
-    right: 70px;
-    bottom: 140px;
-    width: 44px;
-    height: 44px;
-  }
-  .skillbar .auto b {
-    font-size: 18px;
-  }
-  .skillbar .auto > span {
-    display: block;
-    position: absolute;
-    top: auto;
-    bottom: -7px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 8px;
-    padding: 0 4px;
-  }
-
   /* Prompts and banners sized for the narrow screen. */
-  /* Interaction prompt sits over the left thumb cluster, next to F,
-     so it never covers the character. */
-  #context-hint {
-    top: auto;
-    left: var(--pad);
-    transform: none;
-    bottom: calc(var(--bottom) + 146px);
-    font-size: 12px;
-    padding: 6px 12px;
-    max-width: 52%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    animation: none;
-  }
   #boss-bar {
     top: calc(var(--top) + 236px);
     width: calc(100% - 20px);
@@ -449,14 +280,6 @@ body {
 
 /* Very short portrait screens (small phones): tighten the controls. */
 @media (max-width: 700px) and (orientation: portrait) and (max-height: 680px) {
-  .skillbar {
-    transform: scale(0.85);
-    transform-origin: bottom right;
-  }
-  #mobile-controls {
-    transform: scale(0.85);
-    transform-origin: bottom left;
-  }
   #chat-log {
     height: 80px;
   }
@@ -581,17 +404,6 @@ body {
   }
   .gold-display,
   .bottom-actions {
-    display: none;
-  }
-  .skill {
-    width: 50px;
-    height: 50px;
-  }
-  .skill.basic {
-    width: 62px;
-    height: 62px;
-  }
-  .skill small {
     display: none;
   }
 }

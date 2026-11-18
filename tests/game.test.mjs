@@ -1,3 +1,4 @@
+import { dungeonPlatforms } from "../shared/dungeons.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -42,6 +43,7 @@ test("damage is bounded, authoritative input ignores client gold and enforces co
   const i = world.instances.get(p.instance);
   i.enemies.forEach((e) => {
     e.x = p.x + 30;
+    e.y = p.y;
   });
   const t = Date.now() / 1000;
   const before = i.enemies[0].hp;
@@ -154,6 +156,7 @@ test("all classes clear 30 configured stages, unlocks persist and duplicate rewa
         assert.equal(i.stage, stage);
         i.enemies.forEach((e) => {
           e.x = p.x + 30;
+          e.y = p.y;
           e.hp = 1;
         });
         for (let n = 0; i.enemies.length && n < 20; n++) {
@@ -355,7 +358,7 @@ test("every dungeon floor spawns its monsters inside the arena", async () => {
   for (let floor = 1; floor <= floors; floor++) {
     world.beginDungeon(p, floor);
     const i = world.instances.get(p.instance);
-    assert.equal(i.enemies.length, 4 + floor);
+    assert.equal(i.enemies.length, 8 + floor * 2);
     for (const e of i.enemies)
       assert.ok(
         e.x >= 70 && e.x <= WORLD.width - 70,
@@ -367,18 +370,62 @@ test("every dungeon floor spawns its monsters inside the arena", async () => {
   }
   world.players.delete(p.id);
 });
-test("dungeons retain their own reachable platforms", () => {
+test("every dungeon ledge is reachable by short jumps up its stairs", () => {
   const t = Date.now() / 1000 + 1000;
-  for (const [n, platform] of WORLD.dungeonPlatforms.entries()) {
-    const p = create("cave-reach-" + n);
-    world.beginDungeon(p, 1);
-    world.instances.get(p.instance).enemies.forEach((e) => {
-      e.x = 2300;
-    });
-    p.x = platform.x + platform.w / 2;
-    p.jump = true;
-    for (let k = 0; k < 25; k++) world.tick(0.05, t + n * 5 + k * 0.05);
-    assert.equal(p.y, platform.y);
+  for (let floor = 1; floor <= 10; floor++) {
+    const p = create("cave-reach-" + floor);
+    p.unlocked = 10;
+    world.beginDungeon(p, floor);
+    const instance = world.instances.get(p.instance);
+    instance.enemies = [];
+    instance.nextHazardAt = Infinity;
+    for (let stage = 1; stage <= 3; stage++) {
+      instance.stage = stage;
+      const platforms = dungeonPlatforms(floor, stage),
+        reached = [{ x: 0, w: 2400, y: 600 }];
+      // Climb outward from the ground: a surface counts once a hero standing
+      // on an overlapping surface below can jump onto it.
+      for (let grew = true; grew;) {
+        grew = false;
+        for (const platform of platforms) {
+          if (reached.includes(platform)) continue;
+          const froms = reached
+            .filter(
+              (r) =>
+                r.y > platform.y &&
+                Math.max(r.x, platform.x) + 6 <
+                  Math.min(r.x + r.w, platform.x + platform.w) - 6,
+            )
+            .sort((a, b) => a.y - b.y);
+          for (const from of froms) {
+            p.x =
+              (Math.max(from.x, platform.x) +
+                Math.min(from.x + from.w, platform.x + platform.w)) /
+              2;
+            p.y = from.y;
+            p.vy = 0;
+            p.vx = 0;
+            p.input = 0;
+            p.grounded = true;
+            p.jump = true;
+            for (let k = 0; k < 30; k++) world.tick(0.05, t + k * 0.05);
+            if (p.y === platform.y) {
+              reached.push(platform);
+              grew = true;
+              break;
+            }
+          }
+        }
+      }
+      for (const platform of platforms)
+        assert.ok(
+          reached.includes(platform),
+          `floor ${floor} stage ${stage} ledge x=${platform.x} y=${platform.y}`,
+        );
+      // Jumps stay short: nothing far above the ground is reachable directly.
+      assert.ok(Math.max(...platforms.map((q) => 600 - q.y)) > 167);
+    }
+    world.instances.delete(p.instance);
     world.players.delete(p.id);
   }
 });
@@ -511,6 +558,7 @@ test("consecutive kills award bonus gold and MP, resetting after the window", ()
   for (let n = 0; n < 2; n++) {
     const e = i.enemies[0];
     e.x = p.x + 30;
+    e.y = p.y;
     p.direction = 1;
     p.action = null;
     p.pending = null;
@@ -519,11 +567,17 @@ test("consecutive kills award bonus gold and MP, resetting after the window", ()
     world.tick(0.05, t + n + 0.17);
   }
   assert.equal(i.streak, 2);
+  assert.ok(
+    i.events.some(
+      (e) => e.kind === "drop" && e.item === "gold" && e.actorId === p.id,
+    ),
+  );
   assert.equal(p.gold - gold, 23, "two base rewards plus second-kill bonus");
   assert.equal(i.events.find((e) => e.kind === "streak").bonus, 3);
   assert.equal(world.snapshot(p).dungeon.defeated, 2);
   const e = i.enemies[0];
   e.x = p.x + 30;
+  e.y = p.y;
   p.action = null;
   p.pending = null;
   p.cooldowns = {};
@@ -621,4 +675,236 @@ test("WAL-safe backup opens independently with intact character state", async ()
 process.on("exit", () => {
   db.close();
   rmSync(dir, { recursive: true, force: true });
+});
+test("dungeon monsters guard their spots until a hero comes near, and elites hit harder", () => {
+  const p = create("guards");
+  p.unlocked = 10;
+  for (const floor of [1, 10]) {
+    world.beginDungeon(p, floor);
+    const i = world.instances.get(p.instance),
+      t = Date.now() / 1000 + 50;
+    for (let k = 0; k < 40; k++) world.tick(0.05, t + k * 0.05);
+    const awake = i.enemies.filter((e) => e.aggro);
+    assert.ok(
+      awake.length < i.enemies.length / 2,
+      `floor ${floor}: ${awake.length} awake`,
+    );
+    const far = i.enemies.filter((e) => !e.aggro);
+    assert.ok(far.every((e) => Math.abs(e.x - e.homeX) < 80));
+    if (floor === 10) {
+      assert.ok(
+        i.enemies.some((e) => e.elite && e.maxHp > 2 * (55 + 240 + 14)),
+      );
+      const sleeper = far.at(-1);
+      sleeper.hp = sleeper.maxHp;
+      p.x = sleeper.x - 60;
+      p.y = sleeper.y;
+      world.tick(0.05, t + 3);
+      assert.equal(sleeper.aggro, true, "stepping close wakes the guard");
+    }
+    world.returnTown(p);
+  }
+  world.players.delete(p.id);
+});
+test("boss clear shows a floor summary and lets the hero go on to the next floor", () => {
+  const p = create("summary");
+  p.unlocked = 1;
+  world.beginDungeon(p, 1);
+  const i = world.instances.get(p.instance);
+  for (let stage = 1; stage <= 3; stage++) {
+    i.enemies.forEach((e) => {
+      e.x = p.x + 30;
+      e.y = p.y;
+      e.hp = 1;
+    });
+    for (let n = 0; i.enemies.length && n < 20; n++) {
+      p.cooldowns = {};
+      p.mp = 999;
+      p.action = null;
+      p.pending = null;
+      const t = Date.now() / 1000 + 100 + stage * 50 + n * 2;
+      world.attack(p, 3, t);
+      world.tick(0.05, t + 0.43);
+    }
+    if (stage < 3) world.nextStage(p);
+  }
+  const r = world.snapshot(p).dungeon.result;
+  assert.ok(r, "summary is ready after the boss");
+  assert.equal(r.floor, 1);
+  assert.ok(r.seconds >= 0 && r.score > 0 && r.gold > 0 && r.exp > 0);
+  assert.ok(["SSS", "SS", "S", "A", "B", "C"].includes(r.rank));
+  assert.equal(r.hasNext, true);
+  assert.equal(p.auto, false);
+  world.nextStage(p);
+  assert.equal(p.area, "dungeon");
+  assert.equal(i.floor, 2);
+  assert.equal(i.stage, 1);
+  assert.equal(world.snapshot(p).dungeon.result, null);
+  world.returnTown(p);
+  world.players.delete(p.id);
+});
+test("player shops sell potions, ore and unequipped gear by the stack, atomically", () => {
+  const seller = create("market-seller", "swordsman"),
+    buyer = create("market-buyer", "archer");
+  seller.ownedEquipment.push("moon_blade", "crystal_charm");
+  seller.equipment.charm = "crystal_charm";
+  seller.inventory.hp = 10;
+  persist(seller);
+  buyer.gold = 1000;
+  persist(buyer);
+  // Equipped and starter gear stay out of the shop.
+  assert.throws(
+    () =>
+      world.createShop(seller, {
+        name: "x",
+        listings: [{ item: "crystal_charm", qty: 1, price: 50 }],
+        key: "market-bad-0001",
+      }),
+    /ถอดอุปกรณ์/,
+  );
+  assert.throws(() =>
+    world.createShop(seller, {
+      name: "x",
+      listings: [{ item: "starter_swordsman", qty: 1, price: 50 }],
+      key: "market-bad-0002",
+    }),
+  );
+  const shop = world.createShop(seller, {
+    name: "ร้านครบ",
+    listings: [
+      { item: "hp", qty: 6, price: 12 },
+      { item: "moon_blade", qty: 1, price: 300 },
+    ],
+    key: "market-open-0001",
+  });
+  assert.equal(seller.inventory.hp, 4);
+  assert.ok(!seller.ownedEquipment.includes("moon_blade"));
+  const ore = world.listShopItem(seller, {
+    item: "ore",
+    qty: 2,
+    price: 25,
+    key: "market-list-0001",
+  });
+  const listed = world.snapshot(buyer).shops.find((s) => s.id === shop.id);
+  assert.equal(listed.listings.length, 3);
+  const [hp, blade] = shop.listings;
+  world.buyShop(buyer, { id: hp, qty: 4, key: "market-buy-0001" });
+  world.buyShop(buyer, { id: hp, qty: 4, key: "market-buy-0001" });
+  assert.equal(buyer.inventory.hp, 5 + 4);
+  assert.equal(buyer.gold, 1000 - 48);
+  assert.equal(seller.gold, 120 + 48);
+  assert.throws(
+    () => world.buyShop(buyer, { id: hp, qty: 3, key: "market-buy-0002" }),
+    /ไม่พอ/,
+  );
+  world.buyShop(buyer, { id: blade, key: "market-buy-0003" });
+  assert.ok(buyer.ownedEquipment.includes("moon_blade"));
+  assert.throws(() =>
+    world.buyShop(seller, { id: ore.id, key: "market-buy-0004" }),
+  );
+  const after = world.snapshot(seller).shops.find((s) => s.id === shop.id);
+  assert.equal(after.sold, 5);
+  assert.equal(after.earned, 348);
+  assert.equal(after.listings.length, 2, "sold-out gear listing disappears");
+  world.unlistShopItem(seller, { id: ore.id, key: "market-unlist-01" });
+  assert.equal(seller.inventory.ore, 3);
+  world.closeShop(seller, "market-close-0001");
+  assert.equal(seller.inventory.hp, 6, "unsold potions come home");
+  assert.equal(db.prepare("SELECT COUNT(*) n FROM shop_listings").get().n, 0);
+  world.players.delete(seller.id);
+  world.players.delete(buyer.id);
+});
+test("ground monsters climb the stairs to reach a hero on a high ledge", () => {
+  const p = create("stair-target");
+  world.beginDungeon(p, 1);
+  const i = world.instances.get(p.instance),
+    t = Date.now() / 1000 + 3000;
+  i.nextHazardAt = Infinity;
+  i.enemies = [i.enemies.find((e) => e.type !== "bat")];
+  const e = i.enemies[0];
+  Object.assign(e, { x: 640, y: 600, vy: 0, grounded: true, aggro: true });
+  e.hp = e.maxHp = 1e9;
+  p.hp = 1e9;
+  for (let k = 0; k < 240; k++) {
+    // Pin the hero on the 395-high ledge (205 px up, beyond one jump).
+    Object.assign(p, { x: 1100, y: 395, vy: 0, grounded: true, input: 0 });
+    world.tick(0.05, t + k * 0.05);
+    if (e.y === 395) break;
+  }
+  assert.equal(e.y, 395, `monster stuck at x=${e.x} y=${e.y}`);
+  world.returnTown(p);
+  world.players.delete(p.id);
+});
+test("town stall spots never overlap NPCs, the cave gate or each other", async () => {
+  const { SHOP_SPOTS } = await import("../shared/config.js");
+  assert.ok(SHOP_SPOTS.length >= 5);
+  for (const x of SHOP_SPOTS) {
+    for (const n of WORLD.npcs)
+      assert.ok(Math.abs(x - n.x) >= 170, `stall ${x} vs ${n.id}`);
+    assert.ok(Math.abs(x - WORLD.portal) >= 280);
+    assert.ok(x > 200 && x < WORLD.townWidth - 150);
+  }
+  for (let k = 1; k < SHOP_SPOTS.length; k++)
+    assert.ok(SHOP_SPOTS[k] - SHOP_SPOTS[k - 1] >= 300);
+});
+test("auto battle clears a stage without wasting swings on empty air", () => {
+  const p = create("auto-clear", "archer");
+  world.beginDungeon(p, 1);
+  const i = world.instances.get(p.instance),
+    t0 = Date.now() / 1000 + 5000;
+  i.nextHazardAt = Infinity;
+  p.auto = true;
+  let swings = 0,
+    wasted = 0;
+  for (let k = 0; k < 20 * 240 && !i.clear; k++) {
+    p.hp = maxHp(p);
+    p.lastInput = t0 + k * 0.05;
+    const before = p.attackAt;
+    world.tick(0.05, t0 + k * 0.05);
+    if (p.attackAt !== before) {
+      swings++;
+      const reach = 410 + 220;
+      if (!i.enemies.some((e) => e.hp > 0 && Math.abs(e.x - p.x) <= reach))
+        wasted++;
+    }
+  }
+  assert.equal(i.clear, true, `left ${i.enemies.length} monsters`);
+  assert.ok(swings > 0);
+  assert.equal(wasted, 0, "never attacks with nothing in reach");
+  world.returnTown(p);
+  world.players.delete(p.id);
+});
+test("specialization tiers pick costumes and tier 3 doubles the line's bonus", async () => {
+  const { heroSkins, heroTier, rpgBonuses, SPECIALIZATIONS } =
+    await import("../shared/rpg.js");
+  const base = { class: "swordsman", gender: "female" };
+  assert.deepEqual(heroSkins(base), ["swordsman-female"]);
+  assert.deepEqual(heroSkins({ ...base, specialization: "guardian" }), [
+    "swordsman-female-guardian-2",
+    "swordsman-female",
+  ]);
+  assert.deepEqual(
+    heroSkins({ ...base, specialization: "duelist", advanced: true }),
+    [
+      "swordsman-female-duelist-3",
+      "swordsman-female-duelist-2",
+      "swordsman-female",
+    ],
+  );
+  const p = create("advance-hero", "swordsman");
+  assert.throws(() => world.advanceClass(p), /สายพัฒนา/);
+  p.level = 3;
+  world.specialize(p, "guardian");
+  assert.equal(heroTier(p), 2);
+  assert.throws(() => world.advanceClass(p), /เลเวล 20/);
+  const before = rpgBonuses(p);
+  p.level = 20;
+  world.advanceClass(p);
+  assert.equal(heroTier(p), 3);
+  const spec = SPECIALIZATIONS.swordsman.find((s) => s.id === "guardian");
+  for (const [k, v] of Object.entries(spec.stats))
+    assert.equal(rpgBonuses(p)[k], (before[k] || 0) + v);
+  assert.equal(loadCharacter(p.id).advanced, true, "tier persists");
+  assert.equal(world.snapshot(p).self.advanced, true);
+  world.players.delete(p.id);
 });

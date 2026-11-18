@@ -390,11 +390,7 @@ const ADVANCED_FLOOR_GEAR = [
   {
     floor: 10,
     theme: "หัวใจถ้ำหลวง",
-    weapons: [
-      "ดาบจันทราสิ้นสูญ",
-      "ธนูจันทราสิ้นสูญ",
-      "คทาจันทราสิ้นสูญ",
-    ],
+    weapons: ["ดาบจันทราสิ้นสูญ", "ธนูจันทราสิ้นสูญ", "คทาจันทราสิ้นสูญ"],
     armor: "เกราะมังกรจันทรา",
     charm: "หัวใจถ้ำหลวง",
     boots: "รองเท้ามังกรทมิฬ",
@@ -598,7 +594,21 @@ export function rpgBonuses(p) {
     for (const [key, value] of Object.entries(GEAR[id]?.stats || {}))
       stats[key] = (stats[key] || 0) + value;
   const spec = SPECIALIZATIONS[p.class]?.find((s) => s.id === p.specialization);
+  // Tier 3 (advanced) doubles the specialization's bonus.
+  const mult = spec && p.advanced ? 2 : 1;
   for (const [key, value] of Object.entries(spec?.stats || {}))
-    stats[key] = (stats[key] || 0) + value;
+    stats[key] = (stats[key] || 0) + value * mult;
   return stats;
+}
+// Class tiers: 1 = base class, 2 = specialization (Lv.3), 3 = advanced (Lv.20).
+export const ADVANCE_LEVEL = 20;
+export const heroTier = (p) => (p?.specialization ? (p.advanced ? 3 : 2) : 1);
+// Sprite set names to try, most specific first: the costume of this
+// specialization and tier, then the lower tier, then the plain class look.
+export function heroSkins(p) {
+  const base = `${p.class}-${p.gender}`,
+    tier = heroTier(p);
+  if (tier === 1) return [base];
+  const spec = `${base}-${p.specialization}`;
+  return tier === 3 ? [`${spec}-3`, `${spec}-2`, base] : [`${spec}-2`, base];
 }

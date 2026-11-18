@@ -1,9 +1,7 @@
-// Game audio, synthesised in WebAudio: no sound files to download.
-// SFX are layered (filtered noise + tuned partials + pitch envelopes) through a
-// small room reverb and a compressor; music is a generative Lanna-flavoured
-// loop (ranat/khim plucks over a drone, with ching and drum), one mood per area.
+// Game audio: local CC0 music recordings and synthesised WebAudio effects.
+// Track sources and license details: /assets/music/CREDITS.md
 //
-//   import { sfx, music, setSound, soundOn, unlockAudio } from "/sound.js";
+//   import { sfx, music, setSound, soundOn, unlockAudio } from "/sound.js?v=20261118-combat2";
 //   sfx("swing")            // one-shot effects, see SFX below
 //   music("town"|"dungeon"|"boss"|null)
 //
@@ -20,11 +18,9 @@ let ctx = null,
   musicEnabled = readPref("tml-music", true),
   mood = null,
   wantMood = null,
-  nextBeat = 0,
-  beat = 0,
-  phrase = null,
-  timer = null;
+  activeTrack = null;
 const lastPlayed = new Map();
+let effectLevel = 1;
 
 function readPref(key, fallback) {
   try {
@@ -80,6 +76,7 @@ export function unlockAudio() {
   if (!init()) return;
   if (ctx.state === "suspended") ctx.resume();
   if (wantMood !== mood) startMusic(wantMood);
+  else if (activeTrack?.audio.paused) playTrack(activeTrack);
 }
 for (const ev of ["pointerdown", "keydown", "touchstart"])
   window.addEventListener(ev, unlockAudio, { passive: true });
@@ -102,6 +99,7 @@ const now = () => ctx.currentTime;
 
 function out(bus = sfxBus, wet = 0) {
   const g = ctx.createGain();
+  g.gain.value = effectLevel;
   g.connect(bus);
   if (wet) {
     const s = ctx.createGain();
@@ -202,74 +200,61 @@ const rnd = (a, b) => a + Math.random() * (b - a);
 const SFX = {
   // Hero attacks: one per class, and heavier skill variants.
   swing() {
-    const d = out(sfxBus, 0.1);
-    noise(d, { dur: 0.16, vol: 0.5, f: 900, to: 3800, q: 1.4, attack: 0.03 });
-    osc(d, {
-      type: "triangle",
-      f: rnd(300, 340),
-      to: 160,
-      dur: 0.12,
-      vol: 0.06,
-    });
+    const d = out(sfxBus, 0.08), pitch = rnd(0.9, 1.12);
+    noise(d, { dur: 0.18, vol: 0.36, f: 650 * pitch, to: 4200 * pitch, q: 0.7, attack: 0.035 });
+    noise(d, { at: 0.035, dur: 0.09, vol: 0.14, f: 6500, to: 1800, q: 0.5 });
+    osc(d, { type: "triangle", f: 260 * pitch, to: 95, dur: 0.14, vol: 0.09 });
   },
   slash() {
-    const d = out(sfxBus, 0.2);
-    noise(d, { dur: 0.28, vol: 0.6, f: 500, to: 4200, q: 1.2, attack: 0.04 });
-    metal(d, { f: rnd(1300, 1500), at: 0.05, dur: 0.35, vol: 0.05 });
-    osc(d, { f: 110, to: 55, at: 0.05, dur: 0.25, vol: 0.25 });
+    const d = out(sfxBus, 0.16), pitch = rnd(0.94, 1.06);
+    noise(d, { dur: 0.27, vol: 0.48, f: 380 * pitch, to: 4800, q: 0.8, attack: 0.045 });
+    noise(d, { at: 0.09, dur: 0.16, vol: 0.24, f: 3800, to: 700 });
+    osc(d, { f: 155 * pitch, to: 42, at: 0.045, dur: 0.3, vol: 0.3 });
+    metal(d, { f: 780 * pitch, at: 0.07, dur: 0.22, vol: 0.024 });
   },
-  arrow() {
-    const d = out(sfxBus, 0.08);
-    osc(d, { type: "triangle", f: 210, to: 140, dur: 0.18, vol: 0.12 }); // string
-    noise(d, { at: 0.02, dur: 0.22, vol: 0.35, f: 2500, to: 5200, q: 3 });
+  arrow(at = 0) {
+    if (typeof at !== "number") at = 0;
+    const d = out(sfxBus, 0.07), pitch = rnd(0.94, 1.08);
+    osc(d, { type: "triangle", f: 420 * pitch, to: 115, at, dur: 0.12, vol: 0.15 });
+    noise(d, { at, dur: 0.045, vol: 0.21, f: 1700, type: "highpass" });
+    noise(d, { at: at + 0.025, dur: 0.2, vol: 0.22, f: 1800 * pitch, to: 6500, q: 1.1, attack: 0.025 });
   },
   volley() {
-    for (let i = 0; i < 3; i++) setTimeout(() => SFX.arrow(), i * 70);
-    const d = out(sfxBus, 0.25);
-    noise(d, { dur: 0.5, vol: 0.25, f: 600, to: 3000, q: 0.8, attack: 0.1 });
+    // Audio-clock offsets keep all three shots tight even on a busy frame.
+    for (let i = 0; i < 3; i++) SFX.arrow(i * 0.065);
+    osc(out(sfxBus, 0.14), { f: 125, to: 60, dur: 0.25, vol: 0.16 });
   },
   cast() {
-    const d = out(sfxBus, 0.45);
-    for (const [f, i] of [
-      [660, 0],
-      [880, 1],
-      [1320, 2],
-    ])
-      osc(d, { f, at: i * 0.03, dur: 0.45, vol: 0.06, detune: rnd(-12, 12) });
-    noise(d, {
-      dur: 0.3,
-      vol: 0.18,
-      f: 5000,
-      to: 9000,
-      q: 4,
-      type: "highpass",
-    });
+    const d = out(sfxBus, 0.22), pitch = rnd(0.97, 1.04);
+    noise(d, { dur: 0.19, vol: 0.18, f: 1000, to: 5500, q: 1.2, attack: 0.03 });
+    osc(d, { f: 340 * pitch, to: 1000 * pitch, dur: 0.18, vol: 0.1, attack: 0.02 });
+    [1, 1.5, 2].forEach((r, i) => osc(d, { f: 620 * pitch * r, at: 0.035 + i * 0.025, dur: 0.23, vol: 0.045 }));
   },
   spell() {
-    const d = out(sfxBus, 0.5);
-    osc(d, { f: 140, to: 70, dur: 0.6, vol: 0.3 });
-    for (let i = 0; i < 5; i++)
-      osc(d, { f: 520 * 1.25 ** i, at: i * 0.04, dur: 0.5, vol: 0.05 });
-    noise(d, { dur: 0.7, vol: 0.3, f: 300, to: 4000, q: 0.7, attack: 0.15 });
+    const d = out(sfxBus, 0.28);
+    noise(d, { dur: 0.38, vol: 0.28, f: 450, to: 4500, q: 0.7, attack: 0.06 });
+    osc(d, { f: 210, to: 48, at: 0.06, dur: 0.42, vol: 0.32 });
+    [523, 784, 1047, 1568].forEach((f, i) => osc(d, { f, at: 0.04 + i * 0.035, dur: 0.38, vol: 0.045 }));
   },
-  // Impacts.
-  hit() {
-    const d = out(sfxBus, 0.05);
-    osc(d, { f: rnd(140, 170), to: 60, dur: 0.14, vol: 0.45 });
-    noise(d, {
-      dur: 0.09,
-      vol: 0.45,
-      f: 1800,
-      to: 500,
-      q: 0.8,
-      type: "lowpass",
-    });
+  // A short transient, low body and weapon-specific tail make contact readable.
+  hit(arg = {}) {
+    const d = out(sfxBus, 0.06), pitch = rnd(0.88, 1.12);
+    osc(d, { f: 185 * pitch, to: 55, dur: 0.12, vol: 0.32 });
+    noise(d, { dur: 0.045, vol: 0.38, f: 2400 * pitch, to: 650, q: 0.7 });
+    noise(d, { at: 0.018, dur: 0.12, vol: 0.17, f: 700, to: 180, type: "lowpass" });
+    if (arg?.class === "mage") {
+      osc(d, { f: 920 * pitch, to: 310, dur: 0.17, vol: 0.065 });
+      noise(d, { dur: 0.13, vol: 0.1, f: 4200, type: "highpass" });
+    } else if (arg?.class === "archer") {
+      osc(d, { type: "triangle", f: 650 * pitch, to: 170, dur: 0.065, vol: 0.08 });
+    } else metal(d, { f: 1050 * pitch, dur: 0.12, vol: 0.018 });
   },
-  crit() {
-    SFX.hit();
-    const d = out(sfxBus, 0.3);
-    metal(d, { f: 1700, dur: 0.4, vol: 0.06 });
-    osc(d, { f: 90, to: 40, dur: 0.3, vol: 0.4 });
+  crit(arg) {
+    SFX.hit(arg);
+    const d = out(sfxBus, 0.16);
+    osc(d, { f: 105, to: 36, dur: 0.25, vol: 0.3 });
+    noise(d, { dur: 0.08, vol: 0.25, f: 3500, to: 900 });
+    [1175, 1568].forEach((f, i) => osc(d, { f, at: 0.02 + i * 0.035, dur: 0.19, vol: 0.045 }));
   },
   hurt() {
     const d = out(sfxBus, 0.05);
@@ -460,151 +445,61 @@ export function sfx(name, arg, gap = 0.03) {
   if (t - (lastPlayed.get(name) || -1) < gap) return;
   lastPlayed.set(name, t);
   try {
+    effectLevel = Math.max(0, Math.min(1, arg?.volume ?? 1));
     SFX[name](arg);
-  } catch {}
+  } catch {} finally {
+    effectLevel = 1;
+  }
 }
 
 // ---------- music ----------
-// Lanna-flavoured pentatonic phrases (scale steps), drone root and tempo per mood.
-const MOODS = {
-  town: {
-    bpm: 84,
-    root: 196, // G3
-    scale: [0, 2, 4, 7, 9], // major pentatonic
-    phrases: [
-      [4, 2, 0, 2, 4, 4, 4, null, 2, 2, 2, null, 4, 7, 7, null],
-      [7, 9, 7, 4, 2, 4, 2, 0, 2, null, 4, 2, 0, null, null, null],
-      [0, 2, 4, 7, 9, 7, 4, 2, 4, null, 2, 0, 2, null, null, null],
-    ],
-    drum: [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-    ching: true,
-  },
-  dungeon: {
-    bpm: 70,
-    root: 147, // D3
-    scale: [0, 3, 5, 7, 10], // minor pentatonic
-    phrases: [
-      [
-        0,
-        null,
-        3,
-        null,
-        5,
-        null,
-        3,
-        null,
-        0,
-        null,
-        null,
-        null,
-        -2,
-        null,
-        0,
-        null,
-      ],
-      [7, null, 5, null, 3, null, 5, 7, 10, null, 7, null, 5, null, null, null],
-      [
-        3,
-        5,
-        3,
-        0,
-        null,
-        null,
-        0,
-        -2,
-        0,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-      ],
-    ],
-    drum: [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0],
-    ching: false,
-  },
-  boss: {
-    bpm: 112,
-    root: 147,
-    scale: [0, 1, 5, 7, 8], // dark pelog-like
-    phrases: [
-      [0, 0, 1, 0, 5, null, 7, 8, 7, null, 5, 1, 0, null, 0, null],
-      [7, 8, 7, 5, 1, 0, 1, 5, 7, null, 8, null, 7, 5, 1, null],
-    ],
-    drum: [1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1],
-    ching: true,
-  },
+// Local recordings avoid third-party streaming dependencies during play.
+const TRACKS = {
+  town: { src: "/assets/music/town.mp3", gain: 0.8 },
+  dungeon: { src: "/assets/music/dungeon.ogg", gain: 0.8 },
+  boss: { src: "/assets/music/boss.ogg", gain: 0.72 },
 };
+const FADE = 1.2;
 
-function noteFreq(m, step) {
-  const oct = Math.floor(step / 5),
-    idx = ((step % 5) + 5) % 5;
-  return m.root * 2 ** (oct + m.scale[idx] / 12) * 2; // melody one octave up
-}
-
-function scheduleBeat(m, t) {
-  const sixteenth = 60 / m.bpm / 4,
-    i = beat % 16;
-  if (i === 0) phrase = m.phrases[Math.floor(Math.random() * m.phrases.length)];
-  const d = out(musicBus, 0.35),
-    at = t - now(),
-    step = phrase[i];
-  if (step !== null && step !== undefined && Math.random() > 0.08) {
-    bar(d, { f: noteFreq(m, step), at, dur: sixteenth * 5, vol: 0.12 });
-    if (i % 4 === 0 && Math.random() > 0.5)
-      // harmony a fifth below now and then
-      bar(d, { f: noteFreq(m, step) / 1.5, at, dur: sixteenth * 6, vol: 0.05 });
-  }
-  if (m.drum[i]) {
-    osc(d, { f: 85, to: 45, at, dur: 0.3, vol: 0.32 });
-    noise(d, { at, dur: 0.08, vol: 0.1, f: 400, type: "lowpass" });
-  }
-  if (m.ching && i % 4 === 2) metal(d, { f: 2600, at, dur: 0.25, vol: 0.018 });
-  // Drone: a soft root + fifth every bar.
-  if (i === 0)
-    for (const r of [1, 1.5]) {
-      osc(d, {
-        f: m.root * r,
-        at,
-        dur: sixteenth * 17,
-        vol: 0.06,
-        attack: 0.6,
-      });
-      osc(d, {
-        f: m.root * r,
-        at,
-        dur: sixteenth * 17,
-        vol: 0.04,
-        attack: 0.6,
-        detune: 7,
-      });
-    }
-}
-
-function tick() {
-  const m = MOODS[mood];
-  if (!m || !ctx) return;
-  while (nextBeat < now() + 0.25) {
-    scheduleBeat(m, nextBeat);
-    nextBeat += 60 / m.bpm / 4;
-    beat++;
-  }
+function playTrack(track) {
+  // Autoplay may be blocked until a gesture; unlockAudio retries the active track.
+  const pending = track.audio.play();
+  if (pending?.catch) pending.catch(() => {});
 }
 
 function startMusic(name) {
+  const previous = activeTrack;
+  activeTrack = null;
   mood = name;
-  clearInterval(timer);
-  timer = null;
-  if (!name || !ctx) return;
-  beat = 0;
-  nextBeat = now() + 0.15;
-  timer = setInterval(tick, 60);
+  if (previous) {
+    previous.gain.gain.cancelScheduledValues(now());
+    previous.gain.gain.setValueAtTime(previous.gain.gain.value, now());
+    previous.gain.gain.linearRampToValueAtTime(0, now() + FADE);
+    setTimeout(() => {
+      previous.audio.pause();
+      previous.audio.removeAttribute("src");
+      previous.audio.load();
+      previous.source.disconnect();
+      previous.gain.disconnect();
+    }, (FADE + 0.1) * 1000);
+  }
+  const config = TRACKS[name];
+  if (!config || !ctx) return;
+  const audio = new Audio(config.src);
+  audio.loop = true;
+  audio.preload = "auto";
+  const source = ctx.createMediaElementSource(audio);
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0, now());
+  gain.gain.linearRampToValueAtTime(config.gain, now() + FADE);
+  source.connect(gain).connect(musicBus);
+  activeTrack = { audio, source, gain };
+  playTrack(activeTrack);
 }
 
-// Switch the music mood ("town", "dungeon", "boss" or null to stop).
+// Switch area music; repeated snapshots leave the current recording playing.
 export function music(name) {
-  wantMood = name;
-  if (ctx && ctx.state !== "suspended" && name !== mood) startMusic(name);
+  wantMood = Object.hasOwn(TRACKS, name) ? name : null;
+  if (ctx && ctx.state !== "suspended" && wantMood !== mood)
+    startMusic(wantMood);
 }

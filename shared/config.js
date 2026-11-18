@@ -98,6 +98,19 @@ export const WORLD = {
   portalY: TOWN_SPOTS.portal.y,
   townWidth: TOWN_WIDTH,
 };
+// Player stall spots: clear of every NPC, the cave gate and each other, so
+// nothing in town ever stacks on top of something else.
+export const SHOP_SPOTS = (() => {
+  const keepOut = [...WORLD.npcs.map((n) => [n.x, 170]), [WORLD.portal, 280]],
+    spots = [];
+  for (let x = 300; x <= WORLD.townWidth - 200; x += 10)
+    if (
+      keepOut.every(([c, r]) => Math.abs(x - c) >= r) &&
+      (!spots.length || x - spots.at(-1) >= 300)
+    )
+      spots.push(x);
+  return spots.slice(0, 8);
+})();
 // Walkable width of an area: the town is as long as its kit layout.
 export const areaWidth = (area) =>
   area === "town" ? WORLD.townWidth : WORLD.width;

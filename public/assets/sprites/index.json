@@ -89,6 +89,142 @@
         "attack": "attack",
         "skill": "skill"
       }
+    },
+    "archer-male-ranger-2": {
+      "dir": "archer-male-ranger-2-painted",
+      "height": 112,
+      "facing": 1,
+      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "portrait": "portrait.webp"
+    },
+    "archer-male-scout-2": {
+      "dir": "archer-male-ranger-2-painted",
+      "height": 112,
+      "facing": 1,
+      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "portrait": "portrait.webp"
+    },
+    "archer-male-ranger-3": {
+      "dir": "archer-male-ranger-3-painted",
+      "height": 112,
+      "facing": 1,
+      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "portrait": "portrait.webp"
+    },
+    "archer-male-scout-3": {
+      "dir": "archer-male-ranger-3-painted",
+      "height": 112,
+      "facing": 1,
+      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "portrait": "portrait.webp"
+    },
+    "archer-female-ranger-2": {
+      "dir": "archer-female-ranger-2-painted",
+      "height": 112,
+      "facing": 1,
+      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "portrait": "portrait.webp"
+    },
+    "archer-female-scout-2": {
+      "dir": "archer-female-ranger-2-painted",
+      "height": 112,
+      "facing": 1,
+      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "portrait": "portrait.webp"
+    },
+    "archer-female-ranger-3": {
+      "dir": "archer-female-ranger-3-painted",
+      "height": 112,
+      "facing": 1,
+      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "portrait": "portrait.webp"
+    },
+    "archer-female-scout-3": {
+      "dir": "archer-female-ranger-3-painted",
+      "height": 112,
+      "facing": 1,
+      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "portrait": "portrait.webp"
     }
   },
   "monsters": {
@@ -213,7 +349,7 @@
       }
     }
   },
-  "version": "20261117203824",
+  "version": "20261118012020",
   "npcs": {
     "elder": {
       "dir": "npcs/elder",

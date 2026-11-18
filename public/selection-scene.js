@@ -7,7 +7,11 @@ import {
 export function createSelectionPreview() {
   const host = document.querySelector("#hero-preview");
   const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
-  let selected = { job: "swordsman", gender: "female" },
+  let selected = {
+      job: "swordsman",
+      gender: "female",
+      skins: ["swordsman-female"],
+    },
     ready = false;
   const colors = { swordsman: 0xffcf82, archer: 0x9bf1c2, mage: 0xd8b5ff };
   class SelectionScene extends Phaser.Scene {
@@ -50,7 +54,7 @@ export function createSelectionPreview() {
     select(burst = true) {
       if (!this.ready) return;
       const color = colors[selected.job];
-      this.sprites.want("sets", `${selected.job}-${selected.gender}`);
+      for (const skin of selected.skins) this.sprites.want("sets", skin);
       this.hero.setVisible(false);
       this.previewMode = "idle";
       this.runes.clear();
@@ -113,7 +117,9 @@ export function createSelectionPreview() {
       }
     }
     update(time) {
-      const set = this.sprites.heroes.get(`${selected.job}-${selected.gender}`);
+      const set = selected.skins
+        .map((k) => this.sprites.heroes.get(k))
+        .find(Boolean);
       if (set) {
         let mode = this.previewMode;
         if (time - this.previewAt > 1800) mode = this.previewMode = "idle";
@@ -175,8 +181,8 @@ export function createSelectionPreview() {
     });
   document.addEventListener("visibilitychange", visibility);
   return {
-    setHero(job, gender) {
-      selected = { job, gender };
+    setHero(job, gender, skins = [`${job}-${gender}`]) {
+      selected = { job, gender, skins };
       if (ready) game.scene.getScenes()[0].select();
     },
     preview(mode) {

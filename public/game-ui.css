@@ -1,0 +1,158 @@
+/* Compact adventure HUD and slotted inventory. */
+#game-screen { --hud-glass: linear-gradient(145deg,#172824ec,#091817ed); }
+#game-screen .ornate { border-radius: 4px; border-width: 1px; box-shadow: inset 0 0 0 2px #071011,0 3px 12px #0007; }
+#game-screen .ornate::before,#game-screen .ornate::after { width: 5px; height: 5px; top: -3px; box-shadow: none; background: #dbc28a; border: 0; }
+#game-screen .world-gradient { opacity: .5; }
+#game-screen .hud-top { top: 16px; left: 18px; right: 18px; }
+#game-screen .profile-panel { width: 266px; padding: 8px; gap: 8px; }
+#game-screen #avatar { width: 52px; height: 58px; flex-shrink:0; border-radius: 5px; box-shadow: inset 0 0 0 1px #151b19; }
+#game-screen .profile-info strong { font-size: 12px; }
+#game-screen #player-level { font-size: 10px; padding: 1px 7px; }
+#game-screen .stat-bar { height: 14px; margin-bottom: 3px; border-radius: 3px; border-width: 1px; }
+#game-screen .stat-bar span { font-size: 9px; line-height: 12px; }
+#game-screen .exp-bar { height: 4px; margin-top: 4px; }
+#game-screen .profile-meta { margin-top: 3px; }
+#game-screen .profile-meta small,#game-screen .profile-meta button { font-size: 9px; }
+#game-screen #top-menu { gap: 5px; }
+#game-screen #top-menu button { width: 46px; height: 48px; padding: 4px; border-radius: 5px; border-width: 1px; background: linear-gradient(#263a37ed,#101e20ef); box-shadow: inset 0 1px #f4db9c28,0 3px #040c10aa; }
+#game-screen #top-menu b { font-size: 19px; line-height: 23px; }
+#game-screen #top-menu span { font-size: 9px; }
+#game-screen #quests { top: 118px; left: 18px; width: 246px; padding: 0 10px 9px; background: linear-gradient(90deg,#091818dd,#09181883); border:0; border-left:2px solid #be9a56; box-shadow: none; cursor: pointer; }
+#game-screen #quests::before,#game-screen #quests::after { display:none; }
+#game-screen #quests .panel-tabs { padding: 5px 0; border:0; font-size: 9px; }
+#game-screen #quests .panel-tabs > span { font-size:8px; }
+#game-screen #quests h3 { margin: 3px 0 5px; font-size:12px; }
+#game-screen #quests p { font-size:10px; margin: 4px 0 7px; line-height: 1.5; }
+#game-screen #quests small { font-size:9px; }
+#game-screen #quests .quest-progress { height:3px; margin: 6px 0; }
+#game-screen #minimap { top: 82px; right:18px; width: 190px; padding: 9px; opacity:.9; }
+#game-screen #minimap > div { font-size:10px; }
+#game-screen #minimap small { font-size:8px; }
+#game-screen #minimap svg { height:48px; margin:5px 0; border-radius:2px; }
+#game-screen #minimap button { padding:6px 9px; min-height:28px; font-size:10px; border-radius:3px; }
+#game-screen #minimap #training-open { padding:5px; margin-top:4px; font-size:9px; }
+#game-screen #walkability-toggle { top:auto; right:18px; bottom:126px; padding:5px 8px; font-size:10px; opacity:.65; }
+#game-screen #walkability-help { display:none; }
+#game-screen #chat { bottom:100px; left:18px; width:260px; background:#081819a8; opacity:.62; transition:opacity .2s; }
+#game-screen #chat:hover,#game-screen #chat:focus-within,#game-screen #chat.open { opacity:1; }
+#game-screen #chat-log { height:62px; font-size:10px; line-height:1.6; padding:5px 8px; }
+#game-screen .chat-tabs { padding:3px; background:#10242280; }
+#game-screen .chat-tabs button { font-size:9px; padding:3px 8px; }
+#game-screen .chat-tabs > span { font-size:7px; }
+#game-screen #chat-form { height:28px; }
+#game-screen #chat-input { padding:5px 8px; font-size:10px; }
+#game-screen #chat-form button { width:30px; }
+#game-screen .hud-bottom { bottom:25px; left:18px; right:18px; }
+#game-screen .skillbar { gap:6px; padding:7px 9px 10px; border-radius:5px; background:linear-gradient(#182d29d9,#081613eb); border-color:#a98c55; }
+#game-screen .skill { width:49px; height:49px; border-radius:6px; border-width:1px; box-shadow:inset 0 0 0 2px #071319,0 3px #0009; }
+#game-screen .skill b { font-size:25px; }
+#game-screen .skill > span { top:-6px; left:-4px; font-size:9px; padding:1px 4px; min-width:16px; border-radius:3px; }
+#game-screen .skill small { font-size:8px; bottom:-17px; }
+#game-screen .skill .skill-cost { font-size:9px; bottom:3px; right:3px; }
+#game-screen .gold-display { min-width:0; padding:5px 10px; border-radius:4px; border-width:1px; font-size:15px; background:#101e1bd9; }
+#game-screen .gold-display b { font-size:13px; }
+#game-screen .gold-display span { font-size:7px; }
+#game-screen .bottom-actions button { padding:6px 8px; font-size:10px; border-radius:4px; }
+#game-screen #keyboard-help { font-size:8px; opacity:.55; bottom:5px; }
+#game-screen #floor-result { width:min(480px,calc(100% - 24px)); padding:18px 22px; border-radius:3px; background:radial-gradient(ellipse at 50% 0,#98804732,transparent 65%),linear-gradient(#152721f5,#081713fa); }
+#game-screen #floor-result h2 { font-size:24px; margin:7px 0 18px; }
+#game-screen #floor-result .result-kicker { font-size:10px; letter-spacing:4px; }
+#game-screen #floor-result .result-rank { width:108px; height:108px; border-width:2px; }
+#game-screen #floor-result .result-rank b { font-size:40px; }
+#game-screen #floor-result .result-stats { gap:7px; }
+#game-screen #floor-result .result-stats div { padding:9px; border-radius:3px; background:#d2cb9b09; }
+#game-screen #floor-result .result-stats dt { font-size:10px; }
+#game-screen #floor-result .result-stats dd { font-size:20px; }
+#game-screen #floor-result .result-stats dd small { font-size:9px; }
+#game-screen #floor-result .result-loot { margin:15px 0; gap:6px; }
+#game-screen #floor-result .result-loot span { border-radius:3px; font-size:11px; padding:5px 8px; }
+#game-screen #floor-result .result-actions button { padding:10px; font-size:13px; border-radius:3px; }
+/* Equipment screen: lacquered cabinet, brass dividers, actual item slots. */
+#modal[data-panel="inventory"] { background:#020b0c77; backdrop-filter:blur(3px); }
+#modal[data-panel="inventory"] .modal-box { width:min(920px,calc(100vw - 24px)); border-radius:5px; border:1px solid #b99861; background:radial-gradient(ellipse at 0 0,#3c4c2e33,transparent 55%),#101d1b; box-shadow:0 0 0 3px #060e0f,0 0 0 4px #6a573c,0 24px 100px #000c; }
+#modal[data-panel="inventory"] .modal-box > header { padding:10px 18px; background:linear-gradient(90deg,#2b382b,#15231f); }
+#modal[data-panel="inventory"] header small { font-size:8px; letter-spacing:3px; color:#a38e65; }
+#modal[data-panel="inventory"] header h2 { font-size:19px; }
+#modal[data-panel="inventory"] #modal-body { padding:0 18px 16px; }
+#modal[data-panel="inventory"] .rpg-summary { padding:10px 0; gap:9px; }
+#modal[data-panel="inventory"] .class-crest { width:30px; height:30px; font-size:18px; border-radius:4px; }
+#modal[data-panel="inventory"] .rpg-summary h3 { font-size:13px; }
+#modal[data-panel="inventory"] .rpg-summary small { font-size:9px; }
+#modal[data-panel="inventory"] .rpg-summary > strong { font-size:13px; }
+#modal[data-panel="inventory"] .rpg-tabs { margin-bottom:12px; }
+#modal[data-panel="inventory"] .rpg-tabs button { padding:7px 14px; font-size:11px; }
+#modal[data-panel="inventory"] .equipment-layout { grid-template-columns:220px minmax(0,1fr); gap:18px; }
+#modal[data-panel="inventory"] .character-sheet { padding-right:18px; }
+#modal[data-panel="inventory"] .paper-hero { height:178px; margin:0 0 10px; background:radial-gradient(ellipse at 50% 65%,#c7b87623,transparent 65%); }
+#modal[data-panel="inventory"] .paper-hero::after { width:110px; height:110px; border-color:#c6a26130; z-index:0; }
+.inventory-hero { width:160px; height:160px; background-image:url('/assets/heroes.png'); background-size:300% 200%; z-index:1; filter:drop-shadow(0 8px 7px #0008); }
+#modal[data-panel="inventory"] .paper-hero > small { margin-top:-3px; font-size:10px; }
+#modal[data-panel="inventory"] .power-score { padding:6px 8px; }
+#modal[data-panel="inventory"] .character-stats { gap:4px; }
+#modal[data-panel="inventory"] .character-stats > div { padding:4px 7px; font-size:10px; }
+#modal[data-panel="inventory"] .equipped-grid { grid-template-columns:repeat(4,1fr); gap:5px; }
+#modal[data-panel="inventory"] .equipped-slot { min-height:64px; padding:4px 2px; border-radius:3px; background:radial-gradient(ellipse,#52533a33,#081311); }
+#modal[data-panel="inventory"] .equipped-slot small { font-size:8px; }
+#modal[data-panel="inventory"] .equipped-slot b { font-size:24px; }
+#modal[data-panel="inventory"] .equipped-slot .item-art { width:36px; height:36px; }
+#modal[data-panel="inventory"] .equipped-slot > span { display:none; }
+.bag-heading { display:flex; justify-content:space-between; align-items:center; margin-bottom:9px; }
+.bag-heading small { font-size:8px; letter-spacing:3px; color:#ac9569; }
+.bag-heading h3 { font-size:16px; margin:2px 0 0; color:#f1ddae; }
+.bag-heading > span { font-size:11px; color:#a2b5a6; border:1px solid #71836950; padding:4px 9px; }
+#modal-body .bag-filters { display:flex; gap:4px; margin-bottom:10px; flex-wrap:wrap; }
+#modal-body .bag-filters button { border:1px solid #79755066; background:#0a1614; color:#a9b4a3; padding:5px 10px; border-radius:2px; font-size:10px; }
+#modal-body .bag-filters button.active { color:#ffe2a1; border-color:#bc9a5d; background:linear-gradient(#6b593b66,#292d1e); }
+#modal[data-panel="inventory"] .gear-grid { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:6px; max-height:244px; overflow-y:auto; padding:5px; border:1px solid #7e74543d; background:#050e0b99; scrollbar-width:thin; scrollbar-color:#8d754b #101914; }
+#modal[data-panel="inventory"] .gear-card,#modal[data-panel="inventory"] .bag-empty-slot { position:relative; aspect-ratio:1; min-height:0; padding:4px; border:1px solid color-mix(in srgb,var(--rarity,#6c7460) 55%,#16221b); border-radius:3px; background:radial-gradient(ellipse at 50% 75%,color-mix(in srgb,var(--rarity,#6c7460) 15%,transparent),transparent 70%),linear-gradient(#1a2923,#0b1511); box-shadow:inset 0 0 0 2px #030c09,0 1px 2px #000; display:grid; place-items:center; }
+#modal[data-panel="inventory"] .gear-card:hover { transform:translateY(-1px); border-color:#ffdf96; background-color:#556344; }
+#modal[data-panel="inventory"] .gear-card.selected { border-color:#ffe2a1; outline:1px solid #ffe2a177; outline-offset:1px; box-shadow:inset 0 0 12px #e7bd6526,0 0 9px #e6b95026; }
+#modal[data-panel="inventory"] .gear-card > b { width:100%; display:grid; place-items:center; font-size:30px; }
+#modal[data-panel="inventory"] .gear-card .item-art { width:100%; height:100%; max-height:58px; object-fit:contain; }
+#modal[data-panel="inventory"] .gear-card > strong { display:none; }
+#modal[data-panel="inventory"] .gear-card > small { position:absolute; right:4px; bottom:2px; font-size:9px; color:#f5e2bb; text-shadow:0 1px 2px #000; }
+#modal[data-panel="inventory"] .gear-equipped { position:absolute; top:1px; left:4px; font-size:10px; color:#f5d38a; z-index:1; }
+#modal[data-panel="inventory"] .bag-empty-slot { border-color:#51604735; color:#62744e25; font-size:20px; }
+.bag-grid-caption { display:flex; justify-content:space-between; gap:8px; margin:6px 0 10px; font-size:9px; color:#829384; }
+#modal[data-panel="inventory"] .item-inspector { margin:0; display:grid; grid-template-columns:54px minmax(0,1fr) auto; gap:10px; padding:10px; border-radius:3px; background:linear-gradient(110deg,#5c5c3530,#09140f); border-color:color-mix(in srgb,var(--rarity) 40%,transparent); }
+#modal[data-panel="inventory"] .item-large-icon { width:54px; height:64px; }
+#modal[data-panel="inventory"] .item-large-icon .item-art { width:52px; height:64px; object-fit:contain; }
+#modal[data-panel="inventory"] .item-inspector h3 { font-size:14px; margin:3px 0; color:var(--rarity); }
+#modal[data-panel="inventory"] .item-inspector small,#modal[data-panel="inventory"] .item-inspector p { font-size:10px; line-height:1.5; margin:3px 0; }
+#modal[data-panel="inventory"] .item-deltas { font-size:9px; gap:4px; }
+#modal[data-panel="inventory"] .item-inspector button { align-self:end; padding:7px 11px; font-size:11px; border-radius:3px; }
+#modal[data-panel="inventory"] .rpg-section-title { margin:12px 0 7px; font-size:10px; }
+#modal[data-panel="inventory"] .supply-row { gap:6px; }
+#modal[data-panel="inventory"] .supply-row > * { padding:5px; gap:5px; border-radius:3px; background:#0a1712; }
+#modal[data-panel="inventory"] .supply-row .item-art { width:32px; height:32px; }
+#modal[data-panel="inventory"] .supply-row span { font-size:10px; }
+#modal[data-panel="inventory"] .supply-row small { font-size:8px; }
+#modal[data-panel="inventory"] .hint { font-size:9px; margin:8px 0 0; color:#7d927e; }
+.bag-empty-detail { padding:20px; color:#aab99d; border:1px dashed #6b795155; font-size:12px; }
+@media (min-width:761px) { #game-screen .skillbar { position:absolute; left:50%; bottom:0; transform:translateX(-50%); } #game-screen .bottom-actions { margin-left:auto; } }
+@media (max-width:1000px) and (min-width:761px) { #game-screen .bottom-actions span { display:none; } #game-screen #chat { width:220px; } }
+@media (max-width:760px) {
+ #game-screen .profile-panel { width:215px; padding:5px; } #game-screen #avatar { width:40px;height:46px; } #game-screen .hud-top { left:8px;top:8px;right:8px; } #game-screen #top-menu { gap:3px; } #game-screen #top-menu button { width:32px;height:34px;padding:2px; } #game-screen #top-menu b { font-size:16px;line-height:20px; } #game-screen #top-menu span { display:none; }
+ #game-screen #quests { top:98px;left:8px;width:190px; } #game-screen #quests:not(.open) p { display:none; } #game-screen #quests:not(.open) .panel-tabs { display:none; }
+ #game-screen #minimap { top:52px;right:8px;width:145px;padding:6px; } #game-screen #minimap svg { height:30px; } #game-screen #minimap > div { font-size:8px; } #game-screen #minimap small { display:none; }
+ #game-screen #chat { display:none;left:8px;bottom:110px;width:min(280px,calc(100vw - 16px)); } #game-screen #chat.open { display:block; } #game-screen #chat-toggle { display:block; }
+ #game-screen .hud-bottom { left:8px;right:8px;bottom:22px; } #game-screen .skillbar { margin-left:auto;gap:4px;padding:5px 6px 9px; } #game-screen .skill { width:40px;height:40px; } #game-screen .skill b { font-size:22px; } #game-screen .skill small { font-size:7px; } #game-screen .gold-display { display:none; } #game-screen .bottom-actions { display:none; } #game-screen #keyboard-help { display:none; }
+ #modal[data-panel="inventory"] .equipment-layout { grid-template-columns:150px minmax(0,1fr);gap:12px; } #modal[data-panel="inventory"] .character-sheet { padding-right:12px; } #modal[data-panel="inventory"] .paper-hero { height:135px; } .inventory-hero { width:125px;height:125px; } #modal[data-panel="inventory"] .equipped-grid { grid-template-columns:repeat(2,1fr); } #modal[data-panel="inventory"] .gear-grid { grid-template-columns:repeat(5,minmax(0,1fr)); } #modal[data-panel="inventory"] .item-inspector { grid-template-columns:40px minmax(0,1fr); } #modal[data-panel="inventory"] .item-inspector button { grid-column:1/-1; } #modal[data-panel="inventory"] .supply-row small { display:none; } #modal[data-panel="inventory"] .rpg-summary h3 span { display:none; }
+}
+@media (max-width:480px) {
+ #game-screen .profile-panel { width:196px; } #game-screen #top-menu { display:grid;grid-template-columns:repeat(3,30px); } #game-screen #top-menu button { width:30px;height:30px; } #game-screen #minimap { top:83px;width:116px; } #game-screen #minimap #training-open { font-size:8px; } #game-screen #quests { width:170px; }
+ #modal[data-panel="inventory"] #modal-body { padding:0 10px 12px; } #modal[data-panel="inventory"] .equipment-layout { grid-template-columns:1fr; } #modal[data-panel="inventory"] .character-sheet { display:grid;grid-template-columns:88px 1fr;gap:7px 10px;padding:0 0 10px;border-right:0;border-bottom:1px solid #7a795344; } #modal[data-panel="inventory"] .paper-hero { grid-row:1/3;height:95px;margin:0; } .inventory-hero { width:85px;height:85px; } #modal[data-panel="inventory"] .paper-hero small { display:none; } #modal[data-panel="inventory"] .character-stats { grid-template-columns:repeat(3,1fr); } #modal[data-panel="inventory"] .character-stats > div { padding:2px 4px;font-size:9px; } #modal[data-panel="inventory"] .character-sheet > .rpg-section-title { display:none; } #modal[data-panel="inventory"] .equipped-grid { grid-column:1/-1;grid-template-columns:repeat(4,1fr); } #modal[data-panel="inventory"] .equipped-slot { min-height:49px; } #modal[data-panel="inventory"] .gear-grid { grid-template-columns:repeat(5,minmax(0,1fr));max-height:185px; } .bag-heading h3 { font-size:14px; } #modal-body .bag-filters button { padding:5px 7px; } #modal[data-panel="inventory"] .supply-row { display:grid;grid-template-columns:repeat(3,1fr); } #modal[data-panel="inventory"] .supply-row > * { min-width:0; } #modal[data-panel="inventory"] .supply-row b { display:none; }
+}
+@media (prefers-reduced-motion:reduce) { #game-screen *,#modal * { animation-duration:.01ms!important;transition-duration:.01ms!important; } }
+#modal[data-panel="inventory"] #modal-body { line-height:1.45; }
+#modal[data-panel="inventory"] .modal-box > header { position:sticky;top:0;z-index:4; }
+#modal[data-panel="inventory"] .gear-grid { max-height:190px; grid-template-columns:repeat(8,minmax(0,1fr)); }
+#modal[data-panel="inventory"] .gear-card .item-art { max-height:48px; }
+#modal[data-panel="inventory"] .paper-hero { height:153px; }
+#modal[data-panel="inventory"] .inventory-hero { width:140px;height:140px; }
+#modal[data-panel="inventory"] .gear-card { border-color:color-mix(in srgb,var(--rarity,#6c7460) 72%,#16221b); }
+#game-screen #traversal-hint { display:none; }
+@media(max-width:760px) { #modal[data-panel="inventory"] .gear-grid { grid-template-columns:repeat(5,minmax(0,1fr)); } #modal[data-panel="inventory"] .paper-hero { height:135px; } #modal[data-panel="inventory"] .inventory-hero { width:125px;height:125px; } }
+@media(max-width:480px) { #modal[data-panel="inventory"] .paper-hero { height:95px; } #modal[data-panel="inventory"] .inventory-hero { width:85px;height:85px; } }
+#modal[data-panel="inventory"] .modal-box { max-height:calc(100svh - 32px); }
+@media(max-height:650px) and (min-width:761px) { #modal[data-panel="inventory"] .gear-grid { max-height:142px; } #modal[data-panel="inventory"] .paper-hero { height:115px; } #modal[data-panel="inventory"] .inventory-hero { width:105px;height:105px; } }

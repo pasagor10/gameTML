@@ -13,10 +13,14 @@
       content="ผจญภัยในโลกแฟนตาซีดอยนางนอน เกม RPG 2D เล่นบนเว็บ เลือกผู้กล้า 3 อาชีพ เล่นร่วมกับเพื่อนและพิชิตดันเจียน"
     />
     <link rel="stylesheet" href="/style.css?v=0.3.1" />
-    <link rel="stylesheet" href="/hud.css?v=0.6.1" />
-    <link rel="stylesheet" href="/mobile.css?v=0.15.3" />
-    <link rel="stylesheet" href="/rpg.css?v=3" />
+    <link rel="stylesheet" href="/hud.css?v=0.8.0" />
+    <link rel="stylesheet" href="/mobile.css?v=0.16.0" />
+    <link rel="stylesheet" href="/rpg.css?v=6" />
     <link rel="stylesheet" href="/lobby.css?v=2" />
+    <link rel="stylesheet" href="/select.css?v=10" />
+    <link rel="stylesheet" href="/game-ui.css?v=2" />
+    <link rel="stylesheet" href="/actionbar.css?v=2" />
+    <link rel="stylesheet" href="/touch.css?v=4" />
   </head>
   <body>
     <section id="landing" class="game-lobby" data-lobby-mode="loading">
@@ -256,6 +260,24 @@
         <h2>เส้นทางต่อไปเปิดแล้ว</h2>
         <button id="next-stage" class="primary-button">เข้าสู่ด่านต่อไป ➜</button>
       </div>
+      <div
+        id="floor-result"
+        class="hidden"
+        role="dialog"
+        aria-labelledby="result-title"
+      >
+        <span class="result-kicker">✦ FLOOR CLEAR ✦</span>
+        <h2 id="result-title"></h2>
+        <div class="result-body">
+          <div class="result-rank"><b></b><small>RANK</small></div>
+          <dl class="result-stats"></dl>
+        </div>
+        <div class="result-loot"></div>
+        <div class="result-actions">
+          <button id="result-leave" class="ghost-button">ออกกลับเมือง</button>
+          <button id="result-next" class="primary-button">ไปชั้นถัดไป ➜</button>
+        </div>
+      </div>
       <div id="death" class="hidden">
         <h2>ตำนานของเจ้ายังไม่จบ</h2>
         <p>ผลึกจันทราจะนำเจ้ากลับบ้าน โดยไม่เสีย EXP</p>
@@ -297,7 +319,19 @@
             <b>✚</b><span>R</span
             ><small id="hp-potions">ยา HP ×5</small></button
           ><button data-action="auto" id="auto-button" class="skill auto">
-            <b>⚔</b><span>AUTO</span><small>ปิด</small>
+            <b>⚔</b><span>AUTO</span><small>ปิด</small></button
+          ><button
+            id="mobile-jump"
+            class="skill touch-only jump"
+            aria-label="กระโดด"
+          >
+            <b>⤒</b></button
+          ><button
+            id="touch-recall"
+            class="skill touch-only recall"
+            aria-label="กลับเมือง"
+          >
+            <b>⌂</b>
           </button>
         </div>
         <div class="bottom-actions">
@@ -311,9 +345,13 @@
         <span>·</span> F โต้ตอบ <span>·</span> J โจมตี
       </div>
       <div id="mobile-controls">
-        <button data-direction="-1">◀</button
-        ><button data-direction="1">▶</button><button id="mobile-jump">↑</button
-        ><button id="mobile-interact">F</button>
+        <!-- Floating joystick: appears under the thumb anywhere in this zone. -->
+        <div id="joystick-zone">
+          <div id="joystick"><i></i></div>
+        </div>
+        <button id="mobile-interact" class="hidden">
+          <b>✋</b><span></span>
+        </button>
       </div>
       <div id="connection-state" class="hidden">กำลังเชื่อมต่อเซิร์ฟเวอร์…</div>
     </section>
@@ -336,8 +374,17 @@
       </div>
     </div>
     <div id="toast" role="status"></div>
+    <div id="area-loading" class="hidden" aria-live="polite">
+      <div class="loading-rune" aria-hidden="true"><i></i><i></i><b>✦</b></div>
+      <small class="loading-kicker"></small>
+      <h2 class="loading-title">กำลังเดินทาง…</h2>
+      <p class="loading-sub"></p>
+      <div class="loading-dots"></div>
+      <div class="loading-bar"><i></i></div>
+      <p class="loading-tip"></p>
+    </div>
     <script src="/vendor/phaser.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <script type="module" src="/game.js?v=0.21.1"></script>
+    <script type="module" src="/game.js?v=0.29.0"></script>
   </body>
 </html>

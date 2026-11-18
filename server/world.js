@@ -1,3 +1,14 @@
+import { dungeonRank } from "../shared/dungeon-results.js";
+import {
+  dungeonPlatforms,
+  dungeonSpawn,
+  dungeonEnemyCount,
+  climbStep,
+  DUNGEON_JUMP,
+  isElite,
+  DUNGEON_ROSTERS,
+  enemyStep,
+} from "../shared/dungeons.js";
 import {
   GEAR,
   SLOTS,
@@ -5,8 +16,10 @@ import {
   bossLootCandidates,
   SPECIALIZATIONS,
   initializeGear,
+  ADVANCE_LEVEL,
 } from "../shared/rpg.js";
 import { ACTIONS } from "../shared/motion.js";
+import { autoBrain } from "./auto.js";
 import { randomUUID } from "node:crypto";
 import { db, loadCharacter, persist, atomic, log } from "./database.js";
 import {
@@ -20,20 +33,38 @@ import {
   damage,
   combatStats,
   combatPower,
+  SHOP_SPOTS,
 } from "../shared/config.js";
 export const players = new Map(),
   instances = new Map(),
   parties = new Map(),
   trades = new Map();
 const now = () => Date.now() / 1000;
-// Snapshots go out 20×/s per player; shops change only via the three shop actions below.
+// Snapshots go out 20×/s per player; shops change only via the shop actions below.
 let shopCache = null;
 export function shopList() {
-  return (shopCache ??= db
+  if (shopCache) return shopCache;
+  const listings = db
     .prepare(
-      "SELECT s.*,c.name AS ownerName FROM shops s JOIN characters c ON c.id=s.owner",
+      "SELECT id,shop,item,qty,price FROM shop_listings WHERE qty>0 ORDER BY created",
     )
-    .all());
+    .all();
+  return (shopCache = db
+    .prepare(
+      "SELECT s.id,s.owner,s.name,s.x,s.sold,s.earned,c.name AS ownerName FROM shops s JOIN characters c ON c.id=s.owner",
+    )
+    .all()
+    .map((s) => {
+      const items = listings.filter((l) => l.shop === s.id);
+      // qty/item/price mirror the first listing for older clients.
+      return {
+        ...s,
+        listings: items,
+        item: items[0]?.item ?? null,
+        qty: items.reduce((n, l) => n + l.qty, 0),
+        price: items[0]?.price ?? 0,
+      };
+    }));
 }
 export function invalidateShops() {
   shopCache = null;
@@ -53,6 +84,7 @@ export function sync(p) {
       equipment: saved.equipment,
       ownedEquipment: saved.ownedEquipment,
       specialization: saved.specialization,
+      advanced: saved.advanced,
     });
 }
 export function ensureTown(p) {
@@ -137,6 +169,18 @@ export function rollBossLoot(p, floor, firstClear, random = Math.random) {
   const pool = regular.length ? regular : candidates;
   return pool[Math.floor(random() * pool.length)];
 }
+// Tier 3: a specialized hero at ADVANCE_LEVEL takes the advanced form.
+export function advanceClass(p) {
+  ensureTown(p);
+  if (!p.specialization) throw Error("เลือกสายพัฒนาก่อนเลื่อนขั้น");
+  if (p.advanced) throw Error("เลื่อนขั้นแล้ว");
+  if (p.level < ADVANCE_LEVEL) throw Error("เลื่อนขั้นได้เมื่อเลเวล " + ADVANCE_LEVEL);
+  p.advanced = true;
+  p.hp = maxHp(p);
+  p.mp = maxMp(p);
+  savePlayer(p);
+  return { message: "เลื่อนขั้นอาชีพสำเร็จ! พลังสายพัฒนาเพิ่มเป็น 2 เท่า" };
+}
 export function specialize(p, id) {
   ensureTown(p);
   if (p.level < 3) throw Error("ปลดล็อกสายพัฒนาเมื่อเลเวล 3");
@@ -171,17 +215,91 @@ export function enhance(p, key) {
   sync(p);
   return result;
 }
-export function createShop(p, { name, item, price, qty, key }) {
-  ensureTown(p);
+// Anything in the bag can go on sale: potions and ore by the stack, and any
+// owned gear that is not equipped (starter gear is bound to its class).
+const SHOP_STOCK = ["hp", "mp", "ore"],
+  SHOP_LIMIT = 12;
+// Stalls opened on the old, shorter town map move to the current free spots.
+db.transaction(() => {
+  const taken = new Set(),
+    move = [];
+  for (const s of db.prepare("SELECT id,x FROM shops ORDER BY rowid").all())
+    if (SHOP_SPOTS.includes(s.x) && !taken.has(s.x)) taken.add(s.x);
+    else move.push(s);
+  for (const s of move) {
+    const x = SHOP_SPOTS.find((v) => !taken.has(v));
+    if (x === undefined) break;
+    taken.add(x);
+    db.prepare("UPDATE shops SET x=? WHERE id=?").run(x, s.id);
+  }
+})();
+export function sellable(c, item) {
+  if (SHOP_STOCK.includes(item)) return c.inventory[item] || 0;
+  if (!GEAR[item] || item.startsWith("starter_")) return 0;
+  if (!c.ownedEquipment.includes(item)) return 0;
+  return Object.values(c.equipment || {}).includes(item) ? 0 : 1;
+}
+function takeStock(c, item, qty) {
+  if (sellable(c, item) < qty)
+    throw Error(
+      GEAR[item] && Object.values(c.equipment || {}).includes(item)
+        ? "ถอดอุปกรณ์ก่อนวางขาย"
+        : "ไอเทมไม่พอ",
+    );
+  if (SHOP_STOCK.includes(item)) c.inventory[item] -= qty;
+  else c.ownedEquipment = c.ownedEquipment.filter((id) => id !== item);
+}
+function giveStock(c, item, qty) {
+  if (SHOP_STOCK.includes(item))
+    c.inventory[item] = (c.inventory[item] || 0) + qty;
+  else if (!c.ownedEquipment.includes(item)) c.ownedEquipment.push(item);
+}
+function validListing({ item, qty, price }) {
+  const gear = !!GEAR[item] && !SHOP_STOCK.includes(item);
   if (
-    !["hp", "mp", "ore"].includes(item) ||
-    !validInt(qty, 1, 999) ||
-    !validInt(price, 1, 100000) ||
+    (!SHOP_STOCK.includes(item) && !gear) ||
+    !validInt(qty, 1, gear ? 1 : 999) ||
+    !validInt(price, 1, 1000000)
+  )
+    throw Error("ข้อมูลสินค้าไม่ถูกต้อง");
+}
+function ownShop(p) {
+  return db.prepare("SELECT * FROM shops WHERE owner=?").get(p.id);
+}
+function addListing(p, shopId, listing) {
+  const count = db
+    .prepare("SELECT COUNT(*) n FROM shop_listings WHERE shop=? AND qty>0")
+    .get(shopId).n;
+  if (count >= SHOP_LIMIT)
+    throw Error("วางขายได้สูงสุด " + SHOP_LIMIT + " รายการ");
+  const c = loadCharacter(p.id);
+  takeStock(c, listing.item, listing.qty);
+  persist(c);
+  const id = randomUUID();
+  db.prepare("INSERT INTO shop_listings VALUES(?,?,?,?,?,?)").run(
+    id,
+    shopId,
+    listing.item,
+    listing.qty,
+    listing.price,
+    Date.now(),
+  );
+  return id;
+}
+const stockName = (item) => ITEMS[item]?.name || GEAR[item]?.name || item;
+export function createShop(p, { name, item, price, qty, listings, key }) {
+  ensureTown(p);
+  const stock = listings ?? [{ item, qty, price }];
+  if (
     typeof name !== "string" ||
     name.trim().length < 1 ||
-    name.length > 35
+    name.length > 35 ||
+    !Array.isArray(stock) ||
+    stock.length < 1 ||
+    stock.length > SHOP_LIMIT
   )
     throw Error("ข้อมูลร้านไม่ถูกต้อง");
+  stock.forEach(validListing);
   const result = atomic(p.id, "shop:create", key, () => {
     if (
       db
@@ -191,66 +309,124 @@ export function createShop(p, { name, item, price, qty, key }) {
         .get(p.userId)
     )
       throw Error("เปิดได้หนึ่งร้านต่อบัญชี");
-    const c = loadCharacter(p.id);
-    if (c.inventory[item] < qty) throw Error("ไอเทมไม่พอ");
-    c.inventory[item] -= qty;
-    persist(c);
     const used = db
         .prepare("SELECT x FROM shops")
         .all()
         .map((s) => s.x),
-      x = [440, 820, 1230, 1770, 1930].find((v) => !used.includes(v));
+      x = SHOP_SPOTS.find((v) => !used.includes(v));
     if (!x) throw Error("พื้นที่ร้านเต็ม");
     const id = randomUUID();
-    db.prepare("INSERT INTO shops VALUES(?,?,?,?,?,?,?)").run(
-      id,
-      p.id,
-      name.trim(),
-      item,
-      qty,
-      price,
-      x,
-    );
-    return { message: "เปิดร้านแล้ว ไอเทมถูกเก็บเข้าร้าน", id };
+    db.prepare(
+      "INSERT INTO shops(id,owner,name,item,qty,price,x) VALUES(?,?,?,NULL,0,1,?)",
+    ).run(id, p.id, name.trim(), x);
+    const ids = stock.map((l) => addListing(p, id, l));
+    return { message: "เปิดร้านแล้ว สินค้าถูกเก็บเข้าร้าน", id, listings: ids };
   });
   invalidateShops();
   sync(p);
   return result;
 }
-export function buyShop(p, { id, key }) {
+export function listShopItem(p, { item, qty, price, key }) {
   ensureTown(p);
-  const result = atomic(p.id, "shop:buy", key, () => {
-    const s = db.prepare("SELECT * FROM shops WHERE id=?").get(id);
-    if (!s || s.qty < 1) throw Error("สินค้าหมดแล้ว");
-    if (s.owner === p.id) throw Error("ซื้อสินค้าจากร้านตัวเองไม่ได้");
-    const c = loadCharacter(p.id),
-      seller = loadCharacter(s.owner);
-    if (c.gold < s.price) throw Error("ทองไม่พอ");
-    c.gold -= s.price;
-    c.inventory[s.item] = (c.inventory[s.item] || 0) + 1;
-    seller.gold += s.price;
-    persist(c);
-    persist(seller);
-    db.prepare("UPDATE shops SET qty=qty-1 WHERE id=? AND qty>0").run(id);
-    return { message: "ซื้อสินค้าจาก " + s.name + " สำเร็จ" };
+  validListing({ item, qty, price });
+  const result = atomic(p.id, "shop:list", key, () => {
+    const s = ownShop(p);
+    if (!s) throw Error("ยังไม่มีร้าน");
+    const id = addListing(p, s.id, { item, qty, price });
+    return { message: "วางขาย " + stockName(item) + " แล้ว", id };
   });
   invalidateShops();
   sync(p);
-  const shop = db.prepare("SELECT owner FROM shops WHERE id=?").get(id);
-  const seller = shop && live(shop.owner);
+  return result;
+}
+export function unlistShopItem(p, { id, key }) {
+  ensureTown(p);
+  const result = atomic(p.id, "shop:unlist", key, () => {
+    const l = db
+      .prepare(
+        "SELECT l.* FROM shop_listings l JOIN shops s ON s.id=l.shop WHERE l.id=? AND s.owner=?",
+      )
+      .get(id, p.id);
+    if (!l) throw Error("ไม่พบสินค้านี้ในร้าน");
+    const c = loadCharacter(p.id);
+    giveStock(c, l.item, l.qty);
+    persist(c);
+    db.prepare("DELETE FROM shop_listings WHERE id=?").run(l.id);
+    return { message: "เก็บ " + stockName(l.item) + " คืนกระเป๋าแล้ว" };
+  });
+  invalidateShops();
+  sync(p);
+  return result;
+}
+export function buyShop(p, { id, qty = 1, key }) {
+  ensureTown(p);
+  if (!validInt(qty, 1, 999)) throw Error("จำนวนไม่ถูกต้อง");
+  let ownerId = null;
+  const result = atomic(p.id, "shop:buy", key, () => {
+    // Older clients send the shop id: buy from its first listing.
+    const l =
+      db.prepare("SELECT * FROM shop_listings WHERE id=?").get(id) ||
+      db
+        .prepare(
+          "SELECT * FROM shop_listings WHERE shop=? AND qty>0 ORDER BY created",
+        )
+        .get(id);
+    if (!l || l.qty < qty) throw Error(l?.qty ? "สินค้าเหลือไม่พอ" : "สินค้าหมดแล้ว");
+    const s = db.prepare("SELECT * FROM shops WHERE id=?").get(l.shop);
+    if (s.owner === p.id) throw Error("ซื้อสินค้าจากร้านตัวเองไม่ได้");
+    const c = loadCharacter(p.id),
+      seller = loadCharacter(s.owner),
+      total = l.price * qty;
+    if (GEAR[l.item] && c.ownedEquipment.includes(l.item))
+      throw Error("มีอุปกรณ์ชิ้นนี้อยู่แล้ว");
+    if (c.gold < total) throw Error("ทองไม่พอ");
+    c.gold -= total;
+    giveStock(c, l.item, qty);
+    seller.gold += total;
+    persist(c);
+    persist(seller);
+    db.prepare("UPDATE shop_listings SET qty=qty-? WHERE id=?").run(qty, l.id);
+    db.prepare("DELETE FROM shop_listings WHERE id=? AND qty=0").run(l.id);
+    db.prepare("UPDATE shops SET sold=sold+?, earned=earned+? WHERE id=?").run(
+      qty,
+      total,
+      s.id,
+    );
+    ownerId = s.owner;
+    return {
+      message: `ซื้อ ${stockName(l.item)} ×${qty} จาก ${s.name} สำเร็จ`,
+      total,
+    };
+  });
+  invalidateShops();
+  sync(p);
+  const seller = live(
+    ownerId ??
+      db
+        .prepare(
+          "SELECT s.owner FROM shop_listings l JOIN shops s ON s.id=l.shop WHERE l.id=?",
+        )
+        .get(id)?.owner,
+  );
   if (seller) sync(seller);
   return result;
 }
 export function closeShop(p, key) {
   ensureTown(p);
   const result = atomic(p.id, "shop:close", key, () => {
-    const s = db.prepare("SELECT * FROM shops WHERE owner=?").get(p.id);
+    const s = ownShop(p);
     if (!s) throw Error("ยังไม่มีร้าน");
     const c = loadCharacter(p.id);
-    c.inventory[s.item] = (c.inventory[s.item] || 0) + s.qty;
+    for (const l of db
+      .prepare("SELECT * FROM shop_listings WHERE shop=?")
+      .all(s.id))
+      giveStock(c, l.item, l.qty);
     persist(c);
+    db.prepare("DELETE FROM shop_listings WHERE shop=?").run(s.id);
     db.prepare("DELETE FROM shops WHERE id=?").run(s.id);
-    return { message: "ปิดร้านและคืนสินค้าคงเหลือแล้ว" };
+    return {
+      message: `ปิดร้านแล้ว · ขายได้รวม ${s.earned} ทอง · คืนสินค้าที่เหลือแล้ว`,
+    };
   });
   invalidateShops();
   sync(p);
@@ -322,6 +498,7 @@ export function stored(p) {
     "equipment",
     "ownedEquipment",
     "specialization",
+    "advanced",
   ];
   return {
     id: p.id,
@@ -355,6 +532,14 @@ export function beginDungeon(p, floor) {
       emptyAt: null,
     };
   instances.set(id, instance);
+  instance.startedAt = now();
+  instance.rewards = Object.fromEntries(
+    members.map((m) => [
+      m.id,
+      { gold: 0, exp: 0, ore: 0, items: [], damage: 0 },
+    ]),
+  );
+  instance.killCount = 0;
   spawnStage(instance);
   for (const m of members) {
     m.area = "dungeon";
@@ -441,26 +626,33 @@ function spawnStage(i) {
   i.streak = 0;
   i.streakUntil = 0;
   i.defeated = 0;
-  const boss = i.stage === 3,
-    count = boss ? 1 : 4 + i.floor,
-    // Spread the pack inside the arena: 230 px apart, closer on deep floors.
-    gap = Math.min(230, (WORLD.width - 850) / Math.max(1, count - 1));
+  i.lastDrop = null;
+  const count = dungeonEnemyCount(i.floor, i.stage);
   for (let n = 0; n < count; n++) {
-    const max = boss
-      ? 300 + i.floor * 220 + i.floor * i.floor * 55
-      : 45 + i.floor * 18 + i.stage * 12;
+    // Stage 3: the boss first, then its guards; other stages fill the arena.
+    const boss = i.stage === 3 && n === 0,
+      slot = i.stage === 3 ? n - 1 : n,
+      elite = !boss && isElite(i.floor, i.stage, slot),
+      base = boss
+        ? Math.round((300 + i.floor * 220 + i.floor * i.floor * 55) * 1.2)
+        : 55 + i.floor * 24 + i.stage * 14,
+      max = Math.round(base * (elite ? 2.2 : 1)),
+      spot = dungeonSpawn(i.floor, i.stage, slot, boss, count);
     i.enemies.push({
       id: randomUUID(),
-      x: Math.round(700 + n * gap),
-      y: 600,
+      ...spot,
+      homeX: spot.x,
+      homeY: spot.y,
+      grounded: true,
       hp: max,
       maxHp: max,
       type: boss
         ? ["batking", "golem", "serpent"][(i.floor - 1) % 3]
-        : ["slime", "bat", "boar", "mushroom", "wolf", "goblin"][
-            (n + i.stage + i.floor) % 6
-          ],
+        : DUNGEON_ROSTERS[i.floor - 1][(slot + i.stage) % 3],
       boss,
+      elite,
+      aggro: boss,
+      speed: boss ? 75 : 85 + i.floor * 5 + (elite ? 15 : 0),
       spawnAt: now() + n * 0.06,
       attackCount: 0,
       direction: -1,
@@ -477,7 +669,32 @@ export function nextStage(p) {
     spawnTraining(i);
     return { message: "เริ่มฝึกรอบใหม่" };
   }
-  if (i.stage === 3) return returnTown(p);
+  if (i.stage === 3) {
+    if (!i.completed || !i.results) throw Error("รอสรุปผลก่อน");
+    if (i.members.length > 1 && parties.get(p.party)?.leader !== p.id)
+      throw Error("ให้หัวหน้าปาร์ตี้เลือกไปชั้นถัดไป");
+    if (i.floor >= FLOORS.length) return returnTown(p);
+    if (
+      i.members
+        .map(live)
+        .filter(Boolean)
+        .some((m) => m.unlocked < i.floor + 1)
+    )
+      throw Error("สมาชิกยังไม่ปลดล็อกชั้นถัดไป");
+    i.floor++;
+    i.stage = 0;
+    i.completed = false;
+    i.results = null;
+    i.startedAt = now();
+    i.killCount = 0;
+    i.rewards = Object.fromEntries(
+      i.members.map((id) => [
+        id,
+        { gold: 0, exp: 0, ore: 0, items: [], damage: 0 },
+      ]),
+    );
+  }
+  const newFloor = i.stage === 0;
   i.stage++;
   spawnStage(i);
   for (const id of i.members) {
@@ -497,7 +714,11 @@ export function nextStage(p) {
       m.mp = Math.min(maxMp(m), m.mp + 35);
     }
   }
-  return { message: "เข้าสู่ด่าน " + i.stage };
+  return {
+    message: newFloor
+      ? "ลงสู่ชั้น " + i.floor + " · " + FLOORS[i.floor - 1].name
+      : "เข้าสู่ด่าน " + i.stage,
+  };
 }
 export function returnTown(p) {
   if (p.instance) {
@@ -613,6 +834,7 @@ function resolveAttack(p, t) {
         (crit ? 1.5 : 1);
     e.hp -= Math.floor(amount);
     e.hitAt = t;
+    e.aggro = true;
     e.hitDirection = a.direction;
     e.x = Math.max(
       70,
@@ -634,6 +856,8 @@ function resolveAttack(p, t) {
       at: t,
     });
     if (e.hp <= 0 && !i.training) {
+      i.killCount = (i.killCount || 0) + 1;
+      i.lastDrop = { x: e.x, y: e.y - 70 };
       i.defeated = (i.defeated || 0) + 1;
       i.streak = t <= (i.streakUntil || 0) ? i.streak + 1 : 1;
       i.streakUntil = t + 5;
@@ -651,10 +875,41 @@ function resolveAttack(p, t) {
       for (const id of i.members) {
         const m = live(id);
         if (m && m.hp > 0) {
-          m.gold += (e.boss ? 50 + i.floor * 20 : 8 + i.floor * 2) + bonus;
+          const gold =
+              (e.boss
+                ? 50 + i.floor * 20
+                : (8 + i.floor * 2) * (e.elite ? 3 : 1)) + bonus,
+            gained = e.boss ? 110 : e.elite ? 45 : 20,
+            reward = i.rewards?.[m.id];
+          m.gold += gold;
           m.mp = Math.min(maxMp(m), m.mp + (bonus ? 4 : 0));
-          exp(m, e.boss ? 110 : 20);
-          if (Math.random() < 0.4) m.inventory.ore++;
+          if (reward) {
+            reward.gold += gold;
+            reward.exp += gained;
+          }
+          exp(m, gained);
+          i.events.push({
+            id: randomUUID(),
+            kind: "drop",
+            actorId: m.id,
+            x: e.x - 24,
+            y: e.y - 45,
+            item: "gold",
+            at: t,
+          });
+          if (e.elite || Math.random() < 0.4) {
+            m.inventory.ore++;
+            if (i.rewards?.[m.id]) i.rewards[m.id].ore++;
+            i.events.push({
+              id: randomUUID(),
+              kind: "drop",
+              actorId: m.id,
+              x: e.x + 32,
+              y: e.y - 55,
+              item: "ore",
+              at: t,
+            });
+          }
           savePlayer(m);
         }
       }
@@ -674,28 +929,31 @@ function resolveAttack(p, t) {
             Math.max(m.unlocked, i.floor + 1),
           );
           m.gold += 80;
+          if (i.rewards?.[m.id]) i.rewards[m.id].gold += 80;
           const item = rollBossLoot(m, i.floor, firstClear);
           if (item) {
             m.ownedEquipment.push(item);
+            i.rewards?.[m.id]?.items.push(item);
             i.events.push({
               id: randomUUID(),
               kind: "loot",
               actorId: m.id,
-              x: m.x,
-              y: m.y - 110,
+              x: i.lastDrop?.x ?? m.x,
+              y: i.lastDrop?.y ?? m.y - 110,
               item,
               rarity: GEAR[item].rarity,
               at: t,
             });
           } else {
             const ore = 2 + i.floor;
+            if (i.rewards?.[m.id]) i.rewards[m.id].ore += ore;
             m.inventory.ore = (m.inventory.ore || 0) + ore;
             i.events.push({
               id: randomUUID(),
               kind: "material",
               actorId: m.id,
-              x: m.x,
-              y: m.y - 110,
+              x: i.lastDrop?.x ?? m.x,
+              y: i.lastDrop?.y ?? m.y - 110,
               item: "ore",
               amount: ore,
               at: t,
@@ -707,12 +965,13 @@ function resolveAttack(p, t) {
             !m.ownedEquipment.includes("cavern_charm")
           ) {
             m.ownedEquipment.push("cavern_charm");
+            i.rewards?.[m.id]?.items.push("cavern_charm");
             i.events.push({
               id: randomUUID(),
               kind: "loot",
               actorId: m.id,
-              x: m.x,
-              y: m.y - 110,
+              x: i.lastDrop?.x ?? m.x,
+              y: i.lastDrop?.y ?? m.y - 110,
               item: "cavern_charm",
               rarity: GEAR.cavern_charm.rarity,
               at: t,
@@ -722,6 +981,47 @@ function resolveAttack(p, t) {
           savePlayer(m);
         }
       }
+      const seconds = Math.max(0, Math.round(t - i.startedAt));
+      i.results = Object.fromEntries(
+        i.members.map((id) => {
+          const rewards = i.rewards?.[id] || {
+            gold: 0,
+            exp: 0,
+            ore: 0,
+            items: [],
+            damage: 0,
+          };
+          const m = live(id);
+          if (m) {
+            m.auto = false;
+            m.input = 0;
+            m.pending = null;
+            m.action = null;
+          }
+          return [
+            id,
+            {
+              floor: i.floor,
+              seconds,
+              defeated: i.killCount,
+              ...rewards,
+              ...dungeonRank(
+                seconds,
+                i.killCount,
+                rewards.damage,
+                i.floor,
+                m ? maxHp(m) : 100,
+              ),
+              hasNext:
+                i.floor < FLOORS.length &&
+                i.members
+                  .map(live)
+                  .filter(Boolean)
+                  .every((x) => x.unlocked >= i.floor + 1),
+            },
+          ];
+        }),
+      );
       log(p.id, "boss:clear", { floor: i.floor, instance: i.id });
     }
   }
@@ -886,7 +1186,7 @@ function physics(p, dt, t) {
     t - (p.jumpBufferedAt || 0) < 0.13 &&
     (p.grounded || t - (p.lastGroundAt || 0) < 0.1)
   ) {
-    p.vy = -650;
+    p.vy = p.area === "dungeon" ? -DUNGEON_JUMP : -650;
     p.grounded = false;
     p.lastGroundAt = -100;
     p.jumpBufferedAt = -100;
@@ -899,7 +1199,11 @@ function physics(p, dt, t) {
   if (p.vy >= 0)
     for (const platform of p.area === "town"
       ? WORLD.platforms
-      : WORLD.dungeonPlatforms)
+      : dungeonPlatforms(
+          instances.get(p.instance)?.floor,
+          instances.get(p.instance)?.stage,
+          instances.get(p.instance)?.training,
+        ))
       if (
         p.x >= platform.x &&
         p.x <= platform.x + platform.w &&
@@ -918,6 +1222,7 @@ function physics(p, dt, t) {
 // All damage and rewards stay authoritative, including environmental attacks.
 function dealDungeonDamage(i, p, base, actorId, direction, t) {
   const amount = damage(base, combatStats(p).def);
+  if (i.rewards?.[p.id]) i.rewards[p.id].damage += Math.min(p.hp, amount);
   p.hp = Math.max(0, p.hp - amount);
   p.hitAt = t;
   p.hitDirection = direction;
@@ -998,24 +1303,18 @@ export function tick(dt, t = now()) {
     if (t - p.lastInput > 0.3) p.input = 0;
     const i = instances.get(p.instance);
     if (p.auto && i) {
-      const enemies = i.enemies.filter((e) => e.hp > 0),
-        e = enemies.sort(
-          (a, b) => Math.abs(a.x - p.x) - Math.abs(b.x - p.x),
-        )[0];
-      if (e) {
-        const dist = e.x - p.x;
-        p.direction = Math.sign(dist) || 1;
-        p.input =
-          Math.abs(dist) > combatStats(p).range * 0.75 ? Math.sign(dist) : 0;
-        if (p.y < 540) {
-          p.input = Math.sign(dist);
-          p.jump = false;
-        }
+      if (i.enemies.some((e) => e.hp > 0)) {
+        const plan = autoBrain(p, i, t, {
+          range: combatStats(p).range,
+          mpMax: maxMp(p),
+          platforms: dungeonPlatforms(i.floor, i.stage, i.training),
+        });
+        p.input = plan.input;
         p.running = true;
-        attack(p, 3, t);
-        attack(p, 2, t);
-        attack(p, 1, t);
-        attack(p, 0, t);
+        if (plan.jump && p.grounded) p.jumpBufferedAt = t;
+        // Turn only between swings so a windup keeps its aim.
+        if (!p.action || t >= p.action.endsAt) p.direction = plan.direction;
+        if (plan.skill !== null) attack(p, plan.skill, t);
         if (p.hp < maxHp(p) * 0.4 && (p.inventory.hp || i.training)) {
           try {
             potion(p);
@@ -1026,7 +1325,7 @@ export function tick(dt, t = now()) {
             potion(p, "mp");
           } catch {}
         }
-      } else if (i.clear && t - (p.nextAt || 0) > 2) {
+      } else if (i.clear && !i.completed && t - (p.nextAt || 0) > 2) {
         p.nextAt = t;
         nextStage(p);
       }
@@ -1052,6 +1351,33 @@ export function tick(dt, t = now()) {
         e.action = null;
         continue;
       }
+      // Monsters guard their spot until a hero comes close, then call the pack.
+      if (!e.aggro && !i.training) {
+        const reach = e.type === "bat" ? 480 : 400;
+        if (Math.abs(p.x - e.x) < reach && Math.abs(p.y - e.y) < 280) {
+          e.aggro = true;
+          for (const o of i.enemies)
+            if (!o.aggro && Math.abs(o.x - e.x) < 260) o.aggro = true;
+        }
+      }
+      if (!e.aggro && !i.training) {
+        const homeX = e.homeX ?? e.x,
+          goal = homeX + Math.sin(t * 0.6 + (e.spawnAt || 0) * 7) * 55;
+        enemyStep(
+          e,
+          { x: e.x, y: (e.homeY ?? e.y) + 45 },
+          dungeonPlatforms(i.floor, i.stage),
+          dt,
+          t,
+        );
+        if (Math.abs(goal - e.x) > 4) {
+          e.direction = Math.sign(goal - e.x);
+          e.x += e.direction * 30 * dt;
+          e.moving = true;
+        }
+        continue;
+      }
+      enemyStep(e, p, dungeonPlatforms(i.floor, i.stage, i.training), dt, t);
       const distance = p.x - e.x;
       if (e.action) {
         const a = e.action;
@@ -1089,7 +1415,11 @@ export function tick(dt, t = now()) {
             dealDungeonDamage(
               i,
               p,
-              i.training ? 18 : e.boss ? 25 + i.floor * 5 : 13 + i.floor * 3,
+              i.training
+                ? 18
+                : e.boss
+                  ? 28 + i.floor * 6
+                  : Math.round((15 + i.floor * 4) * (e.elite ? 1.5 : 1)),
               e.id,
               a.direction,
               t,
@@ -1103,14 +1433,29 @@ export function tick(dt, t = now()) {
       if (t - (e.hitAt || 0) < 0.14) continue;
       const enraged = e.boss && e.hp <= e.maxHp * 0.5;
       const slam = e.boss && (e.attackCount || 0) % 3 === 0;
-      if (Math.abs(distance) > 70) {
-        e.x += Math.sign(distance) * (e.boss ? (enraged ? 110 : 75) : 90) * dt;
+      // Climbing: walk to the next stair step; otherwise close in on the hero.
+      const climbing = e.goalX !== undefined && e.goalX !== p.x,
+        chase = (e.goalX ?? p.x) - e.x,
+        step = climbing
+          ? Math.abs(chase) > 4
+            ? Math.sign(chase)
+            : 0
+          : Math.abs(distance) > 70
+            ? Math.sign(distance)
+            : 0;
+      if (step) {
+        e.x += step * (e.boss ? (enraged ? 110 : 75) : e.speed || 90) * dt;
         e.moving = true;
       }
       if (
         Math.abs(distance) < (slam ? 650 : e.boss ? 115 : 82) &&
         (slam || Math.abs(p.y - e.y) < 110) &&
-        t - e.attackAt > (enraged ? 1.05 : 1.4)
+        t - e.attackAt >
+          (e.boss
+            ? enraged
+              ? 1.05
+              : 1.4
+            : Math.max(0.95, 1.4 - i.floor * 0.03) * (e.elite ? 0.85 : 1))
       ) {
         e.attackAt = t;
         e.attackCount = (e.attackCount || 0) + 1;
@@ -1137,6 +1482,8 @@ export function snapshot(p) {
     name: m.name,
     class: m.class,
     gender: m.gender,
+    specialization: m.specialization || null,
+    advanced: !!m.advanced,
     x: m.x,
     y: m.y,
     direction: m.direction,
@@ -1191,6 +1538,7 @@ export function snapshot(p) {
           stage: i.stage,
           clear: i.clear,
           completed: i.completed,
+          result: i.results?.[p.id] || null,
           training: !!i.training,
           instanceId: i.id,
           enemies: i.enemies,

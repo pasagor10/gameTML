@@ -1,0 +1,349 @@
+/* Touch screens: MOBA-style thumb controls. Loaded last on purpose. */
+/* ================================================================
+   Touch controls, MOBA style (both orientations).
+   Left thumb: floating joystick. Right thumb: big attack with the
+   three skills in an arc, jump / potion / recall / auto on the rim.
+   Every size scales with --ui so small phones keep the same shape.
+   ================================================================ */
+.touch-only {
+  display: none;
+}
+#mobile-controls #joystick-zone,
+#mobile-interact {
+  display: none;
+}
+@media (pointer: coarse) {
+  #game-screen {
+    --ui: 1;
+    --edge-l: calc(14px + env(safe-area-inset-left));
+    --edge-r: calc(14px + env(safe-area-inset-right));
+    --edge-b: calc(12px + env(safe-area-inset-bottom));
+  }
+  #game-screen #keyboard-help,
+  #game-screen #walkability-toggle,
+  #game-screen #traversal-hint,
+  #game-screen #context-hint {
+    display: none !important;
+  }
+
+  /* ---- Left: joystick ---- */
+  #game-screen #mobile-controls {
+    display: block;
+    position: static;
+    width: auto;
+    height: auto;
+    transform: none;
+  }
+  #game-screen #joystick-zone {
+    display: block;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    /* Stops short of the right-hand cluster so its buttons stay tappable. */
+    width: calc(100% - 300px * var(--ui) - var(--edge-r) - 12px);
+    max-width: 46%;
+    height: 58%;
+    z-index: 5;
+    touch-action: none;
+  }
+  #joystick {
+    position: absolute;
+    left: var(--edge-l);
+    bottom: calc(var(--edge-b) + 6px);
+    width: calc(128px * var(--ui));
+    height: calc(128px * var(--ui));
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      #ffffff0d 55%,
+      #ffffff1f 56%,
+      #0b1a2d55 70%
+    );
+    border: 2px solid #ffe6a540;
+    box-shadow: inset 0 0 22px #0007;
+    opacity: 0.55;
+    transition: opacity 0.15s;
+    pointer-events: none;
+  }
+  #joystick.active {
+    opacity: 1;
+    bottom: auto;
+    transition: none;
+  }
+  #joystick i {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 46%;
+    height: 46%;
+    margin: -23% 0 0 -23%;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle at 35% 30%,
+      #fff3cf,
+      #d9a24a 55%,
+      #7a5320
+    );
+    border: 2px solid #fff3cf;
+    box-shadow:
+      0 4px 10px #000a,
+      0 0 14px #ffd48666;
+  }
+
+  /* Contextual action (talk, enter, next stage) above the joystick. */
+  #game-screen #mobile-interact {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    position: absolute;
+    left: var(--edge-l);
+    bottom: calc(var(--edge-b) + 150px * var(--ui));
+    width: auto;
+    height: auto;
+    max-width: 44%;
+    padding: 8px 14px 8px 10px;
+    border-radius: 999px;
+    background: linear-gradient(#ffe6a5, #d9a24a);
+    border: 2px solid #fff3cf;
+    color: #322516;
+    font-weight: 700;
+    font-size: 13px;
+    box-shadow: 0 4px 12px #000a;
+    z-index: 6;
+    animation: interact-pop 0.25s ease-out;
+  }
+  #game-screen #mobile-interact.hidden {
+    display: none;
+  }
+  #mobile-interact span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  @keyframes interact-pop {
+    from {
+      transform: scale(0.6);
+      opacity: 0;
+    }
+  }
+
+  /* ---- Right: attack + skill arc ---- */
+  #game-screen .hud-bottom.hud-bottom {
+    position: static;
+  }
+  #game-screen .hud-bottom .skillbar {
+    position: absolute;
+    left: auto;
+    top: auto;
+    right: var(--edge-r);
+    bottom: var(--edge-b);
+    width: 300px;
+    height: 300px;
+    display: block;
+    transform: scale(var(--ui));
+    transform-origin: bottom right;
+    pointer-events: none;
+    z-index: 5;
+  }
+  #game-screen .hud-bottom .skillbar .skill {
+    position: absolute;
+    width: 66px;
+    height: 66px;
+    margin: 0;
+    padding: 0;
+    border-radius: 50%;
+    pointer-events: auto;
+    touch-action: none;
+  }
+  #game-screen .hud-bottom .skillbar .skill b {
+    font-size: 28px;
+  }
+  #game-screen .hud-bottom .skillbar .skill > span,
+  #game-screen .hud-bottom .skillbar .skill small {
+    display: none;
+  }
+  #game-screen .hud-bottom .skillbar .skill i {
+    border-radius: 50%;
+    font-size: 20px;
+  }
+  #game-screen .hud-bottom .skillbar .skill.ready::after {
+    border-radius: 50%;
+  }
+  #game-screen .hud-bottom .skillbar .skill-cost {
+    position: absolute;
+    left: 50%;
+    bottom: -9px;
+    transform: translateX(-50%);
+    font-size: 9px;
+    font-style: normal;
+    padding: 0 5px;
+    border-radius: 6px;
+    background: #0b1a2dd9;
+    color: #9fd6ff;
+    white-space: nowrap;
+    z-index: 3;
+  }
+  /* Positions: centres on circles around the attack button. */
+  #game-screen .hud-bottom .skillbar .skill.basic {
+    right: 16px;
+    bottom: 16px;
+    width: 100px;
+    height: 100px;
+  }
+  #game-screen .hud-bottom .skillbar .skill.basic b {
+    font-size: 42px;
+  }
+  #game-screen .hud-bottom .skillbar [data-action="skill1"] {
+    right: 146px;
+    bottom: 30px;
+  }
+  #game-screen .hud-bottom .skillbar [data-action="skill2"] {
+    right: 117px;
+    bottom: 117px;
+  }
+  #game-screen .hud-bottom .skillbar [data-action="skill3"] {
+    right: 30px;
+    bottom: 146px;
+  }
+  #game-screen .hud-bottom .skillbar .skill.jump {
+    display: grid;
+    place-items: center;
+    right: 215px;
+    bottom: 105px;
+    width: 72px;
+    height: 72px;
+    background: radial-gradient(circle at 35% 25%, #7fd0ff, #1b4f7a 70%)
+      padding-box;
+    color: #fff;
+  }
+  #game-screen .hud-bottom .skillbar [data-action="hp"],
+  #game-screen .hud-bottom .skillbar .skill.recall,
+  #game-screen .hud-bottom .skillbar .skill.auto {
+    width: 50px;
+    height: 50px;
+  }
+  #game-screen .hud-bottom .skillbar [data-action="hp"] b,
+  #game-screen .hud-bottom .skillbar .skill.recall b,
+  #game-screen .hud-bottom .skillbar .skill.auto b {
+    font-size: 20px;
+  }
+  #game-screen .hud-bottom .skillbar [data-action="hp"] {
+    right: 161px;
+    bottom: 207px;
+  }
+  #game-screen .hud-bottom .skillbar [data-action="hp"] small {
+    display: block;
+    position: absolute;
+    left: 50%;
+    bottom: -12px;
+    transform: translateX(-50%);
+    font-size: 9px;
+    white-space: nowrap;
+  }
+  #game-screen .hud-bottom .skillbar .skill.recall {
+    display: grid;
+    place-items: center;
+    right: 225px;
+    bottom: 210px;
+    background: radial-gradient(circle at 35% 25%, #c6d6e3, #3a5068 70%)
+      padding-box;
+    color: #fff;
+  }
+  #game-screen .hud-bottom .skillbar .skill.auto {
+    right: 41px;
+    bottom: 243px;
+  }
+  #game-screen .hud-bottom .skillbar .skill.auto > span {
+    display: block;
+    position: absolute;
+    left: 50%;
+    top: auto;
+    bottom: -9px;
+    transform: translateX(-50%);
+    font-size: 8px;
+    padding: 0 4px;
+  }
+
+  /* Town actions and gold: out of the thumbs' way. */
+  #game-screen .bottom-actions {
+    display: none;
+  }
+}
+
+/* Phones held sideways are short: shrink both clusters together. */
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {
+  #game-screen {
+    --ui: 0.74;
+  }
+  #game-screen .gold-display {
+    display: none;
+  }
+}
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 380px) {
+  #game-screen {
+    --ui: 0.64;
+  }
+}
+/* Narrow portrait phones. */
+@media (pointer: coarse) and (orientation: portrait) {
+  #game-screen {
+    --ui: 0.86;
+  }
+}
+@media (pointer: coarse) and (orientation: portrait) and (max-width: 400px) {
+  #game-screen {
+    --ui: 0.78;
+  }
+}
+@media (pointer: coarse) and (orientation: portrait) and (max-width: 340px) {
+  #game-screen {
+    --ui: 0.7;
+  }
+}
+
+/* The desktop deck draws square engraved slots with a frame behind them; on
+   touch every control is a round thumb target and the frame goes away. */
+@media (pointer: coarse) {
+  #game-screen .hud-bottom .skillbar {
+    display: block;
+    flex-direction: initial;
+    gap: 0;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    inset: auto var(--edge-r) var(--edge-b) auto;
+  }
+  #game-screen .hud-bottom .skillbar::before {
+    display: none;
+  }
+  #game-screen .hud-bottom .skillbar .skill,
+  #game-screen .hud-bottom .skillbar .skill::before,
+  #game-screen .hud-bottom .skillbar .skill i,
+  #game-screen .hud-bottom .skillbar .skill.ready::after {
+    border-radius: 50%;
+  }
+  #game-screen .hud-bottom .skillbar .skill {
+    top: auto;
+    left: auto;
+    margin: 0;
+    opacity: 1;
+  }
+  #game-screen .hud-bottom .skillbar .skill:disabled {
+    opacity: 0.55;
+  }
+  #game-screen .hud-bottom .skillbar .skill b {
+    inset: 8px;
+  }
+  #game-screen .hud-bottom .skillbar .skill.basic b {
+    inset: 14px;
+  }
+  #game-screen .hud-bottom .skillbar .skill.green::after {
+    display: none;
+  }
+  #game-screen .hud-bottom.hud-bottom {
+    inset: auto;
+    display: block;
+  }
+}

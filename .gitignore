@@ -6,3 +6,4 @@ data/
 *.sqlite*
 *.backup
 .env.production
+__pycache__/

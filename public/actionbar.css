@@ -1,0 +1,61 @@
+/* Engraved action deck: quiet frame, luminous ability emblems. */
+#game-screen .skillbar {
+ --deck-edge:#96805b;
+ align-items:center; gap:9px; padding:12px 15px 23px;
+ border:1px solid #a18a5e88; border-top-color:#d8c394a0; border-radius:9px 9px 4px 4px;
+ background:linear-gradient(180deg,#2a312ac9,#101c19f2 28%,#07110ff5);
+ box-shadow:inset 0 1px #fff0c21c,inset 0 -3px #0008,0 8px 26px #0008;
+}
+#game-screen .skillbar::before { content:"◆"; position:absolute;left:50%;top:-9px;transform:translateX(-50%);font-size:10px;color:#d6bc82;text-shadow:0 1px #07120f; }
+#game-screen .skillbar .skill {
+ --ability:#a7dbe7;
+ position:relative; flex:0 0 auto; width:56px;height:56px;border:1px solid #718784;
+ border-radius:7px; background:radial-gradient(circle at 50% 30%,color-mix(in srgb,var(--ability) 24%,#15201e),#0b1818 75%);
+ box-shadow:inset 0 0 0 2px #040d0d,inset 0 0 0 3px #a3b8a426,0 3px 0 #020706;
+ color:var(--ability);transition:filter .12s,transform .12s,border-color .12s;
+}
+#game-screen .skillbar .skill::before { content:"";position:absolute;inset:5px;border:1px solid color-mix(in srgb,var(--ability) 17%,transparent);border-radius:4px;pointer-events:none; }
+#game-screen .skillbar .skill b { position:absolute;inset:5px 6px 9px;display:grid;place-items:center;filter:drop-shadow(0 2px 1px #000b) drop-shadow(0 0 5px color-mix(in srgb,var(--ability) 25%,transparent));line-height:1; }
+#game-screen .skillbar .skill b svg { width:100%;height:100%; }
+#game-screen .skillbar .skill > span { top:auto;bottom:-17px;left:50%;transform:translateX(-50%);min-width:19px;height:15px;line-height:13px;font-size:9px;padding:0 4px;border:1px solid #76694e;border-radius:2px;color:#e4d8b8;background:linear-gradient(#343b2f,#17221c);box-shadow:0 1px #000;text-shadow:none;z-index:4; }
+#game-screen .skillbar .skill small { bottom:calc(100% + 14px);left:50%;right:auto;transform:translateX(-50%);width:max-content;max-width:160px;padding:5px 8px;border:1px solid #8c7955;border-radius:3px;background:#071511f5;color:#e8d7b0;font-size:10px;opacity:0;pointer-events:none;transition:opacity .12s; }
+#game-screen .skillbar .skill:hover small,#game-screen .skillbar .skill:focus-visible small { opacity:1; }
+#game-screen .skillbar .skill .skill-cost { right:4px;bottom:3px;font-size:8px;color:#b2d1d8;line-height:1;font-weight:600;text-shadow:0 1px 2px #000;z-index:3; }
+#game-screen .skillbar .skill.blue { --ability:#94def3; }
+#game-screen .skillbar .skill.orange { --ability:#f4bb7d; }
+#game-screen .skillbar .skill.violet { --ability:#d4b0f9; }
+#game-screen .skillbar .skill.basic { --ability:#f1d394; width:64px;height:64px;margin-right:8px;border-color:#c7a76d;border-radius:50%;background:radial-gradient(circle at 40% 30%,#6f6142,#202b23 60%,#101c18);box-shadow:inset 0 0 0 3px #08140f,inset 0 0 0 4px #ba995759,0 3px 0 #020706,0 0 13px #d5ab4420; }
+#game-screen .skillbar .skill.basic::before { inset:7px;border-radius:50%; }
+#game-screen .skillbar .skill.basic b { inset:9px; }
+#game-screen .skillbar .skill.green { --ability:#f7c0a3;margin-left:10px;background:radial-gradient(circle at 50% 35%,#57312f,#161b17 75%);border-color:#936351; }
+#game-screen .skillbar .skill.green::after { content:attr(data-count);position:absolute;right:3px;bottom:3px;min-width:16px;text-align:center;color:#fff0c4;font-size:9px;line-height:14px;background:#120d0cd9;border-radius:2px; }
+#game-screen .skillbar .skill.auto { --ability:#91ad9d; width:43px;height:43px;margin-left:2px;border-radius:50%;border-color:#566d60;background:radial-gradient(circle,#2a3e31,#0c1711); }
+#game-screen .skillbar .skill.auto::before { border-radius:50%;inset:4px; }
+#game-screen .skillbar .skill.auto b { inset:6px; }
+#game-screen .skillbar .skill.auto > span { font-size:7px;bottom:-20px;background:none;border:0;box-shadow:none;color:#8eaa97; }
+#game-screen .skillbar .skill.auto.on { --ability:#b2f1b0;border-color:#a1d792;box-shadow:inset 0 0 0 2px #0a2010,0 0 15px #83dd5f42; }
+#game-screen .skillbar .skill.auto.on > span { color:#b8f2a8; }
+#game-screen .skillbar .skill:not(:disabled):hover { border-color:#ffdf9e;filter:brightness(1.18);transform:translateY(-2px); }
+#game-screen .skillbar .skill:not(:disabled):active { transform:translateY(2px);filter:brightness(1.35); }
+#game-screen .skillbar .skill:disabled { opacity:.65;filter:saturate(.4);cursor:default; }
+#game-screen .skillbar .skill i { inset:3px;border-radius:4px;font-size:20px;font-style:normal;background:conic-gradient(#020a0ee8 calc(var(--cd,0)*360deg),#020a0e50 0);color:#fff3d0;text-shadow:0 2px 2px #000; }
+#game-screen .skillbar .skill[data-tip]:hover::after,#game-screen .skillbar .skill[data-tip]:focus-visible::after { display:none; }
+#game-screen .skillbar .skill.ready::after { display:block;inset:-3px;border-radius:8px;border-width:1px; }
+@media(max-width:760px) {
+ #game-screen .skillbar { gap:5px;padding:8px 9px 21px; }
+ #game-screen .skillbar .skill { width:43px;height:43px; }
+ #game-screen .skillbar .skill.basic { width:50px;height:50px;margin-right:4px; }
+ #game-screen .skillbar .skill.green { margin-left:5px; }
+ #game-screen .skillbar .skill.auto { width:35px;height:35px;margin-left:0; }
+ #game-screen .skillbar .skill b { inset:3px 4px 7px; }
+ #game-screen .skillbar .skill > span { display:block;bottom:-16px;font-size:8px; }
+ #game-screen .skillbar .skill small { display:none; }
+ #game-screen .skillbar .skill .skill-cost { font-size:7px;right:3px;bottom:3px; }
+ #game-screen .skillbar .skill.auto > span { bottom:-19px; }
+}
+@media(max-width:480px) { #game-screen .skillbar { gap:4px; } #game-screen .skillbar .skill { width:39px;height:39px; } #game-screen .skillbar .skill.basic { width:46px;height:46px; } }
+#game-screen .skillbar { display:flex;flex-direction:row;width:max-content;height:auto; }
+#game-screen .skillbar .skill { top:auto;right:auto;bottom:auto;left:auto; }
+@media(max-width:760px) { #game-screen .skillbar { position:relative;inset:auto;transform:none;margin-left:auto; } }
+@media(max-width:760px) { #game-screen .hud-bottom { position:absolute;top:auto;height:auto;display:flex;justify-content:flex-end; } }
+@media(max-width:480px) { #game-screen .hud-bottom { bottom:calc(175px + env(safe-area-inset-bottom)); } }

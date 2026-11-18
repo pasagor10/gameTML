@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "3.0",
+  "name": "run",
+  "artSource": "painted sheet (supplied artwork)",
+  "sourceSize": [
+    304,
+    194
+  ],
+  "sourceAnchor": [
+    152.0,
+    190.41
+  ],
+  "frameCount": 4,
+  "durationsMs": [
+    80,
+    80,
+    80,
+    80
+  ],
+  "durationSeconds": 0.32,
+  "fps": 12.5,
+  "loop": true,
+  "bodyHeightPx": 180.0,
+  "events": [],
+  "sampling": "linear",
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      304,
+      194
+    ],
+    "pages": [
+      {
+        "file": "run-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  }
+}

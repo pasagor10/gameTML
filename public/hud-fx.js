@@ -2,7 +2,7 @@
 // low-HP warning, cooldown sweeps, gold count-up, level-up banner, area intro.
 import { ACTIONS } from "/shared/motion.js";
 import { FLOORS } from "/shared/config.js";
-import { sfx } from "/sound.js?v=1";
+import { sfx } from "/sound.js?v=20261118-combat2";
 
 const $ = (s) => document.querySelector(s);
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;

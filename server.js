@@ -268,10 +268,13 @@ io.on("connection", (socket) => {
   execute("equipment:buy", (p, d) => world.buyEquipment(p, d.id, d.key));
   execute("equipment:equip", (p, d) => world.equip(p, d.slot, d.id));
   execute("class:specialize", (p, d) => world.specialize(p, d.id));
+  execute("class:advance", (p) => world.advanceClass(p), 3);
   execute("equipment:enhance", (p, d) => world.enhance(p, d.key), 3);
   execute("shop:create", (p, d) => world.createShop(p, d), 3);
   execute("shop:buy", (p, d) => world.buyShop(p, d), 5);
   execute("shop:close", (p, d) => world.closeShop(p, d.key), 3);
+  execute("shop:list", (p, d) => world.listShopItem(p, d), 5);
+  execute("shop:unlist", (p, d) => world.unlistShopItem(p, d), 5);
   execute("party:action", (p, d) => world.partyAction(p, d), 5);
   execute("trade:action", (p, d) => world.tradeAction(p, d), 8);
   execute(

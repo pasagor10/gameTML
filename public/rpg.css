@@ -357,11 +357,15 @@ kbd {
 }
 .gear-card.rarity-epic,
 .item-inspector.rarity-epic {
-  box-shadow: 0 0 14px #b07cf026, inset 0 0 20px #c8a2f426;
+  box-shadow:
+    0 0 14px #b07cf026,
+    inset 0 0 20px #c8a2f426;
 }
 .gear-card.rarity-legendary,
 .item-inspector.rarity-legendary {
-  box-shadow: 0 0 20px #ffae3340, inset 0 0 22px #ffca6330;
+  box-shadow:
+    0 0 20px #ffae3340,
+    inset 0 0 22px #ffca6330;
 }
 .bag-content {
   min-width: 0;
@@ -882,4 +886,408 @@ kbd {
     bottom: 20px;
     overflow: auto;
   }
+}
+
+/* Transparent item artwork uses a fixed box so every silhouette stays legible. */
+.item-art {
+  display: inline-block;
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  vertical-align: middle;
+  filter: drop-shadow(0 2px 5px #0008);
+}
+.gear-card .item-art {
+  width: 80px;
+  height: 80px;
+}
+.equipped-slot .item-art {
+  width: 56px;
+  height: 56px;
+}
+.item-large-icon .item-art {
+  width: 104px;
+  height: 104px;
+}
+.shop-gear .item-art {
+  width: 76px;
+  height: 76px;
+}
+.supply-row .item-art {
+  width: 48px;
+  height: 48px;
+}
+.rpg-summary strong .item-art {
+  width: 30px;
+  height: 30px;
+}
+@media (max-width: 540px) {
+  .item-large-icon .item-art {
+    width: 76px;
+    height: 76px;
+  }
+}
+
+/* Player market and shop manager. */
+#modal.market-modal .modal-box {
+  width: min(820px, 100%);
+}
+.market-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.market-head small {
+  display: block;
+  color: #9cb9ce;
+  font-size: 11px;
+}
+.market-head strong {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 16px;
+  color: #ffe1a1;
+}
+.market-head .item-art,
+.market-art .item-art,
+.stock-pick .item-art,
+.sell-item .item-art {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.market-head strong .item-art {
+  width: 22px;
+  height: 22px;
+}
+.market-filters {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 12px;
+}
+.market-filters button {
+  flex: none;
+  border: 1px solid #7895ac55;
+  background: #10253d;
+  color: #c8dbe8;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 11px;
+}
+.market-filters button.active {
+  border-color: #ffd486;
+  background: #ffd4862a;
+  color: #ffe6a5;
+}
+.market-grid {
+  display: grid;
+  gap: 8px;
+}
+.market-card {
+  --rarity: #7895ac;
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--rarity) 45%, transparent);
+  border-left: 3px solid var(--rarity);
+  background: #10253d99;
+  border-radius: 8px;
+}
+.market-art {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  font-size: 30px;
+  border-radius: 8px;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--rarity, #7895ac) 30%, transparent),
+    transparent 70%
+  );
+}
+.market-art.small {
+  width: 40px;
+  height: 40px;
+  font-size: 22px;
+}
+.market-info {
+  min-width: 0;
+}
+.market-info h4 {
+  margin: 0;
+  font-size: 14px;
+  color: var(--rarity, #ffe1a1);
+}
+.market-card:not([class*="rarity-"]) .market-info h4 {
+  color: #ffe1a1;
+}
+.market-info small {
+  display: block;
+  color: #9cb9ce;
+  font-size: 11px;
+  line-height: 1.5;
+}
+#modal-body .market-info p {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: #d2bf94;
+}
+.market-buy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  min-width: 150px;
+}
+.market-price {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffe1a1;
+  text-align: right;
+  line-height: 1.2;
+}
+.market-price small {
+  display: block;
+  font-size: 10px;
+  font-weight: 400;
+  color: #9cb9ce;
+}
+.qty-step {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.qty-step button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #7895ac77;
+  background: #10273b;
+  color: #ffe6a5;
+  border-radius: 5px;
+  font-size: 15px;
+}
+.qty-step button.qty-max {
+  width: auto;
+  padding: 0 8px;
+  font-size: 10px;
+}
+.qty-step b {
+  min-width: 30px;
+  text-align: center;
+  color: #fff;
+}
+#modal-body .market-buy .primary-button {
+  width: 100%;
+  margin: 0;
+  padding: 9px 12px;
+  font-size: 12px;
+}
+.market-buy .primary-button:disabled {
+  filter: grayscale(0.8) brightness(0.7);
+}
+.market-empty {
+  text-align: center;
+  padding: 24px;
+  border: 1px dashed #7895ac55;
+  border-radius: 8px;
+}
+.shop-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.shop-stats div {
+  background: #ffffff0d;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+.shop-stats small {
+  display: block;
+  font-size: 10px;
+  color: #9cb9ce;
+}
+.shop-stats strong {
+  font-size: 15px;
+  color: #ffe1a1;
+  overflow-wrap: anywhere;
+}
+.stock-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.stock-pick {
+  --rarity: #7895ac;
+  display: grid;
+  grid-template-rows: 54px auto;
+  place-items: center;
+  gap: 2px;
+  padding: 8px 4px;
+  border: 1px solid color-mix(in srgb, var(--rarity) 55%, transparent);
+  border-radius: 8px;
+  background: #10253d;
+  color: #ffe1a1;
+  font-size: 26px;
+}
+.stock-pick small {
+  font-size: 10px;
+  line-height: 1.3;
+  color: #c8dbe8;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.stock-pick.active {
+  border-color: #ffd486;
+  box-shadow: 0 0 0 2px #ffd48688;
+  background: #ffd4861f;
+}
+.stock-pick:disabled {
+  opacity: 0.4;
+}
+.sell-form {
+  border: 1px solid #ffd48655;
+  background: #ffd4860d;
+  border-radius: 10px;
+  padding: 14px;
+}
+.sell-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  font-size: 26px;
+}
+.sell-item > :first-child {
+  width: 52px;
+  height: 52px;
+  flex: none;
+}
+.sell-item strong {
+  display: block;
+  color: #ffe1a1;
+  font-size: 14px;
+}
+.sell-item small {
+  color: #9cb9ce;
+  font-size: 11px;
+}
+.sell-form label small {
+  display: block;
+  margin: -8px 0 8px;
+  color: #9cb9ce;
+}
+.shop-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+}
+.shop-foot .text-button {
+  margin: 0;
+}
+.text-button.danger {
+  color: #ff9b8a;
+}
+@media (max-width: 560px) {
+  .market-card {
+    grid-template-columns: 52px 1fr;
+  }
+  .market-art {
+    width: 52px;
+    height: 52px;
+  }
+  .market-buy {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    min-width: 0;
+  }
+  #modal-body .market-buy .primary-button {
+    width: auto;
+    flex: 1 1 100%;
+  }
+  .market-price {
+    text-align: left;
+  }
+  .shop-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.market-stall {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin: -6px 0 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #ffd4861a;
+  border: 1px solid #ffd48655;
+  color: #ffe6a5;
+  font-weight: 600;
+}
+.market-stall .text-button {
+  margin: 0;
+}
+/* Tier 3 class advancement card on the class page. */
+.advance-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 14px 0;
+  padding: 12px 14px;
+  border: 1px solid #ffd48688;
+  border-radius: 10px;
+  background: linear-gradient(110deg, #ffd4861f, #10253d 60%);
+}
+.advance-card > span {
+  font-size: 30px;
+  color: #ffe6a5;
+  text-shadow: 0 0 12px #ffd486;
+}
+.advance-card div {
+  flex: 1;
+}
+.advance-card small {
+  color: #d2bf94;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+.advance-card h3 {
+  margin: 2px 0;
+  color: #ffe6a5;
+}
+.advance-card p {
+  margin: 0;
+  font-size: 11px;
+  color: #9cb9ce;
+}
+.advance-card button {
+  padding: 9px 16px;
+  border-radius: 8px;
+  border: 1px solid #fff3cf;
+  background: linear-gradient(#ffe19b, #d5a451);
+  color: #322516;
+  font-weight: 700;
+}
+.advance-card button:disabled {
+  filter: grayscale(0.8) brightness(0.7);
+}
+.advance-card.done {
+  border-color: #ffd486;
+  box-shadow: 0 0 16px #ffd48644;
 }
