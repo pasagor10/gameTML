@@ -91,10 +91,11 @@
       }
     },
     "archer-male-ranger-2": {
-      "dir": "archer-male-ranger-2-painted",
+      "dir": "archer-male-ranger-2",
       "height": 112,
       "facing": 1,
-      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "source": "4x8 sheet archer-male-ranger-2.png",
+      "portrait": "portrait.webp",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -104,14 +105,14 @@
         "skill": "skill",
         "hit": "hurt",
         "death": "death"
-      },
-      "portrait": "portrait.webp"
+      }
     },
     "archer-male-scout-2": {
-      "dir": "archer-male-ranger-2-painted",
+      "dir": "archer-male-scout-2",
       "height": 112,
       "facing": 1,
-      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "source": "4x8 sheet archer-male-scout-2.png",
+      "portrait": "portrait.webp",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -121,14 +122,14 @@
         "skill": "skill",
         "hit": "hurt",
         "death": "death"
-      },
-      "portrait": "portrait.webp"
+      }
     },
     "archer-male-ranger-3": {
-      "dir": "archer-male-ranger-3-painted",
+      "dir": "archer-male-ranger-3",
       "height": 112,
       "facing": 1,
-      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "source": "4x8 sheet archer-male-ranger-3.png",
+      "portrait": "portrait.webp",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -138,14 +139,14 @@
         "skill": "skill",
         "hit": "hurt",
         "death": "death"
-      },
-      "portrait": "portrait.webp"
+      }
     },
     "archer-male-scout-3": {
-      "dir": "archer-male-ranger-3-painted",
+      "dir": "archer-male-scout-3",
       "height": 112,
       "facing": 1,
-      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "source": "4x8 sheet archer-male-scout-3.png",
+      "portrait": "portrait.webp",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -155,8 +156,7 @@
         "skill": "skill",
         "hit": "hurt",
         "death": "death"
-      },
-      "portrait": "portrait.webp"
+      }
     },
     "archer-female-ranger-2": {
       "dir": "archer-female-ranger-2-painted",
@@ -225,6 +225,278 @@
         "death": "death"
       },
       "portrait": "portrait.webp"
+    },
+    "swordsman-female-duelist-2": {
+      "dir": "swordsman-female-duelist-2",
+      "height": 112,
+      "facing": 1,
+      "source": "4x8 sheet swordsman-female-duelist-2.png",
+      "portrait": "portrait.webp",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      }
+    },
+    "swordsman-female-duelist-3": {
+      "dir": "swordsman-female-duelist-3",
+      "height": 112,
+      "facing": 1,
+      "source": "4x8 sheet swordsman-female-duelist-3.png",
+      "portrait": "portrait.webp",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      }
+    },
+    "swordsman-female-guardian-2": {
+      "dir": "swordsman-female-guardian-2",
+      "height": 112,
+      "facing": 1,
+      "source": "4x8 sheet swordsman-female-guardian-2.png",
+      "portrait": "portrait.webp",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      }
+    },
+    "swordsman-female-guardian-3": {
+      "dir": "swordsman-female-guardian-3",
+      "height": 112,
+      "facing": 1,
+      "source": "4x8 sheet swordsman-female-guardian-3.png",
+      "portrait": "portrait.webp",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      }
+    },
+    "mage-female-arcanist-2": {
+      "dir": "mage-female-arcanist-2",
+      "height": 112,
+      "facing": 1,
+      "source": "4x8 sheet mage-female-arcanist-2.png",
+      "portrait": "portrait.webp",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      }
+    },
+    "mage-female-arcanist-3": {
+      "dir": "mage-female-arcanist-3",
+      "height": 112,
+      "facing": 1,
+      "source": "4x8 sheet mage-female-arcanist-3.png",
+      "portrait": "portrait.webp",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      }
+    },
+    "mage-female-oracle-2": {
+      "dir": "mage-female-oracle-2",
+      "height": 112,
+      "facing": 1,
+      "source": "4x8 sheet mage-female-oracle-2.png",
+      "portrait": "portrait.webp",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      }
+    },
+    "mage-female-oracle-3": {
+      "dir": "mage-female-oracle-3",
+      "height": 112,
+      "facing": 1,
+      "source": "4x8 sheet mage-female-oracle-3.png",
+      "portrait": "portrait.webp",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      }
+    },
+    "swordsman-male-duelist-2": {
+      "dir": "swordsman-male-duelist-2",
+      "height": 112,
+      "facing": 1,
+      "source": "4x8 sheet swordsman-male-duelist-2.png",
+      "portrait": "portrait.webp",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      }
+    },
+    "swordsman-male-duelist-3": {
+      "dir": "swordsman-male-duelist-3",
+      "height": 112,
+      "facing": 1,
+      "source": "4x8 sheet swordsman-male-duelist-3.png",
+      "portrait": "portrait.webp",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      }
+    },
+    "swordsman-male-guardian-2": {
+      "dir": "swordsman-male-guardian-2",
+      "height": 112,
+      "facing": 1,
+      "source": "4x8 sheet swordsman-male-guardian-2.png",
+      "portrait": "portrait.webp",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      }
+    },
+    "swordsman-male-guardian-3": {
+      "dir": "swordsman-male-guardian-3",
+      "height": 112,
+      "facing": 1,
+      "source": "4x8 sheet swordsman-male-guardian-3.png",
+      "portrait": "portrait.webp",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      }
+    },
+    "mage-male-oracle-2": {
+      "dir": "mage-male-oracle-2",
+      "height": 112,
+      "facing": 1,
+      "source": "4x8 sheet mage-male-oracle-2.png",
+      "portrait": "portrait.webp",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      }
+    },
+    "mage-male-oracle-3": {
+      "dir": "mage-male-oracle-3",
+      "height": 112,
+      "facing": 1,
+      "source": "4x8 sheet mage-male-oracle-3.png",
+      "portrait": "portrait.webp",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      }
+    },
+    "mage-male-arcanist-2": {
+      "dir": "mage-male-arcanist-2",
+      "height": 112,
+      "facing": 1,
+      "source": "4x8 sheet mage-male-arcanist-2.png",
+      "portrait": "portrait.webp",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      }
+    },
+    "mage-male-arcanist-3": {
+      "dir": "mage-male-arcanist-3",
+      "height": 112,
+      "facing": 1,
+      "source": "4x8 sheet mage-male-arcanist-3.png",
+      "portrait": "portrait.webp",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      }
     }
   },
   "monsters": {
@@ -349,7 +621,7 @@
       }
     }
   },
-  "version": "20261118012020",
+  "version": "20261118090757",
   "npcs": {
     "elder": {
       "dir": "npcs/elder",

@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "3.0",
+  "name": "run",
+  "artSource": "4x8 sheet swordsman-female-duelist-3.png",
+  "sourceSize": [
+    221,
+    221
+  ],
+  "sourceAnchor": [
+    116.0,
+    213
+  ],
+  "frameCount": 4,
+  "durationsMs": [
+    95,
+    95,
+    95,
+    95
+  ],
+  "durationSeconds": 0.38,
+  "fps": 10.526,
+  "loop": true,
+  "bodyHeightPx": 185.0,
+  "events": [],
+  "sampling": "linear",
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      221,
+      221
+    ],
+    "pages": [
+      {
+        "file": "run-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  }
+}

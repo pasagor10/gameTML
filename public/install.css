@@ -1,0 +1,94 @@
+body #landing.game-lobby[data-lobby-mode] .install-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  z-index: 8;
+}
+body #landing.game-lobby[data-lobby-mode] #install-app {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid #d1b37499;
+  border-radius: 5px;
+  padding: 6px 10px;
+  background: #07252bd9;
+  color: #ffe4a7;
+  font:
+    11px "Noto Sans Thai",
+    sans-serif;
+  cursor: pointer;
+}
+body #landing.game-lobby[data-lobby-mode] #install-app[hidden] {
+  display: none;
+}
+#install-app img {
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+}
+#install-help {
+  width: min(380px, calc(100vw - 48px));
+  padding: 25px;
+  background: linear-gradient(145deg, #173936, #0a1919);
+  color: #f4dfaf;
+  border: 1px solid #c3a368;
+  border-radius: 10px;
+  font:
+    14px/1.9 "Noto Sans Thai",
+    sans-serif;
+  box-shadow: 0 20px 80px #000a;
+  text-align: center;
+}
+#install-help::backdrop {
+  background: #020b12ba;
+  backdrop-filter: blur(4px);
+}
+#install-help > img {
+  width: 80px;
+  height: 80px;
+  border-radius: 16px;
+}
+#install-help h2 {
+  margin: 12px 0;
+  font:
+    24px Georgia,
+    serif;
+  letter-spacing: 2px;
+}
+#install-steps {
+  color: #c3d5cd;
+  text-align: left;
+}
+#install-help small {
+  color: #9db2a7;
+}
+#install-help button {
+  display: block;
+  margin: 18px auto 0;
+  border: 1px solid #e8c98b;
+  border-radius: 4px;
+  background: linear-gradient(#f9df9f, #c28a38);
+  color: #33230d;
+  padding: 7px 28px;
+  cursor: pointer;
+  font: inherit;
+}
+@media (max-width: 760px) {
+  body #landing.game-lobby[data-lobby-mode] .install-actions {
+    gap: 5px;
+  }
+  body #landing.game-lobby[data-lobby-mode] #install-app {
+    padding: 3px 5px;
+    font-size: 9px;
+  }
+  #install-app img {
+    width: 19px;
+    height: 19px;
+  }
+}
+@media (max-width: 480px) {
+  #install-app span {
+    display: none;
+  }
+}

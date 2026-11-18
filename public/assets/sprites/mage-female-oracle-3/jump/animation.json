@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "3.0",
+  "name": "jump",
+  "artSource": "4x8 sheet mage-female-oracle-3.png",
+  "sourceSize": [
+    221,
+    221
+  ],
+  "sourceAnchor": [
+    111.0,
+    213
+  ],
+  "frameCount": 4,
+  "durationsMs": [
+    120,
+    120,
+    120,
+    120
+  ],
+  "durationSeconds": 0.48,
+  "fps": 8.333,
+  "loop": false,
+  "bodyHeightPx": 200.0,
+  "events": [],
+  "sampling": "linear",
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      221,
+      221
+    ],
+    "pages": [
+      {
+        "file": "jump-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  }
+}

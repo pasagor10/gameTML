@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "3.0",
+  "name": "idle",
+  "artSource": "4x8 sheet mage-female-arcanist-2.png",
+  "sourceSize": [
+    221,
+    221
+  ],
+  "sourceAnchor": [
+    109.5,
+    208
+  ],
+  "frameCount": 4,
+  "durationsMs": [
+    180,
+    180,
+    180,
+    180
+  ],
+  "durationSeconds": 0.72,
+  "fps": 5.556,
+  "loop": true,
+  "bodyHeightPx": 193.0,
+  "events": [],
+  "sampling": "linear",
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      221,
+      221
+    ],
+    "pages": [
+      {
+        "file": "idle-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  }
+}

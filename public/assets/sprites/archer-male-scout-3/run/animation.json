@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "3.0",
+  "name": "run",
+  "artSource": "4x8 sheet archer-male-scout-3.png",
+  "sourceSize": [
+    221,
+    214
+  ],
+  "sourceAnchor": [
+    106.5,
+    208
+  ],
+  "frameCount": 4,
+  "durationsMs": [
+    95,
+    95,
+    95,
+    95
+  ],
+  "durationSeconds": 0.38,
+  "fps": 10.526,
+  "loop": true,
+  "bodyHeightPx": 193.0,
+  "events": [],
+  "sampling": "linear",
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      221,
+      214
+    ],
+    "pages": [
+      {
+        "file": "run-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  }
+}

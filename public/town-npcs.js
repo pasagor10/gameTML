@@ -15,11 +15,53 @@ export function footGlow(scene, x, y, alpha = 0.32) {
     .setBlendMode(Phaser.BlendModes.ADD);
 }
 
-// Thin dark rim around a sprite (WebGL only), so characters and stalls read
-// against the busy painted background.
-export function outline(image, distance = 8, strength = 2.4) {
-  image.preFX?.addGlow(0x0d1a22, strength, 0, false, 0.1, distance);
-  return image;
+// Thin dark rim so characters and stalls read against the painted town:
+// four solid-dark copies of the sprite nudged 1-2 px each way, drawn behind
+// it. They batch with the sprite itself; a preFX glow per hero ran a shader
+// pass over the full-size animation frame every frame and got slow with
+// several players. `parent` is a container to add into (or null).
+const RIM_OFFSETS = [
+  [-1, 0],
+  [1, 0],
+  [0, -1],
+  [0, 1],
+];
+export function createRim(scene, parent, depth, px = 1.6) {
+  const parts = RIM_OFFSETS.map(() => {
+    const r = scene.add.image(0, 0, "__WHITE").setTintFill(0x0d1a22);
+    if (depth !== undefined) r.setDepth(depth);
+    return r;
+  });
+  if (parent) parent.add(parts);
+  return {
+    parts,
+    // Copy the sprite's current frame and transform onto the rim copies.
+    sync(img) {
+      for (let k = 0; k < 4; k++) {
+        const r = parts[k];
+        if (r.texture !== img.texture || r.frame.name !== img.frame.name)
+          r.setTexture(img.texture.key, img.frame.name);
+        r.setOrigin(img.originX, img.originY)
+          .setScale(img.scaleX, img.scaleY)
+          .setFlip(img.flipX, img.flipY)
+          .setAngle(img.angle)
+          .setPosition(
+            img.x + RIM_OFFSETS[k][0] * px,
+            img.y + RIM_OFFSETS[k][1] * px,
+          )
+          .setAlpha(img.alpha * 0.55)
+          .setVisible(img.visible);
+      }
+      return this;
+    },
+    setVisible(v) {
+      parts.forEach((r) => r.setVisible(v));
+      return this;
+    },
+    destroy() {
+      parts.forEach((r) => r.destroy());
+    },
+  };
 }
 
 export function createTownNpcs(scene, definitions, sprites) {
@@ -39,8 +81,9 @@ export function createTownNpcs(scene, definitions, sprites) {
       // stands off the equally painted shop fronts behind it.
       footLight = footGlow(scene, 0, 0, 0.3);
     if (footLight) root.add(footLight);
-    root.add([g, image]);
-    outline(image);
+    root.add(g);
+    const rim = createRim(scene, root);
+    root.add(image);
     sprites?.want("npcs", n.id);
     const label = scene.add
       .text(n.x, (n.y ?? 600) - 146, `${n.name}\n${n.role}`, {
@@ -57,7 +100,7 @@ export function createTownNpcs(scene, definitions, sprites) {
       .setOrigin(0.5, 0)
       .setDepth(15);
     objects.push(root, label);
-    rigs.push({ n, g, image });
+    rigs.push({ n, g, image, rim });
   }
   function draw({ n, g }, time) {
     const t = time / 1000,
@@ -338,6 +381,7 @@ export function createTownNpcs(scene, definitions, sprites) {
         image.setFlipX(
           near ? self.x < n.x - 12 === set.facing > 0 : set.facing < 0,
         );
+        rig.rim.sync(image);
       }
     },
   };

@@ -1,0 +1,232 @@
+#modal[data-panel="slots"] .modal-box {
+  width: min(540px, calc(100vw - 24px));
+  border-radius: 9px;
+  border: 1px solid #c8a666;
+  background:
+    radial-gradient(ellipse at top, #334d4533, transparent 65%), #0c1c20;
+}
+#modal[data-panel="slots"] .modal-box > header {
+  padding: 12px 18px;
+  background: linear-gradient(90deg, #273d38, #10262b);
+}
+#modal[data-panel="slots"] #modal-body {
+  padding: 14px 20px 20px;
+}
+.slot-intro {
+  text-align: center;
+}
+.slot-intro > small {
+  font-size: 8px;
+  letter-spacing: 3px;
+  color: #bfa569;
+}
+.slot-intro h3 {
+  margin: 4px 0;
+  font:
+    24px "Chonburi",
+    serif;
+  color: #ffe2a1;
+}
+.slot-intro p {
+  margin: 0;
+  font-size: 11px;
+}
+.slot-balance {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  font-size: 12px;
+  color: #ccbd98;
+}
+.slot-balance .item-art {
+  width: 27px;
+  height: 27px;
+}
+.slot-balance b {
+  color: #ffe1a1;
+  font-size: 17px;
+  margin-left: 5px;
+}
+.slot-machine-ui {
+  padding: 13px;
+  border: 1px solid #b2955f;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #45372b, #172523 55%, #2f2b20);
+  box-shadow:
+    inset 0 0 0 3px #08161a,
+    inset 0 0 0 4px #d4b67044;
+}
+.slot-marquee {
+  text-align: center;
+  color: #e9c98c;
+  font-size: 10px;
+  letter-spacing: 3px;
+  margin-bottom: 10px;
+}
+.slot-reels {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+.slot-reel {
+  height: 98px;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(ellipse, #e6d8a62b, #07151c 70%);
+  border: 1px solid #d4b56c;
+  border-radius: 5px;
+  overflow: hidden;
+  box-shadow:
+    inset 0 8px 20px #0008,
+    inset 0 -8px 20px #0007;
+}
+.slot-reel .item-art {
+  width: 78px;
+  height: 78px;
+  object-fit: contain;
+}
+.slot-result {
+  min-height: 60px;
+  margin: 12px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #abc3c3;
+  font-size: 11px;
+  text-align: center;
+}
+.slot-result strong {
+  display: block;
+  font-size: 17px;
+  color: #ffe1a1;
+}
+.slot-result small {
+  font-size: 9px;
+}
+.slot-prize-art .item-art {
+  width: 48px;
+  height: 48px;
+}
+.slot-machine-ui[data-rarity="epic"] .slot-result strong {
+  color: #dfb6fa;
+}
+.slot-machine-ui[data-rarity="legendary"] {
+  box-shadow:
+    inset 0 0 0 3px #08161a,
+    0 0 25px #eec35444;
+}
+.slot-machine-ui.spinning .slot-reel .item-art {
+  animation: slot-turn 0.24s linear infinite;
+  filter: blur(1.5px);
+}
+.slot-machine-ui.spinning .slot-reel:nth-child(2) .item-art {
+  animation-delay: -0.08s;
+}
+.slot-machine-ui.spinning .slot-reel:nth-child(3) .item-art {
+  animation-delay: -0.16s;
+}
+@keyframes slot-turn {
+  from {
+    transform: translateY(-90px);
+  }
+  to {
+    transform: translateY(90px);
+  }
+}
+#modal-body #slot-spin {
+  width: 100%;
+  margin-top: 12px;
+  padding: 11px;
+  font-size: 15px;
+  border-radius: 4px;
+}
+.slot-note {
+  text-align: center;
+  font-size: 9px;
+  margin: 7px 0;
+  color: #aabdb0;
+}
+.slot-odds {
+  border-top: 1px solid #d1b77044;
+  padding-top: 9px;
+  margin-top: 10px;
+}
+.slot-odds summary {
+  cursor: pointer;
+  font-size: 11px;
+  color: #e3c78c;
+}
+.slot-odds > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 16px;
+  margin-top: 7px;
+}
+.slot-odds > div span {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 10px;
+  color: #b8caca;
+}
+.slot-odds b {
+  color: #edd6a5;
+}
+.slot-odds p {
+  font-size: 9px;
+  line-height: 1.7;
+  margin: 8px 0 0;
+}
+@media (max-height: 600px) and (min-width: 700px) {
+  #modal[data-panel="slots"] .modal-box {
+    width: min(720px, calc(100vw - 24px));
+  }
+  .slot-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px 20px;
+  }
+  .slot-intro {
+    grid-column: 1/-1;
+  }
+  .slot-balance {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .slot-machine-ui {
+    grid-column: 1;
+    grid-row: 3/6;
+  }
+  #modal-body #slot-spin {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: center;
+    margin: 0;
+  }
+  .slot-note {
+    grid-column: 2;
+    grid-row: 3;
+  }
+  .slot-odds {
+    grid-column: 2;
+    grid-row: 4/6;
+    align-self: start;
+    margin: 0;
+  }
+  .slot-reel {
+    height: 75px;
+  }
+  .slot-reel .item-art {
+    width: 60px;
+    height: 60px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .slot-machine-ui.spinning .slot-reel .item-art {
+    animation: none;
+    filter: none;
+  }
+}

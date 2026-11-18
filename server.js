@@ -1,3 +1,4 @@
+import { spinSlotMachine } from "./server/slots.js";
 import express from "express";
 import http from "node:http";
 import { Server } from "socket.io";
@@ -253,6 +254,7 @@ io.on("connection", (socket) => {
       throw Error("Auto เปิดได้เฉพาะในดันเจียน");
     p.auto = !!d.enabled;
   });
+  execute("slots:spin", (p, d) => spinSlotMachine(p, d.key), 3);
   execute("player:potion", (p, d) => world.potion(p, d.type));
   execute("player:heal", (p) => {
     world.ensureTown(p);

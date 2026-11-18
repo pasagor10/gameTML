@@ -1,3 +1,5 @@
+import { SLOT_MACHINE } from "/shared/slots.js";
+import { slotPanelHtml, bindSlotPanel } from "/slots-ui.js?v=1";
 import { heroPortraitStyle } from "/hero-appearance.js?v=2";
 import { skillIcon, potionIcon, autoIcon } from "/skill-icons.js?v=1";
 import { dungeonPlatforms } from "/shared/dungeons.js";
@@ -25,7 +27,7 @@ import {
   SPECIALIZATIONS,
   heroSkins,
 } from "/shared/rpg.js";
-import { createTownNpcs, footGlow, outline } from "/town-npcs.js?v=6";
+import { createTownNpcs, footGlow, createRim } from "/town-npcs.js?v=7";
 import { updateEnhanceAura, AURA_LEVEL } from "/enhance-aura.js?v=3";
 import { marketHtml, shopManagerHtml, marketState } from "/market-ui.js?v=5";
 import { sampleMotion } from "/shared/smoothing.js";
@@ -36,7 +38,7 @@ import {
   animateSlime,
   monsterDeath,
 } from "/combat-visuals.js?v=0.3.1";
-import { createSelectionPreview } from "/selection-scene.js?v=0.7.0-archer1";
+import { createSelectionPreview } from "/selection-scene.js?v=0.8.0-sanctuary";
 import {
   CLASSES,
   ITEMS,
@@ -169,7 +171,7 @@ async function refreshAccount() {
     ? characters
         .map(
           (c) =>
-            `<button data-resume="${c.id}" class="saved-hero"><span class="saved-portrait hero-art" style="${lobbyHeroStyle(c.class, c.gender, c)}"></span><span><strong>${escape(c.name)}</strong><small>${CLASSES[c.class].name}</small></span><b>Lv.${c.level}</b></button>`,
+            `<button data-resume="${c.id}" class="saved-hero"><span class="roster-pose" aria-hidden="true"><span class="resting-portrait" style="background-position:${JOBS.indexOf(c.class) * 50}% ${c.gender === "female" ? 100 : 0}%"></span><span class="saved-portrait hero-art" style="${lobbyHeroStyle(c.class, c.gender, c)}"></span></span><span><strong>${escape(c.name)}</strong><small>${CLASSES[c.class].name}</small></span><b>Lv.${c.level}</b></button>`,
         )
         .join("")
     : '<p class="empty-roster">ยังไม่มีผู้กล้าในบัญชีนี้<br><span>เลือกคลาสแล้วสร้างตำนานแรกของคุณ</span></p>';
@@ -277,10 +279,10 @@ function renderCards() {
     ]
       .map(
         ([key, label, value, max]) =>
-          `<div class="attribute"><div><span><b>${key}</b> <small>${label}</small></span><strong>${value}</strong></div><div class="attribute-track"><i style="width:${Math.min(100, (value / max) * 100)}%"></i></div></div>`,
+          `<div class="attribute" data-stat="${key}"><div><span><b>${key}</b> <small>${label}</small></span><strong>${value}</strong></div><div class="attribute-track"><i style="width:${Math.min(100, (value / max) * 100)}%"></i></div></div>`,
       )
       .join("")}
-  <div class="stats-heading skill-heading"><span>สกิลประจำคลาส</span><small>SKILL PREVIEW</small></div><div class="lobby-skills">${CLASS_SKILLS[job].map((skill, i) => `<button data-lobby-skill="${i}" title="${skill.detail}"><span>${skill.icon}</span><div><strong>${skill.name}</strong><small>${ACTIONS[i + 1].mp} MP · ${ACTIONS[i + 1].cooldown} วินาที</small></div><b>${["Q", "W", "E"][i]}</b></button>`).join("")}</div>`;
+  <div class="stats-heading skill-heading"><span>สกิลประจำคลาส</span><small>SKILL PREVIEW</small></div><div class="lobby-skills">${CLASS_SKILLS[job].map((skill, i) => `<button data-lobby-skill="${i}" title="${skill.name} · ${skill.detail} · ${ACTIONS[i + 1].mp} MP"><span>${skillIcon(job, i + 1)}</span><div><strong>${skill.name}</strong><small>${ACTIONS[i + 1].mp} MP · ${ACTIONS[i + 1].cooldown} วินาที</small></div><b>${["Q", "W", "E"][i]}</b></button>`).join("")}</div>`;
   $$("[data-lobby-skill]").forEach(
     (b) =>
       (b.onclick = () => {
@@ -301,6 +303,7 @@ function renderCards() {
     job,
     gender,
     saved ? heroSkins(saved) : [`${job}-${gender}`],
+    saved?.id || `create-${job}-${gender}`,
   );
   $$("[data-class]").forEach(
     (b) =>
@@ -656,6 +659,7 @@ function updateHUD() {
       p.ownedEquipment,
       p.inventory,
       p.specialization,
+      p.advanced,
       p.level,
       p.gold,
       state.area,
@@ -875,6 +879,8 @@ function nearby() {
     return state.dungeon.clear && !state.dungeon.completed
       ? { id: "next", label: "เข้าสู่ด่านต่อไป" }
       : null;
+  if (Math.abs(p.x - SLOT_MACHINE.x) <= SLOT_MACHINE.reach && Math.abs(p.y - SLOT_MACHINE.y) < 90)
+    return { id: "slots", label: "ตู้สมบัติจันทรา · หมุน 1,000 ทอง" };
   const npc = WORLD.npcs.find(
     (n) =>
       Math.abs(n.x - p.x) < 105 && Math.abs((n.y ?? WORLD.ground) - p.y) < 90,
@@ -895,6 +901,11 @@ function interact() {
 // One way in for keyboard, mouse and touch: NPC id, "portal" or "shop:<id>".
 function openTown(id) {
   if (!state || state.area !== "town") return;
+  if (id === "slots") {
+    if (Math.abs(state.self.x - SLOT_MACHINE.x) > SLOT_MACHINE.reach || Math.abs(state.self.y - SLOT_MACHINE.y) > 90)
+      return toast("เดินเข้าใกล้ตู้สล็อตกลางเมืองก่อน", true);
+    return showPanel("slots");
+  }
   if (id === "portal") return showPanel("dungeon");
   if (id === "market") return showPanel("market");
   if (id.startsWith("shop:")) {
@@ -1116,7 +1127,16 @@ function showPanel(panel) {
   const row = (icon, name, desc, button) =>
     `<div class="item-row"><span>${icon}</span><div><strong>${escape(name)}</strong><small>${escape(desc)}</small></div>${button || ""}</div>`;
   const btn = (data, label) => `<button ${data}>${label}</button>`;
-  if (panel === "inventory" || panel === "class") {
+  if (panel === "slots") {
+    if (state.area !== "town") return toast("ใช้ตู้สล็อตได้ในเมืองเท่านั้น", true);
+    modal("ตู้สมบัติจันทรา", slotPanelHtml(p), "slots");
+    bindSlotPanel($("#modal-body .slot-panel"), p, {
+      request: key => send("slots:spin", { key }),
+      sound: name => sfx(name),
+      currentPlayer: () => state?.self,
+      onSettled: () => { if (activePanel === "slots") showPanel("slots"); },
+    });
+  } else if (panel === "inventory" || panel === "class") {
     modal(
       panel === "class" ? "เส้นทางผู้กล้า" : "อุปกรณ์และกระเป๋า",
       rpgPanel(p, state.area, panel),
@@ -1127,6 +1147,7 @@ function showPanel(panel) {
       p.ownedEquipment,
       p.inventory,
       p.specialization,
+      p.advanced,
       p.level,
       p.gold,
       state.area,
@@ -1605,6 +1626,7 @@ class Adventure extends Phaser.Scene {
       // 2x its display size: a 9x downscale shimmered and looked oversharp.
       "/assets/town-kit/player-market-stall.webp?v=2",
     );
+    this.load.image("slot-machine", "/assets/town-kit/slot-machine-v2.png");
     this.load.image("cave", "/assets/cave.png");
     this.load.image("knight-motion", "/assets/animations/knight-female.png");
     this.load.image("slime-motion", "/assets/animations/slime.png");
@@ -1624,7 +1646,7 @@ class Adventure extends Phaser.Scene {
     // the screen's pixel ratio; at resolution 1 small Thai names go soft.
     // Render every world label at a higher resolution so it stays crisp.
     const addText = this.add.text.bind(this.add),
-      textRes = Math.min(4, Math.ceil((devicePixelRatio || 1) * 2));
+      textRes = Math.min(3, Math.ceil((devicePixelRatio || 1) * 1.5));
     this.add.text = (...args) => addText(...args).setResolution(textRes);
     this.knightAtlas = registerMotionAtlas(this, "knight-motion", 8);
     this.sprites = createSpriteRegistry(this);
@@ -1697,6 +1719,25 @@ class Adventure extends Phaser.Scene {
         openTown("portal"),
       ),
     ];
+    const slotGlow = this.add.ellipse(SLOT_MACHINE.x, WORLD.ground - 2, 118, 20, 0xf2ce78, 0.2).setDepth(3);
+    // Never render Phaser's missing-texture placeholder as the cabinet.
+    const hasSlotArt = this.textures.exists("slot-machine");
+    const slotImage = this.add.image(SLOT_MACHINE.x, WORLD.ground, hasSlotArt ? "slot-machine" : "__WHITE").setOrigin(0.5, 1).setDepth(7).setAlpha(hasSlotArt ? 1 : 0);
+    if (hasSlotArt) slotImage.setScale(178 / slotImage.height);
+    else {
+      const retryKey = "slot-machine-retry";
+      this.load.once(`filecomplete-image-${retryKey}`, () => {
+        slotImage.setTexture(retryKey).setScale(178 / this.textures.get(retryKey).getSourceImage().height).setAlpha(1);
+      });
+      this.load.image(retryKey, `/assets/town-kit/slot-machine.webp?retry=${Date.now()}`);
+      if (!this.load.isLoading()) this.load.start();
+    }
+    const slotLabel = this.add.text(SLOT_MACHINE.x, WORLD.ground - 195, "ตู้สมบัติจันทรา\n1,000 ทอง / ครั้ง", {
+      fontFamily: "Noto Sans Thai", fontSize: "12px", align: "center", color: "#ffe3a1", stroke: "#102829", strokeThickness: 4,
+    }).setOrigin(0.5).setDepth(14);
+    this.npcs.push(slotGlow, slotImage, slotLabel);
+    this.hotspots.push(this.hotspot(SLOT_MACHINE.x, WORLD.ground, 150, 185, () => openTown("slots")));
+    this.tweens.add({targets:slotGlow,alpha:0.4,duration:1300,yoyo:true,repeat:-1});
     this.makePlatforms();
     this.cameras.main.centerOn(380, this.camY ?? 340);
     this.scale.on("resize", () => this.resize());
@@ -1836,13 +1877,14 @@ class Adventure extends Phaser.Scene {
               .setOrigin(0.5)
               .setDepth(14)
           : null;
-      outline(image);
+      const rim = createRim(this, null, 9.5, 1.4);
       a = {
         image,
         label,
         gearBadge,
         shadow,
         footLight,
+        rim,
         marker,
         target: p,
         wasGrounded: p.grounded,
@@ -1998,7 +2040,7 @@ class Adventure extends Phaser.Scene {
           .setOrigin(0.5, 1)
           .setDisplaySize(152, 127)
           .setDepth(4);
-        outline(stall, 6, 2);
+        const rim = createRim(this, null, 3.9, 1.4).sync(stall);
         const light = footGlow(this, shop.x, WORLD.ground - 2, 0.26)
           ?.setDisplaySize(170, 30)
           .setDepth(3);
@@ -2019,6 +2061,7 @@ class Adventure extends Phaser.Scene {
         this.shopObjects.push(
           shadow,
           ...(light ? [light] : []),
+          ...rim.parts,
           stall,
           label,
           this.hotspot(shop.x, WORLD.ground, 152, 127, () =>
@@ -2286,6 +2329,7 @@ class Adventure extends Phaser.Scene {
       a.image.setPosition(point.x, point.y);
       animateHeroBody(a, p, pose, serverTime, time);
       this.fx.applyKick(a, a.image);
+      a.rim.sync(a.image);
       // Name sits just above the head: painted sets know their height.
       const headroom = spriteSet ? spriteSet.height + 24 : 158;
       a.label.setPosition(a.image.x, a.image.y - (p.hp <= 0 ? 60 : headroom));
@@ -2309,9 +2353,10 @@ class Adventure extends Phaser.Scene {
         }[best?.rarity || "common"];
       // Just the enhancement level, in the best item's rarity colour, beside
       // the name: text glyphs for weapon/armour read as clutter in the field.
+      // setColor re-rasterises the text every call: only on change.
+      if (a.gearColor !== gearColor) a.gearBadge.setColor((a.gearColor = gearColor));
       a.gearBadge
         .setText(p.upgrade && weapon ? `+${p.upgrade}` : "")
-        .setColor(gearColor)
         .setPosition(
           a.image.x + a.label.width / 2 + 14,
           a.image.y - (p.hp <= 0 ? 60 : headroom),

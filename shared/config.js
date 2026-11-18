@@ -1,3 +1,4 @@
+import { SLOT_MACHINE } from "./slots.js";
 import { rpgBonuses } from "./rpg.js";
 import { townPlatforms, TOWN_SPOTS, TOWN_WIDTH } from "./town-layout.js";
 export const CLASSES = {
@@ -101,7 +102,7 @@ export const WORLD = {
 // Player stall spots: clear of every NPC, the cave gate and each other, so
 // nothing in town ever stacks on top of something else.
 export const SHOP_SPOTS = (() => {
-  const keepOut = [...WORLD.npcs.map((n) => [n.x, 170]), [WORLD.portal, 280]],
+  const keepOut = [...WORLD.npcs.map((n) => [n.x, 170]), [SLOT_MACHINE.x, 155], [WORLD.portal, 280]],
     spots = [];
   for (let x = 300; x <= WORLD.townWidth - 200; x += 10)
     if (

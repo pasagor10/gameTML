@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "3.0",
+  "name": "skill",
+  "artSource": "4x8 sheet mage-male-oracle-2.png",
+  "sourceSize": [
+    221,
+    221
+  ],
+  "sourceAnchor": [
+    115.0,
+    212
+  ],
+  "frameCount": 4,
+  "durationsMs": [
+    90,
+    100,
+    110,
+    160
+  ],
+  "durationSeconds": 0.46,
+  "fps": 8.696,
+  "loop": false,
+  "bodyHeightPx": 192.0,
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 190,
+      "frame": 2
+    }
+  ],
+  "sampling": "linear",
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      221,
+      221
+    ],
+    "pages": [
+      {
+        "file": "skill-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  }
+}
