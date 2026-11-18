@@ -555,6 +555,37 @@ for (const tier of ADVANCED_FLOOR_GEAR) {
   };
 }
 
+// Base-stat bonuses on gear (RO style "+3 DEX"): weapons push their class's
+// attack stat, other slots a fixed pair. Higher level and rarity give more,
+// so two pieces that share a picture still differ by level and bonus.
+const ATTR_LINES = {
+  weapon: {
+    swordsman: ["str", "dex"],
+    archer: ["dex", "agi"],
+    mage: ["int", "dex"],
+    priest: ["int", "vit"],
+  },
+  armor: ["vit", "str"],
+  charm: ["int", "luk"],
+  boots: ["agi", "luk"],
+};
+const RARITY_ATTR = { common: 0, rare: 0, epic: 1, legendary: 2 };
+for (const g of Object.values(GEAR)) {
+  if (g.attrs || g.rarity === "common") continue;
+  const lines = g.slot === "weapon" ? ATTR_LINES.weapon[g.class] : ATTR_LINES[g.slot];
+  if (!lines) continue;
+  const main = Math.max(1, Math.round(g.level / 3)) + RARITY_ATTR[g.rarity],
+    second = Math.floor(main / 2);
+  g.attrs = { [lines[0]]: main, ...(second ? { [lines[1]]: second } : {}) };
+}
+// Base stats added by everything the hero wears.
+export function gearAttrs(p) {
+  const out = {};
+  for (const id of Object.values(p?.equipment || {}))
+    for (const [k, v] of Object.entries(GEAR[id]?.attrs || {})) out[k] = (out[k] || 0) + v;
+  return out;
+}
+
 export function bossLootCandidates(floor, job, owned = []) {
   const table = FLOOR_LOOT[floor];
   if (!table) return [];

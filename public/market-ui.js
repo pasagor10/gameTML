@@ -2,7 +2,7 @@
 import { itemArt, supplyArt } from "/item-art.js";
 import { GEAR, SLOTS, RARITIES } from "/shared/rpg.js";
 import { ITEMS, CLASSES } from "/shared/config.js";
-import { statText } from "/rpg-ui.js?v=10";
+import { statText } from "/rpg-ui.js?v=11";
 
 const STACKS = ["hp", "mp", "ore"];
 const FILTERS = [
@@ -46,7 +46,7 @@ function detail(id) {
   if (isStack(id)) return "ของใช้ · ซื้อเป็นกองได้";
   const g = GEAR[id];
   const cls = g.class ? " · " + (CLASSES[g.class]?.name || g.class) : "";
-  return `${RARITIES[g.rarity]} · ${SLOTS[g.slot]} · Lv.${g.level}${cls} · ${statText(g.stats)}`;
+  return `${RARITIES[g.rarity]} · ${SLOTS[g.slot]} · Lv.${g.level}${cls} · ${statText(g.stats, g.attrs)}`;
 }
 export function suggestPrice(id) {
   if (isStack(id)) return ITEMS[id].price;

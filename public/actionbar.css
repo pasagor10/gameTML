@@ -29,6 +29,7 @@
 #game-screen .skillbar .skill.basic::before { inset:7px;border-radius:50%; }
 #game-screen .skillbar .skill.basic b { inset:9px; }
 #game-screen .skillbar .skill.green { --ability:#f7c0a3;margin-left:10px;background:radial-gradient(circle at 50% 35%,#57312f,#161b17 75%);border-color:#936351; }
+#game-screen .skillbar .skill.green.mana { --ability:#a3c8f7;margin-left:4px;background:radial-gradient(circle at 50% 35%,#2f3d57,#161b17 75%);border-color:#516b93; }
 #game-screen .skillbar .skill.green::after { content:attr(data-count);position:absolute;right:3px;bottom:3px;min-width:16px;text-align:center;color:#fff0c4;font-size:9px;line-height:14px;background:#120d0cd9;border-radius:2px; }
 #game-screen .skillbar .skill.auto { --ability:#91ad9d; width:43px;height:43px;margin-left:2px;border-radius:50%;border-color:#566d60;background:radial-gradient(circle,#2a3e31,#0c1711); }
 #game-screen .skillbar .skill.auto::before { border-radius:50%;inset:4px; }

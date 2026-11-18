@@ -11,6 +11,7 @@ const world = await import("../server/world.js");
 const { damage, WORLD, combatStats, combatPower, maxHp, DUNGEON_ENERGY_MAX, DUNGEON_ENERGY_INTERVAL } =
   await import("../shared/config.js");
 const { FLOOR_LOOT, GEAR } = await import("../shared/rpg.js");
+const { statEffects } = await import("../shared/stats.js");
 function create(id, job = "swordsman") {
   db.prepare("INSERT INTO users VALUES(?,?,?,?)").run(id, id, null, Date.now());
   const state = {
@@ -537,7 +538,7 @@ test("boss slam locks its aim, supports jump dodges, and accelerates below half 
   world.tick(0.05, t + 1.57);
   const hit = i.events.find((e) => e.targetId === boss.id && e.actorId === p.id);
   // Exposed bosses take 1.5×; each hit spreads ±8%.
-  const exposed = damage(combatStats(p).atk, 5) * (hit.crit ? 1.5 : 1) * 1.5;
+  const exposed = damage(combatStats(p).atk, 5) * (hit.crit ? combatStats(p).critDamage : 1) * 1.5;
   assert.ok(
     hit.amount >= Math.floor(exposed * 0.92) && hit.amount <= Math.floor(exposed * 1.08),
     `${hit.amount} near ${exposed}`,
@@ -734,7 +735,9 @@ test("legacy equipment migrates; explicit gear changes stats and persists withou
   p.gold = 1000;
   p.level = 5;
   world.savePlayer(p);
-  const before = combatStats(p);
+  const before = combatStats(p),
+    // Gear also carries base-stat bonuses (moon_blade: STR +2, DEX +1).
+    attrAtk = () => statEffects(p).atk - statEffects({ ...p, equipment: {} }).atk;
   world.buyEquipment(p, "moon_blade", "rpg-buy-weapon-01");
   world.buyEquipment(p, "moon_blade", "rpg-buy-weapon-01");
   assert.equal(p.gold, 780);
@@ -744,11 +747,13 @@ test("legacy equipment migrates; explicit gear changes stats and persists withou
     "purchase does not silently equip",
   );
   world.equip(p, "weapon", "moon_blade");
-  assert.equal(combatStats(p).atk, before.atk + 22);
+  assert.equal(attrAtk(), 2);
+  assert.equal(combatStats(p).atk, before.atk + 22 + 2);
   assert.equal(combatStats(p).def, before.def + 3);
   world.buyEquipment(p, "crystal_charm", "rpg-buy-charm-01");
   world.equip(p, "charm", "crystal_charm");
-  assert.equal(combatStats(p).mp, before.mp + 25);
+  // crystal_charm: +25 MP and INT +1 (+2 MP, +1%).
+  assert.equal(combatStats(p).mp, Math.round((before.mp + 25) * 1.01 + 2));
   assert.throws(() => world.equip(p, "armor", "moon_blade"));
   assert.throws(() => world.equip(p, "boots", "wind_boots"));
   world.buyEquipment(p, "star_staff", "rpg-foreign-class");

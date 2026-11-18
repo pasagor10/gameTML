@@ -80,7 +80,7 @@ test("VIT raises HP and DEF, INT raises MP; LUK raises crit", () => {
   assert.ok(maxHp(tough) > maxHp(base) * 1.3);
   assert.ok(maxMp(tough) > maxMp(base) * 1.3);
   assert.equal(combatStats(tough).def, combatStats(base).def + 15);
-  assert.ok(Math.abs(combatStats(tough).crit - combatStats(base).crit - 0.06) < 1e-9);
+  assert.ok(Math.abs(combatStats(tough).crit - combatStats(base).crit - 0.08) < 1e-9);
   assert.ok(combatPower(combatStats(tough)) > combatPower(combatStats(base)));
 });
 
@@ -168,6 +168,34 @@ test("auto play spends new points along the build on level up", () => {
   assert.equal(p.level, 3);
   assert.ok(freePoints(p) < 2);
   assert.ok(p.attrs.int > 1);
+});
+
+test("HP and MP potions each have their own cooldown", () => {
+  const p = create("potion-cd", "mage", 5),
+    t = Date.now() / 1000;
+  p.hp = 10;
+  p.mp = 10;
+  world.potion(p, "hp", t);
+  assert.throws(() => world.potion(p, "hp", t + 1), /ยังไม่พร้อม/);
+  world.potion(p, "mp", t + 1);
+  assert.throws(() => world.potion(p, "mp", t + 2), /ยังไม่พร้อม/);
+  p.hp = 10;
+  world.potion(p, "hp", t + 4.1);
+  assert.equal(p.inventory.hp, 3);
+  assert.equal(p.inventory.mp, 2);
+});
+
+test("gear carries base-stat bonuses that grow with level and rarity, and crits hit harder", async () => {
+  const { GEAR, gearAttrs } = await import("../shared/rpg.js");
+  const low = GEAR.floor_4_archer_weapon.attrs,
+    high = GEAR.floor_10_archer_weapon.attrs;
+  assert.ok(low.dex > 0 && high.dex > low.dex, "the archer bow pushes DEX, more at higher tiers");
+  assert.equal(GEAR.starter_archer.attrs, undefined);
+  const p = { class: "archer", level: 20, equipment: { weapon: "floor_10_archer_weapon" } };
+  assert.deepEqual(gearAttrs(p), high);
+  assert.equal(statEffects(p).stats.dex, 1 + high.dex);
+  const plain = combatStats({ class: "archer", level: 1 });
+  assert.ok(plain.crit >= 0.2 && plain.critDamage >= 1.75);
 });
 
 process.on("exit", () => {

@@ -6,7 +6,7 @@ import { isWorldPointer } from "/world-input.js";
 import { SLOT_MACHINE } from "/shared/slots.js";
 import { slotPanelHtml, bindSlotPanel } from "/slots-ui.js?v=2";
 import { heroPortraitStyle } from "/hero-appearance.js?v=2";
-import { skillIcon, potionIcon, autoIcon } from "/skill-icons.js?v=3";
+import { skillIcon, potionIcon, manaPotionIcon, autoIcon } from "/skill-icons.js?v=4";
 import { dungeonPlatforms, withinDungeonSign } from "/shared/dungeons.js";
 import { supplyArt, itemArtPath } from "/item-art.js";
 import {
@@ -24,7 +24,7 @@ import {
   rpgPanel,
   bindRpgPanel,
   gearShop,
-} from "/rpg-ui.js?v=10";
+} from "/rpg-ui.js?v=11";
 import {
   GEAR,
   RARITIES,
@@ -72,6 +72,7 @@ import { createSelectionPreview } from "/selection-scene.js?v=0.10.0";
 import {
   CLASSES,
   ITEMS,
+  POTIONS,
   FLOORS,
   MAIN_FLOORS,
   WORLD,
@@ -822,6 +823,7 @@ function updateHUD() {
   }
   if (!$("#auto-button").dataset.iconReady) {
     $('[data-action="hp"] b').innerHTML = potionIcon;
+    $('[data-action="mp"] b').innerHTML = manaPotionIcon;
     $("#auto-button b").innerHTML = autoIcon;
     $("#auto-button").dataset.iconReady = "1";
   }
@@ -831,17 +833,26 @@ function updateHUD() {
   $("#hp-label").textContent = `HP ${Math.ceil(p.hp)} / ${p.maxHp}`;
   $("#mp-label").textContent = `MP ${Math.floor(p.mp)} / ${p.maxMp}`;
   $("#exp-fill").style.width = (p.exp / (p.level * 80)) * 100 + "%";
-  $("#hp-potions").textContent = d?.training
-    ? "ยา HP ∞"
-    : "ยา HP ×" + p.inventory.hp;
-  const potionButton = $('[data-action="hp"]');
-  potionButton.dataset.count = d?.training ? "∞" : String(p.inventory.hp);
-  potionButton.disabled =
-    p.hp <= 0 || p.hp >= p.maxHp || (!d?.training && p.inventory.hp <= 0);
-  potionButton.title =
-    p.inventory.hp <= 0 && !d?.training
-      ? "ยาหมด · ซื้อเพิ่มได้ที่ร้านยา"
-      : "ยา HP · ฟื้นฟู 90 HP (R)";
+  // HP (R) and MP (G) potions, each with its own cooldown ring.
+  for (const type of ["hp", "mp"]) {
+    const button = $(`[data-action="${type}"]`),
+      count = p.inventory[type] || 0,
+      { restore, cooldown } = POTIONS[type],
+      left = cooldown - (state.time - (p.potionCd?.[type] || 0)),
+      full = type === "hp" ? p.hp >= p.maxHp : p.mp >= p.maxMp,
+      ring = button.querySelector("i"),
+      name = type.toUpperCase();
+    $(`#${type}-potions`).textContent = d?.training ? `ยา ${name} ∞` : `ยา ${name} ×${count}`;
+    button.dataset.count = d?.training ? "∞" : String(count);
+    button.disabled = p.hp <= 0 || full || left > 0 || (!d?.training && count <= 0);
+    button.title =
+      count <= 0 && !d?.training
+        ? "ยาหมด · ซื้อเพิ่มได้ที่ร้านยา"
+        : `ยา ${name} · ฟื้นฟู ${restore} ${name} · คูลดาวน์ ${cooldown} วิ (${type === "hp" ? "R" : "G"})`;
+    button.style.setProperty("--cd", Math.max(0, Math.min(1, left / cooldown)).toFixed(3));
+    ring.style.display = left > 0 ? "grid" : "none";
+    ring.textContent = left > 0 ? Math.ceil(left) : "";
+  }
   $("#training-open").disabled = state.area !== "town";
   $$(
     [
@@ -1131,8 +1142,8 @@ function action(name) {
   if (name === "attack") emit("player:attack", { skill: 0 });
   else if (name.startsWith("skill"))
     emit("player:attack", { skill: Number(name.slice(-1)) });
-  else if (name === "hp")
-    emit("player:potion", { type: "hp" }).then((r) => r && sfx("potion"));
+  else if (name === "hp" || name === "mp")
+    emit("player:potion", { type: name }).then((r) => r && sfx("potion"));
   else if (name === "auto") emit("player:auto", { enabled: !state.self.auto });
 }
 $$("[data-action]").forEach(
@@ -1743,6 +1754,7 @@ addEventListener("keydown", (e) => {
     KeyE: "skill3",
     KeyS: "skill4",
     KeyR: "hp",
+    KeyG: "mp",
     KeyT: "auto",
   };
   if (actions[e.code]) action(actions[e.code]);

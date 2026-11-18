@@ -27,10 +27,10 @@
     <link rel="stylesheet" href="/select.css?v=10" />
     <link rel="stylesheet" href="/game-ui.css?v=4" />
     <link rel="stylesheet" href="/minimap.css?v=3" />
-    <link rel="stylesheet" href="/actionbar.css?v=3" />
-    <link rel="stylesheet" href="/touch.css?v=5" />
-    <link rel="stylesheet" href="/hud-skin.css?v=5" />
-    <link rel="stylesheet" href="/inventory.css?v=9" />
+    <link rel="stylesheet" href="/actionbar.css?v=4" />
+    <link rel="stylesheet" href="/touch.css?v=6" />
+    <link rel="stylesheet" href="/hud-skin.css?v=6" />
+    <link rel="stylesheet" href="/inventory.css?v=10" />
     <link rel="stylesheet" href="/status.css?v=1" />
     <link rel="stylesheet" href="/orientation.css?v=1" />
     <link rel="stylesheet" href="/sanctuary-select.css?v=3" />
@@ -406,7 +406,10 @@
             ><em class="skill-cost"></em><i></i></button
           ><button data-action="hp" class="skill green">
             <b>✚</b><span>R</span
-            ><small id="hp-potions">ยา HP ×5</small></button
+            ><small id="hp-potions">ยา HP ×5</small><i></i></button
+          ><button data-action="mp" class="skill green mana">
+            <b>💧</b><span>G</span
+            ><small id="mp-potions">ยา MP ×3</small><i></i></button
           ><button data-action="auto" id="auto-button" class="skill auto">
             <b>⚔</b><span>AUTO</span><small>ปิด</small></button
           ><button
@@ -475,7 +478,7 @@
     </div>
     <script src="/vendor/phaser.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <script type="module" src="/game.js?v=0.41.0"></script>
+    <script type="module" src="/game.js?v=0.42.0"></script>
     <script type="module" src="/orientation.js?v=1"></script>
   </body>
 </html>

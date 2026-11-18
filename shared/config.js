@@ -1,7 +1,7 @@
 import { SLOT_MACHINE } from "./slots.js";
 import { rpgBonuses } from "./rpg.js";
 import { statEffects } from "./stats.js";
-import { BASE_CRIT } from "./skills.js";
+import { BASE_CRIT, BASE_CRIT_DAMAGE } from "./skills.js";
 import { townPlatforms, TOWN_SPOTS, TOWN_WIDTH } from "./town-layout.js";
 export const DUNGEON_ENERGY_MAX = 10;
 export const DUNGEON_ENERGY_INTERVAL = 30 * 60;
@@ -51,6 +51,12 @@ export const CLASSES = {
     speed: 250,
     color: 0xffe08a,
   },
+};
+// Potions: how much each restores and its own cooldown (seconds), so HP
+// and MP potions can't be chugged back to back.
+export const POTIONS = {
+  hp: { restore: 90, cooldown: 4 },
+  mp: { restore: 80, cooldown: 4 },
 };
 export const ITEMS = {
   hp: { name: "ยาฟื้นฟู HP", icon: "🧪", price: 15 },
@@ -182,7 +188,7 @@ export function combatStats(p) {
     flee: fx.flee,
     perfect: fx.perfect,
     crit: BASE_CRIT + fx.crit,
-    critDamage: 1.5 + fx.critDamage,
+    critDamage: BASE_CRIT_DAMAGE + fx.critDamage,
     cast: fx.cast,
     heal: fx.heal,
     double: fx.double,
@@ -191,9 +197,9 @@ export function combatStats(p) {
 
 export function combatPower(stats) {
   const crit = stats.crit ?? BASE_CRIT,
-    critDamage = stats.critDamage ?? 1.5,
+    critDamage = stats.critDamage ?? BASE_CRIT_DAMAGE,
     // Expected damage per second relative to a plain Lv.1 hero.
-    tempo = (stats.aspd || 1) * (1 + (stats.double || 0)) * (1 + crit * (critDamage - 1)) / (1 + BASE_CRIT * 0.5);
+    tempo = (stats.aspd || 1) * (1 + (stats.double || 0)) * (1 + crit * (critDamage - 1)) / (1 + BASE_CRIT * (BASE_CRIT_DAMAGE - 1));
   return Math.round(
     stats.atk * 6 * tempo +
       (stats.hp * (1 + stats.def / 100)) / 2 / (1 - Math.min(0.4, (stats.flee || 0) + (stats.perfect || 0))) +

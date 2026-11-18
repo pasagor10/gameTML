@@ -226,12 +226,14 @@
     color: #fff;
   }
   #game-screen .hud-bottom .skillbar [data-action="hp"],
+  #game-screen .hud-bottom .skillbar [data-action="mp"],
   #game-screen .hud-bottom .skillbar .skill.recall,
   #game-screen .hud-bottom .skillbar .skill.auto {
     width: 50px;
     height: 50px;
   }
   #game-screen .hud-bottom .skillbar [data-action="hp"] b,
+  #game-screen .hud-bottom .skillbar [data-action="mp"] b,
   #game-screen .hud-bottom .skillbar .skill.recall b,
   #game-screen .hud-bottom .skillbar .skill.auto b {
     font-size: 20px;
@@ -240,7 +242,12 @@
     right: 161px;
     bottom: 207px;
   }
-  #game-screen .hud-bottom .skillbar [data-action="hp"] small {
+  #game-screen .hud-bottom .skillbar [data-action="mp"] {
+    right: 161px;
+    bottom: 272px;
+  }
+  #game-screen .hud-bottom .skillbar [data-action="hp"] small,
+  #game-screen .hud-bottom .skillbar [data-action="mp"] small {
     display: block;
     position: absolute;
     left: 50%;

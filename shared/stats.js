@@ -7,6 +7,8 @@
 // attack stats only count for a quarter, so a build has to suit its class.
 // The server validates every raise; the client uses the same rules to preview.
 
+import { gearAttrs } from "./rpg.js";
+
 export const STAT_KEYS = ["str", "agi", "vit", "int", "dex", "luk"];
 export const STAT_MAX = 99;
 export const STAT_INFO = {
@@ -64,11 +66,17 @@ export function jobBonus(p) {
   for (const [k, v] of Object.entries(spec || {})) out[k] += v * (p.advanced ? 2 : 1);
   return out;
 }
-// Allocated + job bonus: what every formula reads.
+// Free stats from the job and from worn gear (shown as the blue "+n").
+export function bonusStats(p) {
+  const job = jobBonus(p),
+    gear = gearAttrs(p);
+  return Object.fromEntries(STAT_KEYS.map((k) => [k, job[k] + (gear[k] || 0)]));
+}
+// Allocated + job + gear bonus: what every formula reads.
 export function totalStats(p) {
   const base = baseStats(p),
-    job = jobBonus(p);
-  return Object.fromEntries(STAT_KEYS.map((k) => [k, base[k] + job[k]]));
+    bonus = bonusStats(p);
+  return Object.fromEntries(STAT_KEYS.map((k) => [k, base[k] + bonus[k]]));
 }
 
 // Attack from one attack stat: linear, plus a bonus every 10 points like RO.
@@ -104,8 +112,8 @@ export function statEffects(p) {
     aspd: Math.min(ASPD_CAP, 1 + agi * 0.012 + (s.dex - 1) * 0.003),
     flee: Math.min(FLEE_CAP, agi * 0.004),
     perfect: luk * 0.001,
-    crit: luk * 0.003,
-    critDamage: luk * 0.005,
+    crit: luk * 0.004,
+    critDamage: luk * 0.01,
     cast: Math.min(CAST_CAP, (s.dex - 1) * 0.006),
     heal: (s.int - 1) * 0.01,
     range: p?.class === "archer" ? Math.round((s.dex - 1) * 0.6) : 0,

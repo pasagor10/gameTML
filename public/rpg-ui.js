@@ -19,7 +19,7 @@ import {
   ATTACK_STATS,
   LIGHTNING_AGI,
   baseStats,
-  jobBonus,
+  bonusStats,
   raiseCost,
   spentOn,
   pointsAt,
@@ -27,7 +27,7 @@ import {
   resetCost,
 } from "/shared/stats.js";
 import { ACTIONS } from "/shared/motion.js";
-import { skillIcon } from "/skill-icons.js?v=3";
+import { skillIcon } from "/skill-icons.js?v=4";
 const statNames = {
   atk: "ATK",
   def: "DEF",
@@ -36,10 +36,12 @@ const statNames = {
   speed: "ความเร็ว",
   range: "ระยะ",
 };
-export const statText = (stats) =>
-  Object.entries(stats)
-    .map(([k, v]) => `${statNames[k]} +${v}`)
-    .join(" · ") || "อุปกรณ์เริ่มต้น";
+// Gear and path bonuses as text; base-stat bonuses (attrs) use their RO names.
+export const statText = (stats, attrs = {}) =>
+  [
+    ...Object.entries(stats).map(([k, v]) => `${statNames[k]} +${v}`),
+    ...Object.entries(attrs).map(([k, v]) => `${k.toUpperCase()} +${v}`),
+  ].join(" · ") || "อุปกรณ์เริ่มต้น";
 let selected = null;
 let bagFilter = "all";
 const rarity = (item) => `rarity-${item.rarity}`;
@@ -105,6 +107,13 @@ function inventoryPage(p, area, stats, owned, spec, cls) {
   // Gear stacks by id; supplies are their own cells.
   const counts = new Map();
   for (const id of owned) counts.set(id, (counts.get(id) || 0) + 1);
+  // Worn pieces leave the bag until they are taken off.
+  for (const id of Object.values(p.equipment || {}))
+    if (counts.has(id)) {
+      const left = counts.get(id) - 1;
+      if (left > 0) counts.set(id, left);
+      else counts.delete(id);
+    }
   const gearIds = [...counts.keys()].sort((a, b) => {
     const A = GEAR[a],
       B = GEAR[b];
@@ -124,14 +133,15 @@ function inventoryPage(p, area, stats, owned, spec, cls) {
       ? supplyIds.map((k) => "supply:" + k)
       : []),
   ];
-  if (!cells.includes(selected)) selected = cells[0] ?? null;
+  const worn = Object.values(p.equipment || {}).filter(Boolean);
+  if (!cells.includes(selected) && !worn.includes(selected)) selected = cells[0] ?? null;
 
   const cell = (key) => {
     const supply = key.startsWith("supply:") ? key.slice(7) : null,
       g = supply ? SUPPLIES[supply] : GEAR[key],
-      count = supply ? p.inventory[supply] : counts.get(key),
-      worn = !supply && p.equipment[g.slot] === key;
-    return `<button data-inspect="${key}" aria-pressed="${selected === key}" title="${g.name}" class="inv-cell ${rarity(g)} ${selected === key ? "selected" : ""}">${worn ? '<i class="inv-worn" aria-label="สวมใส่อยู่">◆</i>' : ""}<b>${supply ? supplyArt(supply) : itemArt(key, g)}</b><small>${count}</small></button>`;
+      count = supply ? p.inventory[supply] : counts.get(key);
+    // Same picture, different tier: the level tag tells them apart.
+    return `<button data-inspect="${key}" aria-pressed="${selected === key}" title="${g.name}${supply ? "" : ` · Lv.${g.level}`}" class="inv-cell ${rarity(g)} ${selected === key ? "selected" : ""}">${supply ? "" : `<em class="inv-lv">Lv.${g.level}</em>`}<b>${supply ? supplyArt(supply) : itemArt(key, g)}</b><small>${count}</small></button>`;
   };
   // Fill to whole rows of six, at least four rows.
   const empty = Math.max(24, Math.ceil(cells.length / 6) * 6) - cells.length;
@@ -140,7 +150,7 @@ function inventoryPage(p, area, stats, owned, spec, cls) {
     const id = p.equipment[name],
       g = GEAR[id];
     const level = enhancementLevel(p, name);
-    return `<button data-inspect="${id || ""}" ${g ? "" : "disabled"} class="inv-slot ${g ? rarity(g) : "empty"}" title="${g?.name || SLOTS[name]}"><b>${g ? itemArt(id, g) : filterIcons[name]}</b>${level && g ? `<small>+${level}</small>` : ""}</button>`;
+    return `<button data-inspect="${id || ""}" ${g ? "" : "disabled"} class="inv-slot ${g ? rarity(g) : "empty"} ${g && selected === id ? "selected" : ""}" title="${g?.name || SLOTS[name]}"><b>${g ? itemArt(id, g) : filterIcons[name]}</b>${level && g ? `<small>+${level}</small>` : ""}</button>`;
   };
   const power = p.power ?? combatPower(stats);
 
@@ -154,10 +164,21 @@ function inventoryPage(p, area, stats, owned, spec, cls) {
     </div>
     <div class="inv-nameplate">${spec?.name || cls.name} · Lv.${p.level}</div>
     <div class="inv-power"><span>${icon('<path d="M12 2 4 12l8 10 8-10Z"/>')}</span><small>พลังรวม</small><strong>${power.toLocaleString()}</strong></div>
-    <div class="inv-stats">${Object.entries(stats)
+    <div class="inv-stats">${Object.keys(statNames)
+      .filter((k) => k in stats)
       .map(
-        ([k, v]) =>
-          `<div><i>${statIcons[k] || ""}</i><span>${statNames[k]}</span><b>${v}</b></div>`,
+        (k) =>
+          `<div><i>${statIcons[k] || ""}</i><span>${statNames[k]}</span><b>${stats[k]}</b></div>`,
+      )
+      .concat(
+        stats.aspd
+          ? [
+              `<div><i>💨</i><span>ASPD</span><b>${stats.aspd.toFixed(2)}×</b></div>`,
+              `<div><i>✷</i><span>CRIT</span><b>${Math.round(stats.crit * 100)}%</b></div>`,
+              `<div><i>✹</i><span>ดาเมจคริ</span><b>×${stats.critDamage.toFixed(2)}</b></div>`,
+              `<div><i>◌</i><span>FLEE</span><b>${Math.round((stats.flee + stats.perfect) * 100)}%</b></div>`,
+            ]
+          : [],
       )
       .join("")}</div>
   </aside>
@@ -181,6 +202,21 @@ function inventoryPage(p, area, stats, owned, spec, cls) {
 </div>`;
 }
 
+// "This piece vs the one you wear": gear stats and base-stat bonuses, with
+// the difference marked up or down.
+function compareRows(item, worn, wornId) {
+  const rows = [];
+  const add = (label, a = 0, b = 0) => {
+    if (!a && !b) return;
+    const d = a - b;
+    rows.push(`<tr class="${d > 0 ? "up" : d < 0 ? "down" : ""}"><th>${label}</th><td>${b}</td><td>${a}</td><td>${d > 0 ? "▲" + d : d < 0 ? "▼" + -d : "="}</td></tr>`);
+  };
+  for (const k of Object.keys(statNames)) add(statNames[k], item.stats?.[k], worn.stats?.[k]);
+  for (const k of STAT_KEYS) add(STAT_INFO[k].name, item.attrs?.[k], worn.attrs?.[k]);
+  return `<h4>เทียบกับที่สวมอยู่</h4>
+    <div class="inv-versus"><div class="inv-versus-head"><span class="${rarity(worn)}">${itemArt(wornId, worn)}</span><small>${worn.name} · Lv.${worn.level}</small></div>
+    <table><thead><tr><th></th><th>ใส่อยู่</th><th>ชิ้นนี้</th><th></th></tr></thead><tbody>${rows.join("") || '<tr><td colspan="4">ไม่มีค่าสถานะ</td></tr>'}</tbody></table></div>`;
+}
 function discardButton(id, allowed) {
   return `<button class="inv-discard" data-discard="${id}" ${allowed ? "" : "disabled"}>ทิ้ง 1 ชิ้น</button>`;
 }
@@ -229,10 +265,16 @@ function detailCard(p, area, stats, key, counts) {
           ? "ไม่ตรงคลาส"
           : "สวมใส่";
   const check = (ok) => `<em class="${ok ? "ok" : "no"}">${ok ? "✓" : "✕"}</em>`;
+  const attrLines = (g) =>
+    Object.entries(g?.attrs || {}).map(
+      ([k, v]) => `<div class="attr" style="--stat:${STAT_INFO[k].color}"><i>${STAT_INFO[k].icon}</i><span>${STAT_INFO[k].name}</span><b>+${v}</b></div>`,
+    );
+  // Side by side with what is worn in that slot: every stat of either piece.
+  const versus = !equipped && previous ? compareRows(item, previous, p.equipment[item.slot]) : "";
   return `<aside class="inv-detail ${rarity(item)}">
     <div class="inv-detail-art">${itemArt(key, item)}</div>
     <h3>${item.name}${equipped && level ? ` +${level}` : ""}</h3>
-    <div class="inv-pills"><span>${SLOTS[item.slot]}${counts.get(key) > 1 ? ` ×${counts.get(key)}` : ""}</span><span class="rarity">ระดับ${RARITIES[item.rarity]}</span></div>
+    <div class="inv-pills"><span class="lv">Lv.${item.level}</span>${equipped ? '<span class="worn">◆ สวมใส่อยู่</span>' : ""}<span>${SLOTS[item.slot]}${counts.get(key) > 1 ? ` ×${counts.get(key)}` : ""}</span><span class="rarity">ระดับ${RARITIES[item.rarity]}</span></div>
     ${item.lore ? `<p class="inv-lore">${item.lore}</p>` : ""}
     <h4>ค่าสถานะ</h4>
     <div class="inv-detail-stats">${
@@ -241,8 +283,10 @@ function detailCard(p, area, stats, key, counts) {
           ([k, v]) =>
             `<div><i>${statIcons[k] || ""}</i><span>${statNames[k]}</span><b>+${v}</b></div>`,
         )
+        .concat(attrLines(item))
         .join("") || "<div><span>อุปกรณ์เริ่มต้น</span></div>"
     }</div>
+    ${versus}
     <h4>เงื่อนไขสวมใส่</h4>
     <div class="inv-reqs">${item.class ? `<div>${check(classOk)}<span>อาชีพ: ${CLASSES[item.class].name}</span></div>` : ""}<div>${check(levelOk)}<span>เลเวลขั้นต่ำ: ${item.level}</span></div>${item.floor ? `<div><em class="ok">◆</em><span>ดรอปจากบอสชั้น ${item.floor}</span></div>` : ""}</div>
     <div class="inv-compare ${diff > 0 ? "up" : diff < 0 ? "down" : ""}">${equipped ? "ถ้าถอด" : "ถ้าสวม"} พลัง ${now.toLocaleString()} → ${next.toLocaleString()} <b>${diff >= 0 ? "+" : ""}${diff}</b></div>
@@ -381,7 +425,7 @@ function statusPage(p, area) {
     statDraftOwner = p.id;
   }
   const base = baseStats({ attrs: p.attrs }),
-    job = jobBonus(p),
+    job = bonusStats(p),
     next = draftedStats(p),
     total = pointsAt(p.level),
     spent = STAT_KEYS.reduce((n, k) => n + spentOn(base[k]), 0),
@@ -433,7 +477,7 @@ function statusPage(p, area) {
       <button data-stat-cancel ${hasDraft ? "" : "disabled"}>ยกเลิก</button>
       <button class="confirm" data-stat-confirm ${hasDraft ? "" : "disabled"}>ยืนยันอัพ</button>
     </footer>
-    <p class="stat-hint">กด + เพื่อจองแต้ม (Shift = +10) แล้วกดยืนยัน · ยิ่งค่าสูงยิ่งใช้แต้มมาก · ตัวเลขสีฟ้าคือโบนัสอาชีพ</p>
+    <p class="stat-hint">กด + เพื่อจองแต้ม (Shift = +10) แล้วกดยืนยัน · ยิ่งค่าสูงยิ่งใช้แต้มมาก · ตัวเลขสีฟ้าคือโบนัสจากอาชีพและอุปกรณ์</p>
   </section>
   <aside class="stat-derived">
     <h4>ค่าสถานะ</h4>
@@ -588,7 +632,7 @@ export function gearShop(p) {
     .filter(([, g]) => g.price && (!g.class || g.class === p.class))
     .map(
       ([id, g]) =>
-        `<article class="shop-gear ${rarity(g)}"><b>${itemArt(id, g)}</b><div><small>${RARITIES[g.rarity]} · ${SLOTS[g.slot]} · Lv.${g.level}</small><h4>${g.name}</h4><p>${statText(g.stats)}</p></div><button data-buy-gear="${id}" ${p.ownedEquipment.includes(id) || p.gold < g.price ? "disabled" : ""}>${p.ownedEquipment.includes(id) ? "เป็นเจ้าของแล้ว" : `${g.price} ◈`}</button></article>`,
+        `<article class="shop-gear ${rarity(g)}"><b>${itemArt(id, g)}</b><div><small>${RARITIES[g.rarity]} · ${SLOTS[g.slot]} · Lv.${g.level}</small><h4>${g.name}</h4><p>${statText(g.stats, g.attrs)}</p></div><button data-buy-gear="${id}" ${p.ownedEquipment.includes(id) || p.gold < g.price ? "disabled" : ""}>${p.ownedEquipment.includes(id) ? "เป็นเจ้าของแล้ว" : `${g.price} ◈`}</button></article>`,
     )
     .join("")}</div>`;
 }

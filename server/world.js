@@ -79,6 +79,7 @@ import { db, loadCharacter, persist, atomic, log } from "./database.js";
 import {
   CLASSES,
   ITEMS,
+  POTIONS,
   FLOORS,
   MAIN_FLOORS,
   WORLD,
@@ -850,13 +851,12 @@ export function closeShop(p, key) {
   sync(p);
   return result;
 }
-export function potion(p, type = "hp") {
-  if (
-    !["hp", "mp"].includes(type) ||
-    p.hp <= 0 ||
-    now() - (p.potionAt || 0) < 1
-  )
-    throw Error("ยังใช้ยาไม่ได้");
+export function potion(p, type = "hp", t = now()) {
+  if (!POTIONS[type] || p.hp <= 0) throw Error("ยังใช้ยาไม่ได้");
+  p.potionCd ??= {};
+  const left = POTIONS[type].cooldown - (t - (p.potionCd[type] || 0));
+  if (left > 0)
+    throw Error(`ยา ${type.toUpperCase()} ยังไม่พร้อม · อีก ${Math.ceil(left)} วิ`);
   const training = instances.get(p.instance)?.training;
   if (!p.inventory[type] && !training) throw Error("ยาหมด");
   if (
@@ -865,9 +865,9 @@ export function potion(p, type = "hp") {
   )
     throw Error("พลังเต็มแล้ว");
   if (!training) p.inventory[type]--;
-  p.potionAt = now();
-  if (type === "hp") p.hp = Math.min(maxHp(p), p.hp + 90);
-  else p.mp = Math.min(maxMp(p), p.mp + 80);
+  p.potionCd[type] = t;
+  if (type === "hp") p.hp = Math.min(maxHp(p), p.hp + POTIONS.hp.restore);
+  else p.mp = Math.min(maxMp(p), p.mp + POTIONS.mp.restore);
   if (!training) persist(p);
 }
 export function makeRuntime(c, socket) {
@@ -2419,6 +2419,7 @@ export function snapshot(p) {
       bestiary: p.bestiary || {},
       auto: p.auto,
       cooldowns: p.cooldowns,
+      potionCd: p.potionCd || {},
     },
     area: p.area,
     players: [...players.values()]

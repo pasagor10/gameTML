@@ -1129,3 +1129,35 @@ button.path-node { cursor: pointer; }
   text-align: center;
   line-height: 1.5;
 }
+
+/* ---------- Item level tags, base-stat bonuses, worn comparison ---------- */
+.inv-lv {
+  position: absolute;
+  left: 4px;
+  top: 3px;
+  padding: 0 4px;
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 14px;
+  color: #ffe7a6;
+  background: #06110fcc;
+  border-radius: 3px;
+  text-shadow: 0 1px 1px #000;
+}
+.inv-slot.selected { box-shadow: 0 0 0 2px var(--gold-hi), 0 0 14px #ffc96b99; }
+.inv-pills .lv { color: #3a2508; background: linear-gradient(#ffe7a6, #d9a24a); border-color: #fff0bf; font-weight: 800; }
+.inv-pills .worn { color: #9ff0b8; border-color: #4f9f78; }
+.inv-detail-stats > div.attr span, .inv-detail-stats > div.attr b { color: var(--stat); }
+.inv-versus { margin: 2px 0 8px; padding: 6px 8px; border: 1px solid #e9c27a33; border-radius: 8px; background: #06110f80; }
+.inv-versus-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.inv-versus-head span { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 6px; border: 1px solid #e9c27a55; overflow: hidden; }
+.inv-versus-head span img { width: 100%; height: 100%; object-fit: contain; }
+.inv-versus-head small { font-size: 11px; color: #bfb398; }
+.inv-versus table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.inv-versus th, .inv-versus td { padding: 2px 4px; text-align: right; font-weight: 600; }
+.inv-versus th:first-child { text-align: left; color: #bfb398; }
+.inv-versus thead th { color: #8f8670; font-size: 10px; }
+.inv-versus tr.up td:last-child { color: #7ff0a8; }
+.inv-versus tr.down td:last-child { color: #ff8a7a; }
+.inv-versus tr.up td:nth-child(3) { color: #c9ffd9; }

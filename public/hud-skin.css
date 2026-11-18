@@ -470,7 +470,8 @@ body #game-screen #minimap #training-open .map-btn-icon {
   body #game-screen .hud-bottom .skillbar .skill.jump,
   body #game-screen .hud-bottom .skillbar .skill.recall,
   body #game-screen .hud-bottom .skillbar .skill.auto,
-  body #game-screen .hud-bottom .skillbar [data-action="hp"] {
+  body #game-screen .hud-bottom .skillbar [data-action="hp"],
+  body #game-screen .hud-bottom .skillbar [data-action="mp"] {
     background: radial-gradient(circle at 50% 35%, #1d443c, #08161a 75%) padding-box;
     color: #fff6de;
   }

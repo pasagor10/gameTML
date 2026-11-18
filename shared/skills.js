@@ -57,7 +57,9 @@ export const SKILL_KITS = {
   ],
 };
 export const skillOf = (cls, skill) => SKILL_KITS[cls]?.[skill] || SKILL_KITS.swordsman[0];
-export const BASE_CRIT = 0.12;
+// Players asked for more, harder crits: 20% base, ×1.75 damage.
+export const BASE_CRIT = 0.2;
+export const BASE_CRIT_DAMAGE = 1.75;
 
 // Active buff by type, or null.
 export const buffActive = (p, type, t) =>
