@@ -3,37 +3,37 @@
   "name": "walk",
   "artSource": "painted Lanna priest / articulated rig",
   "sourceSize": [
-    84.0,
+    75.0,
     166.0
   ],
   "sourceAnchor": [
-    42.0,
-    163.0
+    35.0,
+    162.0
   ],
   "encodedAnchor": [
-    84,
-    326
+    70,
+    324
   ],
   "bodyHeightPx": 145,
   "frameCount": 8,
   "durationsMs": [
-    100,
-    100,
-    100,
-    100,
-    100,
-    100,
-    100,
-    100
+    95,
+    95,
+    95,
+    95,
+    95,
+    95,
+    95,
+    95
   ],
-  "durationSeconds": 0.8,
+  "durationSeconds": 0.76,
   "loop": true,
   "sampling": "linear",
   "events": [],
   "fallback": {
     "type": "png-atlas",
     "cellSize": [
-      168,
+      150,
       332
     ],
     "pages": [

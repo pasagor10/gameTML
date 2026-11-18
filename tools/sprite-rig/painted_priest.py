@@ -85,14 +85,25 @@ def extract(sheet, gender, branch):
 
 def priest_actions():
     actions = rig.actions("mage")
-    # A staff carrier keeps the gripping arm steady. The free arm makes a
-    # short relaxed swing, rather than the caster rig's deep running curl.
-    for p in actions["walk"][0]:
-        phase = -p["shF"] / 0.45
-        p.update(shF=0.12 - phase * 0.06, elF=0.34,
-                 shB=phase * 0.12, elB=0.12)
+    # A staff carrier keeps the gripping arm clear of the robe; walk and run
+    # get their own gaits rather than the caster rig's deep arm curl.
+    actions["walk"] = (rig.cycle(8, walk_pose), [95] * 8, True, None)
     actions["run"] = (rig.cycle(8, run_pose), [58] * 8, True, None)
     return actions
+
+
+def walk_pose(a):
+    """A composed, confident stride: chest up and head high, a soft dip as
+    each foot lands, robe swaying with the hips. The staff swings forward
+    with every step as if planted ahead; the free arm sways opposite it."""
+    s, c, lift = math.sin(a), math.cos(a), abs(math.sin(a))
+    return rig.pose(
+        dy=-lift * 2.2 + 0.6, lean=0.03, tilt=-0.04 + lift * 0.02,
+        hipF=0.08 + s * 0.36, hipB=0.08 - s * 0.36,
+        kneeF=0.08 + max(0.0, -s) * 0.45, kneeB=0.08 + max(0.0, s) * 0.45,
+        shF=0.27 + abs(c) * 0.05, elF=0.03,
+        shB=0.1 - s * 0.14, elB=0.1,
+        weapon=0.05 + abs(c) * 0.12, wave=math.sin(a * 2) * 1.1)
 
 
 def run_pose(a):

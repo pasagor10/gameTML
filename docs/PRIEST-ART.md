@@ -64,7 +64,8 @@ every walk/run frame, palms must remain on their own side of the torso;
 matching sleeve/palm transforms alone does not enforce this gait constraint.
 Use `--arms-only` to rebuild articulated sleeves and hand clips without
 re-encoding unchanged head and weapon layers.
-`priest_actions()` gives walk a relaxed free arm and a steady staff arm, and
+`walk_pose()` gives walk an upright, confident stride with the staff swinging
+forward each step, and
 `run_pose()` a quick robed trot (58 ms frames, short strides so boots stay
 under the hem, heel flick, bounce, staff arm held clear of the robe);
 the generic caster's deep elbow curl must not be reused for locomotion.
