@@ -81,7 +81,7 @@ import {
 } from "/shared/config.js";
 import { createParallax } from "/parallax.js?v=0.8.1";
 import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.6";
-import { createCombatFx } from "/combat-fx.js?v=0.10.0";
+import { createCombatFx } from "/combat-fx.js?v=0.11.0";
 import { activeEffects, effectTint, effectRow, hudEffects } from "/status-ui.js?v=1";
 import { STATUSES, BUFFS } from "/shared/skills.js";
 import { WORLD_BOSS, worldInfo } from "/shared/world-boss.js";

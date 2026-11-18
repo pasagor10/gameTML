@@ -56,6 +56,37 @@ function makeTextures(scene) {
       c.fill();
     }
   });
+  // Magic circle: two rings, a hexagram and rune ticks, drawn in white.
+  canvasTexture(scene, "cfx-rune", 128, 128, (c, w, h) => {
+    const m = w / 2;
+    c.strokeStyle = "#fff";
+    c.lineWidth = 3;
+    c.beginPath();
+    c.arc(m, m, 60, 0, Math.PI * 2);
+    c.stroke();
+    c.lineWidth = 2;
+    c.beginPath();
+    c.arc(m, m, 48, 0, Math.PI * 2);
+    c.stroke();
+    for (const turn of [0, Math.PI]) {
+      c.beginPath();
+      for (let k = 0; k < 3; k++) {
+        const a = turn + (k * Math.PI * 2) / 3 - Math.PI / 2;
+        c[k ? "lineTo" : "moveTo"](m + Math.cos(a) * 46, m + Math.sin(a) * 46);
+      }
+      c.closePath();
+      c.stroke();
+    }
+    for (let k = 0; k < 12; k++) {
+      const a = (k * Math.PI) / 6;
+      c.save();
+      c.translate(m + Math.cos(a) * 54, m + Math.sin(a) * 54);
+      c.rotate(a);
+      c.fillStyle = "#fff";
+      c.fillRect(-1.5, -4, 3, 8);
+      c.restore();
+    }
+  });
   // Crescent blade trail, opening to the right.
   canvasTexture(scene, "cfx-slash2", 256, 256, (c, w, h) => {
     const cx = 70,
@@ -440,6 +471,117 @@ export function createCombatFx(scene) {
     }
   }
 
+  // Mage basic attack: a three-step spell combo (the server's combo 0/1/2).
+  //   0  arcane orb with motes orbiting it
+  //   1  twin orbs braiding around each other
+  //   2  star finisher that bursts into a rune circle and shards
+  // Every cast opens a spinning magic circle at the staff.
+  function arcaneCast(e, dir, color, base, tier) {
+    // Base tier has no accent of its own: borrow the staff gem's cyan.
+    const accent = base === color ? mix(color, 0x7fe8ff, 0.55) : base,
+      combo = e.combo || 0,
+      sx = e.x + dir * 34,
+      sy = e.y - 12,
+      distance = Math.min(e.range || 350, 420),
+      hot = mix(color, 0xffffff, 0.45);
+    // Magic circle facing the target, squashed so it reads as standing upright.
+    const circle = sprite("cfx-rune", sx + dir * 8, sy, combo === 2 ? accent : color, 36)
+      .setScale(0.12, 0.3)
+      .setAlpha(0.95);
+    scene.tweens.add({
+      targets: circle,
+      scaleX: combo === 2 ? 0.32 : 0.24,
+      scaleY: combo === 2 ? 0.95 : 0.7,
+      angle: dir * 120,
+      alpha: 0,
+      duration: 360,
+      ease: "Cubic.out",
+      onComplete: () => circle.destroy(),
+    });
+    flare(sx, sy, hot, 0.55 + combo * 0.15, 200);
+    blast(motes, sx, sy, 4 + combo * 2, hot, { speed: [0, 0] });
+
+    // One orb along a path; `wave` bends it into a braid. Lands with a burst.
+    const orb = (size, tint, wave, delay, land) => {
+      const head = sprite("cfx-glow", sx, sy, hot, 37).setScale(0.3 * size),
+        halo = sprite("cfx-glow", sx, sy, tint, 36).setScale(0.9 * size).setAlpha(0.75),
+        orbit = [0, 1, 2].map(() => sprite("cfx-glow", sx, sy, hot, 37).setScale(0.12 * size)),
+        trail = scene.add
+          .particles(0, 0, "cfx-glow", {
+            blendMode: ADD,
+            lifespan: 170,
+            frequency: 22,
+            speed: { min: 0, max: 30 },
+            scale: { start: 0.2 * size, end: 0 },
+            alpha: { start: 0.55, end: 0 },
+            tint,
+            follow: head,
+          })
+          .setDepth(35);
+      const parts = [head, halo, ...orbit];
+      parts.forEach((o) => o.setVisible(!delay));
+      scene.tweens.addCounter({
+        from: 0,
+        to: 1,
+        delay,
+        duration: 380 + combo * 30,
+        ease: "Sine.in",
+        onStart: () => parts.forEach((o) => o.setVisible(true)),
+        onUpdate: (tw) => {
+          const v = tw.getValue(),
+            x = sx + dir * distance * v,
+            y = sy + wave(v);
+          head.setPosition(x, y);
+          halo.setPosition(x, y).setScale((0.9 + Math.sin(v * 20) * 0.12) * size);
+          orbit.forEach((o, n) => {
+            const a = v * 18 + (n * Math.PI * 2) / 3;
+            o.setPosition(x + Math.cos(a) * 16 * size, y + Math.sin(a) * 9 * size);
+          });
+        },
+        onComplete: () => {
+          trail.stop();
+          land(head.x, head.y);
+          parts.forEach((o) => o.destroy());
+          scene.time.delayedCall(400, () => trail.destroy());
+        },
+      });
+    };
+    const pop = (x, y, tint, size = 1) => {
+      ring(x, y, tint, 1.4 * size, 300);
+      flare(x, y, 0xffffff, 0.8 * size, 200);
+      blast(sparks, x, y, Math.round(8 * size), tint, { speed: [160, 420] });
+    };
+
+    if (combo === 0) {
+      orb(1, color, () => 0, 0, (x, y) => pop(x, y, color));
+    } else if (combo === 1) {
+      for (const side of [1, -1])
+        orb(0.75, side > 0 ? color : accent, (v) => side * Math.sin(v * Math.PI * 3) * 16 * (1 - v * 0.5), 0, (x, y) =>
+          pop(x, y, side > 0 ? color : accent, 0.8),
+        );
+    } else {
+      orb(1.5 + (tier - 1) * 0.2, accent, () => 0, 60, (x, y) => {
+        // Finisher: the star bursts into a rune circle, a ring and shards.
+        const rune = sprite("cfx-rune", x, y, accent, 36).setScale(0.2).setAlpha(1);
+        scene.tweens.add({
+          targets: rune,
+          scale: 1.05,
+          angle: 90,
+          alpha: 0,
+          duration: 480,
+          ease: "Cubic.out",
+          onComplete: () => rune.destroy(),
+        });
+        ring(x, y, color, 2.4, 420);
+        ring(x, y + 40, accent, 2, 420, 0.3);
+        flare(x, y, 0xffffff, 1.6, 260);
+        blast(sparks, x, y, 18, accent, { speed: [220, 560] });
+        blast(embers, x, y, 10, hot, { speed: [80, 260], angle: { min: 200, max: 340 } });
+        shake(90, 0.003);
+      });
+    }
+  }
+
   // Class tier (1 base, 2 specialization, 3 advanced) grows every skill:
   // bigger shapes, extra projectiles/slashes, an accent colour, and at
   // tier 3 rune circles, pillars of light and a second shockwave.
@@ -567,6 +709,8 @@ export function createCombatFx(scene) {
         ring(e.x, e.y + 40, 0x9dffb0, 2.6, 520, 0.3);
         blast(embers, e.x, e.y + 40, 14, 0x9dffb0, { speed: [60, 200], angle: { min: 250, max: 290 } });
       }
+    } else if (e.class === "mage" && !e.skill) {
+      arcaneCast(e, dir, color, accent, tier);
     } else if (e.class === "mage") {
       const size = [1, 1.4, 1.8, 2.4][e.skill || 0] * (e.skill ? k : 1);
       projectile(e.x + dir * 30, e.y, dir, 350, color, { size, ms: 420 });
