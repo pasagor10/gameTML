@@ -539,6 +539,57 @@
             "staff-3",
             "staff-4"
           ]
+        },
+        "parts": {
+          "outfit": {
+            "robe-1": [
+              "fixed",
+              "main",
+              "trim"
+            ],
+            "robe-2": [
+              "fixed",
+              "main",
+              "trim"
+            ],
+            "robe-3": [
+              "fixed",
+              "main",
+              "trim"
+            ],
+            "robe-4": [
+              "fixed",
+              "main",
+              "trim",
+              "gem"
+            ]
+          },
+          "head": {
+            "hair": [
+              "fixed"
+            ],
+            "circlet": [
+              "fixed",
+              "trim",
+              "gem"
+            ],
+            "hood": [
+              "fixed",
+              "main",
+              "trim"
+            ],
+            "mitre": [
+              "fixed",
+              "main",
+              "trim"
+            ]
+          }
+        },
+        "hand": "hand",
+        "tints": {
+          "main": "#ece4d2",
+          "trim": "#96704a",
+          "gem": "#6ebeff"
         }
       }
     },
@@ -583,6 +634,57 @@
             "staff-3",
             "staff-4"
           ]
+        },
+        "parts": {
+          "outfit": {
+            "robe-1": [
+              "fixed",
+              "main",
+              "trim"
+            ],
+            "robe-2": [
+              "fixed",
+              "main",
+              "trim"
+            ],
+            "robe-3": [
+              "fixed",
+              "main",
+              "trim"
+            ],
+            "robe-4": [
+              "fixed",
+              "main",
+              "trim",
+              "gem"
+            ]
+          },
+          "head": {
+            "hair": [
+              "fixed"
+            ],
+            "circlet": [
+              "fixed",
+              "trim",
+              "gem"
+            ],
+            "hood": [
+              "fixed",
+              "main",
+              "trim"
+            ],
+            "mitre": [
+              "fixed",
+              "main",
+              "trim"
+            ]
+          }
+        },
+        "hand": "hand",
+        "tints": {
+          "main": "#ece4d2",
+          "trim": "#96704a",
+          "gem": "#6ebeff"
         }
       }
     }
@@ -709,7 +811,7 @@
       }
     }
   },
-  "version": "1794973367571495000",
+  "version": 1794982569776688000,
   "npcs": {
     "elder": {
       "dir": "npcs/elder",

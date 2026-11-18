@@ -32,15 +32,22 @@ test("every priest look has art for every action, on the same frames as the body
     const set = index.sets[`priest-${gender}`];
     for (const action of new Set(Object.values(set.actions))) {
       const body = JSON.parse(readFileSync(`public/assets/sprites/${set.dir}/body/${action}/animation.json`, "utf8"));
+      const folders = [set.layers.hand];
       for (const [slot, looks] of Object.entries(set.layers.looks))
         for (const look of looks) {
-          const dir = `public/assets/sprites/${set.dir}/${slot}/${look}/${action}`,
-            clip = JSON.parse(readFileSync(`${dir}/animation.json`, "utf8"));
-          assert.equal(clip.frameCount, body.frameCount, `${dir} frames`);
-          assert.deepEqual(clip.fallback.cellSize, body.fallback.cellSize, `${dir} cell`);
-          assert.deepEqual(clip.sourceAnchor, body.sourceAnchor, `${dir} anchor`);
-          assert.ok(existsSync(`${dir}/${clip.fallback.pages[0].file}`));
+          const parts = set.layers.parts[slot]?.[look];
+          if (parts) for (const part of parts) folders.push(`${slot}/${look}/${part}`);
+          else folders.push(`${slot}/${look}`);
         }
+      assert.equal(body.sockets.hand.length, body.frameCount, "a hand socket per frame");
+      for (const folder of folders) {
+        const dir = `public/assets/sprites/${set.dir}/${folder}/${action}`,
+          clip = JSON.parse(readFileSync(`${dir}/animation.json`, "utf8"));
+        assert.equal(clip.frameCount, body.frameCount, `${dir} frames`);
+        assert.deepEqual(clip.fallback.cellSize, body.fallback.cellSize, `${dir} cell`);
+        assert.deepEqual(clip.sourceAnchor, body.sourceAnchor, `${dir} anchor`);
+        assert.ok(existsSync(`${dir}/${clip.fallback.pages[0].file}`));
+      }
     }
   }
 });
@@ -50,5 +57,13 @@ test("priests get their own weapon from every boss floor", () => {
     const id = FLOOR_LOOT[floor].weapons.priest;
     assert.equal(GEAR[id]?.class, "priest", `floor ${floor}`);
     assert.ok(bossLootCandidates(+floor, "priest").includes(id));
+  }
+});
+
+test("every item picture has gear colours", () => {
+  const palette = JSON.parse(readFileSync("public/assets/items/palette.json", "utf8"));
+  for (const i of [0, 5, 11]) {
+    const p = palette[`armor-${i}`];
+    for (const key of ["main", "trim", "gem"]) assert.match(p[key], /^#[0-9a-f]{6}$/);
   }
 });

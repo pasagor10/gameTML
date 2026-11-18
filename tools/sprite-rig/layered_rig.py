@@ -8,6 +8,19 @@ the game can stack them and they move together frame for frame:
     <set>/head/<look>/<action>/    hair, hood or headwear
     <set>/weapon/<look>/<action>/  weapon in the front hand
 
+Outfit and head looks are split into tint parts, each its own atlas:
+
+    fixed  hair, outlines and glows, shown as drawn
+    main   the cloth, drawn light grey: the game tints it with the
+           armour picture's main colour (public/assets/items/palette.json)
+    trim   edging, sash, mantle and circlet: tinted with its trim colour
+    gem    jewels and glow cores: tinted with its gem colour
+
+The body's animation.json also carries a "hand" socket per frame ([x, y,
+weapon angle in degrees] in cell px) so the game can put the weapon's own
+item picture in the hand, and hand/<action>/ holds the front hand alone to
+draw over the grip.
+
 The game stacks them body < outfit < head < weapon. Where a part of a lower
 layer must show in front of a higher one (the front hand over the weapon
 grip, the front arm over the hair) the higher layer is cut away there, so the
@@ -48,6 +61,10 @@ ACTION_FOLDERS = {"idle": "idle", "walk": "walk", "run": "run", "jump": "jump", 
 HAIR = {"male": (74, 52, 38), "female": (238, 214, 150)}
 PANTS, BOOTS = (92, 78, 66), (70, 52, 40)
 UNDER = (224, 214, 196)  # plain undershirt on the bare body
+# Tint-part marker colours: shade() keeps each family recognisable, so the
+# split can find them again: grey → main, (r,0,r) → trim, (0,g,g) → gem.
+G, M, C = (236, 236, 236), (236, 0, 236), (0, 236, 236)
+PARTS = ["fixed", "main", "trim", "gem"]
 
 # Gear looks, worst to best. Tier 1 is what a hero wears with no armour.
 OUTFITS = {
@@ -59,11 +76,21 @@ OUTFITS = {
     "robe-4": dict(robe=(255, 252, 240), trim=(255, 206, 84), sash=(255, 206, 84), sleeve=0.95, skirt=0.86,
                    mantle=(255, 214, 110), cape=(250, 244, 226), pauldron=True, glow=True),
 }
+# The same looks with cloth, trim and gems in marker colours for tinting.
+MARKED_OUTFITS = {k: dict(v, robe=G, trim=M, sash=M, mantle=M if v.get("mantle") else None,
+                         cape=(184, 184, 184) if v.get("cape") else None, gem=C)
+                  for k, v in OUTFITS.items()}
 HEADS = {
     "hair": dict(),
     "circlet": dict(circlet=(226, 182, 74), gem=(110, 190, 255)),
     "hood": dict(hood=(240, 236, 226), hood_trim=(226, 178, 64)),
     "mitre": dict(mitre=(255, 250, 238), mitre_trim=(255, 200, 80), halo=True),
+}
+MARKED_HEADS = {
+    "hair": dict(),
+    "circlet": dict(circlet=M, gem=C),
+    "hood": dict(hood=G, hood_trim=M),
+    "mitre": dict(mitre=G, mitre_trim=M, halo=True),
 }
 WEAPONS = {
     "staff-1": dict(kind="cross", shaft=(126, 88, 52), metal=(196, 170, 120), length=70),
@@ -161,8 +188,9 @@ def body_pieces(gender, p, s):
     return out
 
 
-def outfit_pieces(look, gender, p, s):
-    o, wave, out = OUTFITS[look], p["wave"], []
+def outfit_pieces(look, gender, p, s, marked=False):
+    o, wave, out = (MARKED_OUTFITS if marked else OUTFITS)[look], p["wave"], []
+    core = rgba(o.get("gem") or (255, 250, 220))
     t, wt, wh, top, hip = s["tpt"], s["w_top"], s["w_hip"], s["top"], s["hip"]
     if o.get("cape"):
         def cape(cv):
@@ -205,7 +233,7 @@ def outfit_pieces(look, gender, p, s):
             cv.line(t(1, TORSO - 16), t(wt + 1, TORSO - 12), 1.4, rgba(o["trim"]))
         if o.get("glow"):
             cv.blend(lambda l: l.circle(t(1, TORSO - 12), 6, (255, 240, 170, 150), outline=False))
-            cv.circle(t(1, TORSO - 12), 2.6, (255, 250, 220, 255), outline=False)
+            cv.circle(t(1, TORSO - 12), 2.6, core, outline=False)
     # After the front leg: a long robe hangs over the legs.
     out.append((65, "outfit", robe))
 
@@ -214,13 +242,13 @@ def outfit_pieces(look, gender, p, s):
         if o.get("pauldron"):
             sh = s["arm_f"][0]
             cv.circle((sh[0], sh[1] + 1), 7.5, rgba(o["mantle"]))
-            cv.circle((sh[0] - 1.5, sh[1] - 1), 2.4, (255, 250, 220, 255), outline=False)
+            cv.circle((sh[0] - 1.5, sh[1] - 1), 2.4, core, outline=False)
     out.append((102, "outfit", front))
     return out
 
 
-def head_pieces(look, gender, p, s):
-    h, hc, wave, fem, out = HEADS[look], s["head"], p["wave"], s["fem"], []
+def head_pieces(look, gender, p, s, marked=False):
+    h, hc, wave, fem, out = (MARKED_HEADS if marked else HEADS)[look], s["head"], p["wave"], s["fem"], []
     hair = rgba(HAIR[gender])
     if fem and not h.get("hood"):
         def tail(cv):
@@ -274,11 +302,24 @@ def head_pieces(look, gender, p, s):
     return out
 
 
+def weapon_angle(p):
+    """Direction the weapon points from the hand, in rig space (radians, y down).
+
+    Tilted forward so the head of the staff rides clear of the face."""
+    return -math.pi / 2 + p["weapon"] + 0.5 - max(0.0, p["weapon"]) * 0.6
+
+
+def hand_socket(s, p):
+    """[x, y, degrees] of the front hand and weapon direction, in cell px."""
+    cv = Canvas(p["rot"], p["dx"], p["dy"])
+    x, y = cv.tx(s["arm_f"][2])
+    return [round(x / SS, 2), round(y / SS, 2), round(math.degrees(weapon_angle(p) + p["rot"]), 2)]
+
+
 def weapon_pieces(look, gender, p, s):
     w = WEAPONS[look]
     hand = s["arm_f"][2]
-    # Tilted forward so the head of the staff rides clear of the face.
-    ang = -math.pi / 2 + p["weapon"] + 0.5 - max(0.0, p["weapon"]) * 0.6
+    ang = weapon_angle(p)
     L = w["length"]
     top = (hand[0] + 4 + math.cos(ang) * L, hand[1] + math.sin(ang) * L)
     bot = (hand[0] - math.cos(ang) * 16, hand[1] - math.sin(ang) * 16)
@@ -329,8 +370,33 @@ def weapon_pieces(look, gender, p, s):
 # --------------------------------------------------------------------------- render
 
 
-def render(pieces, p):
-    """Render pieces into one image per layer, cut where a lower layer must show on top."""
+def _mask(im, test):
+    return im.point(lambda v: 255 if test(v) else 0)
+
+
+def split_parts(im):
+    """Split a marker-coloured supersampled layer into fixed/main/trim/gem images."""
+    r, g, b, a = im.split()
+    grey = _mask(ImageChops.lighter(ImageChops.difference(r, g), ImageChops.difference(g, b)), lambda v: v == 0)
+    zero_g, zero_r = _mask(g, lambda v: v == 0), _mask(r, lambda v: v == 0)
+    trim = ImageChops.multiply(ImageChops.multiply(zero_g, _mask(ImageChops.difference(r, b), lambda v: v == 0)),
+                               _mask(r, lambda v: v > 0))
+    gem = ImageChops.multiply(ImageChops.multiply(zero_r, _mask(ImageChops.difference(g, b), lambda v: v == 0)),
+                              _mask(g, lambda v: v > 0))
+    tinted = ImageChops.lighter(ImageChops.lighter(grey, trim), gem)
+    parts = {
+        "fixed": Image.merge("RGBA", (r, g, b, ImageChops.multiply(a, ImageChops.invert(tinted)))),
+        "main": Image.merge("RGBA", (r, g, b, ImageChops.multiply(a, grey))),
+        "trim": Image.merge("RGBA", (r, r, r, ImageChops.multiply(a, trim))),
+        "gem": Image.merge("RGBA", (g, g, g, ImageChops.multiply(a, gem))),
+    }
+    return parts
+
+
+def render(pieces, p, split=()):
+    """Render pieces into one image per layer, cut where a lower layer must show on top.
+
+    Layers named in `split` come back as {part: image} for tinting."""
     rank = {name: i for i, name in enumerate(LAYERS)}
     drawn = []
     for z, layer, fn in sorted(pieces, key=lambda x: x[0]):
@@ -351,10 +417,16 @@ def render(pieces, p):
             layers[layer].alpha_composite(im)
         else:
             layers[layer] = im
-    return {k: v.resize(CELL, Image.LANCZOS) for k, v in layers.items()}
+    out = {}
+    for k, v in layers.items():
+        if k in split:
+            out[k] = {part: im.resize(CELL, Image.LANCZOS) for part, im in split_parts(v).items()}
+        else:
+            out[k] = v.resize(CELL, Image.LANCZOS)
+    return out
 
 
-def write_clip(folder, action, frames, durations, loop, hit_frame):
+def write_clip(folder, action, frames, durations, loop, hit_frame, sockets=None):
     folder.mkdir(parents=True, exist_ok=True)
     cols = min(8, len(frames))
     atlas = Image.new("RGBA", (CELL[0] * cols, CELL[1] * math.ceil(len(frames) / cols)))
@@ -371,6 +443,7 @@ def write_clip(folder, action, frames, durations, loop, hit_frame):
         "frameCount": len(frames), "durationsMs": durations, "durationSeconds": sum(durations) / 1000,
         "fps": round(1000 * len(frames) / sum(durations), 3), "loop": loop, "bodyHeightPx": 140,
         "events": events, "sampling": "linear",
+        **({"sockets": sockets} if sockets else {}),
         "fallback": {"type": "png-atlas", "cellSize": list(CELL),
                      "pages": [{"file": page, "firstFrame": 0, "frameCount": len(frames), "columns": cols}]},
     }
@@ -381,29 +454,47 @@ def export(job, gender, sheet=None):
     name = f"{job}-{gender}"
     base = ROOT / name
     acts = rig.actions("mage")  # staff-caster poses
-    combos = [("body", None)] + [("outfit", k) for k in OUTFITS] + [("head", k) for k in HEADS] + \
-             [("weapon", k) for k in WEAPONS]
-    makers = {"outfit": outfit_pieces, "head": head_pieces, "weapon": weapon_pieces}
+    makers = {"outfit": outfit_pieces, "head": head_pieces}
+    tinted = [("outfit", k) for k in OUTFITS] + [("head", k) for k in HEADS]
+    parts_used = {"outfit": {}, "head": {}}
     preview_rows = []
     for action, (poses, durations, loop, hit_frame) in acts.items():
-        out = {c: [] for c in combos}
+        body, hand, sockets = [], [], []
+        weapons = {k: [] for k in WEAPONS}
+        looks = {c: {part: [] for part in PARTS} for c in tinted}
         for p in poses:
             s = skeleton(gender, p)
             bodies = body_pieces(gender, p, s)
-            # Body alone, then each look rendered on top of the body so cut-outs are right.
-            out[("body", None)].append(render(bodies, p)["body"])
-            for slot, look in combos[1:]:
-                layers = render(bodies + makers[slot](look, gender, p, s), p)
-                out[(slot, look)].append(layers.get(slot) or Image.new("RGBA", CELL))
-        for (slot, look), frames in out.items():
-            folder = base / slot / (look or "") / action if look else base / slot / action
-            write_clip(folder, action, frames, durations, loop, hit_frame)
+            body.append(render(bodies, p)["body"])
+            sockets.append(hand_socket(s, p))
+            # The front hand alone, drawn over the weapon picture.
+            hand.append(render([pc for pc in bodies if pc[0] == 130], p)["body"])
+            for look in WEAPONS:
+                layers = render(bodies + weapon_pieces(look, gender, p, s), p)
+                weapons[look].append(layers.get("weapon") or Image.new("RGBA", CELL))
+            # Each look on top of the body so the cut-outs are right.
+            for slot, look in tinted:
+                layers = render(bodies + makers[slot](look, gender, p, s, marked=True), p, split=(slot,))
+                for part in PARTS:
+                    looks[(slot, look)][part].append((layers.get(slot) or {}).get(part) or Image.new("RGBA", CELL))
+        write_clip(base / "body" / action, action, body, durations, loop, hit_frame, {"hand": sockets})
+        write_clip(base / "hand" / action, action, hand, durations, loop, hit_frame)
+        for look, frames in weapons.items():
+            write_clip(base / "weapon" / look / action, action, frames, durations, loop, hit_frame)
+        for (slot, look), parts in looks.items():
+            for part, frames in parts.items():
+                if not any(f.getbbox() for f in frames):
+                    continue
+                parts_used[slot].setdefault(look, set()).add(part)
+                write_clip(base / slot / look / part / action, action, frames, durations, loop, hit_frame)
         if sheet:
             row = []
             for i in range(len(poses)):
-                im = out[("body", None)][i].copy()
-                for slot, look in (("outfit", "robe-3"), ("head", "hood"), ("weapon", "staff-3")):
-                    im.alpha_composite(out[(slot, look)][i])
+                im = body[i].copy()
+                for slot, look in (("outfit", "robe-3"), ("head", "hood")):
+                    for part in PARTS:
+                        im.alpha_composite(looks[(slot, look)][part][i])
+                im.alpha_composite(weapons["staff-3"][i])
                 row.append(im)
             preview_rows.append(row)
     # Portrait: idle frame 0 in tier-3 gear, head and shoulders.
@@ -437,6 +528,12 @@ def export(job, gender, sheet=None):
         "layers": {
             "order": ["outfit", "head", "weapon"],
             "looks": {"outfit": list(OUTFITS), "head": list(HEADS), "weapon": list(WEAPONS)},
+            # Tint parts per look; weapon looks have none (drawn as is).
+            "parts": {slot: {look: [p for p in PARTS if p in used] for look, used in looks.items()}
+                      for slot, looks in parts_used.items()},
+            "hand": "hand",
+            # Default tints for a hero with no armour (the plain robe).
+            "tints": {"main": "#ece4d2", "trim": "#96704a", "gem": "#6ebeff"},
         },
     }
     return name, entry

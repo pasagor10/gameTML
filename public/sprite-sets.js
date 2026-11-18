@@ -115,6 +115,8 @@ function clipFrom(scene, key, manifest) {
     origin: [anchor[0] / cw, anchor[1] / ch],
     bodyPx,
     hitMs: hit?.atMs ?? manifest.impactMs ?? null,
+    // Per-frame attachment points, e.g. hand: [[x, y, degrees], …] in cell px.
+    sockets: manifest.sockets || null,
   };
 }
 
@@ -174,13 +176,26 @@ export function createSpriteRegistry(scene) {
       // A layered set's own clips are its bare body.
       request(group, name, set.layers ? { ...set, dir: `${set.dir}/body` } : set);
     },
-    // Clips of one gear look on a layered set, or null while it loads.
-    layer(setName, slot, look) {
+    // Clips of one layer folder under a layered set (e.g. "outfit/robe-3/main"
+    // or "hand"), or null while it loads.
+    layer(setName, path) {
       const set = index()?.sets?.[setName],
-        name = `${setName}/${slot}/${look}`;
-      if (!set?.layers?.looks?.[slot]?.includes(look)) return null;
-      request("layers", name, { ...set, dir: `${set.dir}/${slot}/${look}`, layers: null });
+        name = `${setName}/${path}`;
+      if (!set?.layers) return null;
+      request("layers", name, { ...set, dir: `${set.dir}/${path}`, layers: null });
       return maps.layers.get(name)?.clips || null;
+    },
+    // Texture key for a plain image (a weapon's item picture), or null while it loads.
+    image(url) {
+      const key = `gear:${url}`;
+      if (scene.textures.exists(key)) return key;
+      if (!requested.has(key)) {
+        requested.set(key, { group: "images" });
+        finished.add(key);
+        scene.load.image(key, url);
+        if (!scene.load.isLoading()) scene.load.start();
+      }
+      return null;
     },
   };
 }
@@ -268,7 +283,7 @@ export function playSpriteSet(image, set, p, pose, time) {
   if (image.texture.key !== f.key || image.frame.name !== f.frame)
     image.setTexture(f.key, f.frame);
   image.setOrigin(clip.origin[0], clip.origin[1]);
-  image._clip = { state, index };
+  image._clip = { state, index, clip };
   const scale = set.height / clip.bodyPx;
   image._spriteScale = scale;
   // No authored frames for this state (e.g. walk on an idle+attack sheet):
@@ -340,9 +355,13 @@ export function playMonsterDeath(scene, image, set) {
 // Paper-doll gear: stack each worn look over a layered set's bare body.
 // Every layer shares the body's cell size, anchor and frame timing, so it
 // takes the body's current frame index and copies its whole transform
-// (position, scale, flip, angle, tint, alpha). Call after all procedural
-// motion has been applied to the body image. `holder` keeps the images.
-export function playLayers(scene, holder, image, set, looks, registry) {
+// (position, scale, flip, angle, alpha). Outfit and head looks come in tint
+// parts (fixed / main / trim / gem) coloured from the armour picture; the
+// weapon is the item's own picture placed on the body's hand socket, with the
+// front hand drawn over its grip. Call after all procedural motion has been
+// applied to the body image. `holder` keeps the images; `dress` comes from
+// public/hero-gear.js gearDress().
+export function playLayers(scene, holder, image, set, dress, registry) {
   holder.layers ??= {
     images: {},
     destroy() {
@@ -350,36 +369,90 @@ export function playLayers(scene, holder, image, set, looks, registry) {
       this.images = {};
     },
   };
-  const order = set?.layers?.order || [],
-    images = holder.layers.images;
-  for (const slot of Object.keys(images))
-    if (!order.includes(slot)) {
-      images[slot].destroy();
-      delete images[slot];
-    }
-  order.forEach((slot, k) => {
-    const clips = looks?.[slot] ? registry.layer(set.name, slot, looks[slot]) : null,
-      clip = clips?.[image._clip?.state] || clips?.idle;
-    let im = images[slot];
-    if (!clip) {
-      im?.setVisible(false);
-      return;
-    }
-    im ??= images[slot] = scene.add.image(0, 0, clip.frames[0].key, clip.frames[0].frame);
-    const f = clip.frames[Math.min(image._clip?.index || 0, clip.frames.length - 1)];
+  const layers = set?.layers,
+    images = holder.layers.images,
+    used = new Set(),
+    state = image._clip?.state,
+    index = image._clip?.index || 0;
+  let depth = 0;
+  // One stacked image per key, following the body frame by frame.
+  const place = (key, clips, tint) => {
+    const clip = clips?.[state] || clips?.idle;
+    if (!clip) return;
+    used.add(key);
+    let im = images[key];
+    im ??= images[key] = scene.add.image(0, 0, clip.frames[0].key, clip.frames[0].frame);
+    const f = clip.frames[Math.min(index, clip.frames.length - 1)];
     if (im.texture.key !== f.key || im.frame.name !== f.frame) im.setTexture(f.key, f.frame);
     im.setOrigin(image.originX, image.originY)
       .setPosition(image.x, image.y)
       .setScale(image.scaleX, image.scaleY)
       .setFlip(image.flipX, image.flipY)
-      .setAngle(image.angle)
-      .setAlpha(image.alpha)
+      .setAngle(image.angle);
+    finish(im, tint);
+  };
+  const finish = (im, tint) => {
+    im.setAlpha(image.alpha)
       .setBlendMode(image.blendMode)
       .setVisible(image.visible)
-      .setDepth(image.depth + (k + 1) * 0.01);
+      .setDepth(image.depth + ++depth * 0.005);
+    // A hit flash on the body wins over the gear colours.
     if (image.isTinted) {
       im.setTint(image.tintTopLeft);
       im.tintFill = image.tintFill;
+    } else if (tint != null) {
+      im.tintFill = false;
+      im.setTint(tint);
     } else if (im.isTinted) im.clearTint();
-  });
+  };
+  if (layers) {
+    for (const slot of ["outfit", "head"]) {
+      const look = dress?.looks?.[slot],
+        parts = layers.parts?.[slot]?.[look];
+      if (!look || !layers.looks?.[slot]?.includes(look)) continue;
+      if (!parts) place(slot, registry.layer(set.name, `${slot}/${look}`));
+      // Cloth first, the fixed part (outlines, hair) on top of it.
+      else
+        for (const part of ["main", "trim", "gem", "fixed"])
+          if (parts.includes(part))
+            place(`${slot}:${part}`, registry.layer(set.name, `${slot}/${look}/${part}`), dress.tints?.[slot]?.[part]);
+    }
+    const sock = image._clip?.clip?.sockets?.hand?.[index],
+      icon = dress?.weapon && sock ? registry.image(dress.weapon.url) : null;
+    if (icon) {
+      // The weapon's item picture: butt bottom-left, tip top-right, so it
+      // points at -45° unrotated. Flipping mirrors around the frame middle.
+      used.add("weapon-icon");
+      const w = dress.weapon,
+        flip = image.flipX,
+        cw = image.frame.width,
+        ch = image.frame.height,
+        lx = ((flip ? cw - sock[0] : sock[0]) - image.originX * cw) * image.scaleX,
+        ly = (sock[1] - image.originY * ch) * image.scaleY,
+        r = image.rotation,
+        tex = scene.textures.get(icon).getSourceImage(),
+        gx = 0.1 + 0.8 * w.grip,
+        gy = 0.9 - 0.8 * w.grip,
+        deg = sock[2] + 45;
+      let im = images["weapon-icon"];
+      im ??= images["weapon-icon"] = scene.add.image(0, 0, icon);
+      if (im.texture.key !== icon) im.setTexture(icon);
+      im.setOrigin(flip ? 1 - gx : gx, gy)
+        .setPosition(image.x + lx * Math.cos(r) - ly * Math.sin(r), image.y + lx * Math.sin(r) + ly * Math.cos(r))
+        .setScale((w.length * Math.abs(image.scaleY)) / (tex.width * 0.8 * Math.SQRT2))
+        .setFlip(flip, false)
+        .setAngle((flip ? -deg : deg) + image.angle);
+      finish(im, null);
+    } else {
+      const look = dress?.looks?.weapon;
+      if (look && layers.looks?.weapon?.includes(look)) place("weapon", registry.layer(set.name, `weapon/${look}`));
+    }
+    // The front hand closes over the grip.
+    if (layers.hand) place("hand", registry.layer(set.name, layers.hand));
+  }
+  for (const key of Object.keys(images))
+    if (!used.has(key)) {
+      images[key].destroy();
+      delete images[key];
+    }
 }

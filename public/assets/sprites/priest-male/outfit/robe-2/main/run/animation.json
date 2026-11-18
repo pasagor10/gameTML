@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "3.0",
+  "name": "run",
+  "artSource": "codeart layered (tools/sprite-rig/layered_rig.py)",
+  "sourceSize": [
+    300,
+    220
+  ],
+  "sourceAnchor": [
+    150.0,
+    208.0
+  ],
+  "frameCount": 8,
+  "durationsMs": [
+    75,
+    75,
+    75,
+    75,
+    75,
+    75,
+    75,
+    75
+  ],
+  "durationSeconds": 0.6,
+  "fps": 13.333,
+  "loop": true,
+  "bodyHeightPx": 140,
+  "events": [],
+  "sampling": "linear",
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      300,
+      220
+    ],
+    "pages": [
+      {
+        "file": "run-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 8,
+        "columns": 8
+      }
+    ]
+  }
+}

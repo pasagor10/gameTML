@@ -32,7 +32,7 @@ import {
   enhancementCost,
   enhancementChance,
 } from "/shared/rpg.js";
-import { createTownNpcs, footGlow, createRim } from "/town-npcs.js?v=9";
+import { createTownNpcs, footGlow, createRim } from "/town-npcs.js?v=10";
 import { updateEnhanceAura, AURA_LEVEL } from "/enhance-aura.js?v=3";
 import { marketHtml, shopManagerHtml, marketState } from "/market-ui.js?v=7";
 import { sampleMotion } from "/shared/smoothing.js";
@@ -62,7 +62,7 @@ import {
   animateSlime,
   monsterDeath,
 } from "/combat-visuals.js?v=0.3.1";
-import { createSelectionPreview } from "/selection-scene.js?v=0.9.0";
+import { createSelectionPreview } from "/selection-scene.js?v=0.10.0";
 import {
   CLASSES,
   ITEMS,
@@ -93,8 +93,8 @@ import {
   playMonsterSet,
   playMonsterDeath,
   playLayers,
-} from "/sprite-sets.js?v=0.18.0";
-import { heroLooks } from "/shared/appearance.js";
+} from "/sprite-sets.js?v=0.19.0";
+import { gearDress } from "/hero-gear.js?v=1";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 let lobbyCharacterId = null;
@@ -354,7 +354,7 @@ function renderCards() {
     gender,
     saved ? heroSkins(saved) : [`${job}-${gender}`],
     saved?.id || `create-${job}-${gender}`,
-    heroLooks(saved || { class: job }),
+    saved || { class: job, equipment: { weapon: `starter_${job}` } },
   );
   $$("[data-class]").forEach(
     (b) =>
@@ -2730,7 +2730,7 @@ class Adventure extends Phaser.Scene {
       a.rim.sync(a.image);
       // Paper-doll heroes: worn gear stacked over the bare body.
       if (spriteSet?.layers)
-        playLayers(this, a, a.image, spriteSet, heroLooks(p, spriteSet.layers.looks), this.sprites);
+        playLayers(this, a, a.image, spriteSet, gearDress(p, spriteSet), this.sprites);
       else if (a.layers) a.layers.destroy();
       // Name sits just above the head: painted sets know their height.
       const headroom = spriteSet ? spriteSet.height + 24 : 158;

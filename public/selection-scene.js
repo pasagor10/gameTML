@@ -3,7 +3,8 @@ import {
   createSpriteRegistry,
   playSpriteSet,
   playLayers,
-} from "/sprite-sets.js?v=0.18.0";
+} from "/sprite-sets.js?v=0.19.0";
+import { gearDress } from "/hero-gear.js?v=1";
 
 // The chosen hero rises from rest. Account and creation actions remain in game.js.
 export function createSelectionPreview() {
@@ -113,7 +114,7 @@ export function createSelectionPreview() {
         .setAlpha(rise)
         .setPosition(300, 525 + (1 - rise) * 30)
         .setAngle(0);
-      if (set?.layers) playLayers(this, holder, this.hero, set, selected.looks, this.sprites);
+      if (set?.layers) playLayers(this, holder, this.hero, set, gearDress(selected.hero || { class: selected.job }, set), this.sprites);
       else holder.layers?.destroy();
       this.resting
         .setAlpha(sheeted() ? Math.max(0, 1 - rise * 1.6) : 0)
@@ -160,9 +161,9 @@ export function createSelectionPreview() {
       gender,
       skins = [`${job}-${gender}`],
       identity = `${job}-${gender}`,
-      looks = null,
+      hero = null,
     ) {
-      const next = { job, gender, skins, identity, looks };
+      const next = { job, gender, skins, identity, hero };
       if (JSON.stringify(next) === JSON.stringify(selected)) return;
       selected = next;
       if (ready) game.scene.getScenes()[0].select();

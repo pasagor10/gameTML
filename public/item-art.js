@@ -3,6 +3,8 @@ const artwork = {
   starter_swordsman: ["sword", 0],
   starter_archer: ["bow", 0],
   starter_mage: ["staff", 0],
+  starter_priest: ["staff", 0],
+  dawn_scepter: ["staff", 2],
   guardian_weapon: ["armor", 11],
   traveler_armor: ["armor", 1],
   moon_blade: ["sword", 2],

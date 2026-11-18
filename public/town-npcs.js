@@ -1,4 +1,4 @@
-import { playNpcSet } from "/sprite-sets.js?v=0.18.0";
+import { playNpcSet } from "/sprite-sets.js?v=0.19.0";
 
 // Role-specific townsfolk. Painted idle/talk sets (assets/sprites/npcs) are
 // used once loaded; until then, and if a set is missing, the procedural rig
