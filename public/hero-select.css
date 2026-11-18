@@ -1,0 +1,475 @@
+/* Hero select, redesigned: framed glass panels, roster cards with a portrait
+   slot, a stats sheet with icon rows and a 4-up skill bar, and a light pool
+   under the champion. Loaded after sanctuary-select.css; desktop rules stay
+   inside min-width so the phone layouts there keep working. */
+
+/* Every roster card always shows its standing portrait (the sitting art is gone). */
+body #landing.game-lobby[data-lobby-mode] .saved-hero .saved-portrait {
+  opacity: 1;
+  transform: none;
+  background-position: center bottom;
+}
+body #landing.game-lobby[data-lobby-mode] .saved-hero:not(.active) .saved-portrait {
+  filter: saturate(0.75) brightness(0.85) drop-shadow(0 4px 3px #021d1a66);
+}
+
+@media (min-width: 761px) {
+  body #landing.game-lobby[data-lobby-mode] .landing-shade {
+    background:
+      radial-gradient(ellipse 46% 60% at 50% 58%, transparent 55%, #03101466),
+      linear-gradient(90deg, #020e1399, transparent 30%, transparent 70%, #020e1399),
+      linear-gradient(#03121a55, transparent 26%, transparent 72%, #020c10aa);
+  }
+
+  /* Panels: dark glass in a double gold frame with corner gems. */
+  body #landing.game-lobby[data-lobby-mode] .lobby-panel {
+    border: 1px solid #e0c27a99;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #0d252cf0, #081a20f2 60%, #07161bf5);
+    box-shadow:
+      inset 0 0 0 4px #07161b,
+      inset 0 0 0 5px #e0c27a2e,
+      inset 0 1px 18px #f6dfa514,
+      0 22px 50px #02090ccc;
+    backdrop-filter: blur(8px);
+  }
+  body #landing.game-lobby[data-lobby-mode] .lobby-panel::before {
+    content: "";
+    top: -6px;
+    width: 11px;
+    height: 11px;
+    border: 1px solid #fbe3a6;
+    background: linear-gradient(135deg, #fff1c4, #c9953f);
+    transform: translateX(-50%) rotate(45deg);
+    box-shadow: 0 0 12px #f4c76b99;
+  }
+
+  /* Roster */
+  body #landing.game-lobby[data-lobby-mode] .lobby-roster {
+    padding: 14px 12px 12px;
+    overflow: auto;
+  }
+  body #landing.game-lobby[data-lobby-mode="roster"] .roster-divider {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin: 0 4px 12px;
+    padding: 0 2px 10px;
+    border-bottom: 1px solid #e0c27a3d;
+    color: #f0d79c;
+    font: 15px "Chonburi", serif;
+    letter-spacing: 0.5px;
+  }
+  body #landing.game-lobby[data-lobby-mode="roster"] .roster-divider::before,
+  body #landing.game-lobby[data-lobby-mode="roster"] .roster-divider::after {
+    display: none;
+  }
+  body #landing.game-lobby[data-lobby-mode] .roster-divider small {
+    font: 600 11px system-ui, sans-serif;
+    color: #9fc2b8;
+    letter-spacing: 1px;
+  }
+  body #landing.game-lobby[data-lobby-mode] #saved-characters {
+    gap: 8px;
+  }
+  /* Portrait on the left; name, class and a level pill stacked beside it. */
+  body #landing.game-lobby[data-lobby-mode] .saved-hero {
+    grid-template-columns: 72px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-content: center;
+    column-gap: 12px;
+    row-gap: 4px;
+    min-height: 88px;
+    padding: 7px 12px 7px 7px;
+    border: 1px solid #e0c27a2b;
+    border-radius: 9px;
+    background: linear-gradient(90deg, #123139d9, #0b2026cc);
+    cursor: pointer;
+    transition:
+      border-color 0.2s,
+      background 0.2s,
+      box-shadow 0.2s,
+      transform 0.2s;
+  }
+  body #landing.game-lobby[data-lobby-mode] .saved-hero:last-child {
+    border-bottom: 1px solid #e0c27a2b;
+  }
+  body #landing.game-lobby[data-lobby-mode] .saved-hero:hover {
+    border-color: #e0c27a77;
+    transform: translateX(2px);
+  }
+  body #landing.game-lobby[data-lobby-mode] .saved-hero.active {
+    border: 1px solid #f4d48c;
+    background: linear-gradient(90deg, #3b3622f0, #1a3134e6 70%);
+    box-shadow:
+      inset 0 0 0 1px #ffe8b033,
+      0 0 22px #f4c76b33;
+  }
+  body #landing.game-lobby[data-lobby-mode] .saved-hero.active::before {
+    content: "";
+    position: absolute;
+    left: -1px;
+    top: 14px;
+    bottom: 14px;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: linear-gradient(#fff0bd, #d9a245);
+    box-shadow: 0 0 10px #f4c76b;
+  }
+  body #landing.game-lobby[data-lobby-mode] .saved-hero.active::after {
+    right: -8px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .roster-pose {
+    grid-row: 1 / 3;
+    width: 72px;
+    height: 72px;
+    border: 1px solid #e0c27a40;
+    border-radius: 7px;
+    background:
+      radial-gradient(circle at 50% 78%, #f4d48c40, transparent 62%),
+      linear-gradient(#0f2b32, #071419);
+    overflow: hidden;
+  }
+  body #landing.game-lobby[data-lobby-mode] .saved-hero.active .roster-pose {
+    border-color: #f4d48caa;
+    background:
+      radial-gradient(circle at 50% 78%, #ffe1a066, transparent 64%),
+      linear-gradient(#20383b, #0a1a1e);
+  }
+  body #landing.game-lobby[data-lobby-mode] .saved-hero .saved-portrait {
+    inset: 5px 4px 0;
+    width: auto;
+    height: auto;
+  }
+  body #landing.game-lobby[data-lobby-mode] .saved-hero > span:not(.roster-pose) {
+    align-self: end;
+  }
+  body #landing.game-lobby[data-lobby-mode] .saved-hero strong {
+    font-size: clamp(15px, 1.3vw, 20px);
+    line-height: 1.45;
+  }
+  body #landing.game-lobby[data-lobby-mode] .saved-hero small {
+    display: block;
+    color: #a9cbc0;
+    font-size: 12px;
+    line-height: 1.3;
+  }
+  body #landing.game-lobby[data-lobby-mode] .saved-hero > b {
+    position: static;
+    grid-column: 2;
+    justify-self: start;
+    align-self: start;
+    padding: 3px 9px;
+    border: 1px solid #e0c27a66;
+    border-radius: 999px;
+    background: #07161bcc;
+    color: #f5dfa6;
+    font: 700 11px Georgia, serif;
+    letter-spacing: 0.5px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .new-hero {
+    margin: 12px 4px 0;
+    width: calc(100% - 8px);
+    padding: 10px;
+    border: 1px dashed #e0c27a66;
+    border-radius: 8px;
+    background: #0a1d2299;
+    color: #f0d79c;
+    font-size: 12px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .new-hero:hover {
+    border-style: solid;
+    background: #16323799;
+  }
+
+  /* Stats sheet */
+  body #landing.game-lobby[data-lobby-mode] .lobby-details {
+    padding: 18px 18px 20px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .lobby-details .lobby-panel-title {
+    justify-content: space-between;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e0c27a3d;
+  }
+  body #landing.game-lobby[data-lobby-mode] .lobby-details .lobby-panel-title h2 {
+    font: 15px "Chonburi", serif;
+    color: #f0d79c;
+  }
+  body #landing.game-lobby[data-lobby-mode] .lobby-level {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border: 1px solid #f4d48c;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 30%, #3e3a24, #0a1a1e 70%);
+    box-shadow:
+      inset 0 0 0 3px #07161b,
+      inset 0 0 0 4px #e0c27a44,
+      0 0 14px #f4c76b33;
+    color: #c9b17a;
+    font-size: 8px;
+    line-height: 1;
+    text-align: center;
+  }
+  body #landing.game-lobby[data-lobby-mode] .lobby-level b {
+    display: block;
+    font: 700 18px Georgia, serif;
+    color: #ffe9b4;
+  }
+  body #landing.game-lobby[data-lobby-mode] .class-identity {
+    position: relative;
+    padding: 2px 0 14px;
+    margin-bottom: 6px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .class-identity::after {
+    content: "";
+    position: absolute;
+    left: 20%;
+    right: 20%;
+    bottom: 4px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #e0c27a99, transparent);
+  }
+  body #landing.game-lobby[data-lobby-mode] .class-identity h3 {
+    font-size: clamp(20px, 1.9vw, 28px);
+    color: #ffe6ad;
+    text-shadow: 0 2px 10px #000a;
+  }
+  body #landing.game-lobby[data-lobby-mode] .class-role {
+    display: block;
+    margin-top: 2px;
+    text-align: center;
+    color: #9fc2b8;
+    font-size: 11px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .attribute {
+    margin: 0 0 6px;
+    padding: 6px 10px 8px;
+    border: 1px solid #e0c27a1f;
+    border-radius: 7px;
+    background: #07161b99;
+  }
+  body #landing.game-lobby[data-lobby-mode] .attribute > div:first-child {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 5px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .attribute b {
+    font: 700 12px Georgia, serif;
+    letter-spacing: 1.5px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .attribute small {
+    display: inline;
+    margin-left: 6px;
+    color: #8fb3a9;
+    font-size: 10px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .attribute strong {
+    font: 700 17px Georgia, serif;
+  }
+  body #landing.game-lobby[data-lobby-mode] .attribute-track {
+    height: 6px;
+    border: 0;
+    border-radius: 6px;
+    background: #031013;
+    box-shadow: inset 0 1px 2px #000c;
+  }
+  body #landing.game-lobby[data-lobby-mode] .attribute-track i {
+    box-shadow: 0 0 8px currentColor;
+  }
+  body #landing.game-lobby[data-lobby-mode] .attribute[data-stat="HP"] b { color: #ff8c8a; }
+  body #landing.game-lobby[data-lobby-mode] .attribute[data-stat="MP"] b { color: #7fe6f6; }
+  body #landing.game-lobby[data-lobby-mode] .attribute[data-stat="ATK"] b { color: #f8d98b; }
+  body #landing.game-lobby[data-lobby-mode] .attribute[data-stat="DEF"] b { color: #a1e2aa; }
+
+  body #landing.game-lobby[data-lobby-mode] .stats-heading.skill-heading {
+    display: flex;
+    justify-content: center;
+    margin: 14px 0 0;
+    color: #c9b17a;
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .stats-heading.skill-heading small {
+    display: none;
+  }
+  body #landing.game-lobby[data-lobby-mode] .lobby-skills {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 0;
+    border-top: 0;
+  }
+  body #landing.game-lobby[data-lobby-mode] .lobby-skills button {
+    gap: 6px;
+    cursor: pointer;
+  }
+  body #landing.game-lobby[data-lobby-mode] .lobby-skills button > span {
+    width: 100%;
+    max-width: 54px;
+    height: auto;
+    aspect-ratio: 1;
+    border: 1px solid #e0c27a;
+    border-radius: 9px;
+    background: radial-gradient(circle at 50% 35%, #4a4428, #0a1d22 72%);
+    box-shadow:
+      inset 0 0 0 3px #07161b,
+      inset 0 0 0 4px #e0c27a33,
+      0 4px 10px #0008;
+    transition:
+      transform 0.15s,
+      box-shadow 0.15s;
+  }
+  body #landing.game-lobby[data-lobby-mode] .lobby-skills button:hover > span,
+  body #landing.game-lobby[data-lobby-mode] .lobby-skills button.skill-previewing > span {
+    transform: translateY(-2px);
+    box-shadow:
+      inset 0 0 0 3px #07161b,
+      inset 0 0 0 4px #ffe3a066,
+      0 0 16px #f4c76b77;
+  }
+  body #landing.game-lobby[data-lobby-mode] .lobby-skills button > b {
+    display: grid;
+    place-items: center;
+    position: absolute;
+    top: -5px;
+    right: calc(50% - 31px);
+    width: 18px;
+    height: 18px;
+    border: 1px solid #e0c27a;
+    border-radius: 5px;
+    background: #07161b;
+    color: #ffe6ad;
+    font: 700 10px system-ui, sans-serif;
+  }
+  body #landing.game-lobby[data-lobby-mode] .lobby-skills button strong {
+    font-size: 10px;
+    line-height: 1.3;
+    color: #e9dcb6;
+  }
+
+  /* Champion: a soft pool of light on the pedestal, tinted by the class. */
+  body #landing.game-lobby[data-lobby-mode] .hero-showcase::before {
+    display: block;
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 2%;
+    width: min(70%, 520px);
+    aspect-ratio: 3.6;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: radial-gradient(
+      ellipse at center,
+      color-mix(in srgb, var(--hero-accent, #f4d48c) 45%, #fff3c8 20%) 0%,
+      color-mix(in srgb, var(--hero-accent, #f4d48c) 25%, transparent) 38%,
+      transparent 70%
+    );
+    opacity: 0.55;
+    filter: blur(6px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  body #landing.game-lobby[data-lobby-mode] #hero-preview {
+    z-index: 1;
+  }
+  body #landing.game-lobby[data-lobby-mode] .hero-caption h2 {
+    color: #ffe3a6;
+    text-shadow:
+      0 2px 0 #3a2510,
+      0 4px 16px #000c;
+  }
+  body #landing.game-lobby[data-lobby-mode] .hero-cycle {
+    opacity: 0.7;
+    border: 1px solid #e0c27a88;
+    background: #07161bcc;
+    color: #ffe6ad;
+  }
+}
+
+/* Short desktop windows: tighter rows so the sheet fits. */
+@media (max-height: 720px) and (min-width: 761px) {
+  body #landing.game-lobby[data-lobby-mode] .lobby-details {
+    padding: 12px 14px 14px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .lobby-details .lobby-panel-title {
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .class-identity {
+    padding-bottom: 10px;
+    margin-bottom: 2px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .class-role,
+  body #landing.game-lobby[data-lobby-mode] .stats-heading.skill-heading {
+    display: none;
+  }
+  body #landing.game-lobby[data-lobby-mode] .lobby-skills {
+    margin-top: 10px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .lobby-skills button strong {
+    display: none;
+  }
+}
+/* Not enough room for the name under the hero: the roster and sheet show it. */
+@media (max-height: 680px) and (min-width: 761px) {
+  body #landing.game-lobby[data-lobby-mode] .hero-caption {
+    display: none;
+  }
+}
+@media (max-height: 650px) and (min-width: 761px) {
+  body #landing.game-lobby[data-lobby-mode] .saved-hero {
+    min-height: 70px;
+    grid-template-columns: 60px minmax(0, 1fr);
+  }
+  body #landing.game-lobby[data-lobby-mode] .roster-pose {
+    width: 60px;
+    height: 60px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .attribute {
+    margin-bottom: 5px;
+    padding: 5px 8px 6px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .lobby-level {
+    width: 40px;
+    height: 40px;
+  }
+}
+@media (max-height: 530px) and (min-width: 761px) {
+  body #landing.game-lobby[data-lobby-mode] .saved-hero {
+    min-height: 58px;
+    grid-template-columns: 48px minmax(0, 1fr);
+    column-gap: 8px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .roster-pose {
+    width: 48px;
+    height: 48px;
+  }
+  body #landing.game-lobby[data-lobby-mode="roster"] .roster-divider,
+  body #landing.game-lobby[data-lobby-mode] .stats-heading.skill-heading,
+  body #landing.game-lobby[data-lobby-mode] .attribute small {
+    display: none;
+  }
+  body #landing.game-lobby[data-lobby-mode] .attribute {
+    margin: 0;
+    padding: 4px 6px;
+  }
+}
+/* Narrow desktop and landscape phones: a smaller portrait leaves room for the name. */
+@media (max-width: 1000px) and (min-width: 761px) {
+  body #landing.game-lobby[data-lobby-mode] .saved-hero {
+    grid-template-columns: 50px minmax(0, 1fr);
+    column-gap: 8px;
+    padding-right: 8px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .roster-pose {
+    width: 50px;
+    height: 50px;
+  }
+  body #landing.game-lobby[data-lobby-mode] .saved-hero strong {
+    font-size: 14px;
+  }
+}

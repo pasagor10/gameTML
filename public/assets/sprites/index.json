@@ -13,7 +13,8 @@
         "idle": "idle",
         "attack": "attack",
         "skill": "skill"
-      }
+      },
+      "showcase": "showcase.webp"
     },
     "archer-female": {
       "dir": "archer-female-painted",
@@ -28,7 +29,8 @@
         "idle": "idle",
         "attack": "attack",
         "skill": "skill"
-      }
+      },
+      "showcase": "showcase.webp"
     },
     "mage-male": {
       "dir": "mage-male-painted",
@@ -43,7 +45,8 @@
         "idle": "idle",
         "attack": "attack",
         "skill": "skill"
-      }
+      },
+      "showcase": "showcase.webp"
     },
     "mage-female": {
       "dir": "mage-female-painted",
@@ -58,7 +61,8 @@
         "idle": "idle",
         "attack": "attack",
         "skill": "skill"
-      }
+      },
+      "showcase": "showcase.webp"
     },
     "swordsman-male": {
       "dir": "swordsman-male-painted",
@@ -73,7 +77,8 @@
         "idle": "idle",
         "attack": "attack",
         "skill": "skill"
-      }
+      },
+      "showcase": "showcase.webp"
     },
     "swordsman-female": {
       "dir": "swordsman-female-painted",
@@ -88,7 +93,8 @@
         "idle": "idle",
         "attack": "attack",
         "skill": "skill"
-      }
+      },
+      "showcase": "showcase.webp"
     },
     "archer-male-ranger-2": {
       "dir": "archer-male-ranger-2",
@@ -105,7 +111,8 @@
         "skill": "skill",
         "hit": "hurt",
         "death": "death"
-      }
+      },
+      "showcase": "showcase.webp"
     },
     "archer-male-scout-2": {
       "dir": "archer-male-scout-2",
@@ -122,7 +129,8 @@
         "skill": "skill",
         "hit": "hurt",
         "death": "death"
-      }
+      },
+      "showcase": "showcase.webp"
     },
     "archer-male-ranger-3": {
       "dir": "archer-male-ranger-3",
@@ -139,7 +147,8 @@
         "skill": "skill",
         "hit": "hurt",
         "death": "death"
-      }
+      },
+      "showcase": "showcase.webp"
     },
     "archer-male-scout-3": {
       "dir": "archer-male-scout-3",
@@ -156,7 +165,8 @@
         "skill": "skill",
         "hit": "hurt",
         "death": "death"
-      }
+      },
+      "showcase": "showcase.webp"
     },
     "archer-female-ranger-2": {
       "dir": "archer-female-ranger-2-painted",
@@ -173,7 +183,8 @@
         "hit": "hurt",
         "death": "death"
       },
-      "portrait": "portrait.webp"
+      "portrait": "portrait.webp",
+      "showcase": "showcase.webp"
     },
     "archer-female-scout-2": {
       "dir": "archer-female-ranger-2-painted",
@@ -190,7 +201,8 @@
         "hit": "hurt",
         "death": "death"
       },
-      "portrait": "portrait.webp"
+      "portrait": "portrait.webp",
+      "showcase": "showcase.webp"
     },
     "archer-female-ranger-3": {
       "dir": "archer-female-ranger-3-painted",
@@ -207,7 +219,8 @@
         "hit": "hurt",
         "death": "death"
       },
-      "portrait": "portrait.webp"
+      "portrait": "portrait.webp",
+      "showcase": "showcase.webp"
     },
     "archer-female-scout-3": {
       "dir": "archer-female-ranger-3-painted",
@@ -224,7 +237,8 @@
         "hit": "hurt",
         "death": "death"
       },
-      "portrait": "portrait.webp"
+      "portrait": "portrait.webp",
+      "showcase": "showcase.webp"
     },
     "swordsman-female-duelist-2": {
       "dir": "swordsman-female-duelist-2",
@@ -241,7 +255,8 @@
         "skill": "skill",
         "hit": "hurt",
         "death": "death"
-      }
+      },
+      "showcase": "showcase.webp"
     },
     "swordsman-female-duelist-3": {
       "dir": "swordsman-female-duelist-3",
@@ -258,7 +273,8 @@
         "skill": "skill",
         "hit": "hurt",
         "death": "death"
-      }
+      },
+      "showcase": "showcase.webp"
     },
     "swordsman-female-guardian-2": {
       "dir": "swordsman-female-guardian-2",
@@ -275,7 +291,8 @@
         "skill": "skill",
         "hit": "hurt",
         "death": "death"
-      }
+      },
+      "showcase": "showcase.webp"
     },
     "swordsman-female-guardian-3": {
       "dir": "swordsman-female-guardian-3",
@@ -292,7 +309,8 @@
         "skill": "skill",
         "hit": "hurt",
         "death": "death"
-      }
+      },
+      "showcase": "showcase.webp"
     },
     "mage-female-arcanist-2": {
       "dir": "mage-female-arcanist-2",
@@ -309,7 +327,8 @@
         "skill": "skill",
         "hit": "hurt",
         "death": "death"
-      }
+      },
+      "showcase": "showcase.webp"
     },
     "mage-female-arcanist-3": {
       "dir": "mage-female-arcanist-3",
@@ -326,7 +345,8 @@
         "skill": "skill",
         "hit": "hurt",
         "death": "death"
-      }
+      },
+      "showcase": "showcase.webp"
     },
     "mage-female-oracle-2": {
       "dir": "mage-female-oracle-2",
@@ -343,7 +363,8 @@
         "skill": "skill",
         "hit": "hurt",
         "death": "death"
-      }
+      },
+      "showcase": "showcase.webp"
     },
     "mage-female-oracle-3": {
       "dir": "mage-female-oracle-3",
@@ -360,7 +381,8 @@
         "skill": "skill",
         "hit": "hurt",
         "death": "death"
-      }
+      },
+      "showcase": "showcase.webp"
     },
     "swordsman-male-duelist-2": {
       "dir": "swordsman-male-duelist-2",
@@ -377,7 +399,8 @@
         "skill": "skill",
         "hit": "hurt",
         "death": "death"
-      }
+      },
+      "showcase": "showcase.webp"
     },
     "swordsman-male-duelist-3": {
       "dir": "swordsman-male-duelist-3",
@@ -394,7 +417,8 @@
         "skill": "skill",
         "hit": "hurt",
         "death": "death"
-      }
+      },
+      "showcase": "showcase.webp"
     },
     "swordsman-male-guardian-2": {
       "dir": "swordsman-male-guardian-2",
@@ -411,7 +435,8 @@
         "skill": "skill",
         "hit": "hurt",
         "death": "death"
-      }
+      },
+      "showcase": "showcase.webp"
     },
     "swordsman-male-guardian-3": {
       "dir": "swordsman-male-guardian-3",
@@ -428,7 +453,8 @@
         "skill": "skill",
         "hit": "hurt",
         "death": "death"
-      }
+      },
+      "showcase": "showcase.webp"
     },
     "mage-male-oracle-2": {
       "dir": "mage-male-oracle-2",
@@ -445,7 +471,8 @@
         "skill": "skill",
         "hit": "hurt",
         "death": "death"
-      }
+      },
+      "showcase": "showcase.webp"
     },
     "mage-male-oracle-3": {
       "dir": "mage-male-oracle-3",
@@ -462,7 +489,8 @@
         "skill": "skill",
         "hit": "hurt",
         "death": "death"
-      }
+      },
+      "showcase": "showcase.webp"
     },
     "mage-male-arcanist-2": {
       "dir": "mage-male-arcanist-2",
@@ -479,7 +507,8 @@
         "skill": "skill",
         "hit": "hurt",
         "death": "death"
-      }
+      },
+      "showcase": "showcase.webp"
     },
     "mage-male-arcanist-3": {
       "dir": "mage-male-arcanist-3",
@@ -496,7 +525,8 @@
         "skill": "skill",
         "hit": "hurt",
         "death": "death"
-      }
+      },
+      "showcase": "showcase.webp"
     },
     "priest-male": {
       "dir": "priest-male-painted",
@@ -1351,7 +1381,7 @@
       }
     }
   },
-  "version": "1795008871558888000",
+  "version": 1795028801481215000,
   "npcs": {
     "elder": {
       "dir": "npcs/elder",

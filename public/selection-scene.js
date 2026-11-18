@@ -6,7 +6,13 @@ import {
 } from "/sprite-sets.js?v=0.20.0";
 import { gearDress } from "/hero-gear.js?v=1";
 
-// The chosen hero rises from rest. Account and creation actions remain in game.js.
+// The chosen hero fades in on the pedestal. Account and creation actions remain in game.js.
+//
+// The canvas renders at twice its layout size (camera zoom 2) so the hero
+// stays crisp on large and high-DPI screens. While idle the hero shows its
+// set's "showcase" frame: the full-resolution idle cell, sharpened (built by
+// tools/sprite-rig/build_showcase.py), swapped in at the sprite's own size and
+// anchor. Motion previews (run, attack, skill) play the normal sprite set.
 export function createSelectionPreview() {
   const host = document.querySelector("#hero-preview");
   const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
@@ -17,36 +23,21 @@ export function createSelectionPreview() {
     identity: "create-swordsman-female",
   };
   let ready = false;
-  const jobs = ["swordsman", "archer", "mage"];
-  // Classes outside the painted 3x2 sheets (the priest) show only their sprite set.
-  const sheeted = () => jobs.includes(selected.job);
-  const frame = () =>
-    Math.max(0, jobs.indexOf(selected.job)) + (selected.gender === "female" ? 3 : 0);
+  const RES = 2,
+    W = 600,
+    H = 650,
+    FEET = 560,
+    HERO_HEIGHT = 380;
   const holder = {};
   class SelectionScene extends Phaser.Scene {
     preload() {
       queueSpriteSets(this);
-      this.load.spritesheet("selection-heroes", "/assets/heroes.png", {
-        frameWidth: 512,
-        frameHeight: 512,
-      });
-      this.load.spritesheet(
-        "selection-resting",
-        "/assets/selection/resting-heroes.png?v=1",
-        { frameWidth: 512, frameHeight: 512 },
-      );
     }
     create() {
+      this.cameras.main.setZoom(RES).centerOn(W / 2, H / 2);
       this.sprites = createSpriteRegistry(this);
-      this.shadow = this.add.ellipse(300, 530, 190, 25, 0x092725, 0.28);
-      this.resting = this.add
-        .image(300, 525, "selection-resting", frame())
-        .setOrigin(0.5, 1)
-        .setDisplaySize(360, 360);
-      this.hero = this.add
-        .image(300, 525, "selection-heroes", frame())
-        .setOrigin(0.5, 1)
-        .setDisplaySize(430, 430);
+      this.shadow = this.add.ellipse(W / 2, FEET + 4, 210, 26, 0x05120f, 0.4);
+      this.hero = this.add.image(W / 2, FEET, "__DEFAULT").setOrigin(0.5, 1).setAlpha(0);
       this.motes = Array.from({ length: 14 }, (_, i) => ({
         dot: this.add.circle(
           130 + ((i * 73) % 350),
@@ -69,17 +60,27 @@ export function createSelectionPreview() {
       this.previewAt = this.time.now;
       this.selectionAt = this.time.now;
       this.standStarted = null;
-      this.resting.setFrame(frame()).setAlpha(reducedMotion.matches || !sheeted() ? 0 : 1);
-      this.hero
-        .setTexture("selection-heroes", frame())
-        .setDisplaySize(430, 430)
-        .setAlpha(0);
+      this.hero.setAlpha(0);
+    }
+    // Texture key of the set's sharp idle frame, loading it on first use.
+    showcase(set) {
+      const spec = this.spriteSetIndex?.sets?.[set.name];
+      if (!spec?.showcase) return null;
+      const key = `showcase:${spec.dir}`;
+      if (this.textures.exists(key)) return key;
+      if (!this.wanted?.has(key)) {
+        (this.wanted ??= new Set()).add(key);
+        const v = this.spriteSetIndex.version;
+        this.load.image(key, `/assets/sprites/${spec.dir}/${spec.showcase}${v ? `?v=${v}` : ""}`);
+        if (!this.load.isLoading()) this.load.start();
+      }
+      return null;
     }
     update(time) {
       const set = selected.skins
         .map((k) => this.sprites.heroes.get(k))
         .find(Boolean);
-      if (!set && (time - this.selectionAt < 900 || !sheeted())) {
+      if (!set) {
         holder.layers?.destroy();
         return;
       }
@@ -90,11 +91,11 @@ export function createSelectionPreview() {
       const rise = 1 - (1 - t) ** 3;
       let mode = this.previewMode;
       if (time - this.previewAt > 1800) mode = this.previewMode = "idle";
-      if (set) {
+      {
         const startedAt = this.previewAt / 1000;
         playSpriteSet(
           this.hero,
-          { ...set, height: 415 },
+          { ...set, height: HERO_HEIGHT },
           {
             direction: 1,
             action: ["attack", "skill"].includes(mode)
@@ -110,15 +111,20 @@ export function createSelectionPreview() {
         );
         this.hero.setFlipX(set.facing < 0);
       }
+      // Idle: the sharp showcase frame at the sprite's size, with a slow breath.
+      const sharp = this.hero._clip?.state === "idle" && !set.layers && this.showcase(set);
+      if (sharp) {
+        const w = this.hero.displayWidth,
+          h = this.hero.displayHeight,
+          breath = reducedMotion.matches ? 0 : Math.sin(time * 0.0021) * 0.008;
+        this.hero.setTexture(sharp).setDisplaySize(w * (1 - breath * 0.5), h * (1 + breath));
+      }
       this.hero
         .setAlpha(rise)
-        .setPosition(300, 525 + (1 - rise) * 30)
+        .setPosition(W / 2, FEET + (1 - rise) * 24)
         .setAngle(0);
-      if (set?.layers) playLayers(this, holder, this.hero, set, gearDress(selected.hero || { class: selected.job }, set), this.sprites);
+      if (set.layers) playLayers(this, holder, this.hero, set, gearDress(selected.hero || { class: selected.job }, set), this.sprites);
       else holder.layers?.destroy();
-      this.resting
-        .setAlpha(sheeted() ? Math.max(0, 1 - rise * 1.6) : 0)
-        .setY(525 - rise * 10);
       if (reducedMotion.matches) return;
       for (const m of this.motes) {
         m.dot.x = m.x + Math.sin(time * 0.0004 + m.phase) * 12;
@@ -131,8 +137,8 @@ export function createSelectionPreview() {
     type: Phaser.AUTO,
     parent: host,
     transparent: true,
-    width: 600,
-    height: 650,
+    width: W * RES,
+    height: H * RES,
     scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
     scene: SelectionScene,
     audio: { noAudio: true },

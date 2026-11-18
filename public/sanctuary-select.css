@@ -1,4 +1,4 @@
-/* The sanctuary: an open game scene with resting heroes and a chosen champion. */
+/* The sanctuary: an open game scene with the roster and a chosen champion. */
 body #landing.game-lobby[data-lobby-mode] {
   --gap: clamp(16px, 2.7vw, 48px);
   --gold: #f1d598;
@@ -194,7 +194,6 @@ body #landing.game-lobby[data-lobby-mode] .saved-hero > b {
   height: 114px;
   display: block;
 }
-body #landing.game-lobby[data-lobby-mode] .resting-portrait,
 body #landing.game-lobby[data-lobby-mode] .saved-hero .saved-portrait {
   position: absolute;
   inset: 0;
@@ -206,15 +205,6 @@ body #landing.game-lobby[data-lobby-mode] .saved-hero .saved-portrait {
   box-shadow: none;
   filter: drop-shadow(0 5px 3px #021d1a55);
 }
-.resting-portrait {
-  background-image: url("/assets/selection/resting-heroes.png?v=1");
-  background-size: 300% 200%;
-  background-repeat: no-repeat;
-  opacity: 1;
-  transition:
-    opacity 0.22s,
-    transform 0.35s;
-}
 body #landing.game-lobby[data-lobby-mode] .saved-hero .saved-portrait {
   opacity: 0;
   transform: translateY(12px);
@@ -225,10 +215,6 @@ body #landing.game-lobby[data-lobby-mode] .saved-hero .saved-portrait {
 body #landing.game-lobby[data-lobby-mode] .saved-hero.active .saved-portrait {
   opacity: 1;
   transform: translateY(0);
-}
-body #landing.game-lobby[data-lobby-mode] .saved-hero.active .resting-portrait {
-  opacity: 0;
-  transform: translateY(-8px);
 }
 body #landing.game-lobby[data-lobby-mode] .new-hero {
   padding: 8px;

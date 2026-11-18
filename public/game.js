@@ -68,7 +68,7 @@ import {
   animateSlime,
   monsterDeath,
 } from "/combat-visuals.js?v=0.3.1";
-import { createSelectionPreview } from "/selection-scene.js?v=0.10.0";
+import { createSelectionPreview } from "/selection-scene.js?v=0.11.0";
 import {
   CLASSES,
   ITEMS,
@@ -225,7 +225,7 @@ async function refreshAccount() {
     ? characters
         .map(
           (c) =>
-            `<button data-resume="${c.id}" class="saved-hero"><span class="roster-pose" aria-hidden="true"><span class="resting-portrait" style="background-position:${JOBS.indexOf(c.class) * 50}% ${c.gender === "female" ? 100 : 0}%"></span><span class="saved-portrait hero-art" style="${lobbyHeroStyle(c.class, c.gender, c)}"></span></span><span><strong>${escape(c.name)}</strong><small>${CLASSES[c.class].name}</small></span><b>Lv.${c.level}</b></button>`,
+            `<button data-resume="${c.id}" class="saved-hero"><span class="roster-pose" aria-hidden="true"><span class="saved-portrait hero-art" style="${lobbyHeroStyle(c.class, c.gender, c)}"></span></span><span><strong>${escape(c.name)}</strong><small>${CLASSES[c.class].name}</small></span><b>Lv.${c.level}</b></button>`,
         )
         .join("")
     : '<p class="empty-roster">ยังไม่มีผู้กล้าในบัญชีนี้<br><span>เลือกคลาสแล้วสร้างตำนานแรกของคุณ</span></p>';
