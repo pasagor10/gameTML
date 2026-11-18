@@ -165,6 +165,9 @@ function inventoryPage(p, area, stats, owned, spec, cls) {
 </div>`;
 }
 
+function discardButton(id, allowed) {
+  return `<button class="inv-discard" data-discard="${id}" ${allowed ? "" : "disabled"}>ทิ้ง 1 ชิ้น</button>`;
+}
 function detailCard(p, area, stats, key, counts) {
   if (!key)
     return `<aside class="inv-detail empty"><p>ไม่มีของในหมวดนี้<br>เก็บของจากดันเจียนเพื่อเติมกระเป๋า</p></aside>`;
@@ -175,7 +178,7 @@ function detailCard(p, area, stats, key, counts) {
         id !== "ore" &&
         p.hp > 0 &&
         (id === "hp" ? p.hp < stats.hp : p.mp < stats.mp);
-    return `<aside class="inv-detail ${rarity(s)}"><div class="inv-detail-art">${supplyArt(id)}</div><h3>${s.name}</h3><div class="inv-pills"><span>วัตถุดิบ</span><span class="rarity">${RARITIES[s.rarity]}</span></div><p class="inv-lore">${s.text}</p><div class="inv-detail-stats"><div><span>จำนวนในกระเป๋า</span><b>×${p.inventory[id]}</b></div></div>${id === "ore" ? "" : `<button class="inv-action" data-use="${id}" ${usable ? "" : "disabled"}>${usable ? "ใช้" : "พลังเต็มอยู่แล้ว"}</button>`}</aside>`;
+    return `<aside class="inv-detail ${rarity(s)}"><div class="inv-detail-art">${supplyArt(id)}</div><h3>${s.name}</h3><div class="inv-pills"><span>วัตถุดิบ</span><span class="rarity">${RARITIES[s.rarity]}</span></div><p class="inv-lore">${s.text}</p><div class="inv-detail-stats"><div><span>จำนวนในกระเป๋า</span><b>×${p.inventory[id]}</b></div></div><div class="inv-detail-actions">${id === "ore" ? "" : `<button class="inv-action" data-use="${id}" ${usable ? "" : "disabled"}>${usable ? "ใช้" : "พลังเต็มอยู่แล้ว"}</button>`}${discardButton(id, area === "town")}</div></aside>`;
   }
   const item = GEAR[key],
     equipped = p.equipment[item.slot] === key,
@@ -227,7 +230,7 @@ function detailCard(p, area, stats, key, counts) {
     <h4>เงื่อนไขสวมใส่</h4>
     <div class="inv-reqs">${item.class ? `<div>${check(classOk)}<span>อาชีพ: ${CLASSES[item.class].name}</span></div>` : ""}<div>${check(levelOk)}<span>เลเวลขั้นต่ำ: ${item.level}</span></div>${item.floor ? `<div><em class="ok">◆</em><span>ดรอปจากบอสชั้น ${item.floor}</span></div>` : ""}</div>
     <div class="inv-compare ${diff > 0 ? "up" : diff < 0 ? "down" : ""}">${equipped ? "ถ้าถอด" : "ถ้าสวม"} พลัง ${now.toLocaleString()} → ${next.toLocaleString()} <b>${diff >= 0 ? "+" : ""}${diff}</b></div>
-    <button class="inv-action" data-equip="${key}" data-slot="${item.slot}" ${canEquip ? "" : "disabled"}>${filterIcons.armor}<span>${label}</span></button>
+    <div class="inv-detail-actions"><button class="inv-action" data-equip="${key}" data-slot="${item.slot}" ${canEquip ? "" : "disabled"}>${filterIcons.armor}<span>${label}</span></button>${discardButton(key, area === "town" && !equipped && !key.startsWith("starter_"))}</div>
   </aside>`;
 }
 // ---------------------------------------------------------------------------
@@ -235,11 +238,20 @@ function detailCard(p, area, stats, key, counts) {
 // Lv.3 → advanced form at ADVANCE_LEVEL), and the class skill list. Picking a
 // node previews it; "ยืนยันเส้นทาง" applies the pick or the advancement.
 let pickedSpec = null;
+let pickedFor = null;
 const lock = icon('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>');
 function classPage(p, area, spec, cls) {
   const specs = SPECIALIZATIONS[p.class];
+  const identity = JSON.stringify([p.id, p.class, p.gender, p.specialization, !!p.advanced]);
+  if (identity !== pickedFor) {
+    pickedFor = identity;
+    pickedSpec = p.specialization;
+  }
   if (!specs.some((s) => s.id === pickedSpec)) pickedSpec = p.specialization;
   const picked = specs.find((s) => s.id === pickedSpec),
+    shownSpec = picked || spec,
+    previewing = !!picked && picked.id !== p.specialization,
+    previewHero = previewing ? { ...p, specialization: picked.id } : p,
     town = area === "town",
     tier = p.specialization ? (p.advanced ? 3 : 2) : 1;
 
@@ -277,9 +289,10 @@ function classPage(p, area, spec, cls) {
   ];
   return `<div class="cls2">
   <aside class="cls-hero">
-    <div class="cls-figure"><div class="cls-hero-art" style="${heroPortraitStyle(p)}"></div><i class="inv-pedestal"></i></div>
-    <div class="inv-nameplate">${spec?.name || cls.name} · Lv.${p.level}</div>
-    <div class="cls-role"><span>${spec?.icon || cls.icon}</span><div><strong>${spec?.role || cls.name}</strong><small>${spec?.description || "เลือกสายพัฒนาเมื่อ Lv.3 เพื่อปลดล็อกพลังเฉพาะทาง"}</small></div></div>
+    <div class="cls-figure"><div class="cls-hero-art" data-preview-class="${previewHero.specialization || p.class}" style="${heroPortraitStyle(previewHero)}"></div><i class="inv-pedestal"></i></div>
+    <div class="inv-nameplate">${shownSpec?.name || cls.name} · Lv.${p.level}</div>
+    ${previewing ? '<small class="cls-preview-note">ภาพตัวอย่าง · ยืนยันเส้นทางเพื่อเปลี่ยนคลาส</small>' : ""}
+    <div class="cls-role"><span>${shownSpec?.icon || cls.icon}</span><div><strong>${shownSpec?.role || cls.name}</strong><small>${shownSpec?.description || "เลือกสายพัฒนาเมื่อ Lv.3 เพื่อปลดล็อกพลังเฉพาะทาง"}</small></div></div>
   </aside>
   <section class="cls-path">
     <header><span>${icon('<path d="M4 20 15 9m-2-2 4-4 4 4-4 4M20 20 9 9m2-2L7 3 3 7l4 4"/>')}</span><div><h3>เส้นทางของผู้กล้า</h3><small>3 ขั้น: อาชีพเริ่มต้น → สายพัฒนา (Lv.3) → ขั้นสูง (Lv.${ADVANCE_LEVEL})</small></div><b class="cls-tier">ขั้นที่ ${tier}</b></header>
@@ -339,6 +352,20 @@ export function bindRpgPanel(root, p, handlers) {
         handlers.open("inventory");
       }),
   );
+  root.querySelectorAll("[data-discard]").forEach((b) => {
+    let confirming = false;
+    b.onclick = async () => {
+      if (!confirming) {
+        confirming = true;
+        b.textContent = "ยืนยันทิ้งถาวร 1 ชิ้น";
+        setTimeout(() => { if (b.isConnected) { confirming = false; b.textContent = "ทิ้ง 1 ชิ้น"; } }, 5000);
+        return;
+      }
+      b.disabled = true;
+      try { await handlers.action("inventory:discard", { id: b.dataset.discard, key: crypto.randomUUID() }); }
+      finally { b.disabled = false; confirming = false; b.textContent = "ทิ้ง 1 ชิ้น"; }
+    };
+  });
   root.querySelectorAll("[data-equip]").forEach(
     (b) =>
       (b.onclick = () =>

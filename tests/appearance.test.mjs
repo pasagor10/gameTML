@@ -32,7 +32,7 @@ test("every priest look has art for every action, on the same frames as the body
     const set = index.sets[`priest-${gender}`];
     for (const action of new Set(Object.values(set.actions))) {
       const body = JSON.parse(readFileSync(`public/assets/sprites/${set.dir}/body/${action}/animation.json`, "utf8"));
-      const folders = [set.layers.hand];
+      const folders = [set.layers.hand, ...Object.values(set.layers.hands || {})];
       for (const [slot, looks] of Object.entries(set.layers.looks))
         for (const look of looks) {
           const parts = set.layers.parts[slot]?.[look];

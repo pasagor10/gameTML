@@ -499,11 +499,11 @@
       }
     },
     "priest-male": {
-      "dir": "priest-male",
-      "height": 112,
+      "dir": "priest-male-painted",
+      "height": 125,
       "facing": 1,
-      "portrait": "portrait.webp",
-      "source": "codeart layered (tools/sprite-rig/layered_rig.py)",
+      "portrait": "portrait-robe-1.webp",
+      "source": "painted Lanna source, articulated interchangeable layers",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -516,22 +516,31 @@
       },
       "layers": {
         "order": [
+          "weapon",
           "outfit",
-          "head",
-          "weapon"
+          "head"
         ],
+        "weaponBehind": true,
         "looks": {
           "outfit": [
             "robe-1",
             "robe-2",
             "robe-3",
-            "robe-4"
+            "robe-4",
+            "bishop-2",
+            "bishop-3",
+            "templar-2",
+            "templar-3"
           ],
           "head": [
             "hair",
             "circlet",
             "hood",
-            "mitre"
+            "mitre",
+            "bishop-2",
+            "bishop-3",
+            "templar-2",
+            "templar-3"
           ],
           "weapon": [
             "staff-1",
@@ -540,65 +549,27 @@
             "staff-4"
           ]
         },
-        "parts": {
-          "outfit": {
-            "robe-1": [
-              "fixed",
-              "main",
-              "trim"
-            ],
-            "robe-2": [
-              "fixed",
-              "main",
-              "trim"
-            ],
-            "robe-3": [
-              "fixed",
-              "main",
-              "trim"
-            ],
-            "robe-4": [
-              "fixed",
-              "main",
-              "trim",
-              "gem"
-            ]
-          },
-          "head": {
-            "hair": [
-              "fixed"
-            ],
-            "circlet": [
-              "fixed",
-              "trim",
-              "gem"
-            ],
-            "hood": [
-              "fixed",
-              "main",
-              "trim"
-            ],
-            "mitre": [
-              "fixed",
-              "main",
-              "trim"
-            ]
-          }
-        },
+        "parts": {},
         "hand": "hand",
-        "tints": {
-          "main": "#ece4d2",
-          "trim": "#96704a",
-          "gem": "#6ebeff"
-        }
+        "hands": {
+          "robe-1": "hand/novice",
+          "robe-2": "hand/novice",
+          "robe-3": "hand/novice",
+          "robe-4": "hand/novice",
+          "bishop-2": "hand/bishop",
+          "bishop-3": "hand/bishop",
+          "templar-2": "hand/templar",
+          "templar-3": "hand/templar"
+        },
+        "painted": true
       }
     },
     "priest-female": {
-      "dir": "priest-female",
-      "height": 112,
+      "dir": "priest-female-painted",
+      "height": 125,
       "facing": 1,
-      "portrait": "portrait.webp",
-      "source": "codeart layered (tools/sprite-rig/layered_rig.py)",
+      "portrait": "portrait-robe-1.webp",
+      "source": "painted Lanna source, articulated interchangeable layers",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -611,22 +582,31 @@
       },
       "layers": {
         "order": [
+          "weapon",
           "outfit",
-          "head",
-          "weapon"
+          "head"
         ],
+        "weaponBehind": true,
         "looks": {
           "outfit": [
             "robe-1",
             "robe-2",
             "robe-3",
-            "robe-4"
+            "robe-4",
+            "bishop-2",
+            "bishop-3",
+            "templar-2",
+            "templar-3"
           ],
           "head": [
             "hair",
             "circlet",
             "hood",
-            "mitre"
+            "mitre",
+            "bishop-2",
+            "bishop-3",
+            "templar-2",
+            "templar-3"
           ],
           "weapon": [
             "staff-1",
@@ -635,57 +615,547 @@
             "staff-4"
           ]
         },
-        "parts": {
-          "outfit": {
-            "robe-1": [
-              "fixed",
-              "main",
-              "trim"
-            ],
-            "robe-2": [
-              "fixed",
-              "main",
-              "trim"
-            ],
-            "robe-3": [
-              "fixed",
-              "main",
-              "trim"
-            ],
-            "robe-4": [
-              "fixed",
-              "main",
-              "trim",
-              "gem"
-            ]
-          },
-          "head": {
-            "hair": [
-              "fixed"
-            ],
-            "circlet": [
-              "fixed",
-              "trim",
-              "gem"
-            ],
-            "hood": [
-              "fixed",
-              "main",
-              "trim"
-            ],
-            "mitre": [
-              "fixed",
-              "main",
-              "trim"
-            ]
-          }
-        },
+        "parts": {},
         "hand": "hand",
-        "tints": {
-          "main": "#ece4d2",
-          "trim": "#96704a",
-          "gem": "#6ebeff"
-        }
+        "hands": {
+          "robe-1": "hand/novice",
+          "robe-2": "hand/novice",
+          "robe-3": "hand/novice",
+          "robe-4": "hand/novice",
+          "bishop-2": "hand/bishop",
+          "bishop-3": "hand/bishop",
+          "templar-2": "hand/templar",
+          "templar-3": "hand/templar"
+        },
+        "painted": true
+      }
+    },
+    "priest-male-bishop-2": {
+      "dir": "priest-male-painted",
+      "height": 125,
+      "facing": 1,
+      "portrait": "portrait-bishop-2.webp",
+      "source": "painted Lanna source, articulated interchangeable layers",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "layers": {
+        "order": [
+          "weapon",
+          "outfit",
+          "head"
+        ],
+        "weaponBehind": true,
+        "looks": {
+          "outfit": [
+            "robe-1",
+            "robe-2",
+            "robe-3",
+            "robe-4",
+            "bishop-2",
+            "bishop-3",
+            "templar-2",
+            "templar-3"
+          ],
+          "head": [
+            "hair",
+            "circlet",
+            "hood",
+            "mitre",
+            "bishop-2",
+            "bishop-3",
+            "templar-2",
+            "templar-3"
+          ],
+          "weapon": [
+            "staff-1",
+            "staff-2",
+            "staff-3",
+            "staff-4"
+          ]
+        },
+        "parts": {},
+        "hand": "hand",
+        "hands": {
+          "robe-1": "hand/novice",
+          "robe-2": "hand/novice",
+          "robe-3": "hand/novice",
+          "robe-4": "hand/novice",
+          "bishop-2": "hand/bishop",
+          "bishop-3": "hand/bishop",
+          "templar-2": "hand/templar",
+          "templar-3": "hand/templar"
+        },
+        "painted": true
+      }
+    },
+    "priest-male-bishop-3": {
+      "dir": "priest-male-painted",
+      "height": 125,
+      "facing": 1,
+      "portrait": "portrait-bishop-3.webp",
+      "source": "painted Lanna source, articulated interchangeable layers",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "layers": {
+        "order": [
+          "weapon",
+          "outfit",
+          "head"
+        ],
+        "weaponBehind": true,
+        "looks": {
+          "outfit": [
+            "robe-1",
+            "robe-2",
+            "robe-3",
+            "robe-4",
+            "bishop-2",
+            "bishop-3",
+            "templar-2",
+            "templar-3"
+          ],
+          "head": [
+            "hair",
+            "circlet",
+            "hood",
+            "mitre",
+            "bishop-2",
+            "bishop-3",
+            "templar-2",
+            "templar-3"
+          ],
+          "weapon": [
+            "staff-1",
+            "staff-2",
+            "staff-3",
+            "staff-4"
+          ]
+        },
+        "parts": {},
+        "hand": "hand",
+        "hands": {
+          "robe-1": "hand/novice",
+          "robe-2": "hand/novice",
+          "robe-3": "hand/novice",
+          "robe-4": "hand/novice",
+          "bishop-2": "hand/bishop",
+          "bishop-3": "hand/bishop",
+          "templar-2": "hand/templar",
+          "templar-3": "hand/templar"
+        },
+        "painted": true
+      }
+    },
+    "priest-male-templar-2": {
+      "dir": "priest-male-painted",
+      "height": 125,
+      "facing": 1,
+      "portrait": "portrait-templar-2.webp",
+      "source": "painted Lanna source, articulated interchangeable layers",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "layers": {
+        "order": [
+          "weapon",
+          "outfit",
+          "head"
+        ],
+        "weaponBehind": true,
+        "looks": {
+          "outfit": [
+            "robe-1",
+            "robe-2",
+            "robe-3",
+            "robe-4",
+            "bishop-2",
+            "bishop-3",
+            "templar-2",
+            "templar-3"
+          ],
+          "head": [
+            "hair",
+            "circlet",
+            "hood",
+            "mitre",
+            "bishop-2",
+            "bishop-3",
+            "templar-2",
+            "templar-3"
+          ],
+          "weapon": [
+            "staff-1",
+            "staff-2",
+            "staff-3",
+            "staff-4"
+          ]
+        },
+        "parts": {},
+        "hand": "hand",
+        "hands": {
+          "robe-1": "hand/novice",
+          "robe-2": "hand/novice",
+          "robe-3": "hand/novice",
+          "robe-4": "hand/novice",
+          "bishop-2": "hand/bishop",
+          "bishop-3": "hand/bishop",
+          "templar-2": "hand/templar",
+          "templar-3": "hand/templar"
+        },
+        "painted": true
+      }
+    },
+    "priest-male-templar-3": {
+      "dir": "priest-male-painted",
+      "height": 125,
+      "facing": 1,
+      "portrait": "portrait-templar-3.webp",
+      "source": "painted Lanna source, articulated interchangeable layers",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "layers": {
+        "order": [
+          "weapon",
+          "outfit",
+          "head"
+        ],
+        "weaponBehind": true,
+        "looks": {
+          "outfit": [
+            "robe-1",
+            "robe-2",
+            "robe-3",
+            "robe-4",
+            "bishop-2",
+            "bishop-3",
+            "templar-2",
+            "templar-3"
+          ],
+          "head": [
+            "hair",
+            "circlet",
+            "hood",
+            "mitre",
+            "bishop-2",
+            "bishop-3",
+            "templar-2",
+            "templar-3"
+          ],
+          "weapon": [
+            "staff-1",
+            "staff-2",
+            "staff-3",
+            "staff-4"
+          ]
+        },
+        "parts": {},
+        "hand": "hand",
+        "hands": {
+          "robe-1": "hand/novice",
+          "robe-2": "hand/novice",
+          "robe-3": "hand/novice",
+          "robe-4": "hand/novice",
+          "bishop-2": "hand/bishop",
+          "bishop-3": "hand/bishop",
+          "templar-2": "hand/templar",
+          "templar-3": "hand/templar"
+        },
+        "painted": true
+      }
+    },
+    "priest-female-bishop-2": {
+      "dir": "priest-female-painted",
+      "height": 125,
+      "facing": 1,
+      "portrait": "portrait-bishop-2.webp",
+      "source": "painted Lanna source, articulated interchangeable layers",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "layers": {
+        "order": [
+          "weapon",
+          "outfit",
+          "head"
+        ],
+        "weaponBehind": true,
+        "looks": {
+          "outfit": [
+            "robe-1",
+            "robe-2",
+            "robe-3",
+            "robe-4",
+            "bishop-2",
+            "bishop-3",
+            "templar-2",
+            "templar-3"
+          ],
+          "head": [
+            "hair",
+            "circlet",
+            "hood",
+            "mitre",
+            "bishop-2",
+            "bishop-3",
+            "templar-2",
+            "templar-3"
+          ],
+          "weapon": [
+            "staff-1",
+            "staff-2",
+            "staff-3",
+            "staff-4"
+          ]
+        },
+        "parts": {},
+        "hand": "hand",
+        "hands": {
+          "robe-1": "hand/novice",
+          "robe-2": "hand/novice",
+          "robe-3": "hand/novice",
+          "robe-4": "hand/novice",
+          "bishop-2": "hand/bishop",
+          "bishop-3": "hand/bishop",
+          "templar-2": "hand/templar",
+          "templar-3": "hand/templar"
+        },
+        "painted": true
+      }
+    },
+    "priest-female-bishop-3": {
+      "dir": "priest-female-painted",
+      "height": 125,
+      "facing": 1,
+      "portrait": "portrait-bishop-3.webp",
+      "source": "painted Lanna source, articulated interchangeable layers",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "layers": {
+        "order": [
+          "weapon",
+          "outfit",
+          "head"
+        ],
+        "weaponBehind": true,
+        "looks": {
+          "outfit": [
+            "robe-1",
+            "robe-2",
+            "robe-3",
+            "robe-4",
+            "bishop-2",
+            "bishop-3",
+            "templar-2",
+            "templar-3"
+          ],
+          "head": [
+            "hair",
+            "circlet",
+            "hood",
+            "mitre",
+            "bishop-2",
+            "bishop-3",
+            "templar-2",
+            "templar-3"
+          ],
+          "weapon": [
+            "staff-1",
+            "staff-2",
+            "staff-3",
+            "staff-4"
+          ]
+        },
+        "parts": {},
+        "hand": "hand",
+        "hands": {
+          "robe-1": "hand/novice",
+          "robe-2": "hand/novice",
+          "robe-3": "hand/novice",
+          "robe-4": "hand/novice",
+          "bishop-2": "hand/bishop",
+          "bishop-3": "hand/bishop",
+          "templar-2": "hand/templar",
+          "templar-3": "hand/templar"
+        },
+        "painted": true
+      }
+    },
+    "priest-female-templar-2": {
+      "dir": "priest-female-painted",
+      "height": 125,
+      "facing": 1,
+      "portrait": "portrait-templar-2.webp",
+      "source": "painted Lanna source, articulated interchangeable layers",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "layers": {
+        "order": [
+          "weapon",
+          "outfit",
+          "head"
+        ],
+        "weaponBehind": true,
+        "looks": {
+          "outfit": [
+            "robe-1",
+            "robe-2",
+            "robe-3",
+            "robe-4",
+            "bishop-2",
+            "bishop-3",
+            "templar-2",
+            "templar-3"
+          ],
+          "head": [
+            "hair",
+            "circlet",
+            "hood",
+            "mitre",
+            "bishop-2",
+            "bishop-3",
+            "templar-2",
+            "templar-3"
+          ],
+          "weapon": [
+            "staff-1",
+            "staff-2",
+            "staff-3",
+            "staff-4"
+          ]
+        },
+        "parts": {},
+        "hand": "hand",
+        "hands": {
+          "robe-1": "hand/novice",
+          "robe-2": "hand/novice",
+          "robe-3": "hand/novice",
+          "robe-4": "hand/novice",
+          "bishop-2": "hand/bishop",
+          "bishop-3": "hand/bishop",
+          "templar-2": "hand/templar",
+          "templar-3": "hand/templar"
+        },
+        "painted": true
+      }
+    },
+    "priest-female-templar-3": {
+      "dir": "priest-female-painted",
+      "height": 125,
+      "facing": 1,
+      "portrait": "portrait-templar-3.webp",
+      "source": "painted Lanna source, articulated interchangeable layers",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "layers": {
+        "order": [
+          "weapon",
+          "outfit",
+          "head"
+        ],
+        "weaponBehind": true,
+        "looks": {
+          "outfit": [
+            "robe-1",
+            "robe-2",
+            "robe-3",
+            "robe-4",
+            "bishop-2",
+            "bishop-3",
+            "templar-2",
+            "templar-3"
+          ],
+          "head": [
+            "hair",
+            "circlet",
+            "hood",
+            "mitre",
+            "bishop-2",
+            "bishop-3",
+            "templar-2",
+            "templar-3"
+          ],
+          "weapon": [
+            "staff-1",
+            "staff-2",
+            "staff-3",
+            "staff-4"
+          ]
+        },
+        "parts": {},
+        "hand": "hand",
+        "hands": {
+          "robe-1": "hand/novice",
+          "robe-2": "hand/novice",
+          "robe-3": "hand/novice",
+          "robe-4": "hand/novice",
+          "bishop-2": "hand/bishop",
+          "bishop-3": "hand/bishop",
+          "templar-2": "hand/templar",
+          "templar-3": "hand/templar"
+        },
+        "painted": true
       }
     }
   },
@@ -811,7 +1281,7 @@
       }
     }
   },
-  "version": 1794982569776688000,
+  "version": "1795002334024055000",
   "npcs": {
     "elder": {
       "dir": "npcs/elder",

@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "3.0",
+  "name": "hurt",
+  "artSource": "painted Lanna priest / articulated rig",
+  "sourceSize": [
+    112.0,
+    165.0
+  ],
+  "sourceAnchor": [
+    72.0,
+    160.0
+  ],
+  "encodedAnchor": [
+    144,
+    320
+  ],
+  "bodyHeightPx": 145,
+  "frameCount": 3,
+  "durationsMs": [
+    80,
+    90,
+    110
+  ],
+  "durationSeconds": 0.28,
+  "loop": false,
+  "sampling": "linear",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      224,
+      330
+    ],
+    "pages": [
+      {
+        "file": "hurt-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 3,
+        "columns": 3
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        206.66,
+        158.69,
+        -61.35
+      ],
+      [
+        201.13,
+        197.84,
+        -61.35
+      ],
+      [
+        195.08,
+        211.86,
+        -61.35
+      ]
+    ]
+  }
+}

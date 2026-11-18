@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "3.0",
+  "name": "skill",
+  "artSource": "painted Lanna priest / articulated rig",
+  "sourceSize": [
+    122.0,
+    166.0
+  ],
+  "sourceAnchor": [
+    48.0,
+    160.0
+  ],
+  "encodedAnchor": [
+    96,
+    320
+  ],
+  "bodyHeightPx": 145,
+  "frameCount": 7,
+  "durationsMs": [
+    70,
+    80,
+    80,
+    80,
+    80,
+    90,
+    110
+  ],
+  "durationSeconds": 0.59,
+  "loop": false,
+  "sampling": "linear",
+  "events": [
+    {
+      "name": "hit",
+      "frame": 4,
+      "atMs": 310
+    }
+  ],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      244,
+      332
+    ],
+    "pages": [
+      {
+        "file": "skill-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 7,
+        "columns": 7
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        154.98,
+        211.71,
+        -61.35
+      ],
+      [
+        197.37,
+        145.66,
+        -69.33
+      ],
+      [
+        146.45,
+        65.44,
+        -78.43
+      ],
+      [
+        202.94,
+        103.94,
+        -54.86
+      ],
+      [
+        219.15,
+        141.9,
+        -48.62
+      ],
+      [
+        190.63,
+        190.45,
+        -56.18
+      ],
+      [
+        154.98,
+        211.71,
+        -61.35
+      ]
+    ]
+  }
+}

@@ -1,7 +1,7 @@
 import { SLOT_MACHINE } from "./slots.js";
 import { rpgBonuses } from "./rpg.js";
 import { townPlatforms, TOWN_SPOTS, TOWN_WIDTH } from "./town-layout.js";
-export const DUNGEON_ENERGY_MAX = 5;
+export const DUNGEON_ENERGY_MAX = 10;
 export const DUNGEON_ENERGY_INTERVAL = 30 * 60;
 export const CLASSES = {
   swordsman: {

@@ -1,3 +1,8 @@
+import { bindAnnouncements, receiveAnnouncement, announcementHistory } from "/announcements.js";
+import { updatePartyUi, bindPartyUi } from "/party-ui.js";
+import { showWorldHeroPreview } from "/hero-preview.js";
+import { observeHudLayout } from "/hud-layout.js";
+import { isWorldPointer } from "/world-input.js";
 import { SLOT_MACHINE } from "/shared/slots.js";
 import { slotPanelHtml, bindSlotPanel } from "/slots-ui.js?v=2";
 import { heroPortraitStyle } from "/hero-appearance.js?v=2";
@@ -11,6 +16,7 @@ import {
   soundOn,
   setMusic,
   musicOn,
+  prepareMusic,
 } from "/sound.js?v=20261118-audio2";
 import { TOWN_ANIMS, TOWN_LAYOUT, TOWN_PROPS } from "/shared/town-layout.js";
 import { createWorldDetails } from "/world-details.js?v=4";
@@ -43,7 +49,7 @@ import {
   trackerHtml,
   claimable,
 } from "/quest-ui.js?v=3";
-import { dungeonPanelHtml, energyHeader } from "/dungeon-ui.js?v=1";
+import { dungeonPanelHtml } from "/dungeon-ui.js?v=1";
 import { createNightSky } from "/night-sky.js?v=2";
 import {
   nightInfo,
@@ -71,7 +77,6 @@ import {
   WORLD,
   areaWidth,
   combatStats,
-  DUNGEON_ENERGY_MAX,
 } from "/shared/config.js";
 import { createParallax } from "/parallax.js?v=0.8.1";
 import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.6";
@@ -97,6 +102,10 @@ import {
 import { gearDress } from "/hero-gear.js?v=1";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
+observeHudLayout($("#game-screen"));
+bindPartyUi((data) => emit("party:action", data));
+bindAnnouncements(() => showPanel("announcements"));
+let onlinePlayers = null;
 let lobbyCharacterId = null;
 let lobbyMode = "loading";
 let lastRpgPanelHash = "";
@@ -245,8 +254,8 @@ async function refreshAccount() {
       button?.click();
     } else renderCards();
   } else {
-    lobbyMode = "create";
-    lobbyCharacterId = null;
+    resetLobbyCreation();
+    selectedId = null;
     renderCards();
   }
 }
@@ -279,6 +288,7 @@ const heroDescriptions = {
 };
 function renderCards() {
   const saved = characters.find((c) => c.id === lobbyCharacterId);
+  $("#delete-hero").hidden = lobbyMode !== "roster" || !saved;
   const c = saved ? { ...CLASSES[job], ...combatStats(saved) } : CLASSES[job],
     detail = heroDescriptions[job];
   $("#landing").dataset.heroClass = job;
@@ -403,6 +413,7 @@ $("#start").onclick = async () => {
     }
     const c = await api("characters", { name, class: job, gender });
     selectedId = c.id;
+    characters.push(c);
     showPrologue();
   } catch (e) {
     toast(e.message, true);
@@ -416,9 +427,15 @@ function modal(title, html, panel) {
   $("#modal").dataset.panel = activePanel;
   keys.clear();
   touchDirection = 0;
+  touchAttack = false;
+  touchRun = false;
+  jumpQueued = false;
+  document.dispatchEvent(new Event("game:reset-controls"));
   $("#modal-title").textContent = title;
   $("#modal-body").innerHTML = html;
   $("#modal").classList.remove("hidden");
+  $("#modal-body").scrollTop = 0;
+  $("#modal .modal-box").scrollTop = 0;
   $("#modal").classList.toggle(
     "rpg-modal",
     ["inventory", "class", "weapon"].includes(panel),
@@ -643,14 +660,20 @@ function setMapLayer(selector, markup) {
   layer.dataset.markup = markup;
   layer.innerHTML = markup;
 }
-function enterGame() {
+let enteringGame = false;
+let adventureLoaded;
+let resolveAdventureLoaded;
+async function enterGame() {
+  if (enteringGame) return;
+  enteringGame = true;
   $("#prologue").classList.add("hidden");
   $("#landing").classList.add("hidden");
   $("#game-screen").classList.remove("hidden");
   enterHud();
   $("#connection-state").classList.remove("hidden");
   closeModal();
-  if (!phaser)
+  if (!phaser) {
+    adventureLoaded = new Promise((resolve) => { resolveAdventureLoaded = resolve; });
     phaser = new Phaser.Game({
       type: Phaser.AUTO,
       parent: "game-canvas",
@@ -665,9 +688,19 @@ function enterGame() {
       render: { antialias: true, pixelArt: false },
       audio: { noAudio: true },
     });
+  }
   phaser.loop.wake();
+  $("#connection-state").textContent = "กำลังโหลดภาพและตัวละครก่อนเข้าเกม…";
+  await Promise.all([adventureLoaded, prepareMusic()]);
+  enteringGame = false;
   socket?.disconnect();
+  onlinePlayers = null;
   socket = io({ transports: ["websocket", "polling"], reconnection: true });
+  socket.on("announcement", receiveAnnouncement);
+  socket.on("online:roster", (players) => {
+    onlinePlayers = players;
+    if (activePanel === "players" && state) showPanel("players");
+  });
   socket.on("connect", () => {
     socket.emit("player:join", { id: selectedId }, (result) => {
       if (!result.ok) {
@@ -675,6 +708,8 @@ function enterGame() {
         $("#connection-state").textContent = result.error;
         return;
       }
+      onlinePlayers = result.onlinePlayers || onlinePlayers;
+      for (const notice of result.announcements || []) receiveAnnouncement(notice, false);
       $("#connection-state").classList.add("hidden");
       toast(result.message);
     });
@@ -718,9 +753,7 @@ function skyText(sky, time) {
   const left = Math.max(1, Math.ceil((sky.changeAt - time) / 60));
   return sky.night ? `🌙 ถ้ำลึกลับเปิด ${left} น.` : `☀ มืดใน ${left} น.`;
 }
-function energyText(p) {
-  return `พลังงาน ${p.energy?.points ?? DUNGEON_ENERGY_MAX} / ${DUNGEON_ENERGY_MAX}`;
-}
+
 function updateHUD() {
   const p = state.self,
     d = state.dungeon;
@@ -848,18 +881,8 @@ function updateHUD() {
         : d.night
         ? "ถ้ำลึกลับ · ยามราตรี"
         : `ชั้น ${d.floor} · ด่าน ${d.stage} / 3`
-      : `${energyText(p)} · ${skyText(state.sky, state.time)} · ${worldBossCountdown(state.worldBoss)}`;
-  const energyBox = $("#dungeon-energy");
-  if (energyBox) {
-    const html = energyHeader(p, state.time);
-    if (energyBox.dataset.html !== html) {
-      energyBox.dataset.html = html;
-      energyBox.innerHTML = html;
-    }
-    $$("[data-floor]:not([data-locked])").forEach((b) => {
-      b.disabled = p.energy?.points === 0;
-    });
-  }
+      : `${skyText(state.sky, state.time)} · ${worldBossCountdown(state.worldBoss)}`;
+  updatePartyUi(state);
   $("#minimap").classList.toggle("in-dungeon", !town);
   const dotAt = `translate(${mapX(p.x).toFixed(1)} ${mapY(p.y).toFixed(1)})`;
   $("#map-dot").setAttribute("transform", dotAt);
@@ -1160,7 +1183,7 @@ function showFloorResult(r) {
   ];
   $("#floor-result .result-loot").innerHTML = loot.join("");
   $("#result-next").hidden = !r.hasNext;
-  $("#result-next").textContent = "ชั้นถัดไป · ใช้ 1 พลังงาน ➜";
+  $("#result-next").textContent = "ชั้นถัดไป ➜";
   $("#result-leave").textContent = r.hasNext
     ? "ออกกลับเมือง"
     : "รับชัยชนะ · กลับเมือง";
@@ -1338,6 +1361,12 @@ function showPanel(panel) {
       p.gold,
       state.area,
     ]);
+    const heroHost = $("#modal-body .inv-hero-art");
+    if (panel === "inventory" && heroHost) {
+      const refreshHero = () => requestAnimationFrame(() => showWorldHeroPreview(scene, scene?.actors.get(p.id), heroHost));
+      refreshHero();
+      if (scene?.load.isLoading()) scene.load.once("complete", refreshHero);
+    }
     bindRpgPanel($("#modal-body"), p, {
       open: showPanel,
       action: async (event, data) => {
@@ -1450,7 +1479,7 @@ function showPanel(panel) {
       left = Math.max(1, Math.ceil((sky.changeAt - state.time) / 60));
     modal(
       "ถ้ำลึกลับ · ยามราตรี",
-      `<div class="night-cave"><div class="night-boss">${portrait(boss.type)}</div><div class="night-info"><small>บอสใหญ่ประจำคืนนี้</small><h3>${escape(boss.name)}</h3><p>ถ้ำโบราณที่โผล่ขึ้นใต้ต้นไม้ใหญ่เฉพาะยามค่ำคืน ภายในมีบอสร่างยักษ์ที่แข็งแกร่งกว่าบอสชั้นปกติหลายเท่า พร้อมลูกสมุน</p><div class="night-tags"><span>HP ×${NIGHT_BOSS.hp}</span><span>ตีแรงขึ้น ${Math.round((NIGHT_BOSS.damage - 1) * 100)}%</span><span>พลังเทียบชั้น ${floor}${party ? " (ตามสมาชิกที่เก่งสุด)" : ""}</span><span>ไม่ใช้พลังงาน</span></div><div class="night-reward ${done ? "done" : ""}"><strong>${done ? "รับรางวัลใหญ่คืนนี้แล้ว · ชนะอีกครั้งได้ทองเล็กน้อย" : "รางวัลชนะครั้งแรกของคืนนี้"}</strong><div><b class="chip chip-gold">◈ ${reward.gold}</b><b class="chip chip-ore">◆ แร่ ×${reward.ore}</b><b class="chip chip-exp">EXP ${300 + floor * 30}</b><b class="chip chip-energy">${Math.round(reward.itemChance * 100)}% อุปกรณ์บอสที่ยังไม่มี</b></div></div><p class="night-left">🌙 ถ้ำจะปิดเมื่อรุ่งสางในอีก ${left} นาที</p></div></div><button id="night-enter" class="primary-button">${party && party.leader !== p.id ? "รอหัวหน้าปาร์ตี้พาเข้า" : "ก้าวเข้าถ้ำ ➜"}</button>`,
+      `<div class="night-cave"><div class="night-boss">${portrait(boss.type)}</div><div class="night-info"><small>บอสใหญ่ประจำคืนนี้</small><h3>${escape(boss.name)}</h3><p>ถ้ำโบราณที่โผล่ขึ้นใต้ต้นไม้ใหญ่เฉพาะยามค่ำคืน ภายในมีบอสร่างยักษ์ที่แข็งแกร่งกว่าบอสชั้นปกติหลายเท่า พร้อมลูกสมุน</p><div class="night-tags"><span>HP ×${NIGHT_BOSS.hp}</span><span>ตีแรงขึ้น ${Math.round((NIGHT_BOSS.damage - 1) * 100)}%</span><span>พลังเทียบชั้น ${floor}${party ? " (ตามสมาชิกที่เก่งสุด)" : ""}</span></div><div class="night-reward ${done ? "done" : ""}"><strong>${done ? "รับรางวัลใหญ่คืนนี้แล้ว · ชนะอีกครั้งได้ทองเล็กน้อย" : "รางวัลชนะครั้งแรกของคืนนี้"}</strong><div><b class="chip chip-gold">◈ ${reward.gold}</b><b class="chip chip-ore">◆ แร่ ×${reward.ore}</b><b class="chip chip-exp">EXP ${300 + floor * 30}</b><b class="chip chip-energy">${Math.round(reward.itemChance * 100)}% อุปกรณ์บอสที่ยังไม่มี</b></div></div><p class="night-left">🌙 ถ้ำจะปิดเมื่อรุ่งสางในอีก ${left} นาที</p></div></div><button id="night-enter" class="primary-button">${party && party.leader !== p.id ? "รอหัวหน้าปาร์ตี้พาเข้า" : "ก้าวเข้าถ้ำ ➜"}</button>`,
       "nightcave",
     );
     $("#night-enter").disabled = !!party && party.leader !== p.id;
@@ -1490,7 +1519,7 @@ function showPanel(panel) {
       "ปาร์ตี้ผู้กล้า",
       party
         ? `<p>สมาชิก ${party.members.length} / 3 · หัวหน้า ${escape(party.members.find((m) => m.leader)?.name)}</p>${party.members.map((m) => row(m.leader ? "♛" : "♧", m.name, `${party.ready.includes(m.id) ? "✓ พร้อมแล้ว" : "กำลังเตรียมตัว"}${m.id === p.id ? " · คุณ" : ""}`)).join("")}<button id="party-ready" class="primary-button">${party.ready.includes(p.id) ? "ยกเลิกพร้อม" : "พร้อมลงดันเจียน"}</button><button id="party-leave" class="text-button">ออกจากปาร์ตี้</button><p class="hint">หัวหน้าเลือกดันเจียนได้ที่ประตูถ้ำ สมาชิกที่กดพร้อมจะเข้าห้องเดียวกัน</p>`
-        : `<p>ร่วมทีมกับเพื่อนสูงสุด 3 คน แบ่งรับรางวัลส่วนตัวจากมอนสเตอร์</p><button id="party-create" class="primary-button">สร้างปาร์ตี้</button>${state.parties.map((g) => row("♧", g.name, `${g.count} / 3 คน`, btn(`data-party-join="${g.id}"`, "เข้าร่วม"))).join("")}`,
+        : `<p>ร่วมทีมกับเพื่อนสูงสุด 3 คน แบ่งรับรางวัลส่วนตัวจากมอนสเตอร์</p><button id="party-create" class="primary-button">สร้างปาร์ตี้</button>${state.players.map((g) => row("♧", g.name, "ผู้เล่นในแผนที่", btn(`data-party-join="${g.id}"`, "ชวนปาร์ตี้"))).join("")}`,
     );
     if (party) {
       $("#party-ready").onclick = async () => {
@@ -1510,7 +1539,7 @@ function showPanel(panel) {
         (b) =>
           (b.onclick = async () => {
             await emit("party:action", {
-              action: "join",
+              action: "invite",
               target: b.dataset.partyJoin,
             });
             closeModal();
@@ -1518,26 +1547,35 @@ function showPanel(panel) {
       );
     }
   } else if (panel === "players") {
+    const roster = onlinePlayers || [];
+    const canInvite = state.area === "town" && (!state.party || (state.party.leader === p.id && state.party.members.length < 3));
     modal(
-      "ผู้เล่นในแผนที่",
-      `<p>ออนไลน์ทั้งหมด ${state.online} คน · ผู้เล่นแผนที่นี้ ${state.players.length + 1} คน</p>${state.players.map((m) => row(CLASSES[m.class].icon, m.name, `${CLASSES[m.class].name} · Lv.${m.level}`, btn(`data-trade-target="${m.id}"`, "แลกเปลี่ยน"))).join("") || "<p>ชวนเพื่อนเปิดเว็บเกมนี้เพื่อพบกันในเมือง</p>"}${state.trade ? '<button id="trade-reopen" class="primary-button">เปิดการแลกเปลี่ยนที่ค้างอยู่</button>' : ""}`,
-    );
-    $$("[data-trade-target]").forEach(
-      (b) =>
-        (b.onclick = async () => {
-          const r = await emit("trade:action", {
-            action: "request",
-            target: b.dataset.tradeTarget,
-          });
-          if (r) closeModal();
-        }),
+      "คนออนไลน์ · " + (onlinePlayers ? roster.length : state.online) + " คน",
+      `<p>${onlinePlayers ? "รายชื่อผู้เล่นที่อยู่ในเกมทุกแผนที่" : "กำลังรอรายชื่อจากเซิร์ฟเวอร์…"}</p>${roster.map((m) => {
+        const self = m.id === p.id, town = m.area === "town";
+        return row(CLASSES[m.class]?.icon || "♧", m.name + (self ? " · คุณ" : ""), `${CLASSES[m.class]?.name || ""} · Lv.${m.level} · ${town ? "อยู่เมือง" : "อยู่ดันเจียน"}${m.inParty ? " · มีปาร์ตี้แล้ว" : ""}`, self ? "" : `<span class="online-actions">${state.players.some(player => player.id === m.id) ? `<button data-trade-target="${m.id}">แลกเปลี่ยน</button>` : ""}<button data-online-invite="${m.id}" ${canInvite && town && !m.inParty ? "" : "disabled"}>ชวนปาร์ตี้</button></span>`);
+      }).join("")}${state.trade ? '<button id="trade-reopen" class="primary-button">เปิดการแลกเปลี่ยนที่ค้างอยู่</button>' : ""}`,
+      "players",
     );
     if ($("#trade-reopen")) $("#trade-reopen").onclick = showTrade;
+    $$("[data-trade-target]").forEach(b => b.onclick = async () => {
+      const result = await emit("trade:action", { action: "request", target: b.dataset.tradeTarget });
+      if (result) closeModal();
+    });
+    $$("[data-online-invite]").forEach(b => b.onclick = async () => {
+      b.disabled = true;
+      const result = await emit("party:action", { action: "invite", target: b.dataset.onlineInvite });
+      if (result) { b.textContent = "ส่งคำเชิญแล้ว"; }
+      else b.disabled = false;
+    });
+  } else if (panel === "announcements") {
+    modal("ประกาศจากระบบ", `<p>เจ้าแม่นางนอน · ทุกวัน 20:00–20:30 น. เวลาไทย</p><p>รางวัลเมื่อปราบสำเร็จ: อันดับดาเมจ 1 ได้ตำนาน 3 ชิ้น · อันดับ 2–3 ได้ 2 ชิ้น · ผู้ทำดาเมจคนอื่นได้ 1 ชิ้น · มีของครบแล้วรับแร่แทน</p>${announcementHistory().map(a => `<article class="system-notice"><small>${new Date(a.at * 1000).toLocaleString("th-TH", {timeZone:"Asia/Bangkok"})}</small><p>${escape(a.message)}</p></article>`).join("") || "<p>ยังไม่มีประกาศใหม่</p>"}`, "announcements");
   } else if (panel === "settings") {
     modal(
       "บันทึกการเดินทาง",
-      `<p>เกมบันทึกตัวละคร เงิน อุปกรณ์ และดันเจียนบนเซิร์ฟเวอร์อัตโนมัติ<br>บัญชีผู้มาเยือนผูกกับคุกกี้ในเบราว์เซอร์นี้</p><button id="toggle-sound" class="primary-button">${muted ? "เปิดเสียงทั้งหมด" : "ปิดเสียงทั้งหมด"}</button><button id="toggle-music" class="primary-button">${musicOn() ? "ปิดเพลงประกอบ" : "เปิดเพลงประกอบ"}</button><button id="back-selection" class="text-button">กลับหน้าเลือกตัวละคร</button><p class="hint">Demo v0.3 · นักดาบหญิงและสไลม์มีเฟรมแอนิเมชันชุดแรก · ตัวอื่นยังใช้ภาพ idle · เป้าหมาย 20–30 คนต่อห้องยังไม่ได้ยืนยันด้วย load test</p>`,
+      `<p>เกมบันทึกตัวละคร เงิน อุปกรณ์ และดันเจียนบนเซิร์ฟเวอร์อัตโนมัติ<br>บัญชีผู้มาเยือนผูกกับคุกกี้ในเบราว์เซอร์นี้</p><button id="open-announcements" class="primary-button">📣 ประกาศจากระบบ · บอสโลก 20:00 น.</button><button id="toggle-sound" class="primary-button">${muted ? "เปิดเสียงทั้งหมด" : "ปิดเสียงทั้งหมด"}</button><button id="toggle-music" class="primary-button">${musicOn() ? "ปิดเพลงประกอบ" : "เปิดเพลงประกอบ"}</button><button id="back-selection" class="text-button">กลับหน้าเลือกตัวละคร</button><p class="hint">Demo v0.3 · นักดาบหญิงและสไลม์มีเฟรมแอนิเมชันชุดแรก · ตัวอื่นยังใช้ภาพ idle · เป้าหมาย 20–30 คนต่อห้องยังไม่ได้ยืนยันด้วย load test</p>`,
     );
+    $("#open-announcements").onclick = () => showPanel("announcements");
     $("#toggle-sound").onclick = () => {
       setSound(!soundOn());
       syncSoundButton();
@@ -1647,17 +1685,6 @@ document.addEventListener(
   },
   { passive: false },
 );
-let lastTouchEnd = 0;
-document.addEventListener(
-  "touchend",
-  (e) => {
-    const now = Date.now();
-    if (now - lastTouchEnd < 300 && !e.target.closest("input,textarea,select"))
-      e.preventDefault();
-    lastTouchEnd = now;
-  },
-  { passive: false },
-);
 $("#chat-form").onsubmit = async (e) => {
   e.preventDefault();
   const input = $("#chat-input"),
@@ -1717,6 +1744,9 @@ addEventListener("blur", () => {
 // Floating joystick (MOBA style): it appears under the thumb anywhere in the
 // zone. Tilt walks, full tilt runs, a flick upward jumps once per flick.
 let touchRun = false;
+for (const root of [$("#mobile-controls"), $(".skillbar")])
+  for (const type of ["pointerdown", "pointerup", "pointermove", "pointercancel", "click", "touchstart", "touchmove", "touchend"])
+    root.addEventListener(type, (event) => event.stopPropagation());
 {
   const zone = $("#joystick-zone"),
     base = $("#joystick"),
@@ -1747,7 +1777,8 @@ let touchRun = false;
     } else if (ny > -0.3) stick.flicked = false;
   };
   zone.addEventListener("pointerdown", (e) => {
-    if (stick) return;
+    e.stopPropagation();
+    if (stick || activePanel || !state) return;
     e.preventDefault();
     try {
       zone.setPointerCapture(e.pointerId);
@@ -1763,11 +1794,21 @@ let touchRun = false;
     steer(e);
   });
   zone.addEventListener("pointermove", (e) => {
+    e.stopPropagation();
     if (stick?.id === e.pointerId) steer(e);
   });
   for (const n of ["pointerup", "pointercancel", "lostpointercapture"])
-    zone.addEventListener(n, (e) => stick?.id === e.pointerId && release());
+    zone.addEventListener(n, (e) => {
+      e.stopPropagation();
+      if (stick?.id === e.pointerId) release();
+    });
   addEventListener("blur", release);
+  document.addEventListener("game:reset-controls", release);
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) { release(); touchAttack = false; }
+  });
+  addEventListener("resize", release);
+  zone.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); });
 }
 // Touch buttons fire on press (no 300 ms click delay) and swallow the
 // click that follows, so a tap never casts or drinks twice.
@@ -1785,6 +1826,7 @@ $$("[data-action]").forEach((b) => {
 $("#touch-recall").onclick = () => $("#town-return").click();
 const attackButton = $('[data-action="attack"]');
 attackButton.addEventListener("pointerdown", (e) => {
+  if (activePanel || !state) return;
   attackButton.setPointerCapture(e.pointerId);
   touchAttack = true;
   action("attack");
@@ -1793,6 +1835,7 @@ for (const n of ["pointerup", "pointercancel", "lostpointercapture"])
   attackButton.addEventListener(n, () => (touchAttack = false));
 $("#mobile-jump").onpointerdown = (e) => {
   e.preventDefault();
+  if (activePanel || !state) return;
   jumpQueued = true;
 };
 $("#mobile-interact").onclick = interact;
@@ -1828,6 +1871,10 @@ class Adventure extends Phaser.Scene {
     this.lastArea = null;
   }
   preload() {
+    this.load.maxParallelDownloads = 4;
+    this.load.on("progress", (value) => {
+      $("#connection-state").textContent = `กำลังโหลดทรัพยากร ${Math.round(value * 100)}%`;
+    });
     queueSpriteSets(this);
     // Town kit: pieces, props, animated props and far layers (tools/town-kit).
     const kit = (key) => `/assets/town-kit/${key}.webp?v=7`;
@@ -1865,7 +1912,7 @@ class Adventure extends Phaser.Scene {
       "/assets/town-kit/player-market-stall.webp?v=2",
     );
     this.load.image("slot-machine", "/assets/town-kit/slot-machine-v2.png");
-    this.load.image("cave", "/assets/cave.png");
+    this.load.image("cave", "/assets/cave.webp");
     this.load.image("knight-motion", "/assets/animations/knight-female.png");
     this.load.image("slime-motion", "/assets/animations/slime.png");
     this.load.spritesheet("heroes", "/assets/heroes.png", {
@@ -1888,6 +1935,32 @@ class Adventure extends Phaser.Scene {
     this.add.text = (...args) => addText(...args).setResolution(textRes);
     this.knightAtlas = registerMotionAtlas(this, "knight-motion", 8);
     this.sprites = createSpriteRegistry(this);
+    // Warm the chosen hero and enemies before joining the live world.
+    const index = this.spriteSetIndex || {},
+      hero = characters.find((c) => c.id === selectedId),
+      skin = hero && heroSkins(hero).find((name) => index.sets?.[name]);
+    for (const group of ["monsters", "npcs"])
+      for (const name of Object.keys(index[group] || {})) this.sprites.want(group, name);
+    if (skin) {
+      this.sprites.want("sets", skin);
+      const set = { ...index.sets[skin], name: skin },
+        dress = gearDress(hero, set), layers = set.layers;
+      if (layers) {
+        for (const slot of ["outfit", "head", "weapon"]) {
+          const look = dress.looks?.[slot];
+          if (!layers.looks?.[slot]?.includes(look)) continue;
+          const parts = layers.parts?.[slot]?.[look];
+          for (const path of parts ? parts.map((p) => `${slot}/${look}/${p}`) : [`${slot}/${look}`])
+            this.sprites.layer(skin, path);
+        }
+        const hand = layers.hands?.[dress.looks?.outfit] || layers.hand;
+        if (hand && !layers.weaponBehind) this.sprites.layer(skin, hand);
+        if (dress.weapon) this.sprites.image(dress.weapon.url);
+      }
+    }
+    // Requests above can append atlas pages to the same loader run.
+    if (this.load.isLoading()) this.load.once("complete", () => resolveAdventureLoaded?.());
+    else resolveAdventureLoaded?.();
     this.spriteSets = this.sprites.heroes;
     this.monsterSets = this.sprites.monsters;
     this.slimeAtlas = registerMotionAtlas(this, "slime-motion", 6);
@@ -2019,7 +2092,9 @@ class Adventure extends Phaser.Scene {
       this.hoverRing.setVisible(true);
     });
     zone.on("pointerout", () => this.hoverRing.setVisible(false));
-    zone.on("pointerdown", () => {
+    zone.on("pointerdown", (pointer) => {
+      // Phaser can receive window-level touch events from controls above its canvas.
+      if (!isWorldPointer(pointer, this.game.canvas)) return;
       if (state?.area !== "town" || activePanel || state.self.hp <= 0) return;
       this.hoverRing.setVisible(false);
       open();
@@ -2130,6 +2205,17 @@ class Adventure extends Phaser.Scene {
         wasGrounded: p.grounded,
         footstepAt: 0,
       };
+      if (p.id !== state.self.id) {
+        image.setInteractive({ useHandCursor: true });
+        image.on("pointerdown", (pointer) => {
+          if (!isWorldPointer(pointer, this.game.canvas) || activePanel || state.area !== "town") return;
+          modal("ผู้เล่น · " + p.name, `<p>${escape(p.name)}</p><button id="invite-player" class="primary-button">ชวนเข้าปาร์ตี้</button>`, "player");
+          $("#invite-player").onclick = async () => {
+            const result = await emit("party:action", { action: "invite", target: p.id });
+            if (result) closeModal();
+          };
+        });
+      }
       this.actors.set(p.id, a);
     }
     a.target = p;
@@ -2985,6 +3071,21 @@ $("#new-hero").onclick = () => {
   resetLobbyCreation();
   renderCards();
   $("#character-name").focus();
+};
+$("#delete-hero").onclick = async () => {
+  const character = characters.find((c) => c.id === lobbyCharacterId);
+  if (!character || !confirm(`ลบตัวละคร “${character.name}” ถาวรหรือไม่?\nเลเวล เงิน ไอเทม และร้านค้าของตัวละครนี้จะถูกลบ และกู้คืนไม่ได้`)) return;
+  const button = $("#delete-hero");
+  button.disabled = true;
+  try {
+    await api(`characters/${encodeURIComponent(character.id)}/delete`, {});
+    await refreshAccount();
+    toast(`ลบตัวละคร ${character.name} แล้ว`);
+  } catch (e) {
+    toast(e.message, true);
+  } finally {
+    button.disabled = false;
+  }
 };
 function cycleLobbyClass(direction) {
   if (lobbyMode === "roster" && characters.length) {

@@ -9,6 +9,7 @@ import { mkdirSync, readdirSync, unlinkSync } from "node:fs";
 import { db, loadCharacter, persist } from "./server/database.js";
 import { CLASSES, maxHp, maxMp } from "./shared/config.js";
 import * as world from "./server/world.js";
+import { releaseStamp } from "./server/release-stamp.js";
 const app = express(),
   server = http.createServer(app),
   origin = process.env.APP_ORIGIN;
@@ -21,7 +22,7 @@ app.use((req, res, next) => {
   res.setHeader("X-Frame-Options", "SAMEORIGIN");
   res.setHeader(
     "Content-Security-Policy",
-    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' ws: wss:; media-src 'self' blob:",
+    "default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' ws: wss: https://cloudflareinsights.com; media-src 'self' blob:",
   );
   if (
     req.method === "POST" &&
@@ -188,13 +189,31 @@ app.post("/api/characters", (req, res) => {
     });
   }
 });
+app.post("/api/characters/:id/delete", (req, res) => {
+  const user = sessions(req);
+  if (!user) return res.status(401).json({ error: "กรุณาเข้าสู่ระบบ" });
+  const character = db.prepare("SELECT id FROM characters WHERE id=? AND user_id=?")
+    .get(req.params.id, user.id);
+  if (!character) return res.status(404).json({ error: "ไม่พบตัวละคร" });
+  if ([...world.players.values()].some((p) => p.id === character.id))
+    return res.status(409).json({ error: "กรุณาออกจากเกมก่อนลบตัวละครนี้" });
+  db.transaction(() => {
+    db.prepare("DELETE FROM shops WHERE owner=?").run(character.id);
+    db.prepare("DELETE FROM characters WHERE id=? AND user_id=?").run(character.id, user.id);
+  })();
+  world.invalidateShops();
+  res.json({ ok: true });
+});
 // Code and data always revalidate (cheap 304s via ETag): modules import each
 // other by plain URL, so a stale cached copy of one (e.g. /shared/config.js
 // held for hours by the CDN's browser TTL) breaks a release. Art and audio
-// keep the short cache.
+// revalidate when their browser cache expires.
 const revalidate = (res, file) => {
+  if (/\.(webp|png|jpg|jpeg|mp3|ogg|woff2)$/.test(file))
+    res.setHeader("Cache-Control", "public, max-age=86400");
   if (/\.(js|mjs|json|css|html|webmanifest)$/.test(file)) res.setHeader("Cache-Control", "no-cache");
 };
+app.use(releaseStamp({ publicDir: path.resolve("public"), sharedDir: path.resolve("shared") }));
 app.use("/shared", express.static(path.resolve("shared"), { setHeaders: revalidate }));
 app.use(
   express.static(path.resolve("public"), {
@@ -236,7 +255,7 @@ io.on("connection", (socket) => {
     if (world.players.has(socket.id)) throw Error("เลือกตัวละครแล้ว");
     const p = world.makeRuntime(c, socket);
     world.players.set(socket.id, p);
-    return { message: "ยินดีต้อนรับ " + p.name };
+    return { message: "ยินดีต้อนรับ " + p.name, onlinePlayers: world.onlineRoster(), announcements: world.announcements.slice(-10) };
   });
   execute(
     "player:input",
@@ -279,6 +298,7 @@ io.on("connection", (socket) => {
   execute("dungeon:leave", (p) => world.returnTown(p));
   execute("npc:buy", (p, d) => world.buyNpc(p, d.item, d.key), 5);
   execute("equipment:buy", (p, d) => world.buyEquipment(p, d.id, d.key));
+  execute("inventory:discard", (p, d) => world.discardItem(p, d.id, d.key), 3);
   execute("equipment:equip", (p, d) => world.equip(p, d.slot, d.id));
   execute("class:specialize", (p, d) => world.specialize(p, d.id));
   execute("class:advance", (p) => world.advanceClass(p), 3);
@@ -350,10 +370,23 @@ const backupTimer = setInterval(async () => {
   }
 }, 86400000);
 backupTimer.unref();
+let announcedId = null;
+let rosterHash = "";
 let step = 0;
 const timer = setInterval(() => {
   try {
     world.tick(0.05);
+    const notices = world.announcements;
+    if (notices.length && notices.at(-1).id !== announcedId) {
+      const index = notices.findIndex(a => a.id === announcedId);
+      for (const notice of notices.slice(index + 1)) io.emit("announcement", notice);
+      announcedId = notices.at(-1).id;
+    }
+    const roster = world.onlineRoster(), nextRosterHash = JSON.stringify(roster);
+    if (nextRosterHash !== rosterHash) {
+      rosterHash = nextRosterHash;
+      io.emit("online:roster", roster);
+    }
     if (++step % 1 === 0)
       for (const p of world.players.values())
         p.socket.emit("world:snapshot", world.snapshot(p));

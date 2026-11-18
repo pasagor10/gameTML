@@ -20,6 +20,13 @@ export function heroLooks(p, available = {}) {
       head: HEADS[armor - 1],
       weapon: `staff-${weapon}`,
     };
+  // A priest's vocation defines its silhouette independently of armour rarity.
+  // Keep the weapon appearance tied to the equipped item, including on advance.
+  if (p.class === "priest" && ["bishop", "templar"].includes(p.specialization)) {
+    const look = `${p.specialization}-${p.advanced ? 3 : 2}`;
+    for (const slot of ["outfit", "head"])
+      if (available[slot]?.includes(look)) looks[slot] = look;
+  }
   for (const [slot, look] of Object.entries(p.costume || {}))
     if (look && (!available[slot] || available[slot].includes(look))) looks[slot] = look;
   return looks;

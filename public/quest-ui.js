@@ -65,8 +65,8 @@ const chips = (r) =>
   [
     r.gold && `<b class="chip chip-gold">◈ ${r.gold}</b>`,
     r.exp && `<b class="chip chip-exp">EXP ${r.exp}</b>`,
-    r.ore && `<b class="chip chip-ore">◆ แร่ ×${r.ore}</b>`,
-    r.energy && `<b class="chip chip-energy">⚡ +${r.energy}</b>`,
+    (r.ore || r.energy) && `<b class="chip chip-ore">◆ แร่ ×${(r.ore || 0) + (r.energy || 0) * 2}</b>`,
+
   ]
     .filter(Boolean)
     .join("");
@@ -107,7 +107,7 @@ function dailyPage(p, time) {
     })
     .join("");
   const bonusReady = !d.bonusClaimed && done === d.quests.length;
-  const bonus = `<article class="daily-chest ${d.bonusClaimed ? "is-claimed" : bonusReady ? "is-ready" : ""}"><div class="chest-art" aria-hidden="true"></div><div class="daily-main"><strong>หีบรางวัลประจำวัน</strong><small>รับรางวัลครบ ${d.quests.length} ภารกิจ · ${done} / ${d.quests.length}</small><div class="daily-reward">${chips({ gold: DAILY_BONUS.goldPerLevel * p.level, ore: DAILY_BONUS.ore, energy: DAILY_BONUS.energy })}</div></div>${
+  const bonus = `<article class="daily-chest ${d.bonusClaimed ? "is-claimed" : bonusReady ? "is-ready" : ""}"><div class="chest-art" aria-hidden="true"></div><div class="daily-main"><strong>หีบรางวัลประจำวัน</strong><small>รับรางวัลครบ ${d.quests.length} ภารกิจ · ${done} / ${d.quests.length}</small><div class="daily-reward">${chips({ gold: DAILY_BONUS.goldPerLevel * p.level, ore: DAILY_BONUS.ore + DAILY_BONUS.energy * 2 })}</div></div>${
     d.bonusClaimed
       ? `<button disabled class="claimed">เปิดแล้ว ✓</button>`
       : `<button data-claim="bonus" class="claim" ${bonusReady ? "" : "disabled"}>เปิดหีบ</button>`

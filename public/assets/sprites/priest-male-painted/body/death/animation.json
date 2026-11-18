@@ -1,0 +1,80 @@
+{
+  "schemaVersion": "3.0",
+  "name": "death",
+  "artSource": "painted Lanna priest / articulated rig",
+  "sourceSize": [
+    184.0,
+    177.0
+  ],
+  "sourceAnchor": [
+    135.0,
+    159.0
+  ],
+  "encodedAnchor": [
+    270,
+    318
+  ],
+  "bodyHeightPx": 145,
+  "frameCount": 6,
+  "durationsMs": [
+    80,
+    90,
+    90,
+    100,
+    120,
+    200
+  ],
+  "durationSeconds": 0.68,
+  "loop": false,
+  "sampling": "linear",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      368,
+      354
+    ],
+    "pages": [
+      {
+        "file": "death-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 6,
+        "columns": 6
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        343.42,
+        177.07,
+        -61.35
+      ],
+      [
+        294.0,
+        100.51,
+        -81.41
+      ],
+      [
+        149.2,
+        100.42,
+        -112.92
+      ],
+      [
+        65.88,
+        207.81,
+        -141.57
+      ],
+      [
+        59.89,
+        243.86,
+        -147.3
+      ],
+      [
+        59.4,
+        256.99,
+        -148.44
+      ]
+    ]
+  }
+}

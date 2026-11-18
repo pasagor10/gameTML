@@ -10,7 +10,7 @@ const { db, persist, loadCharacter } = await import("../server/database.js");
 const world = await import("../server/world.js");
 const { damage, WORLD, combatStats, combatPower, maxHp, DUNGEON_ENERGY_MAX, DUNGEON_ENERGY_INTERVAL } =
   await import("../shared/config.js");
-const { FLOOR_LOOT } = await import("../shared/rpg.js");
+const { FLOOR_LOOT, GEAR } = await import("../shared/rpg.js");
 function create(id, job = "swordsman") {
   db.prepare("INSERT INTO users VALUES(?,?,?,?)").run(id, id, null, Date.now());
   const state = {
@@ -714,43 +714,18 @@ test("all gear slots enhance independently and upgrades follow equipped slots", 
   assert.equal(combatStats(p).hp, after.hp);
   world.players.delete(p.id);
 });
-test("dungeon energy regenerates offline, charges once per floor, and checks the whole party", () => {
-  const leader = create("energy-lead"),
-    ally = create("energy-ally"),
-    t = Date.now() / 1000;
+test("dungeons admit the whole party with zero legacy energy and never charge it", () => {
+  const leader = create("energy-lead"), ally = create("energy-ally");
   world.partyAction(leader, { action: "create" });
   world.partyAction(ally, { action: "join", target: leader.party });
   world.partyAction(ally, { action: "ready" });
-  ally.energy = { points: 0, nextAt: t + 600 };
-  world.savePlayer(ally);
-  assert.throws(() => world.beginDungeon(leader, 1), /พลังงาน/);
-  assert.equal(world.snapshot(leader).self.energy.points, DUNGEON_ENERGY_MAX);
-  assert.equal(loadCharacter(leader.id).energy, undefined);
-  world.beginTraining(ally);
-  assert.equal(world.snapshot(ally).self.energy.points, 0);
-  world.returnTown(ally);
-  ally.energy.nextAt = t - DUNGEON_ENERGY_INTERVAL - 60;
-  world.savePlayer(ally);
-  const reloaded = world.makeRuntime(loadCharacter(ally.id), { emit() {} });
-  assert.equal(world.snapshot(reloaded).self.energy.points, 2);
+  for (const p of [leader, ally]) { p.energy = { points: 0, nextAt: Date.now()/1000 + 600 }; world.savePlayer(p); }
   world.beginDungeon(leader, 1);
-  assert.equal(loadCharacter(leader.id).energy.points, DUNGEON_ENERGY_MAX - 1);
-  assert.equal(loadCharacter(ally.id).energy.points, 1);
-  const i = world.instances.get(leader.instance);
-  i.clear = true;
-  world.nextStage(leader);
-  assert.equal(ally.energy.points, 1);
-  i.stage = 3;
-  i.clear = i.completed = true;
-  i.results = {};
-  ally.unlocked = leader.unlocked = 2;
-  world.nextStage(leader);
+  assert.equal(leader.area, "dungeon");
+  assert.equal(leader.instance, ally.instance);
+  assert.equal(loadCharacter(leader.id).energy.points, 0);
   assert.equal(loadCharacter(ally.id).energy.points, 0);
-  assert.equal(loadCharacter(leader.id).energy.points, DUNGEON_ENERGY_MAX - 2);
-  for (const p of [leader, ally]) {
-    world.returnTown(p);
-    world.players.delete(p.id);
-  }
+  for (const p of [leader, ally]) { world.returnTown(p); world.players.delete(p.id); }
 });
 test("legacy equipment migrates; explicit gear changes stats and persists without duplicate charges", () => {
   const p = create("rpg-equipment");
@@ -1081,4 +1056,61 @@ test("auto waits out the loading card and lets the last death play before the ne
   world.tick(0.05, clearedAt + world.CLEAR_LINGER + 0.1);
   assert.equal(i.stage, 2);
   world.returnTown(p);
+});
+
+test('discard removes one item, persists, and retries cannot delete twice', () => {
+  const p = create('discard-items');
+  world.discardItem(p, 'ore', 'discard-ore-once');
+  world.discardItem(p, 'ore', 'discard-ore-once');
+  assert.equal(loadCharacter(p.id).inventory.ore, 2);
+  const id = FLOOR_LOOT[1].pool[0];
+  const c = loadCharacter(p.id);
+  c.ownedEquipment.push(id);
+  c.equipment[GEAR[id].slot] = id;
+  persist(c); world.sync(p);
+  assert.throws(() => world.discardItem(p, id, "discard-equipped-item"), /ถอดอุปกรณ์/);
+  c.equipment[GEAR[id].slot] = null;
+  persist(c); world.sync(p);
+  world.discardItem(p, id, 'discard-gear-once');
+  assert.equal(loadCharacter(p.id).ownedEquipment.includes(id), false);
+  assert.throws(() => world.discardItem(p, id, 'discard-missing-gear'), /ไม่มีอุปกรณ์/);
+  assert.throws(() => world.discardItem(p, 'starter_swordsman', 'discard-starter-gear'), /เริ่มต้น/);
+  p.area = 'dungeon';
+  assert.throws(() => world.discardItem(p, 'ore', 'discard-outside-town'), /เมือง/);
+});
+
+
+test("party invitations require recipient approval, reject stale requests, and expose team health", () => {
+  const a = create("invite-leader"), b = create("invite-recipient"), c = create("invite-third");
+  world.partyAction(a, { action: "invite", target: b.id });
+  const invite = world.snapshot(b).partyInvite;
+  assert.ok(invite.id);
+  assert.equal(b.party, undefined);
+  assert.throws(() => world.partyAction(c, { action: "accept", inviteId: invite.id }), /คำเชิญ/);
+  world.partyAction(b, { action: "decline", inviteId: invite.id });
+  assert.equal(world.snapshot(b).partyInvite, null);
+  world.partyAction(a, { action: "invite", target: b.id });
+  world.partyAction(b, { action: "accept", inviteId: world.snapshot(b).partyInvite.id });
+  assert.equal(a.party, b.party);
+  b.hp = 17;
+  assert.equal(world.snapshot(a).party.members.find(m => m.id === b.id).hp, 17);
+  assert.ok(world.snapshot(a).party.members.find(m => m.id === b.id).maxHp > 17);
+  assert.throws(() => world.partyAction(b, { action: "invite", target: c.id }), /หัวหน้า/);
+  world.partyAction(a, { action: "invite", target: c.id });
+  world.partyInvites.get(c.id).expires = 0;
+  assert.throws(() => world.partyAction(c, { action: "accept", inviteId: world.partyInvites.get(c.id).id }), /หมดอายุ/);
+  for (const p of [a,b,c]) { world.players.delete(p.id); }
+});
+
+test('online roster includes names across maps and drops disconnected players', () => {
+  const a = create('roster-town'), b = create('roster-dungeon');
+  world.beginTraining(b);
+  const roster = world.onlineRoster();
+  assert.equal(roster.find(p => p.id === a.id).area, 'town');
+  assert.equal(roster.find(p => p.id === b.id).area, 'dungeon');
+  assert.equal(roster.find(p => p.id === b.id).name, b.name);
+  assert.deepEqual(Object.keys(roster.find(p => p.id === a.id)).sort(), ['area','class','id','inParty','level','name']);
+  world.disconnect(b); world.players.delete(b.id);
+  assert.equal(world.onlineRoster().some(p => p.id === b.id), false);
+  world.disconnect(a); world.players.delete(a.id);
 });

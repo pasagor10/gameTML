@@ -51,6 +51,7 @@ import {
   questText,
   questResetAt,
   DAILY_BONUS,
+  ENERGY_OVERFLOW_ORE,
 } from "../shared/quests.js";
 import {
   skyAt,
@@ -182,6 +183,28 @@ export function buyEquipment(p, id, key) {
   sync(p);
   return result;
 }
+export function discardItem(p, id, key) {
+  ensureTown(p);
+  const result = atomic(p.id, "inventory:discard", key, () => {
+    const c = loadCharacter(p.id);
+    const gear = GEAR[id];
+    if (gear) {
+      if (id.startsWith("starter_")) throw Error("ทิ้งอุปกรณ์เริ่มต้นไม่ได้");
+      if (Object.values(c.equipment).includes(id)) throw Error("ถอดอุปกรณ์ก่อนทิ้ง");
+      const index = c.ownedEquipment.indexOf(id);
+      if (index < 0) throw Error("ไม่มีอุปกรณ์นี้");
+      c.ownedEquipment.splice(index, 1);
+    } else {
+      if (!["hp", "mp", "ore"].includes(id) || !(c.inventory[id] > 0)) throw Error("ไม่มีไอเทมนี้");
+      c.inventory[id] -= 1;
+    }
+    persist(c);
+    return { message: "ทิ้งไอเทม 1 ชิ้นแล้ว" };
+  });
+  sync(p);
+  return result;
+}
+
 export function equip(p, slot, id) {
   ensureTown(p);
   if (!Object.hasOwn(SLOTS, slot)) throw Error("ช่องอุปกรณ์ไม่ถูกต้อง");
@@ -335,6 +358,14 @@ const wallClock = () => Date.now() / 1000;
 const WB_OFFSET = Number(process.env.WORLD_BOSS_OFFSET) || 0;
 export const worldBossClock = () => wallClock() + WB_OFFSET;
 // { cycle, instanceId, endsAt, done: null|"killed"|"escaped", damage, names, joined }
+export const announcements = db.prepare("SELECT data,created FROM ledger WHERE action='announcement' ORDER BY created DESC LIMIT 40").all().reverse().map(row => ({ ...JSON.parse(row.data), at: row.created / 1000 }));
+function announce(id, message) {
+  if (announcements.some(a => a.id === id)) return;
+  announcements.push({ id, message, at: wallClock() });
+  if (announcements.length > 40) announcements.shift();
+  log(null, "announcement", { id, message });
+}
+const completedWorldCycles = new Set(db.prepare("SELECT data FROM ledger WHERE action='worldboss:down' ORDER BY created DESC LIMIT 60").all().map(row => JSON.parse(row.data).cycle));
 export let worldBoss = null;
 function openWorldBoss(sched) {
   const id = randomUUID(),
@@ -364,18 +395,24 @@ function openWorldBoss(sched) {
     names: new Map(),
     joined: new Set(),
   };
+  announce(`worldboss:${sched.cycle}:open`, "เจ้าแม่นางนอนปรากฏแล้ว! ร่วมปราบบอสโลก รับของตำนานตามอันดับดาเมจ · ปิดสนาม 20:30 น.");
   log(null, "worldboss:open", { cycle: sched.cycle, boss: sched.name });
   return i;
 }
 // Keeps the schedule: opens the arena on time, lets the boss escape at the end.
-export function updateWorldBoss() {
-  const clock = worldBossClock(),
-    sched = worldBossAt(clock);
-  if (sched.open && worldBoss?.cycle !== sched.cycle) {
+export function updateWorldBoss(clock = worldBossClock()) {
+  const sched = worldBossAt(clock);
+  const until = sched.nextAt - clock;
+  if (!sched.open && until > 0 && until <= 600) {
+    const minutes = until <= 60 ? 1 : until <= 300 ? 5 : 10;
+    announce(`worldboss:${sched.cycle + 1}:warning:${minutes}`, `อีกไม่เกิน ${minutes} นาที เจ้าแม่นางนอนจะปรากฏเวลา 20:00 น. เตรียมรับอุปกรณ์ตำนานตามดาเมจ!`);
+  }
+  if (sched.open && !completedWorldCycles.has(sched.cycle) && worldBoss?.cycle !== sched.cycle) {
     if (worldBoss) closeWorldBoss();
     openWorldBoss(sched);
   } else if (worldBoss && !worldBoss.done && clock >= worldBoss.endsAt) {
     worldBoss.done = "escaped";
+    announce(`worldboss:${worldBoss.cycle}:escaped`, "เจ้าแม่นางนอนลับหายไปแล้ว พบกันพรุ่งนี้ 20:00 น.");
     closeWorldBoss();
   }
 }
@@ -466,11 +503,13 @@ function worldSummons(i, t) {
 // The boss fell: pay everyone who hit it, by their share of the damage.
 function worldBossDown(i, t) {
   worldBoss.done = "killed";
+  completedWorldCycles.add(worldBoss.cycle);
   const boss = { maxHp: i.bossMaxHp || 1 },
     ranking = worldRanking(worldBoss.damage, worldBoss.names, boss.maxHp);
   i.ranking = ranking;
   for (const r of ranking) {
-    const m = live(r.id);
+    const saved = !live(r.id) && loadCharacter(r.id);
+    const m = live(r.id) || (saved && makeRuntime(saved, { emit() {} }));
     if (!m) continue;
     const pay = worldReward(r.place, r.share),
       reward = (i.rewards[m.id] ??= { gold: 0, exp: 0, ore: 0, items: [], damage: 0 });
@@ -480,22 +519,15 @@ function worldBossDown(i, t) {
     reward.gold += pay.gold;
     reward.ore += pay.ore;
     reward.exp += pay.exp;
-    const pool = bossLootCandidates(MAIN_FLOORS, m.class, m.ownedEquipment);
-    if (pool.length && Math.random() < pay.itemChance) {
+    for (let n = 0; n < pay.itemCount; n++) {
+      const pool = bossLootCandidates(MAIN_FLOORS, m.class, m.ownedEquipment)
+        .filter(id => GEAR[id].rarity === "legendary");
+      if (!pool.length) { m.inventory.ore += 15; reward.ore += 15; continue; }
       const item = pool[Math.floor(Math.random() * pool.length)];
       m.ownedEquipment.push(item);
       reward.items.push(item);
-      if (m.instance === i.id)
-        i.events.push({
-          id: randomUUID(),
-          kind: "loot",
-          actorId: m.id,
-          x: i.lastDrop?.x ?? m.x,
-          y: i.lastDrop?.y ?? m.y - 110,
-          item,
-          rarity: GEAR[item].rarity,
-          at: t,
-        });
+      if (m.instance === i.id) i.events.push({ id: randomUUID(), kind: "loot", actorId: m.id,
+        x: i.lastDrop?.x ?? m.x, y: i.lastDrop?.y ?? m.y - 110, item, rarity: GEAR[item].rarity, at: t });
     }
     if (m.instance === i.id) {
       questEvents(i, m, advanceQuests(m, wallClock(), "boss"), m.x, m.y - 160, t);
@@ -507,6 +539,7 @@ function worldBossDown(i, t) {
     }
     savePlayer(m);
   }
+  announce(`worldboss:${worldBoss.cycle}:down`, `เจ้าแม่นางนอนถูกปราบแล้ว! ${ranking.slice(0,3).map(r => `อันดับ ${r.place} ${r.name} (${Math.round(r.damage).toLocaleString()} ดาเมจ)`).join(" · ")} · ส่งของรางวัลเข้ากระเป๋าแล้ว`);
   log(null, "worldboss:down", { cycle: worldBoss.cycle, heroes: ranking.length });
 }
 // What a hero sees of the world boss, in town or in the arena.
@@ -559,25 +592,14 @@ export function claimQuest(p, index) {
       throw Error("รับรางวัลภารกิจให้ครบทุกข้อก่อน");
     daily.bonusClaimed = true;
     const gold = DAILY_BONUS.goldPerLevel * p.level,
-      energy = dungeonEnergy(p, t);
-    let ore = DAILY_BONUS.ore,
-      extra = "+1 พลังงาน";
-    if (energy.points < DUNGEON_ENERGY_MAX) {
-      const points = energy.points + DAILY_BONUS.energy;
-      p.energy =
-        points >= DUNGEON_ENERGY_MAX
-          ? { points: DUNGEON_ENERGY_MAX, nextAt: null }
-          : { points, nextAt: energy.nextAt };
-    } else {
-      ore += 2;
-      extra = "พลังงานเต็มอยู่แล้ว แลกเป็นแร่ +2";
-    }
+      { gained, spare } = grantEnergy(p, t, DAILY_BONUS.energy);
+    const ore = DAILY_BONUS.ore + spare;
     p.gold += gold;
     p.inventory.ore = (p.inventory.ore || 0) + ore;
     savePlayer(p);
     return {
-      message: `เปิดหีบประจำวัน · +${gold} ทอง · แร่ ×${ore} · ${extra}`,
-      reward: { gold, ore },
+      message: `เปิดหีบประจำวัน · +${gold} ทอง · แร่ ×${ore}`,
+      reward: { gold, ore, energy: gained },
     };
   }
   if (!validInt(index, 0, daily.quests.length - 1)) throw Error("ไม่พบภารกิจ");
@@ -585,16 +607,23 @@ export function claimQuest(p, index) {
   if (q.claimed) throw Error("รับรางวัลแล้ว");
   if (q.progress < q.goal) throw Error("ภารกิจยังไม่สำเร็จ");
   q.claimed = true;
-  const reward = questReward(q, p.level);
+  const base = questReward(q, p.level),
+    { gained, spare } = grantEnergy(p, t, base.energy || 0),
+    reward = { ...base, ore: base.ore + spare, energy: gained };
   p.gold += reward.gold;
   p.inventory.ore = (p.inventory.ore || 0) + reward.ore;
   exp(p, reward.exp);
   savePlayer(p);
   return {
-    message: `รับรางวัล · +${reward.gold} ทอง · +${reward.exp} EXP · แร่ ×${reward.ore}`,
+    message: `รับรางวัล · +${reward.gold} ทอง · +${reward.exp} EXP · แร่ ×${reward.ore}${base.energy ? `` : ""}`,
     reward,
   };
 }
+// Legacy energy rewards now grant bonus ore; dungeon entry is unlimited.
+function grantEnergy(p, t, amount) {
+  return { gained: 0, spare: amount * ENERGY_OVERFLOW_ORE };
+}
+
 // Anything in the bag can go on sale: potions and ore by the stack, and any
 // owned gear that is not equipped (starter gear is bound to its class).
 const SHOP_STOCK = ["hp", "mp", "ore"],
@@ -906,24 +935,6 @@ function dungeonEnergy(p, t) {
     ? full
     : { points, nextAt: p.energy.nextAt + recovered * DUNGEON_ENERGY_INTERVAL };
 }
-function spendDungeonEnergy(members) {
-  const t = now();
-  const changes = members.map((p) => {
-    const current = dungeonEnergy(p, t);
-    if (current.points < 1) throw Error(`พลังงานของ ${p.name} ไม่พอ`);
-    return {
-      p,
-      energy: {
-        points: current.points - 1,
-        nextAt: current.nextAt ?? t + DUNGEON_ENERGY_INTERVAL,
-      },
-    };
-  });
-  db.transaction(() => {
-    for (const { p, energy } of changes) persist({ ...stored(p), energy });
-  })();
-  for (const { p, energy } of changes) p.energy = energy;
-}
 export function beginDungeon(p, floor) {
   if (!validInt(floor, 1, FLOORS.length)) throw Error("ชั้นไม่ถูกต้อง");
   const party = parties.get(p.party),
@@ -933,7 +944,6 @@ export function beginDungeon(p, floor) {
     throw Error("สมาชิกต้องอยู่เมืองและปลดล็อกชั้นนี้แล้ว");
   if (party && members.some((m) => m.id !== p.id && !party.ready.has(m.id)))
     throw Error("สมาชิกทุกคนต้องกดพร้อมก่อน");
-  spendDungeonEnergy(members);
   openInstance(members, floor, 1);
   if (party) party.ready.clear();
   return { message: "เข้าสู่ " + FLOORS[floor - 1].name };
@@ -1187,8 +1197,7 @@ export function nextStage(p) {
     const members = i.members.map(live).filter(Boolean);
     if (members.some((m) => m.unlocked < i.floor + 1))
       throw Error("สมาชิกยังไม่ปลดล็อกชั้นถัดไป");
-    spendDungeonEnergy(members);
-    i.floor++;
+      i.floor++;
     i.stage = 0;
     i.completed = false;
     i.results = null;
@@ -1655,7 +1664,33 @@ function checkClear(i, t, p) {
     }
   }
 }
-export function partyAction(p, { action, target }) {
+export function onlineRoster() {
+  return [...players.values()].map(p => ({ id: p.id, name: p.name, class: p.class, level: p.level, area: p.area, inParty: !!p.party }));
+}
+
+export const partyInvites = new Map();
+export function partyAction(p, { action, target, inviteId }) {
+  if (["invite", "accept", "decline"].includes(action)) {
+    ensureTown(p);
+    if (action === "invite") {
+      const other = live(target);
+      if (!other || other.id === p.id || other.area !== "town" || other.party) throw Error("ผู้เล่นนี้ยังรับคำเชิญไม่ได้");
+      const existing = parties.get(p.party);
+      if (existing && (existing.leader !== p.id || existing.members.length >= 3)) throw Error("เฉพาะหัวหน้าทีมที่มีที่ว่างเท่านั้นที่ชวนได้");
+      const pending = partyInvites.get(other.id);
+      if (pending?.expires > now()) throw Error("ผู้เล่นนี้มีคำเชิญรอตอบอยู่");
+      if (!existing) partyAction(p, { action: "create" });
+      partyInvites.set(other.id, { id: randomUUID(), from: p.id, party: p.party, expires: now() + 30 });
+      return { message: "ส่งคำเชิญปาร์ตี้แล้ว" };
+    }
+    const invite = partyInvites.get(p.id);
+    if (!invite || invite.id !== inviteId) throw Error("ไม่พบคำเชิญนี้");
+    partyInvites.delete(p.id);
+    if (action === "decline") return { message: "ปฏิเสธคำเชิญแล้ว" };
+    const party = parties.get(invite.party);
+    if (invite.expires <= now() || !live(invite.from) || party?.leader !== invite.from) throw Error("คำเชิญหมดอายุแล้ว");
+    return partyAction(p, { action: "join", target: invite.party });
+  }
   if (action === "create") {
     if (p.party) throw Error("อยู่ในปาร์ตี้แล้ว");
     const id = randomUUID();
@@ -1792,6 +1827,8 @@ export function tradeAction(
   return { message: "อัปเดตการแลกเปลี่ยนแล้ว" };
 }
 export function disconnect(p) {
+  partyInvites.delete(p.id);
+  for (const [id, invite] of partyInvites) if (invite.from === p.id) partyInvites.delete(id);
   savePlayer(p);
   returnTown(p);
   if (p.party) partyAction(p, { action: "leave" });
@@ -2333,10 +2370,17 @@ export function snapshot(p) {
           ready: [...party.ready],
           members: party.members.map((id) => {
             const m = live(id);
-            return { id, name: m?.name, leader: id === party.leader };
+            return { id, name: m?.name, leader: id === party.leader, hp: m?.hp ?? 0, maxHp: m ? maxHp(m) : 1, area: m?.area };
           }),
         }
       : null,
+    partyInvite: (() => {
+      const invite = partyInvites.get(p.id);
+      if (!invite || invite.expires <= t || p.party || !live(invite.from) || parties.get(invite.party)?.leader !== invite.from) {
+        partyInvites.delete(p.id); return null;
+      }
+      return { id: invite.id, name: live(invite.from).name, expires: invite.expires };
+    })(),
     parties: [...parties.values()].map((v) => ({
       id: v.id,
       name: live(v.leader)?.name,

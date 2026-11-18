@@ -15,6 +15,7 @@ const {
   bestiaryStars,
   bestiaryBonuses,
   ensureDaily,
+  questReward,
   BESTIARY_TIERS,
   MONSTERS,
 } = await import("../shared/quests.js");
@@ -124,15 +125,18 @@ test("quest rewards claim once, chest needs every quest, and grants energy or or
   daily.quests.forEach((q) => (q.progress = q.goal));
   const gold = p.gold,
     ore = p.inventory.ore;
+  p.energy = { points: 2, nextAt: Date.now() / 1000 + 600 };
   const r = world.claimQuest(p, 0);
   assert.equal(p.gold, gold + r.reward.gold);
   assert.equal(p.inventory.ore, ore + r.reward.ore);
+  assert.equal(r.reward.energy, 0);
+  assert.equal(p.energy.points, 2, "legacy energy is untouched");
   assert.throws(() => world.claimQuest(p, 0), /รับรางวัลแล้ว/);
   world.claimQuest(p, 1);
   world.claimQuest(p, 2);
-  p.energy = { points: 2, nextAt: Date.now() / 1000 + 600 };
+  assert.equal(p.energy.points, 2);
   world.claimQuest(p, "bonus");
-  assert.equal(p.energy.points, 3);
+  assert.equal(p.energy.points, 2, "chest awards ore instead");
   assert.throws(() => world.claimQuest(p, "bonus"), /แล้ว/);
   assert.equal(loadCharacter(p.id).daily.bonusClaimed, true);
 
@@ -144,7 +148,17 @@ test("quest rewards claim once, chest needs every quest, and grants energy or or
   const fullOre = full.inventory.ore;
   world.claimQuest(full, "bonus");
   assert.equal(world.snapshot(full).self.energy.points, DUNGEON_ENERGY_MAX);
-  assert.equal(full.inventory.ore, fullOre + 5, "full energy converts to ore");
+  assert.equal(full.inventory.ore, fullOre + 7, "full energy converts to ore");
+
+  const capped = create("claims-capped");
+  const quests = ensureDaily(capped, Date.now() / 1000).quests;
+  quests[0].progress = quests[0].goal;
+  capped.energy = { points: DUNGEON_ENERGY_MAX, nextAt: null };
+  const before = capped.inventory.ore,
+    got = world.claimQuest(capped, 0);
+  assert.equal(got.reward.energy, 0);
+  assert.equal(capped.inventory.ore, before + got.reward.ore);
+  assert.equal(got.reward.ore, questReward(quests[0], capped.level).ore + 2);
 });
 
 test("snapshot carries today's quests, reset time and the book", () => {

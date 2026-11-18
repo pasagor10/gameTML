@@ -410,7 +410,8 @@ export function playLayers(scene, holder, image, set, dress, registry) {
       const look = dress?.looks?.[slot],
         parts = layers.parts?.[slot]?.[look];
       if (!look || !layers.looks?.[slot]?.includes(look)) continue;
-      if (!parts) place(slot, registry.layer(set.name, `${slot}/${look}`));
+      // A one-piece (painted) look takes one wash of the armour colour.
+      if (!parts) place(slot, registry.layer(set.name, `${slot}/${look}`), dress.tints?.[slot]?.main);
       // Cloth first, the fixed part (outlines, hair) on top of it.
       else
         for (const part of ["main", "trim", "gem", "fixed"])
@@ -443,16 +444,40 @@ export function playLayers(scene, holder, image, set, dress, registry) {
         .setFlip(flip, false)
         .setAngle((flip ? -deg : deg) + image.angle);
       finish(im, null);
-    } else {
+      if (layers.weaponBehind) im.setDepth(image.depth + 0.002);
+      glowWeapon(scene, im, w.glow, image);
+    } else if (!(dress?.weapon && layers.painted)) {
+      // Painted sets wait for the item picture rather than downloading a
+      // whole fallback weapon atlas for a moment's use.
       const look = dress?.looks?.weapon;
-      if (look && layers.looks?.weapon?.includes(look)) place("weapon", registry.layer(set.name, `weapon/${look}`));
+      if (look && layers.looks?.weapon?.includes(look)) {
+        place("weapon", registry.layer(set.name, `weapon/${look}`));
+        if (layers.weaponBehind && used.has("weapon")) images.weapon.setDepth(image.depth + 0.002);
+      }
     }
-    // The front hand closes over the grip.
-    if (layers.hand) place("hand", registry.layer(set.name, layers.hand));
+    // Optional near-hand grip overlay for sets that need one.
+    const hand = layers.hands?.[dress?.looks?.outfit] || layers.hand;
+    // Painted far-arm sets already paint the gripping palm below the robe.
+    // Repeating it here would bring that far hand back above the near arm.
+    if (hand && !layers.weaponBehind) place("hand", registry.layer(set.name, hand));
   }
   for (const key of Object.keys(images))
     if (!used.has(key)) {
       images[key].destroy();
       delete images[key];
     }
+}
+
+// The held weapon shimmers in its own item picture's accent colour: a soft
+// pulsing outline glow (WebGL only; canvas renderers skip it).
+function glowWeapon(scene, im, colour, body) {
+  if (colour == null || !im.preFX) return;
+  if (!im._glow || im._glowColour !== colour) {
+    im.preFX.clear();
+    im.preFX.padding = 8;
+    im._glow = im.preFX.addGlow(colour, 4, 0, false, 0.1, 12);
+    im._glowColour = colour;
+  }
+  const t = scene.time.now / 1000;
+  im._glow.outerStrength = (4 + Math.sin(t * 3.2) * 1.6) * (body.visible ? 1 : 0);
 }

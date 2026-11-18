@@ -1053,7 +1053,17 @@ button.path-node { cursor: pointer; }
 }
 @media (max-width: 860px) and (min-height: 501px) {
   .cls2 { grid-template-columns: 1fr; }
-  .cls-hero { display: none; }
+  .cls-hero {
+    display: grid;
+    grid-template-columns: 100px minmax(0, 1fr);
+    align-items: center;
+    gap: 6px 10px;
+    padding: 8px;
+  }
+  .cls-figure { grid-column: 1; grid-row: 1 / span 3; height: 130px; }
+  .cls-hero .inv-nameplate { margin: 0; width: 100%; font-size: 13px; }
+  .cls-role { margin: 0; padding: 6px; }
+  .cls-hero .cls-preview-note { margin: 0; text-align: left; }
 }
 @media (max-height: 500px) {
   .cls2 { grid-template-columns: 150px minmax(0, 1fr) 210px; gap: 8px; }
@@ -1110,4 +1120,12 @@ button.path-node { cursor: pointer; }
   .path-col { gap: 10px; }
   .path-node.root .path-emblem { width: 30px; height: 30px; font-size: 15px; }
   .cls-figure { height: 120px; }
+}
+.cls-preview-note {
+  display: block;
+  margin: 4px 8px 8px;
+  color: #e7cc91;
+  font-size: 11px;
+  text-align: center;
+  line-height: 1.5;
 }

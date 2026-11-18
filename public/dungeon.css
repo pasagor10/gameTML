@@ -87,10 +87,11 @@
 }
 .dg-bolts {
   display: flex;
-  gap: 2px;
+  flex-wrap: wrap;
+  gap: 1px;
 }
 .dg-bolts i svg {
-  width: 17px;
+  width: 14px;
   fill: #2b3550;
   stroke: #0005;
 }
@@ -182,7 +183,7 @@
   inset: 0;
   border-radius: inherit;
   overflow: hidden;
-  background: url(/assets/cave.png) no-repeat;
+  background: url(/assets/cave.webp) no-repeat;
   background-size: 260% auto;
 }
 .dg-scene::after {

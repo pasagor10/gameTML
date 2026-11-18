@@ -9,8 +9,8 @@ const { WORLD_BOSS, worldBossAt, worldRanking, worldReward } = await import(
   "../shared/world-boss.js"
 );
 // Shift the schedule so the boss rose a minute ago.
-const into = (Date.now() / 1000) % WORLD_BOSS.every;
-process.env.WORLD_BOSS_OFFSET = String(60 - into);
+const current = Date.now()/1000;
+process.env.WORLD_BOSS_OFFSET = String(worldBossAt(current).startsAt + 60 - current);
 const { db, loadCharacter } = await import("../server/database.js");
 const world = await import("../server/world.js");
 
@@ -29,12 +29,15 @@ function create(id, extra = {}) {
 const arena = () => world.instances.get(world.worldBoss.instanceId);
 const bossOf = (i) => i.enemies.find((e) => e.boss);
 
-test("the world boss keeps a half-hour schedule and rotates", () => {
-  const base = 1000 * WORLD_BOSS.every;
-  assert.ok(worldBossAt(base + 10).open);
-  assert.ok(!worldBossAt(base + WORLD_BOSS.window + 1).open);
-  assert.equal(worldBossAt(base + 10).nextAt, base + WORLD_BOSS.every);
-  assert.notEqual(worldBossAt(base).name, worldBossAt(base + WORLD_BOSS.every).name);
+test("Nang Non appears daily at 20:00 Bangkok and closes at 20:30", () => {
+  const start = Date.parse("2026-11-18T20:00:00+07:00")/1000;
+  assert.equal(worldBossAt(start-1).open, false);
+  assert.equal(worldBossAt(start).name, "เจ้าแม่นางนอน");
+  assert.equal(worldBossAt(start).open, true);
+  assert.equal(worldBossAt(start+1799).open, true);
+  assert.equal(worldBossAt(start+1800).open, false);
+  assert.equal(worldBossAt(start).nextAt, start+86400);
+  assert.equal(worldBossAt(start+86400).open, true);
 });
 
 test("ranking and rewards follow the share of damage", () => {
@@ -45,6 +48,9 @@ test("ranking and rewards follow the share of damage", () => {
     fifth = worldReward(5, 0.05);
   assert.ok(first.gold > fifth.gold && first.ore > fifth.ore && first.exp > fifth.exp);
   assert.equal(first.itemChance, 1);
+  assert.equal(first.itemCount, 3);
+  assert.equal(worldReward(2, .2).itemCount, 2);
+  assert.equal(fifth.itemCount, 1);
 });
 
 test("heroes join one shared arena; each newcomer toughens the boss", () => {
@@ -121,6 +127,13 @@ test("everyone who hit it is paid by place, even after going home", () => {
   assert.equal(i.enemies.length, 0, "the guards scatter with their master");
   const res = i.results[a.id];
   assert.equal(res.world.place, 1);
+  assert.equal(i.rewards[a.id].items.length, 3);
+  assert.equal(i.rewards[b.id].items.length, 2);
+  const completed = world.worldBoss;
+  completed.cycle = -1;
+  world.updateWorldBoss();
+  assert.equal(world.worldBoss, completed, "a completed daily boss cannot respawn");
+  completed.cycle = worldBossAt(world.worldBossClock()).cycle;
   assert.equal(res.hasNext, false);
   assert.ok(a.gold - goldA >= worldReward(1, 0).gold);
   assert.ok(b.gold - goldB >= worldReward(2, 0).gold, "paid at home too");
@@ -131,14 +144,30 @@ test("everyone who hit it is paid by place, even after going home", () => {
 });
 
 test("if time runs out the boss escapes and sends everyone home", () => {
-  world.worldBoss.cycle = -1; // pretend the last one is old: a new one opens
-  world.updateWorldBoss();
+  world.worldBoss.cycle = -1;
+  const tomorrow = worldBossAt(world.worldBossClock()).nextAt + 60;
+  world.updateWorldBoss(tomorrow);
   const i = arena(),
     a = world.live("wb-a");
-  world.joinWorldBoss(a);
+  // Join directly for the simulated next day; the production clock is unchanged.
+  i.members.push(a.id); a.area = "dungeon"; a.instance = i.id;
   world.worldBoss.endsAt = 0;
-  world.updateWorldBoss();
+  world.updateWorldBoss(tomorrow);
   assert.equal(world.worldBoss.done, "escaped");
   assert.equal(a.area, "town");
   assert.ok(!world.instances.has(i.id));
+});
+
+
+test("global announcements warn at 10, 5 and 1 minutes without repeating", () => {
+  const start = worldBossAt(world.worldBossClock()).nextAt + 86400;
+  const before = world.announcements.length;
+  for (const seconds of [600,300,60]) {
+    world.updateWorldBoss(start-seconds);
+    world.updateWorldBoss(start-seconds+1);
+  }
+  const notices = world.announcements.slice(before);
+  assert.equal(notices.length, 3);
+  assert.ok(notices.every(a => a.message.includes("เจ้าแม่นางนอน")));
+  assert.ok(notices[0].message.includes("10 นาที"));
 });

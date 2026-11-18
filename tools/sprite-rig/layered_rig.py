@@ -39,6 +39,7 @@ import argparse
 import json
 import math
 import sys
+import time
 from pathlib import Path
 
 from PIL import Image, ImageChops
@@ -161,12 +162,23 @@ def body_pieces(gender, p, s):
     def face(cv):
         hc = s["head"]
         cv.circle(hc, HEAD_R * 0.86, SKIN)
+        # Soft warm light from the sanctuary sky; keep the face opaque.
+        for radius in range(16, 3, -1):
+            cv.blend(lambda l: l.circle((hc[0] - 6, hc[1] + 4), radius, (174, 107, 78, 3), outline=False))
+        for radius in range(17, 3, -1):
+            cv.blend(lambda l: l.circle((hc[0] + 6, hc[1] - 5), radius, (255, 244, 207, 4), outline=False))
+        # A small ear and its inner fold make the three-quarter view readable.
+        cv.circle((hc[0] - 16, hc[1] + 5), 5, SKIN, width=0.8)
+        cv.line((hc[0] - 18, hc[1] + 3), (hc[0] - 15, hc[1] + 6), 1.0, (182, 119, 86, 255))
         ey = hc[1] + 3
         for ex, sc in ((hc[0] + 13, 1.0), (hc[0] - 1, 0.8)):
             if p["eyes"] == "open":
-                cv.circle((ex, ey), 4.2 * sc, OUTLINE, outline=False)
-                cv.circle((ex, ey + 0.8), 3.0 * sc, (150, 110, 60, 255), outline=False)
-                cv.circle((ex + 1.2, ey - 1.6), 1.3 * sc, (255, 255, 255, 255), outline=False)
+                cv.circle((ex, ey), 4.5 * sc, (255, 244, 221, 255), outline=False)
+                cv.circle((ex + 0.8, ey + 0.3), 3.2 * sc, (112, 90, 48, 255), outline=False)
+                cv.circle((ex + 1.1, ey), 1.8 * sc, (47, 48, 37, 255), outline=False)
+                cv.circle((ex + 1.7, ey - 1.7), 1.2 * sc, (255, 255, 240, 255), outline=False)
+                cv.line((ex - 4 * sc, ey - 3.3), (ex + 3.8 * sc, ey - 3.8), 1.4, (80, 61, 46, 255))
+                cv.line((ex - 3.6 * sc, ey - 8), (ex + 3 * sc, ey - 8.8), 1.1, (116, 86, 55, 255))
                 if s["fem"]:
                     cv.line((ex - 4 * sc, ey - 4.5), (ex + 4.5 * sc, ey - 5.5), 1.4, OUTLINE)
             elif p["eyes"] == "hurt":
@@ -175,7 +187,8 @@ def body_pieces(gender, p, s):
             else:
                 cv.line((ex - 3.5, ey + 1), (ex + 3.5, ey + 1), 1.6, OUTLINE)
         cv.blend(lambda l: l.circle((hc[0] + 16, hc[1] + 11), 3, (255, 160, 160, 140), outline=False))
-        cv.line((hc[0] + 8, hc[1] + 14), (hc[0] + 12, hc[1] + 14.5), 1.4, OUTLINE)
+        cv.line((hc[0] + 17, hc[1] + 7), (hc[0] + 18.5, hc[1] + 9), 0.9, (185, 123, 89, 255))
+        cv.line((hc[0] + 8, hc[1] + 14), (hc[0] + 12, hc[1] + 14.5), 1.0, (139, 83, 69, 255))
 
     out.append((30, "body", lambda cv: arm(cv, s["arm_b"], False)))
     out.append((40, "body", lambda cv: leg(cv, s["leg_b"], False)))
@@ -207,6 +220,9 @@ def outfit_pieces(look, gender, p, s, marked=False):
         cv.capsule(sh, e, 10.5, col)
         cv.capsule(e, cuff, 10 + o["sleeve"] * 3, col)
         cv.circle(cuff, 5.5 + o["sleeve"] * 1.5, rgba(o["trim"]) if front else shade(o["trim"], 0.8))
+        # Embroidered bracer, with a cloth inset and a narrow metal edge.
+        cv.circle(cuff, 3.6 + o["sleeve"], shade(o["robe"], 0.83), outline=False)
+        cv.line((cuff[0] - 3, cuff[1] - 1), (cuff[0] + 3, cuff[1] - 1), 1.0, rgba(o["trim"]))
 
     out.append((32, "outfit", lambda cv: sleeve(cv, s["arm_b"], False)))
 
@@ -223,6 +239,25 @@ def outfit_pieces(look, gender, p, s, marked=False):
         cv.line(t(-wh - flare + wave + 1, -skirt_len + 1.6), t(wh + flare + wave - 1, -skirt_len + 1.6), 2.6,
                 rgba(o["trim"]))
         cv.line(t(1, 4), t(1 + wave * 0.5, -skirt_len + 2), 2.2, rgba(o["trim"]))
+        # Overlapping silk panels: dark folds underneath a tapered front tabard.
+        for side in (-1, 1):
+            cv.poly([t(side * 7, 1), t(side * (wh + 2), 0),
+                     t(side * (wh + flare - 3) + wave, -skirt_len + 4),
+                     t(side * 9 + wave * 0.5, -skirt_len + 7)],
+                    shade(o["robe"], 0.78), outline=False)
+            cv.line(t(side * 10, -4), t(side * 14 + wave, -skirt_len + 7), 1.0, shade(o["trim"], 0.8))
+        cv.poly([t(-6, 2), t(7, 2), t(9 + wave * 0.4, -skirt_len + 7),
+                 t(1 + wave * 0.4, -skirt_len + 1), t(-7 + wave * 0.4, -skirt_len + 7)],
+                rgba(o["robe"]), width=0.8)
+        cv.line(t(-6, 0), t(-7 + wave * 0.4, -skirt_len + 7), 1.2, rgba(o["trim"]))
+        cv.line(t(7, 0), t(9 + wave * 0.4, -skirt_len + 7), 1.2, rgba(o["trim"]))
+        # Small repeating lotus diamonds remain legible at world-sprite size.
+        for y in (-8, -17, -26):
+            if y < -skirt_len + 7:
+                continue
+            x = 1 + wave * 0.25
+            cv.poly([t(x, y + 3), t(x + 2.6, y), t(x, y - 3), t(x - 2.6, y)],
+                    rgba(o["trim"]), outline=False)
         cv.capsule(t(-wh, 5), t(wh, 5), 4.5, rgba(o["sash"]))
         cv.poly([t(4, 5), t(9, -12 + wave), t(5, -12 + wave)], rgba(o["sash"]), width=1.0)
         if o.get("mantle"):
@@ -231,6 +266,15 @@ def outfit_pieces(look, gender, p, s, marked=False):
                      t(-wt, TORSO - 12)], m)
             cv.line(t(-wt, TORSO - 12), t(1, TORSO - 16), 1.4, rgba(o["trim"]))
             cv.line(t(1, TORSO - 16), t(wt + 1, TORSO - 12), 1.4, rgba(o["trim"]))
+        # Crossed ceremonial collar and lotus clasp, drawn above the mantle.
+        cv.poly([t(-wt, TORSO), t(-4, TORSO + 1), t(5, TORSO - 12), t(1, TORSO - 15)],
+                rgba(o["trim"]), width=0.6)
+        cv.poly([t(6, TORSO), t(wt, TORSO - 2), t(1, TORSO - 15), t(-2, TORSO - 12)],
+                shade(o["trim"], 0.87), width=0.6)
+        cv.circle(t(1, TORSO - 13), 2.8, rgba(o["trim"]), width=0.6)
+        cv.circle(t(1, TORSO - 13), 1.4, core, outline=False)
+        cv.poly([t(1, 10), t(6, 5), t(1, 0), t(-4, 5)], rgba(o["trim"]), width=0.7)
+        cv.circle(t(1, 5), 1.8, core, outline=False)
         if o.get("glow"):
             cv.blend(lambda l: l.circle(t(1, TORSO - 12), 6, (255, 240, 170, 150), outline=False))
             cv.circle(t(1, TORSO - 12), 2.6, core, outline=False)
@@ -288,6 +332,17 @@ def head_pieces(look, gender, p, s, marked=False):
             cv.poly([(hc[0] - 22, hc[1] - 4), (hc[0] - 16, hc[1] + 20), (hc[0] - 10, hc[1] + 4)], hair)
         elif not h.get("mitre"):
             cv.poly([(hc[0] - 6, hc[1] - 26), (hc[0] + 2, hc[1] - 36), (hc[0] + 8, hc[1] - 26)], hair)
+        # Broad colour planes and fine strands give code-drawn hair volume.
+        cv.poly([(hc[0] - 24, hc[1] - 12), (hc[0] - 13, hc[1] - 24),
+                 (hc[0] + 3, hc[1] - 27), (hc[0] - 5, hc[1] - 20),
+                 (hc[0] - 15, hc[1] - 14), (hc[0] - 20, hc[1] - 3)], shade(HAIR[gender], 0.86), outline=False)
+        cv.poly([(hc[0] - 10, hc[1] - 23), (hc[0] + 3, hc[1] - 27),
+                 (hc[0] + 17, hc[1] - 21), (hc[0] + 20, hc[1] - 16),
+                 (hc[0] + 5, hc[1] - 21)], rgba(tuple(min(255, int(c * 0.86 + 255 * 0.14)) for c in HAIR[gender])), outline=False)
+        for strand in range(3):
+            x = hc[0] - 18 + strand * 8
+            cv.line((x, hc[1] - 17 - strand * 2), (x - 5, hc[1] - 8 - strand * 2),
+                    0.8, shade(HAIR[gender], 0.72))
         if h.get("circlet"):
             cv.line((hc[0] - 24, hc[1] - 13), (hc[0] + 24, hc[1] - 18), 3.0, rgba(h["circlet"]))
             cv.poly([(hc[0] + 6, hc[1] - 22), (hc[0] + 10, hc[1] - 15), (hc[0] + 2, hc[1] - 14)], rgba(h["gem"]), width=1.0)
@@ -552,6 +607,7 @@ def main():
         key, entry = export(job, gender, sheet=args.sheet if n == 0 else None)
         index["sets"][key] = entry
         print("wrote", key)
+    index["version"] = str(time.time_ns())
     index_path.write_text(json.dumps(index, indent=2, ensure_ascii=False) + "\n")
 
 

@@ -41,11 +41,11 @@ export function updateWorldBossHud(state, onJoin) {
       wb.mine && wb.mine.place > 5
         ? `<li class="me"><b>${wb.mine.place}</b><span>คุณ</span><em>${short(wb.mine.damage)}</em><small>${Math.round(wb.mine.share * 100)}%</small></li>`
         : "";
-    const html = `<header><span>อันดับความเสียหาย</span><small>${wb.done === "killed" ? "พ่ายแพ้แล้ว!" : "⏳ " + clock(wb.left)}</small></header><ol>${rows || '<li class="empty">ยังไม่มีใครโจมตี — ลุยเลย!</li>'}${mine}</ol><footer>ผู้กล้า ${wb.heroes} คน · อยู่ในสนาม ${wb.fighting}</footer>`;
+    const html = `<header><span>อันดับความเสียหาย</span><small>${wb.done === "killed" ? "พ่ายแพ้แล้ว!" : "⏳ " + clock(wb.left)}</small></header><ol>${rows || '<li class="empty">ยังไม่มีใครโจมตี — ลุยเลย!</li>'}${mine}</ol><footer>ผู้กล้า ${wb.heroes} คน · อยู่ในสนาม ${wb.fighting} · อันดับ 1: ตำนาน 3 ชิ้น / 2–3: 2 ชิ้น / อื่น ๆ: 1 ชิ้น</footer>`;
     if (html !== lastRank) rank.innerHTML = lastRank = html;
   }
 }
 
 // Line for the minimap zone while waiting for the next one.
 export const worldBossCountdown = (wb) =>
-  !wb ? "" : wb.open ? "👑 บอสโลกอยู่!" : `👑 บอสโลกใน ${Math.max(1, Math.ceil(wb.nextIn / 60))} น.`;
+  !wb ? "" : wb.open ? "👑 บอสโลกอยู่!" : `👑 เจ้าแม่นางนอน · ทุกวัน 20:00 น.`;

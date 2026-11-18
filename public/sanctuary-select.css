@@ -1000,3 +1000,17 @@ body #landing.game-lobby[data-lobby-mode="create"] .lobby-roster {
 body #landing.game-lobby[data-lobby-mode] .lobby-chapter {
   display: flex;
 }
+body #landing.game-lobby[data-lobby-mode] #delete-hero {
+  display: block;
+  margin: 6px auto;
+  padding: 6px 12px;
+  min-height: 32px;
+  color: #efb2a1;
+  font-size: 12px;
+  border: 1px solid #b9756255;
+  border-radius: 4px;
+  background: #291c1c55;
+}
+body #landing.game-lobby[data-lobby-mode] #delete-hero[hidden] { display: none; }
+body #landing.game-lobby[data-lobby-mode] #delete-hero:hover,
+body #landing.game-lobby[data-lobby-mode] #delete-hero:focus-visible { border-color: #efb2a1; }

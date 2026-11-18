@@ -24,6 +24,16 @@ const tintsOf = (colours) => ({
   trim: toTint(colours.trim),
   gem: toTint(colours.gem),
 });
+// Blend a colour halfway to white, so a multiply tint recolours painted art
+// without darkening it.
+const soften = (c, keep = 0.5) =>
+  c == null
+    ? null
+    : [16, 8, 0].reduce(
+        (out, s) =>
+          out | (Math.round(((c >> s) & 255) * keep + 255 * (1 - keep)) << s),
+        0,
+      );
 const artKey = (url) => url?.match(/\/items\/([^/]+)\.webp/)?.[1];
 
 export function gearDress(p, set) {
@@ -31,13 +41,21 @@ export function gearDress(p, set) {
     looks = heroLooks(p, layers.looks),
     armorId = p.equipment?.armor,
     armorColours = palette[artKey(itemArtPath(armorId, GEAR[armorId]))],
-    tints = tintsOf(armorColours || layers.tints || {}),
+    // Painted layers already carry their own shading and gold, so they only
+    // take a softened wash of the armour colour on the whole outfit.
+    tints = layers.painted
+      ? { main: soften(toTint(armorColours?.main)) }
+      : tintsOf(armorColours || layers.tints || {}),
     weaponId = p.equipment?.weapon,
     url = itemArtPath(weaponId, GEAR[weaponId]),
     kind = artKey(url)?.split("-")[0];
   return {
     looks,
-    tints: { outfit: tints, head: tints },
-    weapon: url && HOLD[kind] ? { url, ...HOLD[kind] } : null,
+    // Painted heads hold the face and hair: leave them their own colours.
+    tints: { outfit: tints, head: layers.painted ? {} : tints },
+    weapon:
+      url && HOLD[kind]
+        ? { url, ...HOLD[kind], glow: toTint(palette[artKey(url)]?.gem) }
+        : null,
   };
 }

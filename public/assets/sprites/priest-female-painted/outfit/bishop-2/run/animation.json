@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "3.0",
+  "name": "run",
+  "artSource": "painted Lanna priest / articulated rig",
+  "sourceSize": [
+    101.0,
+    170.0
+  ],
+  "sourceAnchor": [
+    37.0,
+    163.0
+  ],
+  "encodedAnchor": [
+    74,
+    326
+  ],
+  "bodyHeightPx": 145,
+  "frameCount": 8,
+  "durationsMs": [
+    58,
+    58,
+    58,
+    58,
+    58,
+    58,
+    58,
+    58
+  ],
+  "durationSeconds": 0.464,
+  "loop": true,
+  "sampling": "linear",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      202,
+      340
+    ],
+    "pages": [
+      {
+        "file": "run-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 8,
+        "columns": 8
+      }
+    ]
+  }
+}

@@ -1,38 +1,30 @@
 // World boss: one giant everyone online fights together in a shared arena.
-// It rises every half hour and stays for ten minutes. HP grows with each hero
+// It rises daily at 20:00 Bangkok and stays for thirty minutes. HP grows with each hero
 // who joins; rewards follow each hero's share of the damage.
 export const WORLD_BOSS = {
-  every: 1800, // seconds between appearances (on the half hour)
-  window: 600, // how long it stays before it escapes
-  hp: 200000,
-  hpPerHero: 80000, // added when a new hero joins this appearance
-  damage: 1.5, // on top of a floor-10 boss hit
-  scale: 2.2,
+  every: 86400, // one appearance per day
+  window: 1800, // how long it stays before it escapes
+  hp: 1000000,
+  hpPerHero: 200000, // added when a new hero joins this appearance
+  damage: 1.8, // on top of a floor-10 boss hit
+  scale: 3.2,
   floor: 10,
   // Summons guards as its health passes these marks.
   summonAt: [0.75, 0.5, 0.25],
   summonCount: 4,
 };
 export const WORLD_BOSSES = [
-  { type: "golem", name: "เทพศิลาดอยนางนอน", tint: 0xffc27a },
-  { type: "serpent", name: "พญานาคมหาวารี", tint: 0x8ff0ff },
-  { type: "batking", name: "จอมราชันค้างคาวโลกันตร์", tint: 0xff8ab8 },
+  { type: "serpent", name: "เจ้าแม่นางนอน", tint: 0xffdf9a },
 ];
-export const worldBossOf = (cycle) => WORLD_BOSSES[cycle % WORLD_BOSSES.length];
-
-// Where the schedule stands at time t (seconds).
+export const worldBossOf = () => WORLD_BOSSES[0];
+// 20:00 Asia/Bangkok = 13:00 UTC. Bangkok has no daylight-saving changes.
 export function worldBossAt(t) {
-  const cycle = Math.floor(t / WORLD_BOSS.every),
-    startsAt = cycle * WORLD_BOSS.every,
-    endsAt = startsAt + WORLD_BOSS.window;
-  return {
-    cycle,
-    open: t < endsAt,
-    startsAt,
-    endsAt,
-    nextAt: startsAt + WORLD_BOSS.every,
-    ...worldBossOf(cycle),
-  };
+  const startHourUtc = 13 * 3600;
+  let cycle = Math.floor((t - startHourUtc) / WORLD_BOSS.every);
+  const startsAt = cycle * WORLD_BOSS.every + startHourUtc;
+  const endsAt = startsAt + WORLD_BOSS.window;
+  return { cycle, open: t >= startsAt && t < endsAt, startsAt, endsAt,
+    nextAt: startsAt + WORLD_BOSS.every, ...worldBossOf(cycle) };
 }
 
 // Damage ranking, best first: [{ id, name, damage, share, place }].
@@ -49,15 +41,16 @@ export function worldRanking(damage, names, maxHp) {
     }));
 }
 
-// Everyone who hit it gets paid; more for a bigger share and a top-3 place.
+// Everyone who dealt damage gets paid on victory; share and rank raise rewards.
 export function worldReward(place, share) {
   const top = place <= 3;
   return {
-    gold: 250 + Math.round(1500 * share) + (place === 1 ? 500 : top ? 250 : 0),
-    ore: 3 + (place === 1 ? 4 : top ? 2 : 0),
-    exp: 600 + Math.round(1200 * share),
-    // Chance at a floor-10 boss item the hero does not own yet.
-    itemChance: place === 1 ? 1 : top ? 0.6 : 0.25,
+    gold: 1000 + Math.round(10000 * share) + (place === 1 ? 500 : top ? 250 : 0),
+    ore: 10 + Math.round(40 * share) + (place === 1 ? 15 : top ? 8 : 0),
+    exp: 1500 + Math.round(5000 * share),
+    // Guaranteed legendary items; rank determines how many.
+    itemChance: 1,
+    itemCount: place === 1 ? 3 : top ? 2 : 1,
   };
 }
 

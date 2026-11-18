@@ -536,6 +536,20 @@ const TRACKS = {
   boss: { src: "/assets/music/boss-epic.ogg", gain: 0.75 },
 };
 const FADE = 1.2;
+const preparedTracks = new Map();
+let preparingMusic;
+// Keep downloaded recordings in memory so area changes need no music download.
+export function prepareMusic() {
+  if (!musicEnabled) return Promise.resolve();
+  return preparingMusic ||= (async () => {
+    for (const { src } of Object.values(TRACKS)) {
+      try {
+        const response = await fetch(src);
+        if (response.ok) preparedTracks.set(src, URL.createObjectURL(await response.blob()));
+      } catch { /* Music is optional; a failed recording must not block entry. */ }
+    }
+  })();
+}
 
 function playTrack(track) {
   // Autoplay may be blocked until a gesture; unlockAudio retries the active track.
@@ -561,7 +575,7 @@ function startMusic(name) {
   }
   const config = TRACKS[name];
   if (!config || !ctx) return;
-  const audio = new Audio(config.src);
+  const audio = new Audio(preparedTracks.get(config.src) || config.src);
   audio.loop = true;
   audio.preload = "auto";
   const source = ctx.createMediaElementSource(audio);

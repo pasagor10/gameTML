@@ -73,21 +73,24 @@ export function rollDailyQuests(id, day, unlocked = 1) {
   }
   return chosen.map((q) => ({ ...q, progress: 0, claimed: false }));
 }
-// Rewards scale with level so they stay worth claiming.
+// Rewards scale with level so they stay worth claiming. Every quest also
+// refills one dungeon energy (turned into ore when energy is already full).
 export function questReward(q, level = 1) {
   const gold = 60 + level * 12,
     exp = 50 + level * 15;
   return {
-    kill: { gold, exp, ore: 1 },
-    killAny: { gold, exp, ore: 1 },
-    elite: { gold: gold + 30, exp, ore: 2 },
-    boss: { gold: gold + 40, exp: exp + 40, ore: 2 },
-    rune: { gold, exp, ore: 1 },
-    enhance: { gold: gold + 20, exp: 30, ore: 2 },
+    kill: { gold, exp, ore: 1, energy: 1 },
+    killAny: { gold, exp, ore: 1, energy: 1 },
+    elite: { gold: gold + 30, exp, ore: 2, energy: 1 },
+    boss: { gold: gold + 40, exp: exp + 40, ore: 2, energy: 1 },
+    rune: { gold, exp, ore: 1, energy: 1 },
+    enhance: { gold: gold + 20, exp: 30, ore: 2, energy: 1 },
   }[q.kind];
 }
-// Clearing every daily quest opens one bonus chest with a dungeon energy.
-export const DAILY_BONUS = { ore: 3, energy: 1, goldPerLevel: 20 };
+// Clearing every daily quest opens one bonus chest with two dungeon energy.
+export const DAILY_BONUS = { ore: 3, energy: 2, goldPerLevel: 20 };
+// Energy that would overflow the cap is paid out as ore instead.
+export const ENERGY_OVERFLOW_ORE = 2;
 export function questText(q) {
   const name = MONSTERS[q.target]?.name;
   return {
