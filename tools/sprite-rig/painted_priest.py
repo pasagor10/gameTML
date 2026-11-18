@@ -197,6 +197,7 @@ def priest_actions():
     actions["walk"] = (rig.cycle(8, walk_pose), [95] * 8, True, None)
     actions["attack"] = (rig.keyframes(ATTACK_KEYS, 6, False), [70, 80, 70, 60, 90, 110], False, 3)
     actions["skill"] = (rig.keyframes(SKILL_KEYS, 7, False), [80, 90, 80, 70, 70, 100, 120], False, 4)
+    actions["jump"] = (JUMP_POSES, [100] * 4, False, None)
     actions["run"] = (rig.cycle(8, run_pose), [58] * 8, True, None)
     return actions
 
@@ -235,6 +236,22 @@ SKILL_KEYS = [
     (0.85, rig.pose(shF=0.65, elF=0.2, weapon=UPRIGHT, shB=1.45, elB=0.1, lean=0.08,
                     hipF=0.35, kneeF=0.2, hipB=-0.3, dx=2.5, dy=1.0, glow=0.6)),
     (1.0, rig.pose()),
+]
+
+
+# Airborne frames, picked by vertical speed (rise -> apex -> fall -> land):
+# push off with the knees tucked and the staff swept forward, tuck tighter at
+# the top with the staff overhead, stretch the legs down as the robe lifts on
+# the fall, then soft knees and the staff upright, ready to land.
+JUMP_POSES = [
+    rig.pose(shF=1.3, elF=0.5, weapon=1.2, shB=0.4, elB=1.2, lean=0.2, rot=0.1, tilt=-0.06,
+             hipF=0.9, kneeF=1.5, hipB=0.3, kneeB=1.2, dy=-3.0, wave=1.8, glow=0.15),
+    rig.pose(shF=2.7, elF=0.1, weapon=0.3, shB=1.95, elB=0.55, lean=-0.06, rot=-0.06, tilt=-0.08,
+             hipF=1.1, kneeF=1.7, hipB=0.5, kneeB=1.5, dy=-5.0, wave=0.6, glow=0.6),
+    rig.pose(shF=1.6, elF=0.0, weapon=2.4, shB=1.2, elB=0.2, lean=0.04, rot=0.0, tilt=0.02,
+             hipF=0.35, kneeF=0.5, hipB=-0.25, kneeB=0.6, dy=-1.0, wave=-1.6, glow=0.25),
+    rig.pose(shF=0.9, elF=0.3, weapon=UPRIGHT + 0.1, shB=0.6, elB=0.5, lean=0.1, rot=0.02, tilt=0.03,
+             hipF=0.3, kneeF=0.45, hipB=-0.15, kneeB=0.4, dy=2.5, wave=-1.2),
 ]
 
 

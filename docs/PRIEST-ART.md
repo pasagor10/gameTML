@@ -81,7 +81,9 @@ re-encoding unchanged head and weapon layers.
 forward each step, and
 `ATTACK_KEYS` a holy strike (wind-up, raise, step-in thrust) and
 `SKILL_KEYS` a blessing cast (gather in prayer, rise, plant the staff and
-thrust the palm), and
+thrust the palm), `JUMP_POSES` a dynamic jump (tip forward on push-off,
+staff high at the apex, staff level and robe lifting on the fall, soft
+landing), and
 `run_pose()` a quick robed trot (58 ms frames, short strides so boots stay
 under the hem, heel flick, bounce, staff arm held clear of the robe);
 the generic caster's deep elbow curl must not be reused for locomotion.
