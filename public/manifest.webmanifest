@@ -1,0 +1,9 @@
+{
+  "name": "ตำนาน 3 อัศวิน — ถ้ำหลวงดอยนางนอน",
+  "short_name": "3 อัศวิน",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#07110f",
+  "theme_color": "#132c46"
+}
