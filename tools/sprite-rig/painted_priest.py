@@ -196,6 +196,7 @@ def priest_actions():
     # get their own gaits rather than the caster rig's deep arm curl.
     actions["walk"] = (rig.cycle(8, walk_pose), [95] * 8, True, None)
     actions["attack"] = (rig.keyframes(ATTACK_KEYS, 6, False), [70, 80, 70, 60, 90, 110], False, 3)
+    actions["skill"] = (rig.keyframes(SKILL_KEYS, 7, False), [80, 90, 80, 70, 70, 100, 120], False, 4)
     actions["run"] = (rig.cycle(8, run_pose), [58] * 8, True, None)
     return actions
 
@@ -213,6 +214,26 @@ ATTACK_KEYS = [
                    hipF=0.55, kneeF=0.3, hipB=-0.35, kneeB=0.2, dx=4.0, dy=1.0, glow=1.0)),
     (0.8, rig.pose(shF=1.2, elF=0.05, weapon=2.3, shB=-0.3, elB=0.4, lean=0.16,
                    hipF=0.45, kneeF=0.2, hipB=-0.25, dx=3.0, glow=0.5)),
+    (1.0, rig.pose()),
+]
+
+
+# A blessing cast: gather with the staff upright at the chest and the free
+# hand in prayer, rise lifting staff and open hand to the sky, then plant the
+# staff with a stamp and thrust the palm forward to release it (the hit,
+# frame 4 of 7 = t 0.667), hold the glow and settle. UPRIGHT keeps the staff
+# vertical (staff_angle == -pi/2).
+UPRIGHT = -0.22
+SKILL_KEYS = [
+    (0.0, rig.pose()),
+    (0.2, rig.pose(shF=1.25, elF=1.25, weapon=UPRIGHT, shB=0.95, elB=1.75, lean=0.02, tilt=0.05,
+                   hipF=0.15, kneeF=0.35, hipB=-0.1, kneeB=0.35, dy=2.0, glow=0.45)),
+    (0.45, rig.pose(shF=2.95, elF=0.05, weapon=UPRIGHT, shB=1.95, elB=0.55, lean=-0.1, tilt=-0.08,
+                    hipF=0.1, hipB=-0.05, dy=-5.0, glow=1.0)),
+    (0.667, rig.pose(shF=0.75, elF=0.15, weapon=UPRIGHT, shB=1.55, elB=0.0, lean=0.12, tilt=0.03,
+                     hipF=0.4, kneeF=0.25, hipB=-0.35, kneeB=0.15, dx=3.0, dy=1.5, glow=1.0)),
+    (0.85, rig.pose(shF=0.65, elF=0.2, weapon=UPRIGHT, shB=1.45, elB=0.1, lean=0.08,
+                    hipF=0.35, kneeF=0.2, hipB=-0.3, dx=2.5, dy=1.0, glow=0.6)),
     (1.0, rig.pose()),
 ]
 

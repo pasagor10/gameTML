@@ -79,6 +79,9 @@ Use `--arms-only` to rebuild articulated sleeves and hand clips without
 re-encoding unchanged head and weapon layers.
 `walk_pose()` gives walk an upright, confident stride with the staff swinging
 forward each step, and
+`ATTACK_KEYS` a holy strike (wind-up, raise, step-in thrust) and
+`SKILL_KEYS` a blessing cast (gather in prayer, rise, plant the staff and
+thrust the palm), and
 `run_pose()` a quick robed trot (58 ms frames, short strides so boots stay
 under the hem, heel flick, bounce, staff arm held clear of the robe);
 the generic caster's deep elbow curl must not be reused for locomotion.
