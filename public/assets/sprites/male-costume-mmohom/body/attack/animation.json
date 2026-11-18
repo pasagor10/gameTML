@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "3.0",
+  "name": "attack",
+  "artSource": "pixel sheet male-costume-mmohom.webp",
+  "sourceSize": [
+    62,
+    56
+  ],
+  "encodedAnchor": [
+    39,
+    53
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    70,
+    80,
+    100,
+    130
+  ],
+  "durationSeconds": 0.38,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 150
+    }
+  ],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      62,
+      56
+    ],
+    "pages": [
+      {
+        "file": "attack-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        48.43,
+        37.1,
+        -75
+      ],
+      [
+        55.82,
+        31.95,
+        -140
+      ],
+      [
+        55.73,
+        30.09,
+        -5
+      ],
+      [
+        56.03,
+        30.24,
+        -55
+      ]
+    ]
+  }
+}

@@ -7,7 +7,7 @@
   "start_url": "/?source=homescreen",
   "scope": "/",
   "display": "standalone",
-  "orientation": "landscape",
+  "orientation": "portrait",
   "background_color": "#07110f",
   "theme_color": "#132c46",
   "prefer_related_applications": false,

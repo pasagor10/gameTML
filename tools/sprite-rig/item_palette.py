@@ -1,4 +1,4 @@
-"""Pick each item picture's main, trim and gem colours for hero gear tints.
+"""Pick each pixel item picture (items/px/)'s main, trim and gem colours for hero gear tints.
 
 Writes public/assets/items/palette.json: { "armor-3": {"main": "#8a8f9a",
 "trim": "#e2b24a", "gem": "#5ad0ff"}, ... }. Layered heroes tint their
@@ -60,7 +60,7 @@ def palette(path):
 
 def main():
     out = {}
-    for path in sorted(ITEMS.glob("*.webp")):
+    for path in sorted((ITEMS / "px").glob("*.webp")):
         p = palette(path)
         if p:
             out[path.stem] = p

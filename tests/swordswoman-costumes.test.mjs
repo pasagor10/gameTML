@@ -21,12 +21,12 @@ test('female swordsman changes to the registered guardian and duelist costumes a
  }
 });
 
-test('costumes fit every female class, need owning, and drop from bosses', async () => {
+test('costumes fit every class of their gender, need owning, and drop from bosses', async () => {
  const {COSTUMES, COSTUME_ITEMS, costumeItem, rollCostumeDrop, costumeDropChance} = await import('../shared/costumes.js');
  const index=JSON.parse(await readFile(new URL('index.json',root)));
  for (const cls of ['swordsman','archer','mage','priest']) for (const c of COSTUMES) {
-  const key=heroSkins({class:cls,gender:'female',skin:c.id,specialization:null})[0];
-  assert.equal(key,`female-costume-${c.id}`);
+  const key=heroSkins({class:cls,gender:c.gender,skin:c.id,specialization:null})[0];
+  assert.equal(key,`${c.gender}-costume-${c.id}`);
   const set=index.sets[key];assert.ok(set,key);
   await access(new URL(`${set.dir}/${set.portrait}`,root));
   for (const folder of Object.values(set.actions)) {
@@ -37,6 +37,10 @@ test('costumes fit every female class, need owning, and drop from bosses', async
  }
  // Male heroes and unknown costumes keep the class look.
  assert.deepEqual(heroSkins({class:'swordsman',gender:'male',skin:'5'}),['swordsman-male']);
+ assert.deepEqual(heroSkins({class:'mage',gender:'female',skin:'mnoble'}),['mage-female']);
+ // Three in four drops fit the hero's gender.
+ const seq=[0.01,0.1,0.01]; const male=rollCostumeDrop(1,()=>seq.shift()??0.01,'male');
+ assert.equal(COSTUME_ITEMS[male].gender,'male');
  assert.deepEqual(heroSkins({class:'swordsman',gender:'female',skin:'nope'}),['swordsman-female']);
  // Drops: none above the chance, a known costume below it; deeper is likelier.
  assert.equal(rollCostumeDrop(1,()=>0.99),null);

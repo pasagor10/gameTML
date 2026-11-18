@@ -1,77 +1,64 @@
 {
   "schemaVersion": "3.0",
   "name": "idle",
-  "artSource": "codeart layered (tools/sprite-rig/layered_rig.py)",
+  "artSource": "pixel sheet priest-female-tier1.webp",
   "sourceSize": [
-    300,
+    62,
+    54
+  ],
+  "encodedAnchor": [
+    40,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    220,
+    220,
+    220,
     220
   ],
-  "sourceAnchor": [
-    150.0,
-    208.0
-  ],
-  "frameCount": 6,
-  "durationsMs": [
-    150,
-    150,
-    150,
-    150,
-    150,
-    150
-  ],
-  "durationSeconds": 0.9,
-  "fps": 6.667,
+  "durationSeconds": 0.88,
   "loop": true,
-  "bodyHeightPx": 140,
+  "sampling": "nearest",
   "events": [],
-  "sampling": "linear",
-  "sockets": {
-    "hand": [
-      [
-        164.83,
-        166.43,
-        -61.35
-      ],
-      [
-        165.74,
-        167.07,
-        -61.35
-      ],
-      [
-        165.74,
-        167.07,
-        -61.35
-      ],
-      [
-        164.83,
-        166.43,
-        -61.35
-      ],
-      [
-        163.91,
-        165.75,
-        -61.35
-      ],
-      [
-        163.91,
-        165.75,
-        -61.35
-      ]
-    ]
-  },
   "fallback": {
     "type": "png-atlas",
     "cellSize": [
-      300,
-      220
+      62,
+      54
     ],
     "pages": [
       {
         "file": "idle-atlas-00.webp",
         "firstFrame": 0,
-        "frameCount": 6,
-        "columns": 6
+        "frameCount": 4,
+        "columns": 4
       }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        49.33,
+        38.09,
+        -62
+      ],
+      [
+        49.31,
+        38.15,
+        -64
+      ],
+      [
+        49.42,
+        38.15,
+        -62
+      ],
+      [
+        49.79,
+        38.31,
+        -60
+      ]
     ]
   }
 }

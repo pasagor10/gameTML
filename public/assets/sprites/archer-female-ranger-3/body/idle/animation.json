@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "idle",
+  "artSource": "pixel sheet archer-female-tier3.webp",
+  "sourceSize": [
+    66,
+    54
+  ],
+  "encodedAnchor": [
+    35,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    220,
+    220,
+    220,
+    220
+  ],
+  "durationSeconds": 0.88,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      66,
+      54
+    ],
+    "pages": [
+      {
+        "file": "idle-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        53.86,
+        38.79,
+        -62
+      ],
+      [
+        52.89,
+        38.92,
+        -64
+      ],
+      [
+        53.24,
+        39.22,
+        -62
+      ],
+      [
+        52.3,
+        38.75,
+        -60
+      ]
+    ]
+  }
+}

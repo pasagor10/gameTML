@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "jump",
+  "artSource": "pixel sheet male-costume-mstreet.webp",
+  "sourceSize": [
+    65,
+    56
+  ],
+  "encodedAnchor": [
+    40,
+    53
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    120,
+    120,
+    120,
+    120
+  ],
+  "durationSeconds": 0.48,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      65,
+      56
+    ],
+    "pages": [
+      {
+        "file": "jump-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        51.56,
+        41.06,
+        -50
+      ],
+      [
+        54.59,
+        30.46,
+        -70
+      ],
+      [
+        54.2,
+        28.76,
+        -80
+      ],
+      [
+        54.44,
+        25.34,
+        -45
+      ]
+    ]
+  }
+}

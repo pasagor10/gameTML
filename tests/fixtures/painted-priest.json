@@ -1,0 +1,58 @@
+{
+ "layers": {
+  "order": [
+   "outfit",
+   "weapon",
+   "head"
+  ],
+  "weaponFront": true,
+  "weaponArt": "rig",
+  "looks": {
+   "outfit": [
+    "robe-1",
+    "robe-2",
+    "robe-3",
+    "robe-4",
+    "bishop-2",
+    "bishop-3",
+    "templar-2",
+    "templar-3"
+   ],
+   "head": [
+    "hair",
+    "circlet",
+    "hood",
+    "mitre",
+    "bishop-2",
+    "bishop-3",
+    "templar-2",
+    "templar-3"
+   ],
+   "weapon": [
+    "staff-1",
+    "staff-2",
+    "staff-3",
+    "staff-4"
+   ]
+  },
+  "parts": {},
+  "hand": "hand",
+  "hands": {
+   "robe-1": "hand/novice",
+   "robe-2": "hand/novice",
+   "robe-3": "hand/novice",
+   "robe-4": "hand/novice",
+   "bishop-2": "hand/bishop",
+   "bishop-3": "hand/bishop",
+   "templar-2": "hand/templar",
+   "templar-3": "hand/templar"
+  },
+  "weapons": {
+   "bishop-2": "weapon/bishop",
+   "bishop-3": "weapon/bishop",
+   "templar-2": "weapon/templar",
+   "templar-3": "weapon/templar"
+  },
+  "painted": true
+ }
+}

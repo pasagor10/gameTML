@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "run",
+  "artSource": "pixel sheet archer-female-tier2.webp",
+  "sourceSize": [
+    63,
+    54
+  ],
+  "encodedAnchor": [
+    35,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    100,
+    100,
+    100,
+    100
+  ],
+  "durationSeconds": 0.4,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      63,
+      54
+    ],
+    "pages": [
+      {
+        "file": "run-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        50.67,
+        35.93,
+        -24
+      ],
+      [
+        50.5,
+        35.61,
+        -30
+      ],
+      [
+        49.0,
+        35.34,
+        -24
+      ],
+      [
+        50.28,
+        34.56,
+        -30
+      ]
+    ]
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "3.0",
+  "name": "walk",
+  "artSource": "pixel sheet priest-female-tier3.webp",
+  "sourceSize": [
+    61,
+    53
+  ],
+  "encodedAnchor": [
+    35,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    140,
+    140,
+    140,
+    140
+  ],
+  "durationSeconds": 0.56,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      61,
+      53
+    ],
+    "pages": [
+      {
+        "file": "walk-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  }
+}

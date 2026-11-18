@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "3.0",
+  "name": "skill",
+  "artSource": "pixel sheet archer-female-tier1.webp",
+  "sourceSize": [
+    62,
+    55
+  ],
+  "encodedAnchor": [
+    33,
+    52
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    90,
+    110,
+    120,
+    170
+  ],
+  "durationSeconds": 0.49,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 200
+    }
+  ],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      62,
+      55
+    ],
+    "pages": [
+      {
+        "file": "skill-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        48.93,
+        46.93,
+        -30
+      ],
+      [
+        34.11,
+        33.52,
+        -160
+      ],
+      [
+        50.35,
+        12.79,
+        -95
+      ],
+      [
+        48.76,
+        43.06,
+        -50
+      ]
+    ]
+  }
+}

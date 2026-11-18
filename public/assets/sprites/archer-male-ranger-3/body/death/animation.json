@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "death",
+  "artSource": "pixel sheet archer-male-tier3.webp",
+  "sourceSize": [
+    69,
+    54
+  ],
+  "encodedAnchor": [
+    39,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    140,
+    160,
+    180,
+    400
+  ],
+  "durationSeconds": 0.88,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      69,
+      54
+    ],
+    "pages": [
+      {
+        "file": "death-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        49.83,
+        38.63,
+        -40
+      ],
+      [
+        46.8,
+        39.85,
+        -10
+      ],
+      [
+        34.34,
+        40.32,
+        5
+      ],
+      [
+        58.08,
+        47.37,
+        0
+      ]
+    ]
+  }
+}

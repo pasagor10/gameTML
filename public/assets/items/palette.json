@@ -1,382 +1,1262 @@
 {
  "armor-0": {
-  "main": "#8c667b",
-  "trim": "#ab4b97",
-  "gem": "#bf54a9"
+  "main": "#f3dcc3",
+  "trim": "#a0827b",
+  "gem": "#f3dcc3"
  },
  "armor-1": {
-  "main": "#8c3633",
-  "trim": "#e3b589",
-  "gem": "#c36143"
+  "main": "#8c4841",
+  "trim": "#e9d5c3",
+  "gem": "#bf6f59"
  },
  "armor-10": {
-  "main": "#b09c92",
-  "trim": "#f4cc97",
-  "gem": "#de9d6e"
+  "main": "#8c1837",
+  "trim": "#994c5d",
+  "gem": "#bf193a"
  },
  "armor-11": {
-  "main": "#e69431",
-  "trim": "#daddcb",
-  "gem": "#e69431"
+  "main": "#8c5c42",
+  "trim": "#ecaa41",
+  "gem": "#ecaa41"
+ },
+ "armor-12": {
+  "main": "#395590",
+  "trim": "#94c6e6",
+  "gem": "#6fc3f0"
+ },
+ "armor-13": {
+  "main": "#796a8c",
+  "trim": "#3c7fbf",
+  "gem": "#4498d4"
+ },
+ "armor-14": {
+  "main": "#8c6677",
+  "trim": "#f6d7d0",
+  "gem": "#f0b3c2"
+ },
+ "armor-15": {
+  "main": "#ab9152",
+  "trim": "#278f99",
+  "gem": "#47d4d5"
+ },
+ "armor-16": {
+  "main": "#88c3f1",
+  "trim": "#506199",
+  "gem": "#5a9ee5"
+ },
+ "armor-17": {
+  "main": "#3b448c",
+  "trim": "#9caace",
+  "gem": "#6da2d9"
+ },
+ "armor-18": {
+  "main": "#61a635",
+  "trim": "#a7ac59",
+  "gem": "#9ed24f"
+ },
+ "armor-19": {
+  "main": "#618c38",
+  "trim": "#b5d45e",
+  "gem": "#cde970"
  },
  "armor-2": {
-  "main": "#8c6f72",
-  "trim": "#e6cbb5",
-  "gem": "#d4a27d"
+  "main": "#618f51",
+  "trim": "#739d54",
+  "gem": "#b2c46f"
+ },
+ "armor-20": {
+  "main": "#928a61",
+  "trim": "#f4acb4",
+  "gem": "#df7d86"
+ },
+ "armor-21": {
+  "main": "#bba46d",
+  "trim": "#909962",
+  "gem": "#d6b87d"
+ },
+ "armor-22": {
+  "main": "#68dba6",
+  "trim": "#279973",
+  "gem": "#68dba6"
+ },
+ "armor-23": {
+  "main": "#e89e2e",
+  "trim": "#996f40",
+  "gem": "#eb7110"
+ },
+ "armor-24": {
+  "main": "#873db3",
+  "trim": "#b4907d",
+  "gem": "#eed794"
+ },
+ "armor-25": {
+  "main": "#714b8c",
+  "trim": "#640f99",
+  "gem": "#7c13bf"
+ },
+ "armor-26": {
+  "main": "#c6964a",
+  "trim": "#99766e",
+  "gem": "#dcb25b"
+ },
+ "armor-27": {
+  "main": "#5780d1",
+  "trim": "#99949b",
+  "gem": "#3062db"
+ },
+ "armor-28": {
+  "main": "#4d489f",
+  "trim": "#b7bed4",
+  "gem": "#5d57bf"
+ },
+ "armor-29": {
+  "main": "#53438c",
+  "trim": "#807ca5",
+  "gem": "#7f64bf"
  },
  "armor-3": {
-  "main": "#749043",
-  "trim": "#f3bf5c",
-  "gem": "#f3bf5c"
+  "main": "#6e698c",
+  "trim": "#c1c2d3",
+  "gem": "#a6a5bf"
+ },
+ "armor-30": {
+  "main": "#e7a851",
+  "trim": "#f4e3c1",
+  "gem": "#e7a851"
+ },
+ "armor-31": {
+  "main": "#ba9253",
+  "trim": "#995130",
+  "gem": "#e2a047"
+ },
+ "armor-32": {
+  "main": "#bd988d",
+  "trim": "#998087",
+  "gem": "#d9b6a1"
+ },
+ "armor-33": {
+  "main": "#93705c",
+  "trim": "#ac445f",
+  "gem": "#e1b889"
+ },
+ "armor-34": {
+  "main": "#9c8a6b",
+  "trim": "#dab86e",
+  "gem": "#bf8b40"
+ },
+ "armor-35": {
+  "main": "#b07591",
+  "trim": "#f0b695",
+  "gem": "#50d3cb"
  },
  "armor-4": {
-  "main": "#97593b",
-  "trim": "#f0dd8a",
-  "gem": "#e2a664"
+  "main": "#264395",
+  "trim": "#deb794",
+  "gem": "#4979cd"
  },
  "armor-5": {
-  "main": "#8c3439",
-  "trim": "#f0893c",
-  "gem": "#f0893c"
+  "main": "#60658c",
+  "trim": "#b3b6ca",
+  "gem": "#979dbf"
  },
  "armor-6": {
-  "main": "#3a398c",
-  "trim": "#bdb6da",
-  "gem": "#567fd8"
+  "main": "#c72038",
+  "trim": "#995c3e",
+  "gem": "#c72038"
  },
  "armor-7": {
-  "main": "#ebc6a3",
-  "trim": "#99472f",
-  "gem": "#f7c54d"
+  "main": "#8c5667",
+  "trim": "#ad5034",
+  "gem": "#ca602b"
  },
  "armor-8": {
-  "main": "#86738c",
-  "trim": "#d7cbcf",
-  "gem": "#9116bf"
+  "main": "#5c318c",
+  "trim": "#9b6ab7",
+  "gem": "#9a5abf"
  },
  "armor-9": {
-  "main": "#b3724a",
-  "trim": "#99222e",
-  "gem": "#f1ad5a"
+  "main": "#d79e4c",
+  "trim": "#992c31",
+  "gem": "#efca61"
  },
  "boots-0": {
-  "main": "#955356",
-  "trim": "#99387e",
-  "gem": "#c57b5d"
+  "main": "#a45341",
+  "trim": "#996c70",
+  "gem": "#c96e48"
  },
  "boots-1": {
-  "main": "#8c747f",
-  "trim": "#996d63",
-  "gem": "#d0a379"
+  "main": "#8c7880",
+  "trim": "#dac0b3",
+  "gem": "#ce9b7f"
  },
  "boots-10": {
-  "main": "#a79695",
-  "trim": "#fed0aa",
-  "gem": "#fed0aa"
+  "main": "#b71b44",
+  "trim": "#9c604d",
+  "gem": "#d43f59"
  },
  "boots-11": {
-  "main": "#d49439",
-  "trim": "#995736",
-  "gem": "#d49439"
+  "main": "#8c5c3d",
+  "trim": "#e18934",
+  "gem": "#e18934"
+ },
+ "boots-12": {
+  "main": "#5ca8e6",
+  "trim": "#b4dbf1",
+  "gem": "#3e81d4"
+ },
+ "boots-13": {
+  "main": "#1b66bc",
+  "trim": "#ecb45a",
+  "gem": "#ecb45a"
+ },
+ "boots-14": {
+  "main": "#f8b4c1",
+  "trim": "#c276a3",
+  "gem": "#f8b4c1"
+ },
+ "boots-15": {
+  "main": "#c59b52",
+  "trim": "#13acb1",
+  "gem": "#f4d270"
+ },
+ "boots-16": {
+  "main": "#6eb0f1",
+  "trim": "#403a99",
+  "gem": "#4981de"
+ },
+ "boots-17": {
+  "main": "#687ab4",
+  "trim": "#b5cff0",
+  "gem": "#5596d8"
+ },
+ "boots-18": {
+  "main": "#698c47",
+  "trim": "#c27c4e",
+  "gem": "#b8d948"
+ },
+ "boots-19": {
+  "main": "#77993f",
+  "trim": "#997a56",
+  "gem": "#bbd848"
  },
  "boots-2": {
-  "main": "#246e8c",
-  "trim": "#8ed9ef",
-  "gem": "#42d2e4"
+  "main": "#8c464a",
+  "trim": "#d4996a",
+  "gem": "#d4996a"
+ },
+ "boots-20": {
+  "main": "#b78654",
+  "trim": "#99685c",
+  "gem": "#e4a76c"
+ },
+ "boots-21": {
+  "main": "#af9669",
+  "trim": "#579958",
+  "gem": "#cda870"
+ },
+ "boots-22": {
+  "main": "#94d5bc",
+  "trim": "#599990",
+  "gem": "#69e6b3"
+ },
+ "boots-23": {
+  "main": "#b57c39",
+  "trim": "#f29c23",
+  "gem": "#f29c23"
+ },
+ "boots-24": {
+  "main": "#7f678c",
+  "trim": "#a39bb4",
+  "gem": "#f1e09b"
+ },
+ "boots-25": {
+  "main": "#6d378c",
+  "trim": "#b476b3",
+  "gem": "#9835bf"
+ },
+ "boots-26": {
+  "main": "#c88142",
+  "trim": "#996f5f",
+  "gem": "#c88142"
+ },
+ "boots-27": {
+  "main": "#254cca",
+  "trim": "#f7cc66",
+  "gem": "#f7cc66"
+ },
+ "boots-28": {
+  "main": "#445498",
+  "trim": "#bed6ec",
+  "gem": "#3a54bf"
+ },
+ "boots-29": {
+  "main": "#cacbdf",
+  "trim": "#7d7aa9",
+  "gem": "#817dbf"
  },
  "boots-3": {
-  "main": "#beafce",
-  "trim": "#99675d",
-  "gem": "#dab19f"
+  "main": "#9c4f3f",
+  "trim": "#d87d49",
+  "gem": "#d87d49"
+ },
+ "boots-30": {
+  "main": "#9b6848",
+  "trim": "#f8d982",
+  "gem": "#edb14e"
+ },
+ "boots-31": {
+  "main": "#8c5c46",
+  "trim": "#e19841",
+  "gem": "#efba4d"
+ },
+ "boots-32": {
+  "main": "#e8b86c",
+  "trim": "#99695c",
+  "gem": "#e8b86c"
+ },
+ "boots-33": {
+  "main": "#8c5b69",
+  "trim": "#e4ba97",
+  "gem": "#d59a7f"
+ },
+ "boots-34": {
+  "main": "#caa867",
+  "trim": "#996646",
+  "gem": "#e6ab39"
+ },
+ "boots-35": {
+  "main": "#d1906d",
+  "trim": "#867099",
+  "gem": "#f8dc7a"
  },
  "boots-4": {
-  "main": "#c98a47",
-  "trim": "#839920",
-  "gem": "#e8df5e"
+  "main": "#8c4240",
+  "trim": "#bf6242",
+  "gem": "#bf6242"
  },
  "boots-5": {
-  "main": "#8c5368",
-  "trim": "#f07a36",
-  "gem": "#de2812"
+  "main": "#a75643",
+  "trim": "#99646b",
+  "gem": "#bf624d"
  },
  "boots-6": {
-  "main": "#31378c",
-  "trim": "#5980e2",
-  "gem": "#5980e2"
+  "main": "#c61b3e",
+  "trim": "#994146",
+  "gem": "#d73941"
  },
  "boots-7": {
-  "main": "#e4a45d",
-  "trim": "#feeebe",
-  "gem": "#fdc780"
+  "main": "#deae73",
+  "trim": "#a55a41",
+  "gem": "#dd8f48"
  },
  "boots-8": {
-  "main": "#611f8c",
-  "trim": "#996894",
-  "gem": "#8d1bbf"
+  "main": "#6c398c",
+  "trim": "#a45891",
+  "gem": "#bf1e69"
  },
  "boots-9": {
-  "main": "#8d462c",
-  "trim": "#ebc5b6",
-  "gem": "#f5c46b"
+  "main": "#eaa436",
+  "trim": "#a86c40",
+  "gem": "#eaa436"
  },
  "bow-0": {
-  "main": "#8c4b39",
-  "trim": "#e2955a",
-  "gem": "#e2955a"
+  "main": "#84548c",
+  "trim": "#d0c0d2",
+  "gem": "#7b11bf"
  },
  "bow-1": {
-  "main": "#8c357f",
-  "trim": "#99556a",
-  "gem": "#d24cbc"
+  "main": "#ad969f",
+  "trim": "#9b5941",
+  "gem": "#bf6e50"
  },
  "bow-10": {
-  "main": "#9a5732",
-  "trim": "#f4d091",
-  "gem": "#e3985e"
+  "main": "#936e81",
+  "trim": "#e9567f",
+  "gem": "#e9567f"
  },
  "bow-11": {
-  "main": "#8c5e5f",
-  "trim": "#a58061",
-  "gem": "#eba68e"
+  "main": "#ae9aa7",
+  "trim": "#bb6526",
+  "gem": "#fae249"
+ },
+ "bow-12": {
+  "main": "#8982a5",
+  "trim": "#75a5d5",
+  "gem": "#7dbbeb"
+ },
+ "bow-13": {
+  "main": "#af928f",
+  "trim": "#85c2e7",
+  "gem": "#2179db"
+ },
+ "bow-14": {
+  "main": "#aa99a7",
+  "trim": "#f7e0d7",
+  "gem": "#efb5bb"
+ },
+ "bow-15": {
+  "main": "#d2b241",
+  "trim": "#3ea9ac",
+  "gem": "#e9d452"
+ },
+ "bow-16": {
+  "main": "#96808c",
+  "trim": "#516199",
+  "gem": "#72a7e6"
+ },
+ "bow-17": {
+  "main": "#62558c",
+  "trim": "#9c8da1",
+  "gem": "#9ca7cb"
+ },
+ "bow-18": {
+  "main": "#8c688a",
+  "trim": "#999444",
+  "gem": "#9adb34"
+ },
+ "bow-19": {
+  "main": "#8c7a87",
+  "trim": "#68a91c",
+  "gem": "#beec31"
  },
  "bow-2": {
-  "main": "#f3c37e",
-  "trim": "#bbc22e",
-  "gem": "#f2ea6f"
+  "main": "#9e8783",
+  "trim": "#d99844",
+  "gem": "#efae4c"
+ },
+ "bow-20": {
+  "main": "#ea9126",
+  "trim": "#996d7e",
+  "gem": "#ea9126"
+ },
+ "bow-21": {
+  "main": "#9d8d56",
+  "trim": "#bba3b0",
+  "gem": "#d8da78"
+ },
+ "bow-22": {
+  "main": "#849a99",
+  "trim": "#72e2b2",
+  "gem": "#72e2b2"
+ },
+ "bow-23": {
+  "main": "#ef9c1d",
+  "trim": "#b3967c",
+  "gem": "#f5b615"
+ },
+ "bow-24": {
+  "main": "#a6919a",
+  "trim": "#dbcdca",
+  "gem": "#f3ebab"
+ },
+ "bow-25": {
+  "main": "#9c90a6",
+  "trim": "#cc9ad4",
+  "gem": "#7911bf"
+ },
+ "bow-26": {
+  "main": "#b8a69c",
+  "trim": "#d19c3a",
+  "gem": "#d19c3a"
+ },
+ "bow-27": {
+  "main": "#49429a",
+  "trim": "#917699",
+  "gem": "#4c3ebf"
+ },
+ "bow-28": {
+  "main": "#82648c",
+  "trim": "#bed0f1",
+  "gem": "#97aadd"
+ },
+ "bow-29": {
+  "main": "#937e9d",
+  "trim": "#a6a8c9",
+  "gem": "#9493bf"
  },
  "bow-3": {
-  "main": "#d6c3aa",
-  "trim": "#9bdff2",
-  "gem": "#39d8f7"
+  "main": "#958a97",
+  "trim": "#eceff4",
+  "gem": "#bf8f7b"
+ },
+ "bow-30": {
+  "main": "#b59c88",
+  "trim": "#f1bf44",
+  "gem": "#f1bf44"
+ },
+ "bow-31": {
+  "main": "#e8be4f",
+  "trim": "#995a32",
+  "gem": "#dc9928"
+ },
+ "bow-32": {
+  "main": "#af8e86",
+  "trim": "#f7e9cf",
+  "gem": "#edc89d"
+ },
+ "bow-33": {
+  "main": "#8c6e84",
+  "trim": "#e0b08c",
+  "gem": "#dba276"
+ },
+ "bow-34": {
+  "main": "#a66b31",
+  "trim": "#997d6e",
+  "gem": "#debe54"
+ },
+ "bow-35": {
+  "main": "#8c6a79",
+  "trim": "#84e0ad",
+  "gem": "#f0f260"
  },
  "bow-4": {
-  "main": "#d19c55",
-  "trim": "#3d9964",
-  "gem": "#c07c39"
+  "main": "#b2aebb",
+  "trim": "#907499",
+  "gem": "#bf957f"
  },
  "bow-5": {
-  "main": "#98502e",
-  "trim": "#fead60",
-  "gem": "#fead60"
+  "main": "#a797b0",
+  "trim": "#d8daec",
+  "gem": "#8c96bf"
  },
  "bow-6": {
-  "main": "#9c6e5c",
-  "trim": "#99342a",
-  "gem": "#f39c5d"
+  "main": "#8c5482",
+  "trim": "#da3d54",
+  "gem": "#d41941"
  },
  "bow-7": {
-  "main": "#a1c3f6",
-  "trim": "#5652ac",
-  "gem": "#77a1f1"
+  "main": "#b39a99",
+  "trim": "#db762d",
+  "gem": "#db762d"
  },
  "bow-8": {
-  "main": "#8c4a25",
-  "trim": "#fad6a3",
-  "gem": "#e89541"
+  "main": "#a790a9",
+  "trim": "#8f599e",
+  "gem": "#b47fc2"
  },
  "bow-9": {
-  "main": "#7f1a94",
-  "trim": "#997d93",
-  "gem": "#a422bf"
+  "main": "#8c677e",
+  "trim": "#f2b842",
+  "gem": "#eb712f"
  },
  "charm-0": {
-  "main": "#8424a3",
-  "trim": "#a66352",
-  "gem": "#ecba91"
+  "main": "#615d8c",
+  "trim": "#d0cfd9",
+  "gem": "#5f16bf"
  },
  "charm-1": {
-  "main": "#978a46",
-  "trim": "#99562a",
-  "gem": "#cc863d"
+  "main": "#e7a030",
+  "trim": "#99532a",
+  "gem": "#f7c344"
  },
  "charm-10": {
-  "main": "#bc7832",
-  "trim": "#99301d",
-  "gem": "#f3af44"
+  "main": "#dbb67b",
+  "trim": "#99767e",
+  "gem": "#dbb67b"
  },
  "charm-11": {
-  "main": "#efc468",
-  "trim": "#b77725",
-  "gem": "#37d1dd"
+  "main": "#8c6652",
+  "trim": "#ce9531",
+  "gem": "#e8c04b"
+ },
+ "charm-12": {
+  "main": "#955347",
+  "trim": "#996274",
+  "gem": "#bf715b"
+ },
+ "charm-13": {
+  "main": "#d69b46",
+  "trim": "#996144",
+  "gem": "#ca6b2f"
+ },
+ "charm-14": {
+  "main": "#2b88d2",
+  "trim": "#d2af68",
+  "gem": "#2b88d2"
+ },
+ "charm-15": {
+  "main": "#709338",
+  "trim": "#dadd70",
+  "gem": "#a2c64b"
+ },
+ "charm-16": {
+  "main": "#b8894b",
+  "trim": "#997462",
+  "gem": "#f2d67b"
+ },
+ "charm-17": {
+  "main": "#d9a84b",
+  "trim": "#f6e6bb",
+  "gem": "#d9a84b"
+ },
+ "charm-18": {
+  "main": "#58a531",
+  "trim": "#d4d167",
+  "gem": "#a4d841"
+ },
+ "charm-19": {
+  "main": "#8f5239",
+  "trim": "#edca55",
+  "gem": "#e82a25"
  },
  "charm-2": {
-  "main": "#e2e0d9",
-  "trim": "#c3b6ba",
-  "gem": "#f0b160"
+  "main": "#f5cb53",
+  "trim": "#9e6037",
+  "gem": "#e2942c"
+ },
+ "charm-20": {
+  "main": "#5f6a98",
+  "trim": "#dcf4f6",
+  "gem": "#28a0e6"
+ },
+ "charm-21": {
+  "main": "#dcb767",
+  "trim": "#fdf4d8",
+  "gem": "#dcb767"
+ },
+ "charm-22": {
+  "main": "#bfc5d8",
+  "trim": "#caae8d",
+  "gem": "#faf1aa"
+ },
+ "charm-23": {
+  "main": "#dca133",
+  "trim": "#9d7a47",
+  "gem": "#f5cd3c"
+ },
+ "charm-24": {
+  "main": "#9095af",
+  "trim": "#f7f8f8",
+  "gem": "#d19635"
+ },
+ "charm-25": {
+  "main": "#9a7747",
+  "trim": "#efa434",
+  "gem": "#efa434"
+ },
+ "charm-26": {
+  "main": "#97c7d4",
+  "trim": "#3a83c6",
+  "gem": "#469bd6"
+ },
+ "charm-27": {
+  "main": "#7caa2f",
+  "trim": "#aaa45a",
+  "gem": "#78d00f"
+ },
+ "charm-28": {
+  "main": "#bfae82",
+  "trim": "#999983",
+  "gem": "#d8a23f"
+ },
+ "charm-29": {
+  "main": "#ebc190",
+  "trim": "#997a6f",
+  "gem": "#d7915d"
  },
  "charm-3": {
-  "main": "#337fed",
-  "trim": "#a4d4f7",
-  "gem": "#337fed"
+  "main": "#d08d43",
+  "trim": "#995c54",
+  "gem": "#eca246"
+ },
+ "charm-30": {
+  "main": "#c4a795",
+  "trim": "#99808a",
+  "gem": "#dcba9e"
+ },
+ "charm-31": {
+  "main": "#eb9d38",
+  "trim": "#996c4f",
+  "gem": "#eb9d38"
+ },
+ "charm-32": {
+  "main": "#769dc0",
+  "trim": "#2c80d2",
+  "gem": "#2c80d2"
+ },
+ "charm-33": {
+  "main": "#e6b84c",
+  "trim": "#6c9942",
+  "gem": "#e6b84c"
+ },
+ "charm-34": {
+  "main": "#e6b241",
+  "trim": "#b3aeac",
+  "gem": "#e6b241"
+ },
+ "charm-35": {
+  "main": "#985f34",
+  "trim": "#b3af5e",
+  "gem": "#eab438"
  },
  "charm-4": {
-  "main": "#b16428",
-  "trim": "#f1ca7d",
-  "gem": "#eeaf4d"
+  "main": "#e9c55a",
+  "trim": "#9ee6f7",
+  "gem": "#e9c55a"
  },
  "charm-5": {
-  "main": "#8c851e",
-  "trim": "#c17a3c",
-  "gem": "#d7e521"
+  "main": "#b6753e",
+  "trim": "#dbc48c",
+  "gem": "#f2c450"
  },
  "charm-6": {
-  "main": "#8c3025",
-  "trim": "#9a7f79",
-  "gem": "#e45a33"
+  "main": "#99a5c2",
+  "trim": "#f0f2ef",
+  "gem": "#99a5c2"
  },
  "charm-7": {
-  "main": "#6f8ecd",
-  "trim": "#bbd6f6",
-  "gem": "#8abbef"
+  "main": "#ba322c",
+  "trim": "#ad874f",
+  "gem": "#e49f32"
  },
  "charm-8": {
-  "main": "#cb7814",
-  "trim": "#f4cc7d",
-  "gem": "#f6b225"
+  "main": "#1f8bdf",
+  "trim": "#bf9649",
+  "gem": "#1f8bdf"
  },
  "charm-9": {
-  "main": "#9695ba",
-  "trim": "#b8968c",
-  "gem": "#737ebf"
+  "main": "#79bd34",
+  "trim": "#9d8853",
+  "gem": "#7abf35"
+ },
+ "mace-0": {
+  "main": "#b9956e",
+  "trim": "#fefaea",
+  "gem": "#e1bb90"
+ },
+ "mace-1": {
+  "main": "#c98a7e",
+  "trim": "#f6dbd6",
+  "gem": "#d7a276"
+ },
+ "mace-10": {
+  "main": "#8c6361",
+  "trim": "#e9b773",
+  "gem": "#e9b773"
+ },
+ "mace-11": {
+  "main": "#8c5854",
+  "trim": "#f4dbb7",
+  "gem": "#ee7f54"
+ },
+ "mace-12": {
+  "main": "#e6f6f9",
+  "trim": "#657799",
+  "gem": "#78d7f9"
+ },
+ "mace-13": {
+  "main": "#539bd0",
+  "trim": "#9a7357",
+  "gem": "#f0cb7d"
+ },
+ "mace-14": {
+  "main": "#8c7182",
+  "trim": "#4694ce",
+  "gem": "#6ac8eb"
+ },
+ "mace-15": {
+  "main": "#8cd2f0",
+  "trim": "#d1a45e",
+  "gem": "#f6d582"
+ },
+ "mace-16": {
+  "main": "#7aa5b4",
+  "trim": "#ecd6b6",
+  "gem": "#80dcf4"
+ },
+ "mace-17": {
+  "main": "#dfbea1",
+  "trim": "#8dacbc",
+  "gem": "#d2ac8a"
+ },
+ "mace-18": {
+  "main": "#78a03e",
+  "trim": "#f3ebb2",
+  "gem": "#cae067"
+ },
+ "mace-19": {
+  "main": "#5f8c3e",
+  "trim": "#f3e8d6",
+  "gem": "#b7c16e"
+ },
+ "mace-2": {
+  "main": "#efd8ba",
+  "trim": "#dca35f",
+  "gem": "#dca35f"
+ },
+ "mace-20": {
+  "main": "#8c7f6c",
+  "trim": "#e5d4a6",
+  "gem": "#bccc60"
+ },
+ "mace-21": {
+  "main": "#798c49",
+  "trim": "#faf5e0",
+  "gem": "#b9cb5f"
+ },
+ "mace-22": {
+  "main": "#819e3f",
+  "trim": "#e4bf7d",
+  "gem": "#c5d058"
+ },
+ "mace-23": {
+  "main": "#8b9a53",
+  "trim": "#c7b27b",
+  "gem": "#eeca8b"
+ },
+ "mace-24": {
+  "main": "#f6ba4d",
+  "trim": "#997764",
+  "gem": "#f6ba4d"
+ },
+ "mace-25": {
+  "main": "#eee0b1",
+  "trim": "#9ba367",
+  "gem": "#dcab83"
+ },
+ "mace-26": {
+  "main": "#8c726e",
+  "trim": "#edd4b0",
+  "gem": "#edc380"
+ },
+ "mace-27": {
+  "main": "#f7ce65",
+  "trim": "#996f5a",
+  "gem": "#f7ce65"
+ },
+ "mace-28": {
+  "main": "#b0854b",
+  "trim": "#99745e",
+  "gem": "#f3cd6d"
+ },
+ "mace-29": {
+  "main": "#8c6a66",
+  "trim": "#f5e5c6",
+  "gem": "#dcae71"
+ },
+ "mace-3": {
+  "main": "#c49a5f",
+  "trim": "#f4dea7",
+  "gem": "#e5b66c"
+ },
+ "mace-30": {
+  "main": "#f5ddaf",
+  "trim": "#c4985e",
+  "gem": "#e2b371"
+ },
+ "mace-31": {
+  "main": "#eeb550",
+  "trim": "#996960",
+  "gem": "#eeb550"
+ },
+ "mace-32": {
+  "main": "#c88d68",
+  "trim": "#997776",
+  "gem": "#ebad7a"
+ },
+ "mace-33": {
+  "main": "#e8b564",
+  "trim": "#99705f",
+  "gem": "#e8b564"
+ },
+ "mace-34": {
+  "main": "#a1775c",
+  "trim": "#997b71",
+  "gem": "#d39b70"
+ },
+ "mace-35": {
+  "main": "#e8ba6a",
+  "trim": "#997d6e",
+  "gem": "#e8ba6a"
+ },
+ "mace-4": {
+  "main": "#e0a355",
+  "trim": "#99746d",
+  "gem": "#e0a355"
+ },
+ "mace-5": {
+  "main": "#a78a7e",
+  "trim": "#fdf3d9",
+  "gem": "#d7ae8d"
+ },
+ "mace-6": {
+  "main": "#9d7359",
+  "trim": "#e04349",
+  "gem": "#d9263f"
+ },
+ "mace-7": {
+  "main": "#eaa161",
+  "trim": "#996861",
+  "gem": "#eaa161"
+ },
+ "mace-8": {
+  "main": "#d99846",
+  "trim": "#cd296e",
+  "gem": "#ecb95d"
+ },
+ "mace-9": {
+  "main": "#9b563e",
+  "trim": "#e0b276",
+  "gem": "#f3b143"
  },
  "staff-0": {
-  "main": "#b6865c",
-  "trim": "#d4b6a1",
-  "gem": "#ecb96a"
+  "main": "#94624d",
+  "trim": "#919991",
+  "gem": "#bf8d77"
  },
  "staff-1": {
-  "main": "#98636c",
-  "trim": "#f7dbf1",
-  "gem": "#9025bf"
+  "main": "#6ab1c3",
+  "trim": "#d98c5b",
+  "gem": "#e9b473"
  },
  "staff-10": {
-  "main": "#934921",
-  "trim": "#f4be4c",
-  "gem": "#f4be4c"
+  "main": "#e43f57",
+  "trim": "#992658",
+  "gem": "#f4c359"
  },
  "staff-11": {
-  "main": "#c1b1a9",
-  "trim": "#996f6f",
-  "gem": "#ebb19a"
+  "main": "#f1ce5b",
+  "trim": "#da6c2c",
+  "gem": "#da6c2c"
+ },
+ "staff-12": {
+  "main": "#58a6ea",
+  "trim": "#5e76af",
+  "gem": "#58a6ea"
+ },
+ "staff-13": {
+  "main": "#bbdcec",
+  "trim": "#797f99",
+  "gem": "#21a7f0"
+ },
+ "staff-14": {
+  "main": "#eeb1b8",
+  "trim": "#997388",
+  "gem": "#d48a9b"
+ },
+ "staff-15": {
+  "main": "#40cbde",
+  "trim": "#c6a151",
+  "gem": "#40cbde"
+ },
+ "staff-16": {
+  "main": "#718db9",
+  "trim": "#4c5799",
+  "gem": "#72b0ec"
+ },
+ "staff-17": {
+  "main": "#4d508c",
+  "trim": "#accde7",
+  "gem": "#83c6e9"
+ },
+ "staff-18": {
+  "main": "#689e31",
+  "trim": "#c7d672",
+  "gem": "#7ccc3e"
+ },
+ "staff-19": {
+  "main": "#79b323",
+  "trim": "#bbda5e",
+  "gem": "#dff372"
  },
  "staff-2": {
-  "main": "#fef3c5",
-  "trim": "#c9a27d",
-  "gem": "#eaa357"
+  "main": "#b87267",
+  "trim": "#64cee3",
+  "gem": "#64cee3"
+ },
+ "staff-20": {
+  "main": "#adb753",
+  "trim": "#ba6b61",
+  "gem": "#db7d92"
+ },
+ "staff-21": {
+  "main": "#6a8c3f",
+  "trim": "#d8d26e",
+  "gem": "#d0b25a"
+ },
+ "staff-22": {
+  "main": "#7da76c",
+  "trim": "#49a45f",
+  "gem": "#64d170"
+ },
+ "staff-23": {
+  "main": "#8c5e3b",
+  "trim": "#f39b1a",
+  "gem": "#f08710"
+ },
+ "staff-24": {
+  "main": "#dba379",
+  "trim": "#afa2a7",
+  "gem": "#dba379"
+ },
+ "staff-25": {
+  "main": "#bb699e",
+  "trim": "#996d73",
+  "gem": "#8e0dbf"
+ },
+ "staff-26": {
+  "main": "#8c4455",
+  "trim": "#e8bd65",
+  "gem": "#e0a848"
+ },
+ "staff-27": {
+  "main": "#46508c",
+  "trim": "#b9a270",
+  "gem": "#5096d9"
+ },
+ "staff-28": {
+  "main": "#598dd4",
+  "trim": "#4f4299",
+  "gem": "#598dd4"
+ },
+ "staff-29": {
+  "main": "#715b98",
+  "trim": "#d3c7dd",
+  "gem": "#9378bf"
  },
  "staff-3": {
-  "main": "#b19687",
-  "trim": "#29d4ef",
-  "gem": "#29d4ef"
+  "main": "#e9d0c5",
+  "trim": "#a07676",
+  "gem": "#caa296"
+ },
+ "staff-30": {
+  "main": "#c1803c",
+  "trim": "#c9ad7f",
+  "gem": "#f3c35c"
+ },
+ "staff-31": {
+  "main": "#bb6920",
+  "trim": "#f2cf58",
+  "gem": "#f1a31a"
+ },
+ "staff-32": {
+  "main": "#f4e7d8",
+  "trim": "#b59d9c",
+  "gem": "#d2a064"
+ },
+ "staff-33": {
+  "main": "#ac867f",
+  "trim": "#e8c690",
+  "gem": "#4531bf"
+ },
+ "staff-34": {
+  "main": "#b3874d",
+  "trim": "#dc9327",
+  "gem": "#eaac33"
+ },
+ "staff-35": {
+  "main": "#c88d7e",
+  "trim": "#33e4da",
+  "gem": "#33e4da"
  },
  "staff-4": {
-  "main": "#8c4a27",
-  "trim": "#e1af54",
-  "gem": "#faec77"
+  "main": "#a594b3",
+  "trim": "#946d99",
+  "gem": "#da995e"
  },
  "staff-5": {
-  "main": "#8c6a1d",
-  "trim": "#f9b756",
-  "gem": "#f9b756"
+  "main": "#9c8595",
+  "trim": "#17bdf2",
+  "gem": "#17bdf2"
  },
  "staff-6": {
-  "main": "#8c392d",
-  "trim": "#996866",
-  "gem": "#f48d2a"
+  "main": "#ed7c50",
+  "trim": "#a31532",
+  "gem": "#e5313d"
  },
  "staff-7": {
-  "main": "#4a3f9b",
-  "trim": "#6492df",
-  "gem": "#6fb9f4"
+  "main": "#c1462e",
+  "trim": "#ab7b79",
+  "gem": "#e4ae5a"
  },
  "staff-8": {
-  "main": "#6c6d8c",
-  "trim": "#e9ab59",
-  "gem": "#fbc56d"
+  "main": "#d092dd",
+  "trim": "#874099",
+  "gem": "#d092dd"
  },
  "staff-9": {
-  "main": "#9e7c89",
-  "trim": "#6e0fb1",
-  "gem": "#7710bf"
- },
- "supply-0": {
-  "main": "#c80d10",
-  "trim": "#994f25",
-  "gem": "#ed3030"
- },
- "supply-1": {
-  "main": "#1c378c",
-  "trim": "#b26b2e",
-  "gem": "#28dcfc"
- },
- "supply-2": {
-  "main": "#f6ac31",
-  "trim": "#995214",
-  "gem": "#f6ac31"
- },
- "supply-3": {
-  "main": "#beb5b9",
-  "trim": "#8298b5",
-  "gem": "#73e3f8"
+  "main": "#eb9d50",
+  "trim": "#a41c3a",
+  "gem": "#ed5631"
  },
  "sword-0": {
-  "main": "#a46b3b",
-  "trim": "#c0b7b4",
-  "gem": "#bf874f"
+  "main": "#8782a6",
+  "trim": "#e4e2ea",
+  "gem": "#710dbf"
  },
  "sword-1": {
-  "main": "#8c6187",
-  "trim": "#7f3899",
-  "gem": "#8929bf"
+  "main": "#827c9b",
+  "trim": "#cbc0b3",
+  "gem": "#c6905c"
  },
  "sword-10": {
-  "main": "#955f39",
-  "trim": "#deb172",
-  "gem": "#d6864f"
+  "main": "#90535c",
+  "trim": "#e1b184",
+  "gem": "#d91f56"
  },
  "sword-11": {
-  "main": "#9c7956",
-  "trim": "#998d88",
-  "gem": "#f2c79c"
+  "main": "#da7931",
+  "trim": "#ae845b",
+  "gem": "#da7931"
+ },
+ "sword-12": {
+  "main": "#330c8c",
+  "trim": "#a1cdf0",
+  "gem": "#58a0e1"
+ },
+ "sword-13": {
+  "main": "#7db0da",
+  "trim": "#3380c5",
+  "gem": "#3c91d6"
+ },
+ "sword-14": {
+  "main": "#dbacab",
+  "trim": "#996a7b",
+  "gem": "#ecbfbc"
+ },
+ "sword-15": {
+  "main": "#4a8c7e",
+  "trim": "#c39347",
+  "gem": "#ecc257"
+ },
+ "sword-16": {
+  "main": "#7ba5e0",
+  "trim": "#4c4a99",
+  "gem": "#75b1ea"
+ },
+ "sword-17": {
+  "main": "#736f9b",
+  "trim": "#aab4d0",
+  "gem": "#83b3d8"
+ },
+ "sword-18": {
+  "main": "#99c75e",
+  "trim": "#5f9e41",
+  "gem": "#c3df7d"
+ },
+ "sword-19": {
+  "main": "#84a746",
+  "trim": "#b7d75e",
+  "gem": "#b7d75e"
  },
  "sword-2": {
-  "main": "#afbfe6",
-  "trim": "#996c87",
-  "gem": "#afbfe6"
+  "main": "#af7246",
+  "trim": "#995b55",
+  "gem": "#e6bd75"
+ },
+ "sword-20": {
+  "main": "#de9c36",
+  "trim": "#f4dc7f",
+  "gem": "#e6a839"
+ },
+ "sword-21": {
+  "main": "#bcb06a",
+  "trim": "#b17241",
+  "gem": "#d3c573"
+ },
+ "sword-22": {
+  "main": "#70d3a7",
+  "trim": "#6c9c90",
+  "gem": "#70d3a7"
+ },
+ "sword-23": {
+  "main": "#a06a35",
+  "trim": "#ef9017",
+  "gem": "#ef9017"
+ },
+ "sword-24": {
+  "main": "#7e42a6",
+  "trim": "#d4bba3",
+  "gem": "#914cbf"
+ },
+ "sword-25": {
+  "main": "#640e97",
+  "trim": "#8944a9",
+  "gem": "#8312bf"
+ },
+ "sword-26": {
+  "main": "#8c7c88",
+  "trim": "#be8f4b",
+  "gem": "#bf904b"
+ },
+ "sword-27": {
+  "main": "#52388c",
+  "trim": "#547add",
+  "gem": "#263bc6"
+ },
+ "sword-28": {
+  "main": "#3a208c",
+  "trim": "#534dac",
+  "gem": "#574cbf"
+ },
+ "sword-29": {
+  "main": "#8784ad",
+  "trim": "#dbdbe8",
+  "gem": "#8076bf"
  },
  "sword-3": {
-  "main": "#5e7c8c",
-  "trim": "#b3a08d",
-  "gem": "#40ceea"
+  "main": "#9b9bb2",
+  "trim": "#aa8067",
+  "gem": "#c49d6c"
+ },
+ "sword-30": {
+  "main": "#efcd75",
+  "trim": "#9b6439",
+  "gem": "#ecc062"
+ },
+ "sword-31": {
+  "main": "#eec155",
+  "trim": "#99686b",
+  "gem": "#eec155"
+ },
+ "sword-32": {
+  "main": "#a1857e",
+  "trim": "#f4e6cd",
+  "gem": "#e1c7aa"
+ },
+ "sword-33": {
+  "main": "#8e6873",
+  "trim": "#e3a097",
+  "gem": "#dc818d"
+ },
+ "sword-34": {
+  "main": "#9d6f38",
+  "trim": "#ecd6a6",
+  "gem": "#d49d4a"
+ },
+ "sword-35": {
+  "main": "#f5e573",
+  "trim": "#e5a697",
+  "gem": "#f5e573"
  },
  "sword-4": {
-  "main": "#629138",
-  "trim": "#996330",
-  "gem": "#e0ba64"
+  "main": "#a5a8c2",
+  "trim": "#bc9e7f",
+  "gem": "#bf2867"
  },
  "sword-5": {
-  "main": "#93552c",
-  "trim": "#deb56a",
-  "gem": "#e79e51"
+  "main": "#715c8c",
+  "trim": "#bbbdd2",
+  "gem": "#6b0fbf"
  },
  "sword-6": {
-  "main": "#8c3327",
-  "trim": "#f45d22",
-  "gem": "#f45d22"
+  "main": "#ca173f",
+  "trim": "#d75c62",
+  "gem": "#ca173f"
  },
  "sword-7": {
-  "main": "#b8e1f9",
-  "trim": "#a19dcb",
-  "gem": "#7daaeb"
+  "main": "#d47d36",
+  "trim": "#993b34",
+  "gem": "#d47d36"
  },
  "sword-8": {
-  "main": "#be7d2e",
-  "trim": "#f37b7e",
-  "gem": "#f1bb3f"
+  "main": "#60368c",
+  "trim": "#9968b2",
+  "gem": "#bd87cf"
  },
  "sword-9": {
-  "main": "#8c767a",
-  "trim": "#8b15ac",
-  "gem": "#9b17bf"
+  "main": "#dd3333",
+  "trim": "#9d7f55",
+  "gem": "#e5a740"
  }
 }

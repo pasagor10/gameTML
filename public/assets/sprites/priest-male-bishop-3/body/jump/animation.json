@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "jump",
+  "artSource": "pixel sheet priest-male-tier3.webp",
+  "sourceSize": [
+    62,
+    54
+  ],
+  "encodedAnchor": [
+    38,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    120,
+    120,
+    120,
+    120
+  ],
+  "durationSeconds": 0.48,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      62,
+      54
+    ],
+    "pages": [
+      {
+        "file": "jump-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        49.91,
+        47.84,
+        -50
+      ],
+      [
+        49.13,
+        31.89,
+        -70
+      ],
+      [
+        49.2,
+        31.15,
+        -80
+      ],
+      [
+        49.08,
+        47.72,
+        -45
+      ]
+    ]
+  }
+}

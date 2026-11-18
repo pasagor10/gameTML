@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "idle",
+  "artSource": "pixel sheet priest-male-tier3.webp",
+  "sourceSize": [
+    62,
+    54
+  ],
+  "encodedAnchor": [
+    38,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    220,
+    220,
+    220,
+    220
+  ],
+  "durationSeconds": 0.88,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      62,
+      54
+    ],
+    "pages": [
+      {
+        "file": "idle-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        52.42,
+        38.31,
+        -62
+      ],
+      [
+        52.17,
+        38.22,
+        -64
+      ],
+      [
+        52.62,
+        38.38,
+        -62
+      ],
+      [
+        52.13,
+        38.49,
+        -60
+      ]
+    ]
+  }
+}

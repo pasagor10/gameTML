@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "3.0",
+  "name": "skill",
+  "artSource": "pixel sheet priest-female-tier2.webp",
+  "sourceSize": [
+    63,
+    54
+  ],
+  "encodedAnchor": [
+    38,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    90,
+    110,
+    120,
+    170
+  ],
+  "durationSeconds": 0.49,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 200
+    }
+  ],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      63,
+      54
+    ],
+    "pages": [
+      {
+        "file": "skill-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        43.27,
+        38.59,
+        -30
+      ],
+      [
+        48.85,
+        31.02,
+        -160
+      ],
+      [
+        49.89,
+        11.3,
+        -95
+      ],
+      [
+        43.46,
+        39.0,
+        -50
+      ]
+    ]
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "run",
+  "artSource": "pixel sheet priest-female-tier2.webp",
+  "sourceSize": [
+    63,
+    54
+  ],
+  "encodedAnchor": [
+    38,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    100,
+    100,
+    100,
+    100
+  ],
+  "durationSeconds": 0.4,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      63,
+      54
+    ],
+    "pages": [
+      {
+        "file": "run-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        50.63,
+        34.09,
+        -24
+      ],
+      [
+        49.11,
+        35.41,
+        -30
+      ],
+      [
+        48.79,
+        33.37,
+        -24
+      ],
+      [
+        49.99,
+        33.45,
+        -30
+      ]
+    ]
+  }
+}

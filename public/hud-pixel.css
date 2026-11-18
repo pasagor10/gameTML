@@ -1,0 +1,363 @@
+/* Pixel HUD: navy panels in a 2px gold pixel frame, square icon buttons, a
+   green "choose dungeon" button, chunky red / blue / green bars and a gold
+   level tag. Loaded after every HUD stylesheet (hud-skin.css, pixel-ui.css),
+   so `body #game-screen` and !important keep it ahead of their rules.
+   The skin applies everywhere; the layout block at the end arranges portrait
+   phones: profile card left, a 4-wide icon column right (icons / dungeon /
+   icons), the quest bar under the profile. */
+
+body #game-screen {
+  --hx-navy: #182a50;
+  --hx-navy-hi: #22396a;
+  --hx-ink: #0a1226;
+  --hx-gold: #efc354;
+  --hx-gold-hi: #ffe49a;
+  --hx-gold-lo: #9c6c1c;
+  --hx-green: #1f8a43;
+  --hx-green-hi: #35b35d;
+  --hx-text: #fdf6e3;
+  /* Frame: ink outline, gold border, ink inner line, a light top bevel. */
+  --hx-frame: 0 0 0 2px var(--hx-ink), inset 0 0 0 2px var(--hx-ink), inset 0 4px 0 0 #ffffff14, 3px 4px 0 2px #00000070;
+}
+
+/* ---------- Panels ---------- */
+body #game-screen :is(.profile-panel, #quests, #minimap, #chat-toggle, #top-menu button, #mobile-interact, #walkability-toggle, #context-hint, .gold-display) {
+  background: var(--hx-navy) !important;
+  border: 2px solid var(--hx-gold) !important;
+  box-shadow: var(--hx-frame) !important;
+  color: var(--hx-text);
+}
+/* No ornate corner scrolls or crests: the pixel frame is enough. */
+body #game-screen :is(.profile-panel, #quests, #minimap)::before,
+body #game-screen :is(.profile-panel, #quests, #minimap)::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* ---------- Profile ---------- */
+body #game-screen #avatar {
+  border: 2px solid var(--hx-gold) !important;
+  box-shadow: 0 0 0 2px var(--hx-ink), inset 0 0 0 2px var(--hx-ink) !important;
+  background-color: #2b4a7e !important;
+  image-rendering: pixelated;
+}
+body #game-screen #player-name {
+  color: #fff !important;
+  font-weight: 700;
+  text-shadow: 1px 1px 0 var(--hx-ink) !important;
+}
+body #game-screen #player-level {
+  background: var(--hx-gold) !important;
+  color: #3a2406 !important;
+  border: 0 !important;
+  box-shadow: 0 0 0 2px var(--hx-ink), inset 0 2px 0 var(--hx-gold-hi), inset 0 -2px 0 var(--hx-gold-lo) !important;
+  font-weight: 700;
+  text-shadow: none !important;
+}
+body #game-screen .stat-bar {
+  background: var(--hx-ink) !important;
+  border: 0 !important;
+  box-shadow: 0 0 0 2px var(--hx-ink) !important;
+  overflow: hidden;
+}
+body #game-screen .stat-bar :is(i, b) {
+  border-radius: 0 !important;
+}
+body #game-screen .stat-bar.hp i {
+  background: #e23a45 !important;
+  box-shadow: inset 0 3px 0 #ff7d84, inset 0 -3px 0 #a3172a !important;
+}
+body #game-screen .stat-bar.mp i {
+  background: #3d7fe6 !important;
+  box-shadow: inset 0 3px 0 #86b7ff, inset 0 -3px 0 #1e4ea6 !important;
+}
+body #game-screen .stat-bar.exp {
+  background: #0d1a33 !important;
+}
+body #game-screen .stat-bar.exp i {
+  background: #4fca59 !important;
+  box-shadow: inset 0 2px 0 #9cf08f !important;
+}
+body #game-screen .stat-bar .bar-trail {
+  background: #ffffff55 !important;
+}
+body #game-screen .stat-bar span {
+  color: #fff !important;
+  font-weight: 700;
+  text-shadow: 1px 0 0 var(--hx-ink), -1px 0 0 var(--hx-ink), 0 1px 0 var(--hx-ink), 0 -1px 0 var(--hx-ink) !important;
+}
+body #game-screen .exp-row :is(b, small) {
+  color: var(--hx-gold-hi) !important;
+  text-shadow: 1px 1px 0 var(--hx-ink) !important;
+}
+body #game-screen #player-class {
+  color: var(--hx-gold-hi) !important;
+}
+
+/* ---------- Icon buttons ---------- */
+body #game-screen #top-menu button,
+body #game-screen #chat-toggle {
+  color: var(--hx-text) !important;
+}
+body #game-screen #top-menu button:is(:hover, :focus-visible),
+body #game-screen #chat-toggle:is(:hover, :focus-visible) {
+  background: var(--hx-navy-hi) !important;
+}
+body #game-screen #top-menu button:active,
+body #game-screen #chat-toggle:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 2px var(--hx-ink), inset 0 0 0 2px var(--hx-ink) !important;
+}
+body #game-screen #top-menu b,
+body #game-screen #top-menu svg {
+  color: var(--hx-text) !important;
+  filter: drop-shadow(1px 1px 0 var(--hx-ink));
+}
+body #game-screen .menu-badge {
+  background: #e23a45 !important;
+  color: #fff !important;
+  box-shadow: 0 0 0 2px var(--hx-ink) !important;
+  border: 0 !important;
+}
+body #game-screen #chat-toggle {
+  clip-path: none !important;
+}
+body #game-screen #chat-toggle i {
+  clip-path: none !important;
+}
+
+/* ---------- Dungeon button (in the map card) ---------- */
+body #game-screen #minimap #dungeon-open {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: var(--hx-green) !important;
+  border: 2px solid var(--hx-gold) !important;
+  box-shadow: var(--hx-frame), inset 0 6px 0 var(--hx-green-hi) !important;
+  color: #fff !important;
+  font-weight: 700;
+  text-shadow: 1px 1px 0 #0b3a1b !important;
+}
+body #game-screen #minimap #dungeon-open:active {
+  transform: translateY(2px);
+}
+body #game-screen #minimap :is(#dungeon-open, #training-open) .map-btn-icon {
+  display: grid;
+  place-items: center;
+  background: var(--hx-gold) !important;
+  color: #3a2406 !important;
+  border: 0 !important;
+  box-shadow: 0 0 0 2px var(--hx-ink), inset 0 2px 0 var(--hx-gold-hi) !important;
+  clip-path: none !important;
+  font-weight: 800;
+}
+body #game-screen #minimap .map-btn-go {
+  margin-left: auto;
+  color: #fff !important;
+}
+body #game-screen #minimap #training-open {
+  background: var(--hx-navy) !important;
+  border: 2px solid var(--hx-gold) !important;
+  box-shadow: var(--hx-frame) !important;
+  color: var(--hx-text) !important;
+}
+
+/* ---------- Quest bar ---------- */
+body #game-screen #quests h3 {
+  color: #fff !important;
+  text-shadow: 1px 1px 0 var(--hx-ink) !important;
+}
+body #game-screen #quests .quest-badge {
+  background: var(--hx-gold) !important;
+  color: #3a2406 !important;
+  border: 0 !important;
+  box-shadow: 0 0 0 2px var(--hx-ink), inset 0 2px 0 var(--hx-gold-hi) !important;
+  font-weight: 800;
+}
+body #game-screen #quests .quest-progress {
+  background: var(--hx-ink) !important;
+  border: 0 !important;
+}
+body #game-screen #quests #quest-fill {
+  background: var(--hx-gold) !important;
+}
+
+/* ---------- Talk / interact button ---------- */
+body #game-screen #mobile-interact {
+  clip-path: none !important;
+  color: #fff !important;
+  font-weight: 600;
+  text-shadow: 1px 1px 0 var(--hx-ink) !important;
+}
+body #game-screen #mobile-interact b {
+  color: var(--hx-gold-hi) !important;
+}
+
+/* ---------- Portrait phones: the reference layout ---------- */
+@media (max-width: 700px) and (orientation: portrait) {
+  body #game-screen {
+    --hx-btn: 34px;
+    --hx-gap: 4px;
+    /* Right column: four buttons wide. */
+    --hx-col: calc(var(--hx-btn) * 4 + var(--hx-gap) * 3);
+  }
+  body #game-screen .hud-top {
+    display: block !important;
+  }
+  body #game-screen .profile-panel {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    width: calc(100% - var(--hx-col) - 10px) !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 6px 7px 6px 6px !important;
+    gap: 7px !important;
+    align-items: center;
+  }
+  body #game-screen #avatar {
+    width: 48px !important;
+    height: 52px !important;
+    flex: 0 0 auto;
+  }
+  body #game-screen .profile-info {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  body #game-screen .profile-info strong {
+    font-size: 12px !important;
+    max-width: none !important;
+  }
+  body #game-screen .profile-info #player-level {
+    font-size: 10px !important;
+    padding: 0 6px !important;
+    line-height: 15px;
+    margin-left: auto;
+  }
+  body #game-screen .profile-info > div:first-child {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 3px;
+  }
+  body #game-screen .stat-bar:is(.hp, .mp) {
+    height: 13px !important;
+    margin: 0 0 4px !important;
+  }
+  body #game-screen .stat-bar span {
+    font-size: 9px !important;
+    line-height: 13px !important;
+  }
+  body #game-screen .exp-row {
+    gap: 4px;
+  }
+  body #game-screen .exp-row :is(b, small) {
+    font-size: 8px !important;
+  }
+  body #game-screen .stat-bar.exp {
+    height: 6px !important;
+  }
+  body #game-screen .profile-meta {
+    display: none !important;
+  }
+
+  /* Icon grid: row 1 chat + 3, row 2 the dungeon button, row 3 four more,
+     row 4 the online list at the end. */
+  body #game-screen #top-menu {
+    position: absolute !important;
+    top: 0;
+    right: 0;
+    display: grid !important;
+    grid-template-columns: repeat(4, var(--hx-btn));
+    grid-template-rows: var(--hx-btn) 46px var(--hx-btn) var(--hx-btn);
+    gap: var(--hx-gap);
+    width: var(--hx-col);
+    max-width: none !important;
+  }
+  body #game-screen #top-menu button {
+    width: var(--hx-btn) !important;
+    height: var(--hx-btn) !important;
+    margin: 0 !important;
+    clip-path: none !important;
+  }
+  body #game-screen #top-menu b {
+    font-size: 16px !important;
+  }
+  body #game-screen #top-menu button:nth-child(3) { grid-area: 1 / 2; }
+  body #game-screen #top-menu button:nth-child(2) { grid-area: 1 / 3; }
+  body #game-screen #top-menu button:nth-child(4) { grid-area: 1 / 4; }
+  body #game-screen #top-menu button:nth-child(5) { grid-area: 3 / 1; }
+  body #game-screen #top-menu button:nth-child(6) { grid-area: 3 / 2; }
+  body #game-screen #top-menu button:nth-child(7) { grid-area: 3 / 3; }
+  body #game-screen #top-menu button:nth-child(8) { grid-area: 3 / 4; }
+  body #game-screen #top-menu button:nth-child(1) { grid-area: 4 / 4; }
+  body #game-screen #chat-toggle {
+    top: var(--top) !important;
+    left: auto !important;
+    right: calc(var(--pad) + var(--hx-col) - var(--hx-btn)) !important;
+    width: var(--hx-btn) !important;
+    height: var(--hx-btn) !important;
+    font-size: 16px !important;
+  }
+  /* Phones show only the dungeon button: no card around it. */
+  body #game-screen #minimap {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    top: calc(var(--top) + var(--hx-btn) + var(--hx-gap) + 3px) !important;
+    right: var(--pad) !important;
+    left: auto !important;
+    width: var(--hx-col) !important;
+  }
+  body #game-screen #minimap #dungeon-open {
+    height: 40px;
+    padding: 0 8px !important;
+    font-size: 12px !important;
+  }
+  body #game-screen #minimap #dungeon-open .map-btn-icon {
+    width: 20px;
+    height: 22px;
+    font-size: 13px;
+  }
+  body #game-screen #minimap #training-open {
+    display: none !important;
+  }
+  body #game-screen #quests {
+    top: calc(var(--top) + 80px) !important;
+    left: var(--pad) !important;
+    width: calc(100% - var(--pad) * 2 - var(--hx-col) - 10px) !important;
+    padding: 0 9px 0 6px !important;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 34px;
+  }
+  body #game-screen #quests.open {
+    display: block;
+    padding: 4px 9px 8px !important;
+  }
+  body #game-screen #quests .quest-badge {
+    position: static !important;
+    flex: 0 0 auto;
+    width: 20px;
+    height: 20px;
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    transform: none !important;
+  }
+  body #game-screen #quests h3 {
+    margin: 0 !important;
+    font-size: 12px !important;
+  }
+  body #game-screen #quests:not(.open) :is(.quest-progress, #daily-tracker) {
+    display: none !important;
+  }
+  body #game-screen #mobile-interact {
+    height: 38px !important;
+    padding: 0 14px !important;
+    gap: 8px;
+  }
+}

@@ -1,77 +1,64 @@
 {
   "schemaVersion": "3.0",
   "name": "death",
-  "artSource": "codeart layered (tools/sprite-rig/layered_rig.py)",
+  "artSource": "pixel sheet priest-male-tier1.webp",
   "sourceSize": [
-    300,
-    220
+    63,
+    55
   ],
-  "sourceAnchor": [
-    150.0,
-    208.0
+  "encodedAnchor": [
+    42,
+    51
   ],
-  "frameCount": 6,
+  "bodyHeightPx": 48,
+  "frameCount": 4,
   "durationsMs": [
-    80,
-    90,
-    90,
-    100,
-    120,
-    200
+    140,
+    160,
+    180,
+    400
   ],
-  "durationSeconds": 0.68,
-  "fps": 8.824,
+  "durationSeconds": 0.88,
   "loop": false,
-  "bodyHeightPx": 140,
+  "sampling": "nearest",
   "events": [],
-  "sampling": "linear",
-  "sockets": {
-    "hand": [
-      [
-        172.68,
-        154.38,
-        -61.35
-      ],
-      [
-        153.87,
-        129.12,
-        -81.41
-      ],
-      [
-        103.59,
-        132.27,
-        -112.92
-      ],
-      [
-        79.23,
-        171.73,
-        -141.57
-      ],
-      [
-        78.74,
-        184.32,
-        -147.3
-      ],
-      [
-        78.95,
-        189.03,
-        -148.44
-      ]
-    ]
-  },
   "fallback": {
     "type": "png-atlas",
     "cellSize": [
-      300,
-      220
+      63,
+      55
     ],
     "pages": [
       {
         "file": "death-atlas-00.webp",
         "firstFrame": 0,
-        "frameCount": 6,
-        "columns": 6
+        "frameCount": 4,
+        "columns": 4
       }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        44.06,
+        39.5,
+        -40
+      ],
+      [
+        44.06,
+        39.5,
+        -10
+      ],
+      [
+        52.21,
+        49.12,
+        5
+      ],
+      [
+        56.31,
+        49.24,
+        0
+      ]
     ]
   }
 }

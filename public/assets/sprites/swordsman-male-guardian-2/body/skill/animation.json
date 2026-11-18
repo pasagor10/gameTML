@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "3.0",
+  "name": "skill",
+  "artSource": "pixel sheet swordsman-male-tier2.webp",
+  "sourceSize": [
+    60,
+    54
+  ],
+  "encodedAnchor": [
+    33,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    90,
+    110,
+    120,
+    170
+  ],
+  "durationSeconds": 0.49,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 200
+    }
+  ],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      60,
+      54
+    ],
+    "pages": [
+      {
+        "file": "skill-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        45.72,
+        45.05,
+        -30
+      ],
+      [
+        30.94,
+        28.03,
+        -160
+      ],
+      [
+        47.44,
+        10.26,
+        -95
+      ],
+      [
+        45.89,
+        41.21,
+        -50
+      ]
+    ]
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "run",
+  "artSource": "pixel sheet male-costume-mtang.webp",
+  "sourceSize": [
+    63,
+    54
+  ],
+  "encodedAnchor": [
+    39,
+    52
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    100,
+    100,
+    100,
+    100
+  ],
+  "durationSeconds": 0.4,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      63,
+      54
+    ],
+    "pages": [
+      {
+        "file": "run-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        51.98,
+        32.09,
+        -24
+      ],
+      [
+        53.64,
+        33.52,
+        -30
+      ],
+      [
+        50.72,
+        35.35,
+        -24
+      ],
+      [
+        47.47,
+        34.91,
+        -30
+      ]
+    ]
+  }
+}

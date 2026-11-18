@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "jump",
+  "artSource": "pixel sheet swordsman-male-tier3.webp",
+  "sourceSize": [
+    65,
+    54
+  ],
+  "encodedAnchor": [
+    35,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    120,
+    120,
+    120,
+    120
+  ],
+  "durationSeconds": 0.48,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      65,
+      54
+    ],
+    "pages": [
+      {
+        "file": "jump-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        50.69,
+        32.15,
+        -50
+      ],
+      [
+        50.69,
+        32.15,
+        -70
+      ],
+      [
+        51.69,
+        32.13,
+        -80
+      ],
+      [
+        51.69,
+        32.13,
+        -45
+      ]
+    ]
+  }
+}

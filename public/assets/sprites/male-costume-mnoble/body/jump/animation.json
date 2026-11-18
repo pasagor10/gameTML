@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "jump",
+  "artSource": "pixel sheet male-costume-mnoble.webp",
+  "sourceSize": [
+    65,
+    54
+  ],
+  "encodedAnchor": [
+    41,
+    52
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    120,
+    120,
+    120,
+    120
+  ],
+  "durationSeconds": 0.48,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      65,
+      54
+    ],
+    "pages": [
+      {
+        "file": "jump-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        52.69,
+        40.45,
+        -50
+      ],
+      [
+        53.95,
+        31.64,
+        -70
+      ],
+      [
+        55.48,
+        29.62,
+        -80
+      ],
+      [
+        54.66,
+        26.47,
+        -45
+      ]
+    ]
+  }
+}

@@ -8,39 +8,26 @@ import { playLayers } from "../public/sprite-sets.js";
 
 const root = new URL("../public/assets/sprites/", import.meta.url);
 const index = JSON.parse(readFileSync(new URL("index.json", root)));
+const painted = JSON.parse(readFileSync(new URL("../tests/fixtures/painted-priest.json", import.meta.url)));
 const digest = (path) => createHash("sha256").update(readFileSync(new URL(path, root))).digest("hex");
 
-test("every priest vocation and advancement has distinct painted art for both genders", () => {
+test("monks are pixel art with empty hands, one look per vocation and advancement", () => {
   for (const gender of ["male", "female"]) {
-    const set = index.sets[`priest-${gender}`];
-    assert.equal(set.layers.painted, true);
-    assert.equal(set.layers.weaponFront, true);
-    assert.equal(set.layers.weaponBehind, undefined);
-    assert.equal(set.layers.weaponArt, "rig");
-    const hashes = new Set();
-    for (const specialization of [null, "bishop", "templar"])
-      for (const advanced of specialization ? [false, true] : [false]) {
-        const p = { class: "priest", gender, specialization, advanced,
-          equipment: { weapon: "starter_priest", armor: "traveler_armor" } };
-        const skin = heroSkins(p)[0];
-        assert.ok(index.sets[skin], skin);
-        const looks = heroLooks(p, set.layers.looks);
-        assert.equal(looks.weapon, "staff-1");
-        if (specialization) {
-          assert.equal(looks.outfit, `${specialization}-${advanced ? 3 : 2}`);
-          assert.equal(looks.head, looks.outfit);
-        }
-        const hash = digest(`${set.dir}/head/${looks.head}/idle/idle-atlas-00.webp`)
-          + digest(`${set.dir}/outfit/${looks.outfit}/idle/idle-atlas-00.webp`);
-        assert.ok(!hashes.has(hash), `${skin} must not reuse the same look`);
-        hashes.add(hash);
-        assert.ok(readFileSync(new URL(`${set.dir}/${index.sets[skin].portrait}`, root)).length);
-      }
+  const dirs = new Set();
+  for (const specialization of [null, "bishop", "templar"])
+    for (const advanced of specialization ? [false, true] : [false]) {
+      const set = index.sets[heroSkins({ class: "priest", gender, specialization, advanced })[0]];
+      assert.equal(set.layers.pixel, true);
+      assert.equal(set.layers.heldArt, undefined, "monks hold no weapon");
+      readFileSync(new URL(`${set.dir}/body/idle/idle-atlas-00.webp`, root));
+      dirs.add(set.dir);
+    }
+  assert.equal(dirs.size, 5);
   }
 });
 
 test("class and advancement preserve the equipped weapon tier and player costume override", () => {
-  const available = index.sets["priest-female"].layers.looks;
+  const available = painted.layers.looks;
   const p = { class: "priest", specialization: "bishop", advanced: true,
     equipment: { weapon: "floor_10_priest_weapon", armor: "traveler_armor" } };
   assert.deepEqual(heroLooks(p, available), { outfit: "bishop-3", head: "bishop-3", weapon: "staff-4" });
@@ -61,15 +48,15 @@ test("painted priest holds its own drawn staff glowing in the item's colour and 
   } finally {
     globalThis.fetch = originalFetch;
   }
-  const set = index.sets["priest-female"],
+  const set = painted,
     p = { class: "priest", specialization: "templar", advanced: true,
       equipment: { armor: "traveler_armor" } };
   const glows = [];
   for (const weapon of ["starter_priest", "dawn_scepter", "floor_10_priest_weapon"]) {
     const dress = gearDress({ ...p, equipment: { ...p.equipment, weapon } }, set);
     assert.equal(dress.looks.outfit, "templar-3");
-    // traveler_armor is armor-1 (main #8c3633), softened halfway to white.
-    assert.deepEqual(dress.tints.outfit, { main: 0xc69b99 });
+    // traveler_armor is armor-1 (main #8c4841), softened halfway to white.
+    assert.deepEqual(dress.tints.outfit, { main: 0xc6a4a0 });
     assert.deepEqual(dress.tints.head, {});
     // The priest holds its own drawn staff, not the ornate item picture...
     assert.equal(dress.weapon, null);
@@ -77,10 +64,17 @@ test("painted priest holds its own drawn staff glowing in the item's colour and 
     glows.push(dress.weaponGlow);
   }
   // ...glowing in each item picture's own accent colour.
-  assert.deepEqual(glows, [0xecb96a, 0xeaa357, 0xebb19a]);
+  assert.deepEqual(glows, [0xe1bb90, 0xeeb550, 0xedc380]);
   const other = gearDress({ class: "priest", equipment: { weapon: "dawn_scepter" } },
     { layers: { looks: set.layers.looks } });
-  assert.equal(other.weapon.url, "/assets/items/staff-2.webp", "sets without weaponArt still hold the picture");
+  assert.equal(other.weapon.url, "/assets/items/held/mace-31.webp", "sets without weaponArt hold the pixel mace");
+  assert.equal(other.weapon.upright, true);
+  assert.equal(other.weapon.length, 90, "a painted body holds it at painted size");
+  assert.equal(gearDress({ class: "priest", equipment: { weapon: "dawn_scepter" } }, { layers: { pixel: true } }).weapon,
+    null, "a pixel set without heldArt (a monk) holds nothing");
+  const pixel = gearDress({ class: "archer", equipment: {} }, { layers: { pixel: true, heldArt: "pixel" } });
+  assert.equal(pixel.weapon.url, "/assets/items/held/bow-0.webp", "no weapon: the class starter");
+  assert.equal(pixel.weapon.length, null, "a pixel body holds it at its own pixel size");
 });
 
 test("a replaced weapon image follows the animated hand in both facing directions", () => {

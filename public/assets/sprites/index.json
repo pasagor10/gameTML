@@ -1,42 +1,56 @@
 {
   "sets": {
     "archer-male": {
-      "dir": "archer-male-painted",
-      "height": 112,
+      "dir": "archer-male",
+      "height": 96,
       "facing": 1,
-      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (archer-male-tier1.webp), weapon drawn in the front fist",
       "actions": {
+        "idle": "idle",
         "walk": "walk",
         "run": "run",
-        "hit": "hurt",
-        "death": "death",
-        "idle": "idle",
+        "jump": "jump",
         "attack": "attack",
-        "skill": "skill"
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
       },
-      "showcase": "showcase.webp"
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "archer-female": {
-      "dir": "archer-female-painted",
-      "height": 112,
+      "dir": "archer-female",
+      "height": 96,
       "facing": 1,
-      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (archer-female-tier1.webp), weapon drawn in the front fist",
       "actions": {
+        "idle": "idle",
         "walk": "walk",
         "run": "run",
-        "hit": "hurt",
-        "death": "death",
-        "idle": "idle",
+        "jump": "jump",
         "attack": "attack",
-        "skill": "skill"
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
       },
-      "showcase": "showcase.webp"
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "mage-male": {
       "dir": "mage-male-painted",
       "height": 112,
       "facing": 1,
-      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "source": "supplied painted sheets; states without frames use procedural motion on idle; pixelated (pixelate_sprites.py)",
       "actions": {
         "walk": "walk",
         "run": "run",
@@ -46,13 +60,13 @@
         "attack": "attack",
         "skill": "skill"
       },
-      "showcase": "showcase.webp"
+      "pixel": true
     },
     "mage-female": {
       "dir": "mage-female-painted",
       "height": 112,
       "facing": 1,
-      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "source": "supplied painted sheets; states without frames use procedural motion on idle; pixelated (pixelate_sprites.py)",
       "actions": {
         "walk": "walk",
         "run": "run",
@@ -62,27 +76,34 @@
         "attack": "attack",
         "skill": "skill"
       },
-      "showcase": "showcase.webp"
+      "pixel": true
     },
     "swordsman-male": {
-      "dir": "swordsman-male-painted",
-      "height": 112,
+      "dir": "swordsman-male",
+      "height": 96,
       "facing": 1,
-      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (swordsman-male-tier1.webp), weapon drawn in the front fist",
       "actions": {
+        "idle": "idle",
         "walk": "walk",
         "run": "run",
-        "hit": "hurt",
-        "death": "death",
-        "idle": "idle",
+        "jump": "jump",
         "attack": "attack",
-        "skill": "skill"
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
       },
-      "showcase": "showcase.webp"
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "swordsman-female": {
       "dir": "swordsman-female",
-      "height": 112,
+      "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
       "source": "pixel art sheet (swordsman-female-tier1.webp), weapon drawn in the front fist",
@@ -105,10 +126,10 @@
     },
     "archer-male-ranger-2": {
       "dir": "archer-male-ranger-2",
-      "height": 112,
+      "height": 96,
       "facing": 1,
-      "source": "4x8 sheet archer-male-ranger-2.png",
       "portrait": "portrait.webp",
+      "source": "pixel art sheet (archer-male-tier2.webp), weapon drawn in the front fist",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -119,14 +140,19 @@
         "hit": "hurt",
         "death": "death"
       },
-      "showcase": "showcase.webp"
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "archer-male-scout-2": {
       "dir": "archer-male-scout-2",
-      "height": 112,
+      "height": 96,
       "facing": 1,
-      "source": "4x8 sheet archer-male-scout-2.png",
       "portrait": "portrait.webp",
+      "source": "pixel art sheet (archer-male-tier2.webp), weapon drawn in the front fist",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -137,14 +163,19 @@
         "hit": "hurt",
         "death": "death"
       },
-      "showcase": "showcase.webp"
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "archer-male-ranger-3": {
       "dir": "archer-male-ranger-3",
-      "height": 112,
+      "height": 96,
       "facing": 1,
-      "source": "4x8 sheet archer-male-ranger-3.png",
       "portrait": "portrait.webp",
+      "source": "pixel art sheet (archer-male-tier3.webp), weapon drawn in the front fist",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -155,14 +186,19 @@
         "hit": "hurt",
         "death": "death"
       },
-      "showcase": "showcase.webp"
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "archer-male-scout-3": {
       "dir": "archer-male-scout-3",
-      "height": 112,
+      "height": 96,
       "facing": 1,
-      "source": "4x8 sheet archer-male-scout-3.png",
       "portrait": "portrait.webp",
+      "source": "pixel art sheet (archer-male-tier3.webp), weapon drawn in the front fist",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -173,13 +209,19 @@
         "hit": "hurt",
         "death": "death"
       },
-      "showcase": "showcase.webp"
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "archer-female-ranger-2": {
-      "dir": "archer-female-ranger-2-painted",
-      "height": 112,
+      "dir": "archer-female-ranger-2",
+      "height": 96,
       "facing": 1,
-      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (archer-female-tier2.webp), weapon drawn in the front fist",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -190,14 +232,19 @@
         "hit": "hurt",
         "death": "death"
       },
-      "portrait": "portrait.webp",
-      "showcase": "showcase.webp"
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "archer-female-scout-2": {
-      "dir": "archer-female-ranger-2-painted",
-      "height": 112,
+      "dir": "archer-female-scout-2",
+      "height": 96,
       "facing": 1,
-      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (archer-female-tier2.webp), weapon drawn in the front fist",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -208,14 +255,19 @@
         "hit": "hurt",
         "death": "death"
       },
-      "portrait": "portrait.webp",
-      "showcase": "showcase.webp"
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "archer-female-ranger-3": {
-      "dir": "archer-female-ranger-3-painted",
-      "height": 112,
+      "dir": "archer-female-ranger-3",
+      "height": 96,
       "facing": 1,
-      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (archer-female-tier3.webp), weapon drawn in the front fist",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -226,14 +278,19 @@
         "hit": "hurt",
         "death": "death"
       },
-      "portrait": "portrait.webp",
-      "showcase": "showcase.webp"
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "archer-female-scout-3": {
-      "dir": "archer-female-ranger-3-painted",
-      "height": 112,
+      "dir": "archer-female-scout-3",
+      "height": 96,
       "facing": 1,
-      "source": "supplied painted sheets; states without frames use procedural motion on idle",
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (archer-female-tier3.webp), weapon drawn in the front fist",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -244,12 +301,16 @@
         "hit": "hurt",
         "death": "death"
       },
-      "portrait": "portrait.webp",
-      "showcase": "showcase.webp"
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "swordsman-female-duelist-2": {
       "dir": "swordsman-female-duelist-2",
-      "height": 112,
+      "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
       "source": "pixel art sheet (swordsman-female-tier2.webp), weapon drawn in the front fist",
@@ -272,7 +333,7 @@
     },
     "swordsman-female-duelist-3": {
       "dir": "swordsman-female-duelist-3",
-      "height": 112,
+      "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
       "source": "pixel art sheet (swordsman-female-tier3.webp), weapon drawn in the front fist",
@@ -295,7 +356,7 @@
     },
     "swordsman-female-guardian-2": {
       "dir": "swordsman-female-guardian-2",
-      "height": 112,
+      "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
       "source": "pixel art sheet (swordsman-female-tier2.webp), weapon drawn in the front fist",
@@ -318,7 +379,7 @@
     },
     "swordsman-female-guardian-3": {
       "dir": "swordsman-female-guardian-3",
-      "height": 112,
+      "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
       "source": "pixel art sheet (swordsman-female-tier3.webp), weapon drawn in the front fist",
@@ -343,7 +404,7 @@
       "dir": "mage-female-arcanist-2",
       "height": 112,
       "facing": 1,
-      "source": "4x8 sheet mage-female-arcanist-2.png",
+      "source": "4x8 sheet mage-female-arcanist-2.png; pixelated (pixelate_sprites.py)",
       "portrait": "portrait.webp",
       "actions": {
         "idle": "idle",
@@ -355,13 +416,13 @@
         "hit": "hurt",
         "death": "death"
       },
-      "showcase": "showcase.webp"
+      "pixel": true
     },
     "mage-female-arcanist-3": {
       "dir": "mage-female-arcanist-3",
       "height": 112,
       "facing": 1,
-      "source": "4x8 sheet mage-female-arcanist-3.png",
+      "source": "4x8 sheet mage-female-arcanist-3.png; pixelated (pixelate_sprites.py)",
       "portrait": "portrait.webp",
       "actions": {
         "idle": "idle",
@@ -373,13 +434,13 @@
         "hit": "hurt",
         "death": "death"
       },
-      "showcase": "showcase.webp"
+      "pixel": true
     },
     "mage-female-oracle-2": {
       "dir": "mage-female-oracle-2",
       "height": 112,
       "facing": 1,
-      "source": "4x8 sheet mage-female-oracle-2.png",
+      "source": "4x8 sheet mage-female-oracle-2.png; pixelated (pixelate_sprites.py)",
       "portrait": "portrait.webp",
       "actions": {
         "idle": "idle",
@@ -391,13 +452,13 @@
         "hit": "hurt",
         "death": "death"
       },
-      "showcase": "showcase.webp"
+      "pixel": true
     },
     "mage-female-oracle-3": {
       "dir": "mage-female-oracle-3",
       "height": 112,
       "facing": 1,
-      "source": "4x8 sheet mage-female-oracle-3.png",
+      "source": "4x8 sheet mage-female-oracle-3.png; pixelated (pixelate_sprites.py)",
       "portrait": "portrait.webp",
       "actions": {
         "idle": "idle",
@@ -409,14 +470,14 @@
         "hit": "hurt",
         "death": "death"
       },
-      "showcase": "showcase.webp"
+      "pixel": true
     },
     "swordsman-male-duelist-2": {
       "dir": "swordsman-male-duelist-2",
-      "height": 112,
+      "height": 96,
       "facing": 1,
-      "source": "4x8 sheet swordsman-male-duelist-2.png",
       "portrait": "portrait.webp",
+      "source": "pixel art sheet (swordsman-male-tier2.webp), weapon drawn in the front fist",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -427,14 +488,19 @@
         "hit": "hurt",
         "death": "death"
       },
-      "showcase": "showcase.webp"
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "swordsman-male-duelist-3": {
       "dir": "swordsman-male-duelist-3",
-      "height": 112,
+      "height": 96,
       "facing": 1,
-      "source": "4x8 sheet swordsman-male-duelist-3.png",
       "portrait": "portrait.webp",
+      "source": "pixel art sheet (swordsman-male-tier3.webp), weapon drawn in the front fist",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -445,14 +511,19 @@
         "hit": "hurt",
         "death": "death"
       },
-      "showcase": "showcase.webp"
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "swordsman-male-guardian-2": {
       "dir": "swordsman-male-guardian-2",
-      "height": 112,
+      "height": 96,
       "facing": 1,
-      "source": "4x8 sheet swordsman-male-guardian-2.png",
       "portrait": "portrait.webp",
+      "source": "pixel art sheet (swordsman-male-tier2.webp), weapon drawn in the front fist",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -463,14 +534,19 @@
         "hit": "hurt",
         "death": "death"
       },
-      "showcase": "showcase.webp"
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "swordsman-male-guardian-3": {
       "dir": "swordsman-male-guardian-3",
-      "height": 112,
+      "height": 96,
       "facing": 1,
-      "source": "4x8 sheet swordsman-male-guardian-3.png",
       "portrait": "portrait.webp",
+      "source": "pixel art sheet (swordsman-male-tier3.webp), weapon drawn in the front fist",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -481,13 +557,18 @@
         "hit": "hurt",
         "death": "death"
       },
-      "showcase": "showcase.webp"
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "mage-male-oracle-2": {
       "dir": "mage-male-oracle-2",
       "height": 112,
       "facing": 1,
-      "source": "4x8 sheet mage-male-oracle-2.png",
+      "source": "4x8 sheet mage-male-oracle-2.png; pixelated (pixelate_sprites.py)",
       "portrait": "portrait.webp",
       "actions": {
         "idle": "idle",
@@ -499,13 +580,13 @@
         "hit": "hurt",
         "death": "death"
       },
-      "showcase": "showcase.webp"
+      "pixel": true
     },
     "mage-male-oracle-3": {
       "dir": "mage-male-oracle-3",
       "height": 112,
       "facing": 1,
-      "source": "4x8 sheet mage-male-oracle-3.png",
+      "source": "4x8 sheet mage-male-oracle-3.png; pixelated (pixelate_sprites.py)",
       "portrait": "portrait.webp",
       "actions": {
         "idle": "idle",
@@ -517,13 +598,13 @@
         "hit": "hurt",
         "death": "death"
       },
-      "showcase": "showcase.webp"
+      "pixel": true
     },
     "mage-male-arcanist-2": {
       "dir": "mage-male-arcanist-2",
       "height": 112,
       "facing": 1,
-      "source": "4x8 sheet mage-male-arcanist-2.png",
+      "source": "4x8 sheet mage-male-arcanist-2.png; pixelated (pixelate_sprites.py)",
       "portrait": "portrait.webp",
       "actions": {
         "idle": "idle",
@@ -535,13 +616,13 @@
         "hit": "hurt",
         "death": "death"
       },
-      "showcase": "showcase.webp"
+      "pixel": true
     },
     "mage-male-arcanist-3": {
       "dir": "mage-male-arcanist-3",
       "height": 112,
       "facing": 1,
-      "source": "4x8 sheet mage-male-arcanist-3.png",
+      "source": "4x8 sheet mage-male-arcanist-3.png; pixelated (pixelate_sprites.py)",
       "portrait": "portrait.webp",
       "actions": {
         "idle": "idle",
@@ -553,14 +634,14 @@
         "hit": "hurt",
         "death": "death"
       },
-      "showcase": "showcase.webp"
+      "pixel": true
     },
     "priest-male": {
-      "dir": "priest-male-painted",
-      "height": 125,
+      "dir": "priest-male",
+      "height": 96,
       "facing": 1,
-      "portrait": "portrait-robe-1.webp",
-      "source": "painted Lanna source, articulated interchangeable layers",
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (priest-male-tier1.webp), empty hands (monks hold no weapon)",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -572,68 +653,17 @@
         "death": "death"
       },
       "layers": {
-        "order": [
-          "outfit",
-          "weapon",
-          "head"
-        ],
-        "weaponFront": true,
-        "weaponArt": "rig",
-        "looks": {
-          "outfit": [
-            "robe-1",
-            "robe-2",
-            "robe-3",
-            "robe-4",
-            "bishop-2",
-            "bishop-3",
-            "templar-2",
-            "templar-3"
-          ],
-          "head": [
-            "hair",
-            "circlet",
-            "hood",
-            "mitre",
-            "bishop-2",
-            "bishop-3",
-            "templar-2",
-            "templar-3"
-          ],
-          "weapon": [
-            "staff-1",
-            "staff-2",
-            "staff-3",
-            "staff-4"
-          ]
-        },
-        "parts": {},
+        "looks": {},
         "hand": "hand",
-        "hands": {
-          "robe-1": "hand/novice",
-          "robe-2": "hand/novice",
-          "robe-3": "hand/novice",
-          "robe-4": "hand/novice",
-          "bishop-2": "hand/bishop",
-          "bishop-3": "hand/bishop",
-          "templar-2": "hand/templar",
-          "templar-3": "hand/templar"
-        },
-        "weapons": {
-          "bishop-2": "weapon/bishop",
-          "bishop-3": "weapon/bishop",
-          "templar-2": "weapon/templar",
-          "templar-3": "weapon/templar"
-        },
-        "painted": true
+        "pixel": true
       }
     },
     "priest-female": {
-      "dir": "priest-female-painted",
-      "height": 125,
+      "dir": "priest-female",
+      "height": 96,
       "facing": 1,
-      "portrait": "portrait-robe-1.webp",
-      "source": "painted Lanna source, articulated interchangeable layers",
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (priest-female-tier1.webp), empty hands (monks hold no weapon)",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -645,68 +675,17 @@
         "death": "death"
       },
       "layers": {
-        "order": [
-          "outfit",
-          "weapon",
-          "head"
-        ],
-        "weaponFront": true,
-        "weaponArt": "rig",
-        "looks": {
-          "outfit": [
-            "robe-1",
-            "robe-2",
-            "robe-3",
-            "robe-4",
-            "bishop-2",
-            "bishop-3",
-            "templar-2",
-            "templar-3"
-          ],
-          "head": [
-            "hair",
-            "circlet",
-            "hood",
-            "mitre",
-            "bishop-2",
-            "bishop-3",
-            "templar-2",
-            "templar-3"
-          ],
-          "weapon": [
-            "staff-1",
-            "staff-2",
-            "staff-3",
-            "staff-4"
-          ]
-        },
-        "parts": {},
+        "looks": {},
         "hand": "hand",
-        "hands": {
-          "robe-1": "hand/novice",
-          "robe-2": "hand/novice",
-          "robe-3": "hand/novice",
-          "robe-4": "hand/novice",
-          "bishop-2": "hand/bishop",
-          "bishop-3": "hand/bishop",
-          "templar-2": "hand/templar",
-          "templar-3": "hand/templar"
-        },
-        "weapons": {
-          "bishop-2": "weapon/bishop",
-          "bishop-3": "weapon/bishop",
-          "templar-2": "weapon/templar",
-          "templar-3": "weapon/templar"
-        },
-        "painted": true
+        "pixel": true
       }
     },
     "priest-male-bishop-2": {
-      "dir": "priest-male-painted",
-      "height": 125,
+      "dir": "priest-male-bishop-2",
+      "height": 96,
       "facing": 1,
-      "portrait": "portrait-bishop-2.webp",
-      "source": "painted Lanna source, articulated interchangeable layers",
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (priest-male-tier2.webp), empty hands (monks hold no weapon)",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -718,68 +697,17 @@
         "death": "death"
       },
       "layers": {
-        "order": [
-          "outfit",
-          "weapon",
-          "head"
-        ],
-        "weaponFront": true,
-        "weaponArt": "rig",
-        "looks": {
-          "outfit": [
-            "robe-1",
-            "robe-2",
-            "robe-3",
-            "robe-4",
-            "bishop-2",
-            "bishop-3",
-            "templar-2",
-            "templar-3"
-          ],
-          "head": [
-            "hair",
-            "circlet",
-            "hood",
-            "mitre",
-            "bishop-2",
-            "bishop-3",
-            "templar-2",
-            "templar-3"
-          ],
-          "weapon": [
-            "staff-1",
-            "staff-2",
-            "staff-3",
-            "staff-4"
-          ]
-        },
-        "parts": {},
+        "looks": {},
         "hand": "hand",
-        "hands": {
-          "robe-1": "hand/novice",
-          "robe-2": "hand/novice",
-          "robe-3": "hand/novice",
-          "robe-4": "hand/novice",
-          "bishop-2": "hand/bishop",
-          "bishop-3": "hand/bishop",
-          "templar-2": "hand/templar",
-          "templar-3": "hand/templar"
-        },
-        "weapons": {
-          "bishop-2": "weapon/bishop",
-          "bishop-3": "weapon/bishop",
-          "templar-2": "weapon/templar",
-          "templar-3": "weapon/templar"
-        },
-        "painted": true
+        "pixel": true
       }
     },
     "priest-male-bishop-3": {
-      "dir": "priest-male-painted",
-      "height": 125,
+      "dir": "priest-male-bishop-3",
+      "height": 96,
       "facing": 1,
-      "portrait": "portrait-bishop-3.webp",
-      "source": "painted Lanna source, articulated interchangeable layers",
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (priest-male-tier3.webp), empty hands (monks hold no weapon)",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -791,68 +719,17 @@
         "death": "death"
       },
       "layers": {
-        "order": [
-          "outfit",
-          "weapon",
-          "head"
-        ],
-        "weaponFront": true,
-        "weaponArt": "rig",
-        "looks": {
-          "outfit": [
-            "robe-1",
-            "robe-2",
-            "robe-3",
-            "robe-4",
-            "bishop-2",
-            "bishop-3",
-            "templar-2",
-            "templar-3"
-          ],
-          "head": [
-            "hair",
-            "circlet",
-            "hood",
-            "mitre",
-            "bishop-2",
-            "bishop-3",
-            "templar-2",
-            "templar-3"
-          ],
-          "weapon": [
-            "staff-1",
-            "staff-2",
-            "staff-3",
-            "staff-4"
-          ]
-        },
-        "parts": {},
+        "looks": {},
         "hand": "hand",
-        "hands": {
-          "robe-1": "hand/novice",
-          "robe-2": "hand/novice",
-          "robe-3": "hand/novice",
-          "robe-4": "hand/novice",
-          "bishop-2": "hand/bishop",
-          "bishop-3": "hand/bishop",
-          "templar-2": "hand/templar",
-          "templar-3": "hand/templar"
-        },
-        "weapons": {
-          "bishop-2": "weapon/bishop",
-          "bishop-3": "weapon/bishop",
-          "templar-2": "weapon/templar",
-          "templar-3": "weapon/templar"
-        },
-        "painted": true
+        "pixel": true
       }
     },
     "priest-male-templar-2": {
-      "dir": "priest-male-painted",
-      "height": 125,
+      "dir": "priest-male-templar-2",
+      "height": 96,
       "facing": 1,
-      "portrait": "portrait-templar-2.webp",
-      "source": "painted Lanna source, articulated interchangeable layers",
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (priest-male-tier2.webp), empty hands (monks hold no weapon)",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -864,68 +741,17 @@
         "death": "death"
       },
       "layers": {
-        "order": [
-          "outfit",
-          "weapon",
-          "head"
-        ],
-        "weaponFront": true,
-        "weaponArt": "rig",
-        "looks": {
-          "outfit": [
-            "robe-1",
-            "robe-2",
-            "robe-3",
-            "robe-4",
-            "bishop-2",
-            "bishop-3",
-            "templar-2",
-            "templar-3"
-          ],
-          "head": [
-            "hair",
-            "circlet",
-            "hood",
-            "mitre",
-            "bishop-2",
-            "bishop-3",
-            "templar-2",
-            "templar-3"
-          ],
-          "weapon": [
-            "staff-1",
-            "staff-2",
-            "staff-3",
-            "staff-4"
-          ]
-        },
-        "parts": {},
+        "looks": {},
         "hand": "hand",
-        "hands": {
-          "robe-1": "hand/novice",
-          "robe-2": "hand/novice",
-          "robe-3": "hand/novice",
-          "robe-4": "hand/novice",
-          "bishop-2": "hand/bishop",
-          "bishop-3": "hand/bishop",
-          "templar-2": "hand/templar",
-          "templar-3": "hand/templar"
-        },
-        "weapons": {
-          "bishop-2": "weapon/bishop",
-          "bishop-3": "weapon/bishop",
-          "templar-2": "weapon/templar",
-          "templar-3": "weapon/templar"
-        },
-        "painted": true
+        "pixel": true
       }
     },
     "priest-male-templar-3": {
-      "dir": "priest-male-painted",
-      "height": 125,
+      "dir": "priest-male-templar-3",
+      "height": 96,
       "facing": 1,
-      "portrait": "portrait-templar-3.webp",
-      "source": "painted Lanna source, articulated interchangeable layers",
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (priest-male-tier3.webp), empty hands (monks hold no weapon)",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -937,68 +763,17 @@
         "death": "death"
       },
       "layers": {
-        "order": [
-          "outfit",
-          "weapon",
-          "head"
-        ],
-        "weaponFront": true,
-        "weaponArt": "rig",
-        "looks": {
-          "outfit": [
-            "robe-1",
-            "robe-2",
-            "robe-3",
-            "robe-4",
-            "bishop-2",
-            "bishop-3",
-            "templar-2",
-            "templar-3"
-          ],
-          "head": [
-            "hair",
-            "circlet",
-            "hood",
-            "mitre",
-            "bishop-2",
-            "bishop-3",
-            "templar-2",
-            "templar-3"
-          ],
-          "weapon": [
-            "staff-1",
-            "staff-2",
-            "staff-3",
-            "staff-4"
-          ]
-        },
-        "parts": {},
+        "looks": {},
         "hand": "hand",
-        "hands": {
-          "robe-1": "hand/novice",
-          "robe-2": "hand/novice",
-          "robe-3": "hand/novice",
-          "robe-4": "hand/novice",
-          "bishop-2": "hand/bishop",
-          "bishop-3": "hand/bishop",
-          "templar-2": "hand/templar",
-          "templar-3": "hand/templar"
-        },
-        "weapons": {
-          "bishop-2": "weapon/bishop",
-          "bishop-3": "weapon/bishop",
-          "templar-2": "weapon/templar",
-          "templar-3": "weapon/templar"
-        },
-        "painted": true
+        "pixel": true
       }
     },
     "priest-female-bishop-2": {
-      "dir": "priest-female-painted",
-      "height": 125,
+      "dir": "priest-female-bishop-2",
+      "height": 96,
       "facing": 1,
-      "portrait": "portrait-bishop-2.webp",
-      "source": "painted Lanna source, articulated interchangeable layers",
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (priest-female-tier2.webp), empty hands (monks hold no weapon)",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -1010,68 +785,17 @@
         "death": "death"
       },
       "layers": {
-        "order": [
-          "outfit",
-          "weapon",
-          "head"
-        ],
-        "weaponFront": true,
-        "weaponArt": "rig",
-        "looks": {
-          "outfit": [
-            "robe-1",
-            "robe-2",
-            "robe-3",
-            "robe-4",
-            "bishop-2",
-            "bishop-3",
-            "templar-2",
-            "templar-3"
-          ],
-          "head": [
-            "hair",
-            "circlet",
-            "hood",
-            "mitre",
-            "bishop-2",
-            "bishop-3",
-            "templar-2",
-            "templar-3"
-          ],
-          "weapon": [
-            "staff-1",
-            "staff-2",
-            "staff-3",
-            "staff-4"
-          ]
-        },
-        "parts": {},
+        "looks": {},
         "hand": "hand",
-        "hands": {
-          "robe-1": "hand/novice",
-          "robe-2": "hand/novice",
-          "robe-3": "hand/novice",
-          "robe-4": "hand/novice",
-          "bishop-2": "hand/bishop",
-          "bishop-3": "hand/bishop",
-          "templar-2": "hand/templar",
-          "templar-3": "hand/templar"
-        },
-        "weapons": {
-          "bishop-2": "weapon/bishop",
-          "bishop-3": "weapon/bishop",
-          "templar-2": "weapon/templar",
-          "templar-3": "weapon/templar"
-        },
-        "painted": true
+        "pixel": true
       }
     },
     "priest-female-bishop-3": {
-      "dir": "priest-female-painted",
-      "height": 125,
+      "dir": "priest-female-bishop-3",
+      "height": 96,
       "facing": 1,
-      "portrait": "portrait-bishop-3.webp",
-      "source": "painted Lanna source, articulated interchangeable layers",
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (priest-female-tier3.webp), empty hands (monks hold no weapon)",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -1083,68 +807,17 @@
         "death": "death"
       },
       "layers": {
-        "order": [
-          "outfit",
-          "weapon",
-          "head"
-        ],
-        "weaponFront": true,
-        "weaponArt": "rig",
-        "looks": {
-          "outfit": [
-            "robe-1",
-            "robe-2",
-            "robe-3",
-            "robe-4",
-            "bishop-2",
-            "bishop-3",
-            "templar-2",
-            "templar-3"
-          ],
-          "head": [
-            "hair",
-            "circlet",
-            "hood",
-            "mitre",
-            "bishop-2",
-            "bishop-3",
-            "templar-2",
-            "templar-3"
-          ],
-          "weapon": [
-            "staff-1",
-            "staff-2",
-            "staff-3",
-            "staff-4"
-          ]
-        },
-        "parts": {},
+        "looks": {},
         "hand": "hand",
-        "hands": {
-          "robe-1": "hand/novice",
-          "robe-2": "hand/novice",
-          "robe-3": "hand/novice",
-          "robe-4": "hand/novice",
-          "bishop-2": "hand/bishop",
-          "bishop-3": "hand/bishop",
-          "templar-2": "hand/templar",
-          "templar-3": "hand/templar"
-        },
-        "weapons": {
-          "bishop-2": "weapon/bishop",
-          "bishop-3": "weapon/bishop",
-          "templar-2": "weapon/templar",
-          "templar-3": "weapon/templar"
-        },
-        "painted": true
+        "pixel": true
       }
     },
     "priest-female-templar-2": {
-      "dir": "priest-female-painted",
-      "height": 125,
+      "dir": "priest-female-templar-2",
+      "height": 96,
       "facing": 1,
-      "portrait": "portrait-templar-2.webp",
-      "source": "painted Lanna source, articulated interchangeable layers",
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (priest-female-tier2.webp), empty hands (monks hold no weapon)",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -1156,68 +829,17 @@
         "death": "death"
       },
       "layers": {
-        "order": [
-          "outfit",
-          "weapon",
-          "head"
-        ],
-        "weaponFront": true,
-        "weaponArt": "rig",
-        "looks": {
-          "outfit": [
-            "robe-1",
-            "robe-2",
-            "robe-3",
-            "robe-4",
-            "bishop-2",
-            "bishop-3",
-            "templar-2",
-            "templar-3"
-          ],
-          "head": [
-            "hair",
-            "circlet",
-            "hood",
-            "mitre",
-            "bishop-2",
-            "bishop-3",
-            "templar-2",
-            "templar-3"
-          ],
-          "weapon": [
-            "staff-1",
-            "staff-2",
-            "staff-3",
-            "staff-4"
-          ]
-        },
-        "parts": {},
+        "looks": {},
         "hand": "hand",
-        "hands": {
-          "robe-1": "hand/novice",
-          "robe-2": "hand/novice",
-          "robe-3": "hand/novice",
-          "robe-4": "hand/novice",
-          "bishop-2": "hand/bishop",
-          "bishop-3": "hand/bishop",
-          "templar-2": "hand/templar",
-          "templar-3": "hand/templar"
-        },
-        "weapons": {
-          "bishop-2": "weapon/bishop",
-          "bishop-3": "weapon/bishop",
-          "templar-2": "weapon/templar",
-          "templar-3": "weapon/templar"
-        },
-        "painted": true
+        "pixel": true
       }
     },
     "priest-female-templar-3": {
-      "dir": "priest-female-painted",
-      "height": 125,
+      "dir": "priest-female-templar-3",
+      "height": 96,
       "facing": 1,
-      "portrait": "portrait-templar-3.webp",
-      "source": "painted Lanna source, articulated interchangeable layers",
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (priest-female-tier3.webp), empty hands (monks hold no weapon)",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -1229,65 +851,14 @@
         "death": "death"
       },
       "layers": {
-        "order": [
-          "outfit",
-          "weapon",
-          "head"
-        ],
-        "weaponFront": true,
-        "weaponArt": "rig",
-        "looks": {
-          "outfit": [
-            "robe-1",
-            "robe-2",
-            "robe-3",
-            "robe-4",
-            "bishop-2",
-            "bishop-3",
-            "templar-2",
-            "templar-3"
-          ],
-          "head": [
-            "hair",
-            "circlet",
-            "hood",
-            "mitre",
-            "bishop-2",
-            "bishop-3",
-            "templar-2",
-            "templar-3"
-          ],
-          "weapon": [
-            "staff-1",
-            "staff-2",
-            "staff-3",
-            "staff-4"
-          ]
-        },
-        "parts": {},
+        "looks": {},
         "hand": "hand",
-        "hands": {
-          "robe-1": "hand/novice",
-          "robe-2": "hand/novice",
-          "robe-3": "hand/novice",
-          "robe-4": "hand/novice",
-          "bishop-2": "hand/bishop",
-          "bishop-3": "hand/bishop",
-          "templar-2": "hand/templar",
-          "templar-3": "hand/templar"
-        },
-        "weapons": {
-          "bishop-2": "weapon/bishop",
-          "bishop-3": "weapon/bishop",
-          "templar-2": "weapon/templar",
-          "templar-3": "weapon/templar"
-        },
-        "painted": true
+        "pixel": true
       }
     },
     "female-costume-crimson": {
       "dir": "female-costume-crimson",
-      "height": 112,
+      "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
       "source": "pixel art sheet (swordsman-female-tier1.webp), weapon drawn in the front fist",
@@ -1310,7 +881,7 @@
     },
     "female-costume-1": {
       "dir": "female-costume-1",
-      "height": 112,
+      "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
       "source": "pixel art sheet (costume-1.webp), weapon drawn in the front fist",
@@ -1333,7 +904,7 @@
     },
     "female-costume-2": {
       "dir": "female-costume-2",
-      "height": 112,
+      "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
       "source": "pixel art sheet (costume-2.webp), weapon drawn in the front fist",
@@ -1356,7 +927,7 @@
     },
     "female-costume-3": {
       "dir": "female-costume-3",
-      "height": 112,
+      "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
       "source": "pixel art sheet (costume-3.webp), weapon drawn in the front fist",
@@ -1379,7 +950,7 @@
     },
     "female-costume-4": {
       "dir": "female-costume-4",
-      "height": 112,
+      "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
       "source": "pixel art sheet (costume-4.webp), weapon drawn in the front fist",
@@ -1402,7 +973,7 @@
     },
     "female-costume-5": {
       "dir": "female-costume-5",
-      "height": 112,
+      "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
       "source": "pixel art sheet (costume-5.webp), weapon drawn in the front fist",
@@ -1425,7 +996,7 @@
     },
     "female-costume-6": {
       "dir": "female-costume-6",
-      "height": 112,
+      "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
       "source": "pixel art sheet (costume-6.webp), weapon drawn in the front fist",
@@ -1448,10 +1019,217 @@
     },
     "female-costume-7": {
       "dir": "female-costume-7",
-      "height": 112,
+      "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
       "source": "pixel art sheet (costume-7.webp), weapon drawn in the front fist",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
+    },
+    "male-costume-mcrimson": {
+      "dir": "male-costume-mcrimson",
+      "height": 96,
+      "facing": 1,
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (swordsman-male-tier1.webp), weapon drawn in the front fist",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
+    },
+    "male-costume-mnoble": {
+      "dir": "male-costume-mnoble",
+      "height": 96,
+      "facing": 1,
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (male-costume-mnoble.webp), weapon drawn in the front fist",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
+    },
+    "male-costume-mmohom": {
+      "dir": "male-costume-mmohom",
+      "height": 96,
+      "facing": 1,
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (male-costume-mmohom.webp), weapon drawn in the front fist",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
+    },
+    "male-costume-mstreet": {
+      "dir": "male-costume-mstreet",
+      "height": 96,
+      "facing": 1,
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (male-costume-mstreet.webp), weapon drawn in the front fist",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
+    },
+    "male-costume-mtang": {
+      "dir": "male-costume-mtang",
+      "height": 96,
+      "facing": 1,
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (male-costume-mtang.webp), weapon drawn in the front fist",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
+    },
+    "male-costume-mbeach": {
+      "dir": "male-costume-mbeach",
+      "height": 96,
+      "facing": 1,
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (male-costume-mbeach.webp), weapon drawn in the front fist",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
+    },
+    "male-costume-mwinter": {
+      "dir": "male-costume-mwinter",
+      "height": 96,
+      "facing": 1,
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (male-costume-mwinter.webp), weapon drawn in the front fist",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
+    },
+    "male-costume-mhunter": {
+      "dir": "male-costume-mhunter",
+      "height": 96,
+      "facing": 1,
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (archer-male-tier1.webp), weapon drawn in the front fist",
+      "actions": {
+        "idle": "idle",
+        "walk": "walk",
+        "run": "run",
+        "jump": "jump",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hurt",
+        "death": "death"
+      },
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
+    },
+    "female-costume-hunter": {
+      "dir": "female-costume-hunter",
+      "height": 96,
+      "facing": 1,
+      "portrait": "portrait.webp",
+      "source": "pixel art sheet (archer-female-tier1.webp), weapon drawn in the front fist",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -1476,7 +1254,7 @@
       "height": 72,
       "facing": 1,
       "flyer": true,
-      "source": "supplied painted sheet",
+      "source": "supplied painted sheet; pixelated (pixelate_sprites.py)",
       "actions": {
         "idle": "idle",
         "move": "move",
@@ -1484,14 +1262,15 @@
         "hit": "hit",
         "death": "death",
         "spawn": "spawn"
-      }
+      },
+      "pixel": true
     },
     "batking": {
       "dir": "monsters/batking",
       "height": 175,
       "facing": 1,
       "flyer": true,
-      "source": "supplied painted sheet",
+      "source": "supplied painted sheet; pixelated (pixelate_sprites.py)",
       "actions": {
         "idle": "idle",
         "move": "move",
@@ -1499,14 +1278,15 @@
         "hit": "hit",
         "death": "death",
         "spawn": "spawn"
-      }
+      },
+      "pixel": true
     },
     "boar": {
       "dir": "monsters/boar",
       "height": 78,
       "facing": 1,
       "flyer": false,
-      "source": "supplied painted sheet",
+      "source": "supplied painted sheet; pixelated (pixelate_sprites.py)",
       "actions": {
         "idle": "idle",
         "move": "move",
@@ -1514,14 +1294,15 @@
         "hit": "hit",
         "death": "death",
         "spawn": "spawn"
-      }
+      },
+      "pixel": true
     },
     "goblin": {
       "dir": "monsters/goblin",
       "height": 92,
       "facing": 1,
       "flyer": false,
-      "source": "supplied painted sheet",
+      "source": "supplied painted sheet; pixelated (pixelate_sprites.py)",
       "actions": {
         "idle": "idle",
         "move": "move",
@@ -1529,14 +1310,15 @@
         "hit": "hit",
         "death": "death",
         "spawn": "spawn"
-      }
+      },
+      "pixel": true
     },
     "golem": {
       "dir": "monsters/golem",
       "height": 185,
       "facing": 1,
       "flyer": false,
-      "source": "supplied painted sheet",
+      "source": "supplied painted sheet; pixelated (pixelate_sprites.py)",
       "actions": {
         "idle": "idle",
         "move": "move",
@@ -1544,14 +1326,15 @@
         "hit": "hit",
         "death": "death",
         "spawn": "spawn"
-      }
+      },
+      "pixel": true
     },
     "mushroom": {
       "dir": "monsters/mushroom",
       "height": 82,
       "facing": 1,
       "flyer": false,
-      "source": "supplied painted sheet",
+      "source": "supplied painted sheet; pixelated (pixelate_sprites.py)",
       "actions": {
         "idle": "idle",
         "move": "move",
@@ -1559,14 +1342,15 @@
         "hit": "hit",
         "death": "death",
         "spawn": "spawn"
-      }
+      },
+      "pixel": true
     },
     "serpent": {
       "dir": "monsters/serpent",
       "height": 190,
       "facing": 1,
       "flyer": false,
-      "source": "supplied painted sheet",
+      "source": "supplied painted sheet; pixelated (pixelate_sprites.py)",
       "actions": {
         "idle": "idle",
         "move": "move",
@@ -1574,14 +1358,15 @@
         "hit": "hit",
         "death": "death",
         "spawn": "spawn"
-      }
+      },
+      "pixel": true
     },
     "wolf": {
       "dir": "monsters/wolf",
       "height": 80,
       "facing": 1,
       "flyer": false,
-      "source": "supplied painted sheet",
+      "source": "supplied painted sheet; pixelated (pixelate_sprites.py)",
       "actions": {
         "idle": "idle",
         "move": "move",
@@ -1589,50 +1374,55 @@
         "hit": "hit",
         "death": "death",
         "spawn": "spawn"
-      }
+      },
+      "pixel": true
     }
   },
-  "version": 1795033230097089000,
+  "version": 1795035855694009000,
   "npcs": {
     "elder": {
       "dir": "npcs/elder",
       "height": 104,
       "facing": 1,
-      "source": "supplied painted sheet",
+      "source": "supplied painted sheet; pixelated (pixelate_sprites.py)",
       "actions": {
         "idle": "idle",
         "talk": "talk"
-      }
+      },
+      "pixel": true
     },
     "forge": {
       "dir": "npcs/forge",
       "height": 114,
       "facing": 1,
-      "source": "supplied painted sheet",
+      "source": "supplied painted sheet; pixelated (pixelate_sprites.py)",
       "actions": {
         "idle": "idle",
         "talk": "talk"
-      }
+      },
+      "pixel": true
     },
     "potion": {
       "dir": "npcs/potion",
       "height": 108,
       "facing": 1,
-      "source": "supplied painted sheet",
+      "source": "supplied painted sheet; pixelated (pixelate_sprites.py)",
       "actions": {
         "idle": "idle",
         "talk": "talk"
-      }
+      },
+      "pixel": true
     },
     "weapon": {
       "dir": "npcs/weapon",
       "height": 114,
       "facing": 1,
-      "source": "supplied painted sheet",
+      "source": "supplied painted sheet; pixelated (pixelate_sprites.py)",
       "actions": {
         "idle": "idle",
         "talk": "talk"
-      }
+      },
+      "pixel": true
     }
   }
 }

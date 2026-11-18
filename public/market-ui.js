@@ -2,8 +2,8 @@
 import { itemArt, supplyArt } from "/item-art.js";
 import { GEAR, SLOTS, RARITIES } from "/shared/rpg.js";
 import { ITEMS, CLASSES } from "/shared/config.js";
-import { COSTUME_ITEMS } from "/shared/costumes.js";
-import { statText } from "/rpg-ui.js?v=14";
+import { COSTUME_ITEMS, costumeFits } from "/shared/costumes.js";
+import { statText } from "/rpg-ui.js?v=16";
 
 // Stacks sell by count: supplies, and costumes (shared/costumes.js).
 const STACKS = ["hp", "mp", "ore", ...Object.keys(COSTUME_ITEMS)];
@@ -50,7 +50,7 @@ const group = (id) =>
       : "accessory";
 function detail(id) {
   if (isCostume(id))
-    return `ชุดแต่งกาย · ${RARITIES[COSTUME_ITEMS[id].rarity]} · สวมได้กับตัวละครหญิงทุกอาชีพ`;
+    return `ชุดแต่งกาย · ${RARITIES[COSTUME_ITEMS[id].rarity]} · ${costumeFits(id)}`;
   if (isStack(id)) return "ของใช้ · ซื้อเป็นกองได้";
   const g = GEAR[id];
   const cls = g.class ? " · " + (CLASSES[g.class]?.name || g.class) : "";

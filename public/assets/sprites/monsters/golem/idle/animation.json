@@ -22,12 +22,12 @@
   "loop": true,
   "bodyHeightPx": 169.0,
   "events": [],
-  "sampling": "linear",
+  "sampling": "nearest",
   "fallback": {
     "type": "png-atlas",
     "cellSize": [
-      362,
-      195
+      230,
+      124
     ],
     "pages": [
       {

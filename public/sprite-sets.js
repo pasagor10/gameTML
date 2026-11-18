@@ -227,6 +227,8 @@ function buildSet(scene, group, name, set) {
       // A single painted still: keep the procedural bob/tilt/lunge on it.
       still: !!set.still,
       flyer: !!set.flyer,
+      // Pixel art (layered pixel heroes, or sets made by pixelate_sprites.py).
+      pixel: !!(set.pixel || set.layers?.pixel),
       layers: group === "sets" ? set.layers || null : null,
       clips,
     };
@@ -467,9 +469,9 @@ export function playLayers(scene, holder, image, set, dress, registry) {
         r = image.rotation,
         texture = scene.textures.get(icon),
         tex = texture.getSourceImage(),
-        gx = w.upright ? 0.5 : 0.1 + 0.8 * w.grip,
+        gx = w.upright ? (w.gripX ?? 0.5) : 0.1 + 0.8 * w.grip,
         gy = w.upright ? w.grip : 0.9 - 0.8 * w.grip,
-        deg = sock[2] + (w.upright ? 90 : 45);
+        deg = w.upright ? (sock[2] + 90) * (w.tilt ?? 1) : sock[2] + 45;
       if (w.upright && texture._pixel !== true) {
         texture.setFilter(1);
         texture._pixel = true;
@@ -481,7 +483,7 @@ export function playLayers(scene, holder, image, set, dress, registry) {
         .setPosition(image.x + lx * Math.cos(r) - ly * Math.sin(r), image.y + lx * Math.sin(r) + ly * Math.cos(r))
         .setScale(
           w.upright
-            ? Math.abs(image.scaleY)
+            ? (w.length ? w.length / tex.height : 1) * Math.abs(image.scaleY)
             : (w.length * Math.abs(image.scaleY)) / (tex.width * 0.8 * Math.SQRT2),
         )
         .setFlip(flip, false)

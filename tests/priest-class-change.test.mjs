@@ -63,7 +63,6 @@ test("class changes update owner and observer appearance, keep the weapon, and s
       assert.ok(index.sets[expected]);
       assert.equal(p.equipment.weapon, "dawn_scepter");
       const look = heroLooks(p, index.sets[expected].layers.looks);
-      if (p.specialization) assert.equal(look.outfit, `${p.specialization}-${p.advanced ? 3 : 2}`);
     };
     appearance((await snapshot(owner, () => true)).self, "priest-female");
     for (const [event, data, spec, advanced] of [

@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "walk",
+  "artSource": "pixel sheet swordsman-male-tier2.webp",
+  "sourceSize": [
+    58,
+    54
+  ],
+  "encodedAnchor": [
+    33,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    140,
+    140,
+    140,
+    140
+  ],
+  "durationSeconds": 0.56,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      58,
+      54
+    ],
+    "pages": [
+      {
+        "file": "walk-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        45.9,
+        35.81,
+        -58
+      ],
+      [
+        44.85,
+        35.8,
+        -64
+      ],
+      [
+        43.67,
+        35.4,
+        -58
+      ],
+      [
+        46.03,
+        35.92,
+        -64
+      ]
+    ]
+  }
+}

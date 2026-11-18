@@ -1,83 +1,69 @@
 {
   "schemaVersion": "3.0",
   "name": "attack",
-  "artSource": "codeart layered (tools/sprite-rig/layered_rig.py)",
+  "artSource": "pixel sheet priest-female-tier1.webp",
   "sourceSize": [
-    300,
-    220
+    62,
+    54
   ],
-  "sourceAnchor": [
-    150.0,
-    208.0
+  "encodedAnchor": [
+    40,
+    51
   ],
-  "frameCount": 6,
+  "bodyHeightPx": 48,
+  "frameCount": 4,
   "durationsMs": [
-    60,
-    70,
     70,
     80,
-    90,
-    100
+    100,
+    130
   ],
-  "durationSeconds": 0.47,
-  "fps": 12.766,
+  "durationSeconds": 0.38,
   "loop": false,
-  "bodyHeightPx": 140,
+  "sampling": "nearest",
   "events": [
     {
       "name": "hit",
-      "atMs": 200,
-      "frame": 3
+      "atMs": 150
     }
   ],
-  "sampling": "linear",
-  "sockets": {
-    "hand": [
-      [
-        165.62,
-        166.09,
-        -61.35
-      ],
-      [
-        181.12,
-        140.42,
-        -69.95
-      ],
-      [
-        163.23,
-        114.12,
-        -78.54
-      ],
-      [
-        187.42,
-        138.77,
-        -47.6
-      ],
-      [
-        180.85,
-        155.14,
-        -54.48
-      ],
-      [
-        165.62,
-        166.09,
-        -61.35
-      ]
-    ]
-  },
   "fallback": {
     "type": "png-atlas",
     "cellSize": [
-      300,
-      220
+      62,
+      54
     ],
     "pages": [
       {
         "file": "attack-atlas-00.webp",
         "firstFrame": 0,
-        "frameCount": 6,
-        "columns": 6
+        "frameCount": 4,
+        "columns": 4
       }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        44.42,
+        49.66,
+        -75
+      ],
+      [
+        52.7,
+        26.98,
+        -140
+      ],
+      [
+        55.51,
+        29.89,
+        -5
+      ],
+      [
+        45.37,
+        49.65,
+        -55
+      ]
     ]
   }
 }

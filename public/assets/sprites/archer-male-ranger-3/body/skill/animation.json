@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "3.0",
+  "name": "skill",
+  "artSource": "pixel sheet archer-male-tier3.webp",
+  "sourceSize": [
+    69,
+    54
+  ],
+  "encodedAnchor": [
+    39,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    90,
+    110,
+    120,
+    170
+  ],
+  "durationSeconds": 0.49,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 200
+    }
+  ],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      69,
+      54
+    ],
+    "pages": [
+      {
+        "file": "skill-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        54.15,
+        45.39,
+        -30
+      ],
+      [
+        61.86,
+        34.63,
+        -160
+      ],
+      [
+        55.55,
+        34.07,
+        -95
+      ],
+      [
+        54.1,
+        41.49,
+        -50
+      ]
+    ]
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "walk",
+  "artSource": "pixel sheet archer-male-tier1.webp",
+  "sourceSize": [
+    65,
+    54
+  ],
+  "encodedAnchor": [
+    38,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    140,
+    140,
+    140,
+    140
+  ],
+  "durationSeconds": 0.56,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      65,
+      54
+    ],
+    "pages": [
+      {
+        "file": "walk-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        52.31,
+        36.2,
+        -58
+      ],
+      [
+        51.17,
+        35.88,
+        -64
+      ],
+      [
+        48.2,
+        34.34,
+        -58
+      ],
+      [
+        49.51,
+        31.8,
+        -64
+      ]
+    ]
+  }
+}

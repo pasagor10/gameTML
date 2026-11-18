@@ -5,7 +5,7 @@ import { observeHudLayout } from "/hud-layout.js";
 import { isWorldPointer } from "/world-input.js";
 import { SLOT_MACHINE } from "/shared/slots.js";
 import { slotPanelHtml, bindSlotPanel } from "/slots-ui.js?v=2";
-import { heroPortraitStyle } from "/hero-appearance.js?v=2";
+import { heroPortraitStyle } from "/hero-appearance.js?v=3";
 import { skillIcon, potionIcon, manaPotionIcon, autoIcon } from "/skill-icons.js?v=4";
 import { dungeonPlatforms, withinDungeonSign } from "/shared/dungeons.js";
 import { supplyArt, itemArtPath, costumeArtPath } from "/item-art.js";
@@ -25,7 +25,7 @@ import {
   rpgPanel,
   bindRpgPanel,
   gearShop,
-} from "/rpg-ui.js?v=14";
+} from "/rpg-ui.js?v=16";
 import {
   GEAR,
   RARITIES,
@@ -41,7 +41,7 @@ import {
 } from "/shared/rpg.js";
 import { createTownNpcs, footGlow, createRim } from "/town-npcs.js?v=10";
 import { updateEnhanceAura, AURA_LEVEL } from "/enhance-aura.js?v=3";
-import { marketHtml, shopManagerHtml, marketState } from "/market-ui.js?v=8";
+import { marketHtml, shopManagerHtml, marketState } from "/market-ui.js?v=9";
 import { sampleMotion } from "/shared/smoothing.js";
 import {
   questPanelHtml,
@@ -69,7 +69,7 @@ import {
   animateSlime,
   monsterDeath,
 } from "/combat-visuals.js?v=0.3.1";
-import { createSelectionPreview } from "/selection-scene.js?v=0.12.1";
+import { createSelectionPreview } from "/selection-scene.js?v=0.12.3";
 import {
   CLASSES,
   ITEMS,
@@ -100,8 +100,8 @@ import {
   playMonsterSet,
   playMonsterDeath,
   playLayers,
-} from "/sprite-sets.js?v=0.21.0";
-import { gearDress } from "/hero-gear.js?v=3";
+} from "/sprite-sets.js?v=0.21.1";
+import { gearDress } from "/hero-gear.js?v=5";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 observeHudLayout($("#game-screen"));
@@ -1907,7 +1907,7 @@ class Adventure extends Phaser.Scene {
     });
     queueSpriteSets(this);
     // Town kit: pieces, props, animated props and far layers (tools/town-kit).
-    const kit = (key) => `/assets/town-kit/${key}.webp?v=7`;
+    const kit = (key) => `/assets/town-kit/${key}.webp?v=8`;
     for (const piece of new Set(TOWN_LAYOUT.map((p) => p.piece)))
       this.load.image(`town-piece-${piece}`, kit(`piece-${piece}`));
     for (const key of new Set(TOWN_PROPS.map((p) => p.key)))
@@ -1939,17 +1939,17 @@ class Adventure extends Phaser.Scene {
     this.load.image(
       "player-market-stall",
       // 2x its display size: a 9x downscale shimmered and looked oversharp.
-      "/assets/town-kit/player-market-stall.webp?v=2",
+      "/assets/town-kit/player-market-stall.webp?v=3",
     );
-    this.load.image("slot-machine", "/assets/town-kit/slot-machine-v2.png");
-    this.load.image("cave", "/assets/cave.webp");
+    this.load.image("slot-machine", "/assets/town-kit/slot-machine-v2.png?v=2");
+    this.load.image("cave", "/assets/cave.webp?v=2");
     this.load.image("knight-motion", "/assets/animations/knight-female.png");
-    this.load.image("slime-motion", "/assets/animations/slime.png");
+    this.load.image("slime-motion", "/assets/animations/slime.png?v=2");
     this.load.spritesheet("heroes", "/assets/heroes.png", {
       frameWidth: 512,
       frameHeight: 512,
     });
-    this.load.spritesheet("monsters", "/assets/monsters.png", {
+    this.load.spritesheet("monsters", "/assets/monsters.png?v=2", {
       frameWidth: 418,
       frameHeight: 418,
     });
@@ -1957,6 +1957,11 @@ class Adventure extends Phaser.Scene {
   create() {
     scene = this;
     this.ready = true;
+    // Pixel art (tools/sprite-rig/pixelate_images.py): sample it nearest so
+    // the blocks stay square instead of blurring.
+    for (const key of this.textures.getTextureKeys())
+      if (/^(town-|item-|cave$|slot-machine$|player-market-stall$|slime-motion$|monsters$)/.test(key))
+        this.textures.get(key).setFilter(Phaser.Textures.FilterMode.NEAREST);
     // World text is drawn into a texture, then scaled by the camera zoom and
     // the screen's pixel ratio; at resolution 1 small Thai names go soft.
     // Render every world label at a higher resolution so it stays crisp.
@@ -2093,11 +2098,13 @@ class Adventure extends Phaser.Scene {
       portrait = h > w && w < 700,
       // Portrait phones: frame by width so heroes stay readable, and put the
       // ground near 2/3 of the screen so thumb controls sit below the action.
+      // Zoomed out for a wide view; portrait stays tall enough to fill the
+      // screen with the 950px-high world.
       zoom = portrait
-        ? Phaser.Math.Clamp(w / 420, 0.75, 1.2)
+        ? Phaser.Math.Clamp(Math.max(w / 520, h / 940), 0.6, 1.2)
         : w < 700
-          ? Math.max(0.6, h / 900)
-          : Math.max(0.7, h / 800),
+          ? Math.max(0.5, h / 1050)
+          : Math.max(0.6, h / 950),
       viewH = h / zoom;
     this.portrait = portrait;
     // Ground at ~2/3 on portrait phones, ~3/4 on short landscape screens

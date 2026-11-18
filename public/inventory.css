@@ -1191,4 +1191,6 @@ button.path-node { cursor: pointer; }
 .wardrobe-card.rarity-epic:not(.locked):not(.worn) { border-color: #8d6cc4; }
 .wardrobe-card.rarity-legendary:not(.locked):not(.worn) { border-color: #d9a441; }
 .item-art.costume-art { object-fit: contain; image-rendering: pixelated; }
+/* Pixel item pictures stay square-pixelled at any size. */
+img.item-art[src*="/items/px/"] { object-fit: contain; image-rendering: pixelated; }
 .rpg-modal .wardrobe-card.worn:disabled, .wardrobe-card.worn:disabled { opacity: 1; filter: none; }

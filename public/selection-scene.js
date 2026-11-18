@@ -3,8 +3,8 @@ import {
   createSpriteRegistry,
   playSpriteSet,
   playLayers,
-} from "/sprite-sets.js?v=0.21.0";
-import { gearDress } from "/hero-gear.js?v=3";
+} from "/sprite-sets.js?v=0.21.1";
+import { gearDress } from "/hero-gear.js?v=5";
 
 // The chosen hero fades in on the pedestal. Account and creation actions remain in game.js.
 //
@@ -28,7 +28,7 @@ export function createSelectionPreview() {
     H = 650,
     FEET = 560,
     HERO_HEIGHT = 380,
-    PIXEL_SCALE = 5;
+    PIXEL_SCALE = 4;
   const holder = {};
   class SelectionScene extends Phaser.Scene {
     preload() {
@@ -96,8 +96,8 @@ export function createSelectionPreview() {
         const startedAt = this.previewAt / 1000;
         playSpriteSet(
           this.hero,
-          // Pixel sets at a whole 5x so every art pixel stays square.
-          { ...set, height: set.layers?.pixel ? set.clips.idle.bodyPx * PIXEL_SCALE : HERO_HEIGHT },
+          // Pixel sets at a whole 4x so every art pixel stays square.
+          { ...set, height: set.pixel ? set.clips.idle.bodyPx * PIXEL_SCALE : HERO_HEIGHT },
           {
             direction: 1,
             action: ["attack", "skill"].includes(mode)

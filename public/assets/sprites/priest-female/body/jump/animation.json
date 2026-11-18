@@ -1,57 +1,32 @@
 {
   "schemaVersion": "3.0",
   "name": "jump",
-  "artSource": "codeart layered (tools/sprite-rig/layered_rig.py)",
+  "artSource": "pixel sheet priest-female-tier1.webp",
   "sourceSize": [
-    300,
-    220
+    62,
+    54
   ],
-  "sourceAnchor": [
-    150.0,
-    208.0
+  "encodedAnchor": [
+    40,
+    51
   ],
+  "bodyHeightPx": 48,
   "frameCount": 4,
   "durationsMs": [
-    100,
-    100,
-    100,
-    100
+    120,
+    120,
+    120,
+    120
   ],
-  "durationSeconds": 0.4,
-  "fps": 10.0,
+  "durationSeconds": 0.48,
   "loop": false,
-  "bodyHeightPx": 140,
+  "sampling": "nearest",
   "events": [],
-  "sampling": "linear",
-  "sockets": {
-    "hand": [
-      [
-        185.61,
-        143.16,
-        -61.35
-      ],
-      [
-        182.93,
-        145.83,
-        -61.35
-      ],
-      [
-        180.59,
-        149.09,
-        -61.35
-      ],
-      [
-        180.3,
-        160.81,
-        -61.35
-      ]
-    ]
-  },
   "fallback": {
     "type": "png-atlas",
     "cellSize": [
-      300,
-      220
+      62,
+      54
     ],
     "pages": [
       {
@@ -60,6 +35,30 @@
         "frameCount": 4,
         "columns": 4
       }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        47.06,
+        48.78,
+        -50
+      ],
+      [
+        45.79,
+        34.15,
+        -70
+      ],
+      [
+        47.14,
+        30.34,
+        -80
+      ],
+      [
+        48.12,
+        49.07,
+        -45
+      ]
     ]
   }
 }

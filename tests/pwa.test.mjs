@@ -13,7 +13,7 @@ test("TML ONLINE manifest has installable icons, stable identity and launch scop
   assert.equal(manifest.scope, "/");
   assert.equal(manifest.display, "standalone");
   assert.ok(manifest.start_url.startsWith("/"));
-  assert.equal(manifest.orientation, "landscape");
+  assert.equal(manifest.orientation, "portrait");
   for (const size of [192, 512])
     assert.ok(
       manifest.icons.some(

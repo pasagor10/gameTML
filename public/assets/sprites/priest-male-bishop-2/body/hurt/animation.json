@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "hurt",
+  "artSource": "pixel sheet priest-male-tier2.webp",
+  "sourceSize": [
+    65,
+    54
+  ],
+  "encodedAnchor": [
+    38,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    70,
+    90,
+    90,
+    110
+  ],
+  "durationSeconds": 0.36,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      65,
+      54
+    ],
+    "pages": [
+      {
+        "file": "hurt-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        50.93,
+        34.04,
+        -95
+      ],
+      [
+        46.01,
+        37.05,
+        -110
+      ],
+      [
+        46.01,
+        37.05,
+        -90
+      ],
+      [
+        49.76,
+        38.32,
+        -70
+      ]
+    ]
+  }
+}

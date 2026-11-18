@@ -1,0 +1,70 @@
+/* Pixel-art UI: square stepped frames, square bars and buttons, hard
+   shadows, a pixel face for Latin text and numbers (Thai falls back to
+   Noto Sans Thai), and every picture sampled nearest. Loaded last, so it
+   restyles the HUD, panels, lobby and select screen without touching their
+   layout. */
+@import url("https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap");
+
+:root {
+  --px-font: "Pixelify Sans", "Noto Sans Thai", sans-serif;
+  --px-shadow: 3px 3px 0 #000000b0;
+  --px-circle: polygon(30% 0,70% 0,70% 4%,82% 4%,82% 10%,90% 10%,90% 18%,96% 18%,96% 30%,100% 30%,100% 70%,96% 70%,96% 82%,90% 82%,90% 90%,82% 90%,82% 96%,70% 96%,70% 100%,30% 100%,30% 96%,18% 96%,18% 90%,10% 90%,10% 82%,4% 82%,4% 70%,0 70%,0 30%,4% 30%,4% 18%,10% 18%,10% 10%,18% 10%,18% 4%,30% 4%);
+}
+body #game-screen {
+  --corner-tl: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2230%22%20height%3D%2230%22%20viewBox%3D%220%200%2030%2030%22%20shape-rendering%3D%22crispEdges%22%3E%3Cg%20transform%3D%22%22%3E%3Cpath%20d%3D%22M3%2027V11h2V8h3V5h3V3h16v3H12v2H9v3H6v16Z%22%20fill%3D%22%23e9c27a%22/%3E%3Cpath%20d%3D%22M8%2027V14h2v-2h2v-2h2V8h13v1H15v2h-2v2h-2v2H9v12Z%22%20fill%3D%22%23e9c27a%22%20opacity%3D%22.5%22/%3E%3Crect%20x%3D%2211%22%20y%3D%2211%22%20width%3D%223%22%20height%3D%223%22%20fill%3D%22%23ffe7a6%22/%3E%3Crect%20x%3D%222%22%20y%3D%2226%22%20width%3D%223%22%20height%3D%223%22%20fill%3D%22%23ffe7a6%22/%3E%3Crect%20x%3D%2226%22%20y%3D%222%22%20width%3D%223%22%20height%3D%223%22%20fill%3D%22%23ffe7a6%22/%3E%3C/g%3E%3C/svg%3E");
+  --corner-tr: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2230%22%20height%3D%2230%22%20viewBox%3D%220%200%2030%2030%22%20shape-rendering%3D%22crispEdges%22%3E%3Cg%20transform%3D%22scale%28-1%201%29%20translate%28-30%200%29%22%3E%3Cpath%20d%3D%22M3%2027V11h2V8h3V5h3V3h16v3H12v2H9v3H6v16Z%22%20fill%3D%22%23e9c27a%22/%3E%3Cpath%20d%3D%22M8%2027V14h2v-2h2v-2h2V8h13v1H15v2h-2v2h-2v2H9v12Z%22%20fill%3D%22%23e9c27a%22%20opacity%3D%22.5%22/%3E%3Crect%20x%3D%2211%22%20y%3D%2211%22%20width%3D%223%22%20height%3D%223%22%20fill%3D%22%23ffe7a6%22/%3E%3Crect%20x%3D%222%22%20y%3D%2226%22%20width%3D%223%22%20height%3D%223%22%20fill%3D%22%23ffe7a6%22/%3E%3Crect%20x%3D%2226%22%20y%3D%222%22%20width%3D%223%22%20height%3D%223%22%20fill%3D%22%23ffe7a6%22/%3E%3C/g%3E%3C/svg%3E");
+  --corner-bl: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2230%22%20height%3D%2230%22%20viewBox%3D%220%200%2030%2030%22%20shape-rendering%3D%22crispEdges%22%3E%3Cg%20transform%3D%22scale%281%20-1%29%20translate%280%20-30%29%22%3E%3Cpath%20d%3D%22M3%2027V11h2V8h3V5h3V3h16v3H12v2H9v3H6v16Z%22%20fill%3D%22%23e9c27a%22/%3E%3Cpath%20d%3D%22M8%2027V14h2v-2h2v-2h2V8h13v1H15v2h-2v2h-2v2H9v12Z%22%20fill%3D%22%23e9c27a%22%20opacity%3D%22.5%22/%3E%3Crect%20x%3D%2211%22%20y%3D%2211%22%20width%3D%223%22%20height%3D%223%22%20fill%3D%22%23ffe7a6%22/%3E%3Crect%20x%3D%222%22%20y%3D%2226%22%20width%3D%223%22%20height%3D%223%22%20fill%3D%22%23ffe7a6%22/%3E%3Crect%20x%3D%2226%22%20y%3D%222%22%20width%3D%223%22%20height%3D%223%22%20fill%3D%22%23ffe7a6%22/%3E%3C/g%3E%3C/svg%3E");
+  --corner-br: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2230%22%20height%3D%2230%22%20viewBox%3D%220%200%2030%2030%22%20shape-rendering%3D%22crispEdges%22%3E%3Cg%20transform%3D%22scale%28-1%20-1%29%20translate%28-30%20-30%29%22%3E%3Cpath%20d%3D%22M3%2027V11h2V8h3V5h3V3h16v3H12v2H9v3H6v16Z%22%20fill%3D%22%23e9c27a%22/%3E%3Cpath%20d%3D%22M8%2027V14h2v-2h2v-2h2V8h13v1H15v2h-2v2h-2v2H9v12Z%22%20fill%3D%22%23e9c27a%22%20opacity%3D%22.5%22/%3E%3Crect%20x%3D%2211%22%20y%3D%2211%22%20width%3D%223%22%20height%3D%223%22%20fill%3D%22%23ffe7a6%22/%3E%3Crect%20x%3D%222%22%20y%3D%2226%22%20width%3D%223%22%20height%3D%223%22%20fill%3D%22%23ffe7a6%22/%3E%3Crect%20x%3D%2226%22%20y%3D%222%22%20width%3D%223%22%20height%3D%223%22%20fill%3D%22%23ffe7a6%22/%3E%3C/g%3E%3C/svg%3E");
+  --crest: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2264%22%20height%3D%2218%22%20viewBox%3D%220%200%2064%2018%22%20shape-rendering%3D%22crispEdges%22%3E%3Cpath%20d%3D%22M30%201h4v3h2v4h2v2h-2v4h-2v3h-4v-3h-2v-4h-2v-2h2V4h2Z%22%20fill%3D%22%23ffe7a6%22/%3E%3Cpath%20d%3D%22M2%2011h8v-2h8V7h6v2h-6v2h-8v2H2ZM62%2011h-8v-2h-8V7h-6v2h6v2h8v2h8Z%22%20fill%3D%22%23e9c27a%22/%3E%3C/svg%3E");
+  --panel-shadow: 4px 4px 0 #000000a8;
+}
+
+/* Square everything: frames, bars, chips, buttons, inputs. */
+:is(#game-screen, #modal, .rpg-modal, #landing, #prologue, #rotate-device) :where(*:not(svg, svg *)) {
+  border-radius: 0 !important;
+}
+/* Round controls become stepped pixel circles. */
+:is(#game-screen, #modal) :is(.skill.basic, .quest-badge, .map-emblem, #chat-toggle, #chat-toggle i,
+  #mobile-interact, #mobile-controls button) {
+  clip-path: var(--px-circle);
+}
+
+/* The thumb stick stays a smooth ring. */
+body #game-screen :is(#joystick, #joystick *, #joystick-zone) {
+  border-radius: 50% !important;
+}
+
+/* Pixel face for Latin, numbers and key caps; Thai keeps its own glyphs. */
+:is(#game-screen, #modal, .rpg-modal, #landing, #prologue) :where(*:not(h1, h2, h3, .brand, .brand *, svg, svg *)) {
+  font-family: var(--px-font) !important;
+}
+:is(#game-screen, #modal, .rpg-modal, #landing) :is(kbd, #player-level, #hp-label, #mp-label, #exp-label, .skill-cost, #gold, #online-count) {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+:is(#game-screen, #modal, .rpg-modal, #landing) :where(*) {
+  text-shadow: none;
+}
+:is(#game-screen, #modal, .rpg-modal, #landing) :is(strong, b, h3, h4, #player-name, kbd) {
+  text-shadow: 1px 1px 0 #000000c0;
+}
+
+/* Hard drop shadows on the frames instead of soft glows. */
+body #game-screen :is(.profile-panel, #quests, #minimap, #walkability-toggle, #context-hint),
+body #game-screen .hud-top button,
+:is(#modal, .rpg-modal) :is(.rpg-tabs button, .gear-card, .equipped-slot, .inv-action, .primary-button, .wardrobe-card) {
+  box-shadow: inset 0 0 0 2px #06110f, var(--px-shadow) !important;
+}
+
+/* Bars: square ends with a 1px dark rim and stepped highlight. */
+body #game-screen .stat-bar {
+  box-shadow: 0 0 0 1px #000, inset 0 2px 0 #ffffff22 !important;
+}
+body #game-screen .stat-bar :is(i, b) {
+  box-shadow: inset 0 2px 0 #ffffff40, inset 0 -2px 0 #00000040 !important;
+}
+
+/* Pictures stay square-pixelled when scaled. */
+:is(#game-screen, #modal, .rpg-modal, #landing, #prologue) :is(img, i, .cls-hero-art, .wardrobe-card i, #avatar) {
+  image-rendering: pixelated;
+}

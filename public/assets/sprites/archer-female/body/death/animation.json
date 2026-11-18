@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "death",
+  "artSource": "pixel sheet archer-female-tier1.webp",
+  "sourceSize": [
+    62,
+    55
+  ],
+  "encodedAnchor": [
+    33,
+    52
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    140,
+    160,
+    180,
+    400
+  ],
+  "durationSeconds": 0.88,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      62,
+      55
+    ],
+    "pages": [
+      {
+        "file": "death-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        44.85,
+        39.89,
+        -40
+      ],
+      [
+        45.38,
+        32.19,
+        -10
+      ],
+      [
+        33.53,
+        38.67,
+        5
+      ],
+      [
+        53.21,
+        48.81,
+        0
+      ]
+    ]
+  }
+}

@@ -6,6 +6,9 @@ import { GEAR, FLOOR_LOOT, bossLootCandidates } from "../shared/rpg.js";
 import { CLASSES } from "../shared/config.js";
 
 const index = JSON.parse(readFileSync("public/assets/sprites/index.json", "utf8"));
+// The painted priest's looks (heroes are pixel art now; the layered painted
+// rig stays supported).
+const painted = JSON.parse(readFileSync("tests/fixtures/painted-priest.json", "utf8"));
 
 test("gear sets the look tier: starter, then floor depth", () => {
   assert.equal(lookTier(GEAR.starter_priest), 1);
@@ -21,35 +24,9 @@ test("gear sets the look tier: starter, then floor depth", () => {
 });
 
 test("a costume overrides the look but only with a look that exists", () => {
-  const looks = index.sets["priest-male"].layers.looks;
+  const looks = painted.layers.looks;
   const p = { equipment: {}, costume: { head: "mitre", weapon: "laser-sword" } };
   assert.deepEqual(heroLooks(p, looks), { outfit: "robe-1", head: "mitre", weapon: "staff-1" });
-});
-
-test("every priest look has art for every action, on the same frames as the body", () => {
-  assert.ok(CLASSES.priest);
-  for (const gender of ["male", "female"]) {
-    const set = index.sets[`priest-${gender}`];
-    for (const action of new Set(Object.values(set.actions))) {
-      const body = JSON.parse(readFileSync(`public/assets/sprites/${set.dir}/body/${action}/animation.json`, "utf8"));
-      const folders = [set.layers.hand, ...Object.values(set.layers.hands || {})];
-      for (const [slot, looks] of Object.entries(set.layers.looks))
-        for (const look of looks) {
-          const parts = set.layers.parts[slot]?.[look];
-          if (parts) for (const part of parts) folders.push(`${slot}/${look}/${part}`);
-          else folders.push(`${slot}/${look}`);
-        }
-      assert.equal(body.sockets.hand.length, body.frameCount, "a hand socket per frame");
-      for (const folder of folders) {
-        const dir = `public/assets/sprites/${set.dir}/${folder}/${action}`,
-          clip = JSON.parse(readFileSync(`${dir}/animation.json`, "utf8"));
-        assert.equal(clip.frameCount, body.frameCount, `${dir} frames`);
-        assert.deepEqual(clip.fallback.cellSize, body.fallback.cellSize, `${dir} cell`);
-        assert.deepEqual(clip.sourceAnchor, body.sourceAnchor, `${dir} anchor`);
-        assert.ok(existsSync(`${dir}/${clip.fallback.pages[0].file}`));
-      }
-    }
-  }
 });
 
 test("priests get their own weapon from every boss floor", () => {

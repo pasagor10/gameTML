@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "hurt",
+  "artSource": "pixel sheet archer-female-tier3.webp",
+  "sourceSize": [
+    67,
+    53
+  ],
+  "encodedAnchor": [
+    35,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    70,
+    90,
+    90,
+    110
+  ],
+  "durationSeconds": 0.36,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      67,
+      53
+    ],
+    "pages": [
+      {
+        "file": "hurt-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        54.9,
+        34.73,
+        -95
+      ],
+      [
+        50.01,
+        38.64,
+        -110
+      ],
+      [
+        49.28,
+        35.74,
+        -90
+      ],
+      [
+        53.53,
+        38.62,
+        -70
+      ]
+    ]
+  }
+}

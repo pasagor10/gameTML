@@ -1,8 +1,8 @@
-/* Landscape-only on phones: a card that covers everything in portrait. */
+/* Portrait-only on phones: a card that covers everything when turned sideways. */
 #rotate-device {
   display: none;
 }
-@media (pointer: coarse) and (orientation: portrait) and (max-width: 900px) {
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {
   #rotate-device {
     position: fixed;
     inset: 0;
@@ -71,14 +71,14 @@
 }
 @keyframes rotate-hint {
   0%,
-  20% { transform: rotate(0deg); }
+  20% { transform: rotate(-90deg); }
   55%,
-  80% { transform: rotate(-90deg); }
-  100% { transform: rotate(0deg); }
+  80% { transform: rotate(0deg); }
+  100% { transform: rotate(-90deg); }
 }
 @media (prefers-reduced-motion: reduce) {
   #rotate-device .rotate-phone {
     animation: none;
-    transform: rotate(-90deg);
+    transform: none;
   }
 }

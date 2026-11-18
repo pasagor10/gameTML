@@ -4,7 +4,7 @@ body #landing.game-lobby[data-lobby-mode] {
   --gold: #f1d598;
   background:
     linear-gradient(0deg, #061c22bb, transparent 28%),
-    url("/assets/selection/sanctuary-lake.webp?v=1") center center/cover
+    url("/assets/selection/sanctuary-lake.webp?v=2") center center/cover
       no-repeat;
   grid-template-columns: clamp(220px, 23vw, 340px) minmax(0, 1fr) clamp(
       220px,

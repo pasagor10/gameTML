@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "idle",
+  "artSource": "pixel sheet archer-male-tier3.webp",
+  "sourceSize": [
+    69,
+    54
+  ],
+  "encodedAnchor": [
+    39,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    220,
+    220,
+    220,
+    220
+  ],
+  "durationSeconds": 0.88,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      69,
+      54
+    ],
+    "pages": [
+      {
+        "file": "idle-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        56.01,
+        38.23,
+        -62
+      ],
+      [
+        56.64,
+        38.05,
+        -64
+      ],
+      [
+        56.11,
+        38.38,
+        -62
+      ],
+      [
+        55.47,
+        38.04,
+        -60
+      ]
+    ]
+  }
+}

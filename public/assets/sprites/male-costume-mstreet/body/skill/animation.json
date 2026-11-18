@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "3.0",
+  "name": "skill",
+  "artSource": "pixel sheet male-costume-mstreet.webp",
+  "sourceSize": [
+    65,
+    56
+  ],
+  "encodedAnchor": [
+    40,
+    53
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    90,
+    110,
+    120,
+    170
+  ],
+  "durationSeconds": 0.49,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 200
+    }
+  ],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      65,
+      56
+    ],
+    "pages": [
+      {
+        "file": "skill-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        54.4,
+        44.64,
+        -30
+      ],
+      [
+        51.93,
+        39.64,
+        -160
+      ],
+      [
+        56.14,
+        11.94,
+        -95
+      ],
+      [
+        50.95,
+        6.91,
+        -50
+      ]
+    ]
+  }
+}

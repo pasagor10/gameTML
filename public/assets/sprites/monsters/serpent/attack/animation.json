@@ -28,12 +28,12 @@
       "frame": 2
     }
   ],
-  "sampling": "linear",
+  "sampling": "nearest",
   "fallback": {
     "type": "png-atlas",
     "cellSize": [
-      256,
-      270
+      118,
+      124
     ],
     "pages": [
       {

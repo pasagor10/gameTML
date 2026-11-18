@@ -1,89 +1,64 @@
 {
   "schemaVersion": "3.0",
   "name": "run",
-  "artSource": "codeart layered (tools/sprite-rig/layered_rig.py)",
+  "artSource": "pixel sheet priest-male-tier1.webp",
   "sourceSize": [
-    300,
-    220
+    63,
+    55
   ],
-  "sourceAnchor": [
-    150.0,
-    208.0
+  "encodedAnchor": [
+    42,
+    51
   ],
-  "frameCount": 8,
+  "bodyHeightPx": 48,
+  "frameCount": 4,
   "durationsMs": [
-    75,
-    75,
-    75,
-    75,
-    75,
-    75,
-    75,
-    75
+    100,
+    100,
+    100,
+    100
   ],
-  "durationSeconds": 0.6,
-  "fps": 13.333,
+  "durationSeconds": 0.4,
   "loop": true,
-  "bodyHeightPx": 140,
+  "sampling": "nearest",
   "events": [],
-  "sampling": "linear",
-  "sockets": {
-    "hand": [
-      [
-        174.03,
-        161.84,
-        -61.35
-      ],
-      [
-        161.24,
-        162.18,
-        -61.35
-      ],
-      [
-        155.67,
-        160.12,
-        -61.35
-      ],
-      [
-        161.24,
-        162.18,
-        -61.35
-      ],
-      [
-        174.03,
-        161.84,
-        -61.35
-      ],
-      [
-        182.76,
-        148.19,
-        -61.35
-      ],
-      [
-        184.47,
-        141.4,
-        -61.35
-      ],
-      [
-        182.76,
-        148.19,
-        -61.35
-      ]
-    ]
-  },
   "fallback": {
     "type": "png-atlas",
     "cellSize": [
-      300,
-      220
+      63,
+      55
     ],
     "pages": [
       {
         "file": "run-atlas-00.webp",
         "firstFrame": 0,
-        "frameCount": 8,
-        "columns": 8
+        "frameCount": 4,
+        "columns": 4
       }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        49.5,
+        33.6,
+        -24
+      ],
+      [
+        49.9,
+        34.98,
+        -30
+      ],
+      [
+        48.01,
+        33.16,
+        -24
+      ],
+      [
+        50.52,
+        33.93,
+        -30
+      ]
     ]
   }
 }

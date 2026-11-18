@@ -19,12 +19,12 @@
   "loop": true,
   "bodyHeightPx": 180.0,
   "events": [],
-  "sampling": "linear",
+  "sampling": "nearest",
   "fallback": {
     "type": "png-atlas",
     "cellSize": [
-      254,
-      154
+      102,
+      62
     ],
     "pages": [
       {

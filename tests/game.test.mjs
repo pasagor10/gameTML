@@ -1142,6 +1142,6 @@ test("costumes: owned to wear, female only, sold through shops and taken off wit
   world.wearCostume(b, "5");
   assert.equal(b.skin, "5", "any female class can wear it");
   b.gender = "male";
-  assert.throws(() => world.wearCostume(b, "5"), /เฉพาะตัวละครหญิง/);
+  assert.throws(() => world.wearCostume(b, "5"), /ไม่ตรงกับเพศ/);
   world.closeShop(a, "request-costume-close");
 });

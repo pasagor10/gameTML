@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "jump",
+  "artSource": "pixel sheet archer-male-tier3.webp",
+  "sourceSize": [
+    69,
+    54
+  ],
+  "encodedAnchor": [
+    39,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    120,
+    120,
+    120,
+    120
+  ],
+  "durationSeconds": 0.48,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      69,
+      54
+    ],
+    "pages": [
+      {
+        "file": "jump-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        52.06,
+        42.29,
+        -50
+      ],
+      [
+        52.89,
+        32.17,
+        -70
+      ],
+      [
+        53.5,
+        31.07,
+        -80
+      ],
+      [
+        51.08,
+        47.68,
+        -45
+      ]
+    ]
+  }
+}

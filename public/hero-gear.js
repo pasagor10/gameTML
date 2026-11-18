@@ -1,26 +1,29 @@
 // What a layered (paper-doll) hero wears, resolved from its equipment:
 //   looks   outfit / head / weapon shape tier (shared/appearance.js)
 //   tints   the armour picture's main / trim / gem colours for the cloth
-//   weapon  the weapon's own item picture, held in the hand (unless the set
-//           draws its own staff: layers.weaponArt "rig")
-//   weaponGlow  the weapon picture's accent colour, for the held glow
+//   weapon  the weapon's small upright pixel picture, held in the hand
+//           (unless the set draws its own staff: layers.weaponArt "rig")
+//   weaponGlow  the weapon picture's accent colour
 // public/sprite-sets.js playLayers() draws it.
 import { GEAR } from "/shared/rpg.js";
 import { heroLooks } from "/shared/appearance.js";
 import { itemArtPath, heldArtPath } from "/item-art.js";
 
-const palette = await fetch("/assets/items/palette.json?v=1")
+const palette = await fetch("/assets/items/palette.json?v=2")
   .then((r) => (r.ok ? r.json() : {}))
   .catch(() => ({}));
 
-// Where the hand grips each kind of picture (share of the way from the
-// bottom-left butt to the top-right tip) and its length in body pixels.
+// Held weapons are small upright pixel pictures (tip up). grip: share of the
+// way down from the top where the fist closes; gripX: across, for a bow held
+// by the handle on its belly; tilt: how much of the hand's swing the weapon
+// follows (a bow stays near upright). length: its height in painted-body
+// pixels when a painted (non-pixel) body holds it.
 const HOLD = {
-  staff: { grip: 0.3, length: 104 },
-  sword: { grip: 0.17, length: 84 },
-  bow: { grip: 0.5, length: 84 },
+  sword: { grip: 0.88, length: 84 },
+  staff: { grip: 0.62, tilt: 0.6, length: 104 },
+  mace: { grip: 0.78, tilt: 0.8, length: 90 },
+  bow: { grip: 0.5, gripX: 0.8, tilt: 0.35, length: 84 },
 };
-const PIXEL_HOLD = 0.4;
 const toTint = (hex) => (hex ? parseInt(hex.slice(1), 16) : null);
 const tintsOf = (colours) => ({
   main: toTint(colours.main),
@@ -37,7 +40,7 @@ const soften = (c, keep = 0.5) =>
           out | (Math.round(((c >> s) & 255) * keep + 255 * (1 - keep)) << s),
         0,
       );
-const artKey = (url) => url?.match(/\/items\/([^/]+)\.webp/)?.[1];
+const artKey = (url) => url?.match(/\/([^/]+)\.webp/)?.[1];
 
 export function gearDress(p, set) {
   const layers = set?.layers || {},
@@ -50,23 +53,28 @@ export function gearDress(p, set) {
       ? { main: soften(toTint(armorColours?.main)) }
       : tintsOf(armorColours || layers.tints || {}),
     weaponId = p.equipment?.weapon,
-    url = itemArtPath(weaponId, GEAR[weaponId]),
-    kind = artKey(url)?.split("-")[0],
-    // Pixel heroes hold a small upright pixel sword, drawn at true pixel size.
-    held = layers.heldArt === "pixel" ? heldArtPath(weaponId) || (kind === "sword" ? heldArtPath("starter_swordsman") : null) : null;
+    starter = `starter_${p.class}`,
+    held =
+      heldArtPath(weaponId, GEAR[weaponId], p.class) ||
+      heldArtPath(starter, GEAR[starter], p.class),
+    kind = artKey(held)?.split("-")[0],
+    url = itemArtPath(weaponId, GEAR[weaponId]);
   return {
     looks,
     // Painted heads hold the face and hair: leave them their own colours.
     tints: { outfit: tints, head: layers.painted ? {} : tints },
     // Sets with weaponArt "rig" hold their own drawn staff (looks.weapon),
     // which suits the character better than the ornate item picture.
-    weapon: held
-      ? { url: held, upright: true, grip: 0.88 }
-      : url && HOLD[kind] && layers.weaponArt !== "rig"
-        ? // HOLD lengths are in painted-body pixels; a pixel body (48px,
-          // e.g. a mage in a costume) holds her item picture at that scale
-          // until staffs and bows get pixel art of their own.
-          { url, ...HOLD[kind], length: HOLD[kind].length * (layers.pixel ? PIXEL_HOLD : 1) }
+    weapon:
+      // Pixel sets hold one only with heldArt "pixel" (monks keep empty hands).
+      held && HOLD[kind] && layers.weaponArt !== "rig" && (!layers.pixel || layers.heldArt === "pixel")
+        ? {
+            url: held,
+            upright: true,
+            ...HOLD[kind],
+            // Pixel bodies hold it at their own pixel scale.
+            length: layers.pixel ? null : HOLD[kind].length,
+          }
         : null,
     // Either way the held weapon glows in its item picture's accent colour.
     weaponGlow: toTint(palette[artKey(url)]?.gem),

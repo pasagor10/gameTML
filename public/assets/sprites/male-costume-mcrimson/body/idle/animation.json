@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "idle",
+  "artSource": "pixel sheet swordsman-male-tier1.webp",
+  "sourceSize": [
+    58,
+    54
+  ],
+  "encodedAnchor": [
+    34,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    220,
+    220,
+    220,
+    220
+  ],
+  "durationSeconds": 0.88,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      58,
+      54
+    ],
+    "pages": [
+      {
+        "file": "idle-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        46.88,
+        38.79,
+        -62
+      ],
+      [
+        46.73,
+        36.97,
+        -64
+      ],
+      [
+        46.74,
+        38.85,
+        -62
+      ],
+      [
+        47.2,
+        37.49,
+        -60
+      ]
+    ]
+  }
+}

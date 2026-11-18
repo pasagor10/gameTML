@@ -1,5 +1,5 @@
-import { heroPortraitStyle, heroPortraitUrl } from "/hero-appearance.js?v=2";
-import { costumesOf, canWearCostumes, ownsCostume, COSTUME_ITEMS, costumeItem } from "/shared/costumes.js";
+import { heroPortraitStyle, heroPortraitUrl } from "/hero-appearance.js?v=3";
+import { costumesOf, ownsCostume, COSTUME_ITEMS, costumeItem, costumeFits, costumeOf } from "/shared/costumes.js";
 import { itemArt, supplyArt } from "/item-art.js";
 import {
   GEAR,
@@ -131,7 +131,7 @@ const supplyInfo = (id) =>
   SUPPLIES[id] ||
   (COSTUME_ITEMS[id] && {
     name: COSTUME_ITEMS[id].name,
-    text: "ชุดแต่งกาย สวมได้กับตัวละครหญิงทุกอาชีพ ไม่มีผลกับสเตตัส · ขายในตลาดหรือแลกเปลี่ยนได้",
+    text: `ชุดแต่งกาย ${costumeFits(id)} ไม่มีผลกับสเตตัส · ขายในตลาดหรือแลกเปลี่ยนได้`,
     rarity: COSTUME_ITEMS[id].rarity,
     costume: COSTUME_ITEMS[id].costume,
   });
@@ -252,7 +252,7 @@ function compareRows(item, worn, wornId) {
     <table><thead><tr><th></th><th>ใส่อยู่</th><th>ชิ้นนี้</th><th></th></tr></thead><tbody>${rows.join("") || '<tr><td colspan="4">ไม่มีค่าสถานะ</td></tr>'}</tbody></table></div>`;
 }
 function costumeAction(p, id) {
-  if (!canWearCostumes(p)) return `<button class="inv-action" disabled>สวมได้เฉพาะตัวละครหญิง</button>`;
+  if (!costumeOf(p, id)) return `<button class="inv-action" disabled>${costumeFits(costumeItem(id))}</button>`;
   if (p.skin === id) return `<button class="inv-action" data-wear="">ถอดชุด</button>`;
   return `<button class="inv-action" data-wear="${id}">สวมชุดนี้</button>`;
 }

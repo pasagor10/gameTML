@@ -20,10 +20,16 @@ export function heroPortraitUrl(p) {
   return null;
 }
 
+// Pixel-art sets (pixel / layers.pixel) keep square pixels when scaled.
+const isPixel = (p) => {
+  const set = heroSkins(p).map((s) => sets[s]).find((s) => s?.portrait);
+  return set?.pixel || set?.layers?.pixel;
+};
+
 export function heroPortraitStyle(p) {
   const url = heroPortraitUrl(p);
   if (url)
-    return `background-image:url('${url}');background-size:contain;background-position:center;background-repeat:no-repeat`;
+    return `background-image:url('${url}');background-size:contain;background-position:center;background-repeat:no-repeat${isPixel(p) ? ";image-rendering:pixelated" : ""}`;
   // Plain class look: the shared 3x2 portrait sheet.
   return `background-image:url('/assets/heroes.png');background-size:300% 200%;background-position:${["swordsman", "archer", "mage"].indexOf(p.class) * 50}% ${p.gender === "female" ? 100 : 0}%`;
 }

@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "walk",
+  "artSource": "pixel sheet priest-male-tier2.webp",
+  "sourceSize": [
+    65,
+    54
+  ],
+  "encodedAnchor": [
+    38,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    140,
+    140,
+    140,
+    140
+  ],
+  "durationSeconds": 0.56,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      65,
+      54
+    ],
+    "pages": [
+      {
+        "file": "walk-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        52.12,
+        35.01,
+        -58
+      ],
+      [
+        48.42,
+        33.15,
+        -64
+      ],
+      [
+        49.94,
+        35.37,
+        -58
+      ],
+      [
+        48.32,
+        34.08,
+        -64
+      ]
+    ]
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "hurt",
+  "artSource": "pixel sheet priest-female-tier3.webp",
+  "sourceSize": [
+    61,
+    53
+  ],
+  "encodedAnchor": [
+    37,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    70,
+    90,
+    90,
+    110
+  ],
+  "durationSeconds": 0.36,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      61,
+      53
+    ],
+    "pages": [
+      {
+        "file": "hurt-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        49.98,
+        36.45,
+        -95
+      ],
+      [
+        46.25,
+        22.6,
+        -110
+      ],
+      [
+        47.56,
+        28.62,
+        -90
+      ],
+      [
+        48.33,
+        37.25,
+        -70
+      ]
+    ]
+  }
+}

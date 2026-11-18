@@ -335,7 +335,7 @@ def build(sheet, key, grid, col_range, name):
     index = json.loads(index_path.read_text())
     index["sets"][key] = {
         "dir": key,
-        "height": 112,
+        "height": 96,  # 48px body at 2x (x0.86 GROUP_SCALE in game)
         "facing": 1,
         "portrait": "portrait.webp",
         "source": f"pixel art sheet ({Path(sheet).name}), weapon drawn in the front fist",

@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "run",
+  "artSource": "pixel sheet archer-male-tier3.webp",
+  "sourceSize": [
+    69,
+    54
+  ],
+  "encodedAnchor": [
+    39,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    100,
+    100,
+    100,
+    100
+  ],
+  "durationSeconds": 0.4,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      69,
+      54
+    ],
+    "pages": [
+      {
+        "file": "run-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        56.18,
+        34.63,
+        -24
+      ],
+      [
+        54.95,
+        34.55,
+        -30
+      ],
+      [
+        54.07,
+        34.42,
+        -24
+      ],
+      [
+        54.88,
+        33.69,
+        -30
+      ]
+    ]
+  }
+}

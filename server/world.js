@@ -283,7 +283,7 @@ export function specialize(p, id) {
 }
 // Wear a costume (shared/costumes.js) over the class look, or null to take it off.
 export function wearCostume(p, id) {
-  if (id != null && !costumeOf(p, id)) throw Error("ชุดนี้สวมได้เฉพาะตัวละครหญิง");
+  if (id != null && !costumeOf(p, id)) throw Error("ชุดนี้ไม่ตรงกับเพศของตัวละคร");
   if (id != null && !ownsCostume(p, id)) throw Error("ยังไม่มีชุดนี้ · เก็บได้จากบอสในดันเจียน");
   p.skin = id ?? null;
   savePlayer(p);
@@ -1696,7 +1696,7 @@ function checkClear(i, t, p) {
             });
           }
           // Costumes drop for every hero (anyone can sell or trade them).
-          const costume = rollCostumeDrop(i.floor);
+          const costume = rollCostumeDrop(i.floor, Math.random, m.gender);
           if (costume) {
             m.inventory[costume] = (m.inventory[costume] || 0) + 1;
             i.rewards?.[m.id]?.items.push(costume);

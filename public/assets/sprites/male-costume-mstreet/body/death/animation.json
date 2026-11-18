@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "death",
+  "artSource": "pixel sheet male-costume-mstreet.webp",
+  "sourceSize": [
+    65,
+    56
+  ],
+  "encodedAnchor": [
+    40,
+    53
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    140,
+    160,
+    180,
+    400
+  ],
+  "durationSeconds": 0.88,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      65,
+      56
+    ],
+    "pages": [
+      {
+        "file": "death-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        42.92,
+        41.36,
+        -40
+      ],
+      [
+        45.68,
+        30.33,
+        -10
+      ],
+      [
+        40.41,
+        37.98,
+        5
+      ],
+      [
+        56.02,
+        49.22,
+        0
+      ]
+    ]
+  }
+}

@@ -1,59 +1,64 @@
 {
   "schemaVersion": "3.0",
   "name": "hurt",
-  "artSource": "codeart layered (tools/sprite-rig/layered_rig.py)",
+  "artSource": "pixel sheet priest-male-tier1.webp",
   "sourceSize": [
-    300,
-    220
+    63,
+    55
   ],
-  "sourceAnchor": [
-    150.0,
-    208.0
+  "encodedAnchor": [
+    42,
+    51
   ],
-  "frameCount": 3,
+  "bodyHeightPx": 48,
+  "frameCount": 4,
   "durationsMs": [
-    80,
+    70,
+    90,
     90,
     110
   ],
-  "durationSeconds": 0.28,
-  "fps": 10.714,
+  "durationSeconds": 0.36,
   "loop": false,
-  "bodyHeightPx": 140,
+  "sampling": "nearest",
   "events": [],
-  "sampling": "linear",
-  "sockets": {
-    "hand": [
-      [
-        168.47,
-        147.14,
-        -61.35
-      ],
-      [
-        166.13,
-        161.04,
-        -61.35
-      ],
-      [
-        163.02,
-        166.13,
-        -61.35
-      ]
-    ]
-  },
   "fallback": {
     "type": "png-atlas",
     "cellSize": [
-      300,
-      220
+      63,
+      55
     ],
     "pages": [
       {
         "file": "hurt-atlas-00.webp",
         "firstFrame": 0,
-        "frameCount": 3,
-        "columns": 3
+        "frameCount": 4,
+        "columns": 4
       }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        51.01,
+        34.9,
+        -95
+      ],
+      [
+        46.75,
+        39.44,
+        -110
+      ],
+      [
+        32.64,
+        25.47,
+        -90
+      ],
+      [
+        50.39,
+        38.85,
+        -70
+      ]
     ]
   }
 }

@@ -4,7 +4,7 @@
   --px-panel: #102b3b;
   --px-line: #476574;
   --px-gold: #e4c27c;
-  background: #0a2537 url("/assets/selection/pixel-sanctuary-v1.png") center
+  background: #0a2537 url("/assets/selection/pixel-sanctuary-v1.png?v=2") center
     65% / cover no-repeat;
   image-rendering: pixelated;
   font-family: "Noto Sans Thai", monospace;

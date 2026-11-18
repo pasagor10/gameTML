@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "jump",
+  "artSource": "pixel sheet archer-female-tier1.webp",
+  "sourceSize": [
+    62,
+    55
+  ],
+  "encodedAnchor": [
+    33,
+    52
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    120,
+    120,
+    120,
+    120
+  ],
+  "durationSeconds": 0.48,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      62,
+      55
+    ],
+    "pages": [
+      {
+        "file": "jump-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        47.38,
+        43.71,
+        -50
+      ],
+      [
+        47.73,
+        33.46,
+        -70
+      ],
+      [
+        48.04,
+        32.65,
+        -80
+      ],
+      [
+        47.67,
+        48.82,
+        -45
+      ]
+    ]
+  }
+}

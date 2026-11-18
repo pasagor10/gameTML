@@ -11,7 +11,7 @@
   display: block;
   background:
     linear-gradient(180deg, #07132110, #07121c45),
-    url("/assets/cave.webp") center 58% / cover no-repeat;
+    url("/assets/cave.webp?v=2") center 58% / cover no-repeat;
   color: #e8ded0;
 }
 #landing.game-lobby[data-hero-class="archer"] {

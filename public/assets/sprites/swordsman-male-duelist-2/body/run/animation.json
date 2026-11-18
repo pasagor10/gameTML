@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "3.0",
+  "name": "run",
+  "artSource": "pixel sheet swordsman-male-tier2.webp",
+  "sourceSize": [
+    58,
+    54
+  ],
+  "encodedAnchor": [
+    33,
+    51
+  ],
+  "bodyHeightPx": 48,
+  "frameCount": 4,
+  "durationsMs": [
+    100,
+    100,
+    100,
+    100
+  ],
+  "durationSeconds": 0.4,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      58,
+      54
+    ],
+    "pages": [
+      {
+        "file": "run-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        47.12,
+        32.72,
+        -24
+      ],
+      [
+        46.7,
+        33.71,
+        -30
+      ],
+      [
+        47.38,
+        34.04,
+        -24
+      ],
+      [
+        46.69,
+        32.09,
+        -30
+      ]
+    ]
+  }
+}
