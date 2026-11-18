@@ -256,9 +256,30 @@ function actionMs(clip, a, time) {
   );
 }
 
+// Archer rapid fire: chained basic shots skip the reach-for-an-arrow frames
+// and cycle full draw -> release, and between shots the archer holds the aim
+// instead of dropping back to idle. Returns a frame index or null.
+export const AIM_HOLD = 0.45;
+export function rapidFireFrame(clip, p, pose, time) {
+  const a = p?.action;
+  if (p?.class !== "archer" || !a || a.skill || !clip || clip.hitMs == null) return null;
+  const release = frameAt(clip, clip.hitMs),
+    aim = Math.max(0, release - 1);
+  if (pose.state === "attack" && a.chain > 0 && time < a.endsAt)
+    return time < a.impactAt
+      ? aim
+      : time - a.impactAt < (a.endsAt - a.impactAt) * 0.6
+        ? release
+        : aim;
+  if (pose.state === "idle" && time >= a.endsAt && time - a.endsAt < AIM_HOLD) return aim;
+  return null;
+}
+
 // Show the right frame for this pose. Returns the scale to keep this frame at
 // the set's on-screen height (creature-fx multiplies its squash on top).
 export function playSpriteSet(image, set, p, pose, time) {
+  const rapid = rapidFireFrame(set.clips.attack, p, pose, time);
+  if (rapid != null) pose = { ...pose, state: "attack" };
   const state = set.clips[pose.state]
       ? pose.state
       : pose.state === "run" && set.clips.walk
@@ -273,7 +294,9 @@ export function playSpriteSet(image, set, p, pose, time) {
   else ms = time * 1000 * (state === "run" && !set.clips.run ? 1.4 : 1);
   // Airborne poses follow vertical speed (heroPose's 0..3 rise→fall), not a timer.
   const index =
-    state === "jump"
+    rapid != null
+      ? rapid
+      : state === "jump"
       ? Math.min(
           clip.frames.length - 1,
           Math.floor(((pose.frame ?? 0) / 4) * clip.frames.length),

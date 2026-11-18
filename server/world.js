@@ -1355,10 +1355,17 @@ export function attack(p, skill = 0, t = now()) {
       ? ((p.combo || 0) + 1) % 3
       : 0;
   p.lastSlash = t;
+  // Rapid fire: basic attacks right after the previous one form a chain
+  // (the client keeps the archer aimed and the arrows heat up with it).
+  if (!skill) {
+    p.chain = t - (p.lastShotAt || 0) < Math.max(0.9, cooldown * 2.2) ? (p.chain || 0) + 1 : 0;
+    p.lastShotAt = t;
+  }
   p.action = {
     kind: skill ? "skill" : "attack",
     skill,
     combo: p.combo,
+    chain: skill ? 0 : p.chain,
     direction: p.direction,
     startedAt: t,
     impactAt: t + windup,
@@ -1392,6 +1399,8 @@ function resolveAttack(p, t) {
     skill,
     range: combatStats(p).range + ACTIONS[skill].rangeBonus,
     combo: a.combo,
+    chain: a.chain || 0,
+    lightning: t < (p.lightningUntil || 0),
     at: t,
   });
   const kit = skillOf(p.class, skill);

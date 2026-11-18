@@ -198,6 +198,40 @@ test("gear carries base-stat bonuses that grow with level and rarity, and crits 
   assert.ok(plain.crit >= 0.2 && plain.critDamage >= 1.75);
 });
 
+test("archer rapid fire: back-to-back shots chain and hold the aim between them", async () => {
+  const { rapidFireFrame, AIM_HOLD } = await import("../public/sprite-sets.js");
+  const p = create("rapid-chain", "archer", 40);
+  world.raiseStats(p, { agi: 40 });
+  world.beginDungeon(p, 1);
+  const i = world.instances.get(p.instance);
+  i.enemies.forEach((e) => { e.x = p.x + 60; e.y = p.y; e.hp = e.maxHp = 1e6; });
+  const t = Date.now() / 1000,
+    chains = [];
+  for (let n = 0; n <= 30; n++) {
+    const at = t + n * 0.05, before = p.attackAt;
+    world.attack(p, 0, at);
+    if (p.attackAt !== before) chains.push(p.action.chain);
+    world.tick(0.05, at);
+  }
+  assert.equal(chains[0], 0);
+  assert.deepEqual(chains.slice(0, 4), [0, 1, 2, 3], "every follow-up shot extends the chain");
+  const shot = i.events.find((e) => e.kind === "attack" && e.chain >= 2);
+  assert.ok(shot, "attack events carry the chain for the client effects");
+  world.returnTown(p);
+  // The 6-frame painted clip: hit on frame 4, so aim = 3 and release = 4.
+  const durations = [70, 70, 80, 70, 90, 110],
+    clip = { hitMs: 290, durations, total: 490, frames: durations.map(() => ({})) },
+    action = { skill: 0, chain: 2, startedAt: 0, impactAt: 0.1, endsAt: 0.3 },
+    archer = { class: "archer", action };
+  assert.equal(rapidFireFrame(clip, archer, { state: "attack" }, 0.05), 3);
+  assert.equal(rapidFireFrame(clip, archer, { state: "attack" }, 0.15), 4);
+  assert.equal(rapidFireFrame(clip, archer, { state: "idle" }, 0.3 + AIM_HOLD / 2), 3, "holds the aim between shots");
+  assert.equal(rapidFireFrame(clip, archer, { state: "idle" }, 0.3 + AIM_HOLD + 0.1), null);
+  assert.equal(rapidFireFrame(clip, { ...archer, action: { ...action, chain: 0 } }, { state: "attack" }, 0.05), null,
+    "the first shot plays the full draw");
+  assert.equal(rapidFireFrame(clip, { class: "mage", action }, { state: "attack" }, 0.05), null);
+});
+
 process.on("exit", () => {
   db.close();
   rmSync(dir, { recursive: true, force: true });

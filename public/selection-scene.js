@@ -3,7 +3,7 @@ import {
   createSpriteRegistry,
   playSpriteSet,
   playLayers,
-} from "/sprite-sets.js?v=0.19.0";
+} from "/sprite-sets.js?v=0.20.0";
 import { gearDress } from "/hero-gear.js?v=1";
 
 // The chosen hero rises from rest. Account and creation actions remain in game.js.

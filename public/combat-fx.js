@@ -34,6 +34,28 @@ function makeTextures(scene) {
     c.closePath();
     c.fill();
   });
+  // A real arrow, pointing right: steel head, slim shaft, split fletching.
+  canvasTexture(scene, "cfx-arrow", 72, 16, (c, w, h) => {
+    const m = h / 2;
+    c.fillStyle = "#fff";
+    c.fillRect(12, m - 1.2, w - 26, 2.4);
+    c.beginPath();
+    c.moveTo(w, m);
+    c.lineTo(w - 15, m - 5.5);
+    c.lineTo(w - 12, m);
+    c.lineTo(w - 15, m + 5.5);
+    c.closePath();
+    c.fill();
+    for (const k of [-1, 1]) {
+      c.beginPath();
+      c.moveTo(2, m + k * 6.5);
+      c.lineTo(16, m + k * 1.2);
+      c.lineTo(21, m + k * 1.2);
+      c.lineTo(9, m + k * 6.5);
+      c.closePath();
+      c.fill();
+    }
+  });
   // Crescent blade trail, opening to the right.
   canvasTexture(scene, "cfx-slash2", 256, 256, (c, w, h) => {
     const cx = 70,
@@ -307,6 +329,117 @@ export function createCombatFx(scene) {
     });
   };
 
+  // Archer basic shot, built for rapid fire. `chain` counts shots fired back
+  // to back: the arrows fly faster, glow hotter and leave afterimages as it
+  // climbs; lightning draw (AGI crit haste) turns them into gold bolts.
+  const LIGHTNING_TINT = 0xffe066;
+  function rapidShot(e, dir, color, accent) {
+    const chain = e.chain || 0,
+      heat = Math.min(1, chain / 6),
+      tint = e.lightning ? LIGHTNING_TINT : heat > 0.5 ? mix(color, accent, heat) : color,
+      bx = e.x + dir * 36,
+      by = e.y - 6,
+      distance = Math.min(e.range || 410, 560),
+      ms = 250 - heat * 90,
+      // Rapid shots wobble a little in height so a stream reads as a volley.
+      y = by + (chain ? ((chain * 37) % 9) - 4 : 0);
+    // Bowstring snap: a thin vertical flash and a small ring at the bow.
+    const snap = sprite("cfx-spark2", bx - dir * 6, by, 0xffffff, 38)
+      .setAngle(90)
+      .setScale(0.5, 0.35 + heat * 0.25)
+      .setAlpha(0.9);
+    scene.tweens.add({ targets: snap, alpha: 0, scaleX: 0.2, duration: 110, onComplete: () => snap.destroy() });
+    ring(bx, by, tint, 0.45 + heat * 0.35, 200, 1);
+    flare(bx, by, tint, 0.35 + heat * 0.35, 150);
+    // A feather or two drifting down from the quiver hand.
+    blast(embers, bx - dir * 26, by, 2 + Math.round(heat * 3), tint, {
+      speed: [40, 120],
+      angle: dir > 0 ? { min: 150, max: 210 } : { min: -30, max: 30 },
+    });
+    // The arrow itself, a glow riding on it and a streak behind it.
+    const arrow = scene.add
+      .image(bx, y, "cfx-arrow")
+      .setTint(e.lightning ? 0xfff6c8 : mix(0xffffff, tint, 0.25))
+      .setScale(0.95 + heat * 0.3, 1)
+      .setFlipX(dir < 0)
+      .setDepth(37);
+    const glow = sprite("cfx-spark2", bx, y, tint, 36)
+      .setScale(1.5 + heat * 1.4, 0.9 + heat * 0.5)
+      .setFlipX(dir < 0)
+      .setAlpha(0.55 + heat * 0.4);
+    const trail = scene.add
+      .particles(0, 0, "cfx-glow", {
+        blendMode: ADD,
+        lifespan: 120 + heat * 140,
+        frequency: 12,
+        speed: { min: 0, max: 20 },
+        scale: { start: 0.16 + heat * 0.18, end: 0 },
+        alpha: { start: 0.8, end: 0 },
+        tint,
+        follow: arrow,
+      })
+      .setDepth(35);
+    // Hot streams leave afterimages chasing the arrow.
+    const ghosts =
+      heat >= 0.5
+        ? [0.55, 0.3].map((alpha) =>
+            sprite("cfx-arrow", bx, y, tint, 36).setAlpha(alpha).setFlipX(dir < 0),
+          )
+        : [];
+    ghosts.forEach((g, n) =>
+      scene.tweens.add({
+        targets: g,
+        x: bx + dir * distance,
+        delay: 22 * (n + 1),
+        duration: ms,
+        ease: "Linear",
+        onComplete: () => g.destroy(),
+      }),
+    );
+    scene.tweens.add({
+      targets: [arrow, glow],
+      x: bx + dir * distance,
+      duration: ms,
+      ease: "Linear",
+      onUpdate: () => {
+        // Lightning arrows crackle along the way.
+        if (e.lightning && Math.random() < 0.35)
+          blast(sparks, arrow.x, arrow.y, 1, LIGHTNING_TINT, { speed: [120, 260] });
+      },
+      onComplete: () => {
+        trail.stop();
+        blast(sparks, arrow.x, arrow.y, 6 + Math.round(heat * 6), tint, { speed: [160, 460] });
+        flare(arrow.x, arrow.y, tint, 0.6 + heat * 0.5, 180);
+        if (e.lightning) pillar(arrow.x, arrow.y + 56, LIGHTNING_TINT, 0.55, 0.35);
+        arrow.destroy();
+        glow.destroy();
+        scene.time.delayedCall(320, () => trail.destroy());
+      },
+    });
+    // The stream's counter: "ยิงรัว ×N" from the third shot on.
+    if (chain >= 2 && !e.echo && scene.children.length < 240) {
+      const label = scene.add
+        .text(e.x, e.y - 96, `ยิงรัว ×${chain + 1}`, {
+          fontFamily: "Noto Sans Thai",
+          fontSize: `${Math.min(20, 13 + chain)}px`,
+          fontStyle: "bold",
+          color: e.lightning ? "#ffe066" : "#bff5d0",
+          stroke: "#0b0f1a",
+          strokeThickness: 4,
+        })
+        .setOrigin(0.5)
+        .setDepth(43);
+      scene.tweens.add({
+        targets: label,
+        y: label.y - 22,
+        alpha: 0,
+        duration: 420,
+        ease: "Cubic.out",
+        onComplete: () => label.destroy(),
+      });
+    }
+  }
+
   // Class tier (1 base, 2 specialization, 3 advanced) grows every skill:
   // bigger shapes, extra projectiles/slashes, an accent colour, and at
   // tier 3 rune circles, pillars of light and a second shockwave.
@@ -379,7 +512,9 @@ export function createCombatFx(scene) {
       return;
     }
     if (e.skill && tier >= 2) tierAura(e.x, e.y + 50, tier, color, accent);
-    if (e.class === "archer") {
+    if (e.class === "archer" && !e.skill) {
+      rapidShot(e, dir, color, accent);
+    } else if (e.class === "archer") {
       // Volley: 3 / 4 / 5 arrows by tier; other skills gain a ghost arrow.
       const count =
         e.skill === 2 ? 2 + tier : e.skill && tier >= 2 ? 2 : 1;

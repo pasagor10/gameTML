@@ -81,7 +81,7 @@ import {
 } from "/shared/config.js";
 import { createParallax } from "/parallax.js?v=0.8.1";
 import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.6";
-import { createCombatFx } from "/combat-fx.js?v=0.9.0";
+import { createCombatFx } from "/combat-fx.js?v=0.10.0";
 import { activeEffects, effectTint, effectRow, hudEffects } from "/status-ui.js?v=1";
 import { STATUSES, BUFFS } from "/shared/skills.js";
 import { WORLD_BOSS, worldInfo } from "/shared/world-boss.js";
@@ -99,7 +99,7 @@ import {
   playMonsterSet,
   playMonsterDeath,
   playLayers,
-} from "/sprite-sets.js?v=0.19.0";
+} from "/sprite-sets.js?v=0.20.0";
 import { gearDress } from "/hero-gear.js?v=1";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
@@ -2714,7 +2714,7 @@ class Adventure extends Phaser.Scene {
       );
       this.fx.attack(e);
       // Double strafe: the second arrow follows right behind the first.
-      if (e.double) this.time.delayedCall(90, () => this.fx.attack(e));
+      if (e.double) this.time.delayedCall(90, () => this.fx.attack({ ...e, y: e.y + 12, echo: true }));
     }
   }
   showDungeonSigns(area, signs) {
