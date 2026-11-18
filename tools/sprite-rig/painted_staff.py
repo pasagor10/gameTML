@@ -112,47 +112,60 @@ def staff_frame(look, palm, angle, place, size, scale, grip=None):
     return pen.done(size)
 
 
+def capsule(p0, p1, r, n=10):
+    """Stadium outline between p0 and p1 with radius r."""
+    a = math.atan2(p1[1] - p0[1], p1[0] - p0[0])
+    pts = []
+    for centre, start in ((p1, a - math.pi / 2), (p0, a + math.pi / 2)):
+        for k in range(n + 1):
+            t = start + math.pi * k / n
+            pts.append((centre[0] + math.cos(t) * r, centre[1] + math.sin(t) * r))
+    return pts
+
+
 def fist(pen, grip, u, n):
-    """A closed hand around the shaft: wrist from the cuff, four curled
-    fingers stacked along the staff with their knuckles away from the arm,
-    and the thumb wrapped over the top. Shaded in the painted hand's skin."""
+    """A closed hand around the shaft, shaded like the painted hands.
+
+    The wrist grows out of the sleeve cuff into the back of the hand; four
+    rounded fingers wrap across the shaft, stacked along it, each lit on its
+    upper edge and shaded below; the thumb closes over the top finger."""
     c, r, cuff = grip["fist"], grip["radius"], grip["cuff"]
-    base = grip["skin"]
-    tone = lambda k, a=255: tuple(max(0, min(255, round(v * k))) for v in base) + (a,)
-    shade, dark, light = tone(0.8), tone(0.5), tuple(round(v + (255 - v) * 0.45) for v in base) + (170,)
+    # Small painted hands read warmer than their mean colour.
+    base = tuple(round(v * w) for v, w in zip(grip["skin"], (1.0, 0.94, 0.86)))
+
+    def tone(k, a=255):
+        return tuple(max(0, min(255, round(v * k))) for v in base) + (a,)
+
+    def lit(k, a):
+        return tuple(round(v + (255 - v) * k) for v in base) + (a,)
+
+    line = tuple(round(v) for v in (base[0] * 0.55, base[1] * 0.42, base[2] * 0.36)) + (255,)
+    shade = tone(0.84)
 
     def at(a, b):
         return (c[0] + u[0] * a + n[0] * b, c[1] + u[1] * a + n[1] * b)
 
-    # Which side of the staff the arm comes from; knuckles face the other way.
+    # Which side of the shaft the arm comes from; the knuckles face away.
     side = 1 if (cuff[0] - c[0]) * n[0] + (cuff[1] - c[1]) * n[1] > 0 else -1
-    # Wrist: from the cuff into the back of the fist.
-    wx, wy = c[0] - cuff[0], c[1] - cuff[1]
-    length = math.hypot(wx, wy) or 1
-    px, py = -wy / length, wx / length
-    w0, w1 = r * 0.55, r * 0.72
-    back = at(0, side * r * 0.35)
-    pen.shape([(cuff[0] + px * w0, cuff[1] + py * w0), (back[0] + px * w1, back[1] + py * w1),
-               (back[0] - px * w1, back[1] - py * w1), (cuff[0] - px * w0, cuff[1] - py * w0)],
-              tone(0.92), dark, 0.7)
-    # Palm block behind the fingers.
-    pen.shape([at(-r * 0.95, side * r * 1.0), at(r * 0.95, side * r * 1.0),
-               at(r * 1.0, -side * r * 0.2), at(-r * 1.0, -side * r * 0.2)], shade, dark, 0.7)
-    # Four curled fingers, top to bottom, rounded on the knuckle side.
-    h = r * 1.9 / 4
+    k = -side
+    # Wrist from the cuff into the back of the hand.
+    back = at(0.05 * r, side * r * 0.62)
+    pen.shape(capsule(cuff, back, r * 0.5), tone(0.93), line, 0.55)
+    # Back of the hand, behind the fingers.
+    pen.shape(capsule(at(0.55 * r, side * r * 0.55), at(-0.6 * r, side * r * 0.5), r * 0.55), shade, line, 0.55)
+    # Fingers, bottom up so each overlaps the one below.
+    h = r * 0.27
     for i in range(4):
-        a0 = r * 0.95 - i * h
-        a1 = a0 - h * 1.05
-        k = -side
-        finger = [at(a0, side * r * 0.25), at(a0, k * r * 0.75), at(a0 - h * 0.15, k * r * 1.02),
-                  at((a0 + a1) / 2, k * r * 1.12), at(a1 + h * 0.15, k * r * 1.02), at(a1, k * r * 0.75),
-                  at(a1, side * r * 0.25)]
-        pen.shape(finger, tone(1.0 - i * 0.04), dark, 0.6)
-        pen.shape([at(a0 - h * 0.2, k * r * 0.2), at(a0 - h * 0.2, k * r * 0.85),
-                   at(a0 - h * 0.45, k * r * 0.95), at(a0 - h * 0.45, k * r * 0.2)], light)
-    # Thumb over the top of the fist, toward the arm side.
-    pen.shape([at(r * 0.75, side * r * 0.75), at(r * 1.25, side * r * 0.2), at(r * 1.15, -side * r * 0.45),
-               at(r * 0.7, -side * r * 0.5), at(r * 0.55, side * r * 0.1)], tone(0.97), dark, 0.6)
+        a = -0.72 * r + i * 0.47 * r
+        p0, p1 = at(a, side * r * 0.35), at(a - 0.04 * r, k * r * (0.62 - abs(i - 1.5) * 0.06))
+        pen.shape(capsule(p0, p1, h), tone(0.9 - (3 - i) * 0.02), line, 0.5)
+        # Light along the upper edge of each finger gives it roundness.
+        q0, q1 = at(a + h * 0.35, side * r * 0.3), at(a + h * 0.3, k * r * 0.55)
+        pen.shape(capsule(q0, q1, h * 0.45), lit(0.22, 130))
+    # Thumb, from the arm side over the top finger.
+    t0, t1 = at(0.62 * r, side * r * 0.62), at(0.5 * r, k * r * 0.05)
+    pen.shape(capsule(t0, t1, h * 1.05), tone(0.97), line, 0.5)
+    pen.shape(capsule(at(0.62 * r + h * 0.35, side * r * 0.5), at(0.5 * r + h * 0.3, k * r * 0.0), h * 0.45), lit(0.28, 140))
 
 
 def finial(pen, spec, at, base):

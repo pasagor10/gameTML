@@ -92,8 +92,21 @@ def extract(sheet, gender, branch):
         parts[f"upper-{side}"] = limb_mask(image, sh, elbow, 28, 26)
         # Extend past the wrist to retain fingers, but not back up the upper
         # arm: rotating that duplicated shoulder patch makes a second elbow.
-        parts[f"fore-{side}"] = limb_mask(image, elbow, wrist, 29, 20, extend=0.46, start_extend=0.04)
+        # The free (back) hand is cut narrower: a wider cut takes a strip of
+        # the robe beside the fingers along with it.
+        parts[f"fore-{side}"] = limb_mask(image, elbow, wrist, 29, 15 if side == "back" else 20,
+                                          extend=0.46, start_extend=0.04)
         parts[f"hand-{side}"] = limb_mask(image, wrist, (wrist[0], wrist[1] + 25), 12, 10, extend=0.1)
+    # Near-black robe edging can still sit right beside the free fingers:
+    # nothing that dark belongs to a hand, so drop it below the wrist.
+    free, wy = parts["fore-back"], joints[2][1]
+    mask = free.getchannel("A")
+    alpha, pixels = mask.load(), free.load()
+    for y in range(wy - 10, min(free.height, wy + 45)):
+        for x in range(free.width):
+            if alpha[x, y] and max(pixels[x, y][:3]) < 100:
+                alpha[x, y] = 0
+    free.putalpha(mask)
     # The staff layer paints the gripping hand; the sleeve keeps only the arm.
     cut = Image.new("L", image.size, 255)
     ImageDraw.Draw(cut).polygon(hand, fill=0, outline=0, width=3)
@@ -174,7 +187,7 @@ def grip_rig(art, s):
     g = art["grip"]
     return dict(cuff=limb_point_rig(g["cuff"], elbow, wrist, dest_elbow, dest_wrist),
                 fist=limb_point_rig(g["fist"], elbow, wrist, dest_elbow, dest_wrist),
-                radius=14 * k, skin=g["skin"])
+                radius=16 * k, skin=g["skin"])
 
 
 def priest_actions():
@@ -182,8 +195,26 @@ def priest_actions():
     # A staff carrier keeps the gripping arm clear of the robe; walk and run
     # get their own gaits rather than the caster rig's deep arm curl.
     actions["walk"] = (rig.cycle(8, walk_pose), [95] * 8, True, None)
+    actions["attack"] = (rig.keyframes(ATTACK_KEYS, 6, False), [70, 80, 70, 60, 90, 110], False, 3)
     actions["run"] = (rig.cycle(8, run_pose), [58] * 8, True, None)
     return actions
+
+
+# A holy strike: wind the staff back over the shoulder with the free hand at
+# the chest, raise it high and glowing with the palm out, then step in and
+# drive it forward as the free arm sweeps back, and settle.
+ATTACK_KEYS = [
+    (0.0, rig.pose()),
+    (0.22, rig.pose(shF=2.6, elF=0.3, weapon=-0.9, shB=0.7, elB=1.5, lean=-0.12, tilt=-0.06,
+                    hipF=0.25, hipB=-0.15, dy=-1.0, glow=0.3)),
+    (0.42, rig.pose(shF=2.95, elF=0.1, weapon=-0.2, shB=1.5, elB=0.3, lean=-0.06, tilt=-0.03,
+                    hipF=0.2, hipB=-0.1, dy=-3.0, glow=0.8)),
+    (0.6, rig.pose(shF=1.45, elF=0.0, weapon=2.6, shB=-0.45, elB=0.5, lean=0.24, tilt=0.05,
+                   hipF=0.55, kneeF=0.3, hipB=-0.35, kneeB=0.2, dx=4.0, dy=1.0, glow=1.0)),
+    (0.8, rig.pose(shF=1.2, elF=0.05, weapon=2.3, shB=-0.3, elB=0.4, lean=0.16,
+                   hipF=0.45, kneeF=0.2, hipB=-0.25, dx=3.0, glow=0.5)),
+    (1.0, rig.pose()),
+]
 
 
 def walk_pose(a):
