@@ -25,7 +25,7 @@ import {
   SPECIALIZATIONS,
   heroSkins,
 } from "/shared/rpg.js";
-import { createTownNpcs, footGlow, outline } from "/town-npcs.js?v=5";
+import { createTownNpcs, footGlow, outline } from "/town-npcs.js?v=6";
 import { marketHtml, shopManagerHtml, marketState } from "/market-ui.js?v=2";
 import { sampleMotion } from "/shared/smoothing.js";
 import { ACTIONS } from "/shared/motion.js";
@@ -46,7 +46,7 @@ import {
 } from "/shared/config.js";
 import { createParallax } from "/parallax.js?v=0.7.0";
 import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.1";
-import { createCombatFx } from "/combat-fx.js?v=0.5.1";
+import { createCombatFx } from "/combat-fx.js?v=0.6.0";
 import {
   animateHeroBody,
   animateMonsterBody,
@@ -59,7 +59,7 @@ import {
   playSpriteSet,
   playMonsterSet,
   playMonsterDeath,
-} from "/sprite-sets.js?v=0.16.1";
+} from "/sprite-sets.js?v=0.16.2";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 let lobbyCharacterId = null;
@@ -2008,11 +2008,10 @@ class Adventure extends Phaser.Scene {
             fontStyle: "bold",
             align: "center",
             wordWrap: { width: 138 },
-            backgroundColor: "#243a32dd",
-            padding: { x: 7, y: 4 },
             color: "#fff2cd",
-            stroke: "#193851",
-            strokeThickness: 3,
+            stroke: "#10202a",
+            strokeThickness: 4,
+            shadow: { offsetX: 0, offsetY: 2, color: "#000", blur: 6, fill: true, stroke: true },
           })
           .setOrigin(0.5)
           .setDepth(14);

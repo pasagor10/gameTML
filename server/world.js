@@ -17,6 +17,7 @@ import {
   SPECIALIZATIONS,
   initializeGear,
   ADVANCE_LEVEL,
+  heroTier,
 } from "../shared/rpg.js";
 import { ACTIONS } from "../shared/motion.js";
 import { autoBrain } from "./auto.js";
@@ -620,6 +621,8 @@ function spawnTraining(i) {
 }
 function spawnStage(i) {
   i.clear = false;
+  i.clearedAt = 0;
+  i.stageAt = now();
   i.enemies = [];
   i.hazards = [];
   i.nextHazardAt = now() + 4;
@@ -656,12 +659,19 @@ function spawnStage(i) {
       spawnAt: now() + n * 0.06,
       attackCount: 0,
       direction: -1,
-      attackAt: 0,
+      // No swings while the loading card is still up (cooldown ~1-1.4 s).
+      attackAt: now() + STAGE_INTRO - 1,
     });
   }
   i.totalEnemies = i.enemies.length;
   i.events = [];
 }
+// The client shows a loading card for ~1.5 s (plus a 0.45 s fade) when the
+// stage changes, so heroes on auto and the monsters hold off until it clears.
+export const STAGE_INTRO = 2;
+// After the last monster falls, auto waits this long before moving on so the
+// death animation and loot drops are actually seen.
+export const CLEAR_LINGER = 2.6;
 export function nextStage(p) {
   const i = instances.get(p.instance);
   if (!i || !i.clear) throw Error("กำจัดมอนสเตอร์ให้หมดก่อน");
@@ -812,6 +822,8 @@ function resolveAttack(p, t) {
     color: c.color,
     direction: a.direction,
     class: p.class,
+    // 1 base, 2 specialization, 3 advanced: the client scales skill FX by it.
+    tier: heroTier(p),
     skill,
     range: combatStats(p).range + ACTIONS[skill].rangeBonus,
     combo: a.combo,
@@ -917,6 +929,7 @@ function resolveAttack(p, t) {
   }
   i.enemies = i.enemies.filter((e) => e.hp > 0);
   if (!i.enemies.length) {
+    if (!i.clear) i.clearedAt = t;
     i.clear = true;
     if (i.stage === 3 && !i.completed && !i.training) {
       i.completed = true;
@@ -1303,7 +1316,10 @@ export function tick(dt, t = now()) {
     if (t - p.lastInput > 0.3) p.input = 0;
     const i = instances.get(p.instance);
     if (p.auto && i) {
-      if (i.enemies.some((e) => e.hp > 0)) {
+      if (t - (i.stageAt || 0) < STAGE_INTRO) {
+        // Still behind the loading card: stand still, don't swing yet.
+        p.input = 0;
+      } else if (i.enemies.some((e) => e.hp > 0)) {
         const plan = autoBrain(p, i, t, {
           range: combatStats(p).range,
           mpMax: maxMp(p),
@@ -1325,7 +1341,12 @@ export function tick(dt, t = now()) {
             potion(p, "mp");
           } catch {}
         }
-      } else if (i.clear && !i.completed && t - (p.nextAt || 0) > 2) {
+      } else if (
+        i.clear &&
+        !i.completed &&
+        t - (i.clearedAt || 0) > CLEAR_LINGER &&
+        t - (p.nextAt || 0) > 2
+      ) {
         p.nextAt = t;
         nextStage(p);
       }

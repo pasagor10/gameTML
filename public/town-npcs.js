@@ -1,4 +1,4 @@
-import { playNpcSet } from "/sprite-sets.js?v=0.16.1";
+import { playNpcSet } from "/sprite-sets.js?v=0.16.2";
 
 // Role-specific townsfolk. Painted idle/talk sets (assets/sprites/npcs) are
 // used once loaded; until then, and if a set is missing, the procedural rig
@@ -50,10 +50,9 @@ export function createTownNpcs(scene, definitions, sprites) {
         color: "#ffe6ac",
         align: "center",
         lineSpacing: -2,
-        stroke: "#0f2633",
-        strokeThickness: 4,
-        backgroundColor: "#0f2633dd",
-        padding: { x: 9, y: 4 },
+        stroke: "#10202a",
+        strokeThickness: 5,
+        shadow: { offsetX: 0, offsetY: 2, color: "#000", blur: 6, fill: true, stroke: true },
       })
       .setOrigin(0.5, 0)
       .setDepth(15);

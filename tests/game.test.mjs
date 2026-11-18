@@ -908,3 +908,31 @@ test("specialization tiers pick costumes and tier 3 doubles the line's bonus", a
   assert.equal(world.snapshot(p).self.advanced, true);
   world.players.delete(p.id);
 });
+test("auto waits out the loading card and lets the last death play before the next stage", () => {
+  const p = create("auto-pacing");
+  world.beginDungeon(p, 1);
+  const i = world.instances.get(p.instance),
+    t0 = i.stageAt;
+  p.auto = true;
+  // Behind the loading card: no swing, no walking.
+  world.tick(0.05, t0 + world.STAGE_INTRO - 0.5);
+  assert.equal(p.action, null);
+  assert.equal(p.input, 0);
+  assert.ok(
+    i.enemies.every((e) => e.attackAt > t0),
+    "monsters hold their first swing too",
+  );
+  // Leave one weak monster in reach; auto finishes it, then lingers.
+  const [last] = i.enemies;
+  i.enemies = [last];
+  Object.assign(last, { hp: 1, x: p.x + 60, y: p.y, attackAt: t0 + 99 });
+  for (let k = 0; k < 40 && !i.clear; k++)
+    world.tick(0.05, t0 + world.STAGE_INTRO + 0.1 + k * 0.05);
+  assert.equal(i.clear, true);
+  const clearedAt = i.clearedAt;
+  world.tick(0.05, clearedAt + world.CLEAR_LINGER - 0.5);
+  assert.equal(i.stage, 1, "still on the cleared stage while the death plays");
+  world.tick(0.05, clearedAt + world.CLEAR_LINGER + 0.1);
+  assert.equal(i.stage, 2);
+  world.returnTown(p);
+});

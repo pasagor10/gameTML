@@ -97,6 +97,13 @@ function makeTextures(scene) {
   });
 }
 
+// Blend two 0xRRGGBB colours (t = 0 → a, 1 → b).
+function mix(a, b, t) {
+  const ch = (c, s) => (c >> s) & 255,
+    lerp = (s) => Math.round(ch(a, s) + (ch(b, s) - ch(a, s)) * t);
+  return (lerp(16) << 16) | (lerp(8) << 8) | lerp(0);
+}
+
 export function createCombatFx(scene) {
   makeTextures(scene);
   const reduced = scene.reducedMotion,
@@ -300,53 +307,140 @@ export function createCombatFx(scene) {
     });
   };
 
+  // Class tier (1 base, 2 specialization, 3 advanced) grows every skill:
+  // bigger shapes, extra projectiles/slashes, an accent colour, and at
+  // tier 3 rune circles, pillars of light and a second shockwave.
+  const TIER_SCALE = [1, 1.3, 1.65];
+  const tierAccent = (tier, color) =>
+    tier >= 3 ? 0xffe27a : tier === 2 ? mix(color, 0xffffff, 0.55) : color;
+
+  // Caster aura for tier 2+ skills: a ground ring and rising motes; tier 3
+  // adds a spinning rune circle and a bright core flare.
+  function tierAura(x, feet, tier, color, accent) {
+    ring(x, feet, accent, 2.2 + tier * 0.5, 460, 0.24);
+    blast(embers, x, feet - 10, 6 * tier, accent, {
+      speed: [160, 360],
+      angle: { min: 245, max: 295 },
+    });
+    if (tier < 3) return;
+    flare(x, feet - 60, 0xffffff, 1.6, 300);
+    for (const [size, tint, spin] of [
+      [1.9, accent, 140],
+      [1.3, color, -200],
+    ]) {
+      const rune = sprite("cfx-ring", x, feet, tint, 32)
+        .setScale(0.4, 0.1)
+        .setAlpha(0.95);
+      scene.tweens.add({
+        targets: rune,
+        scaleX: size,
+        scaleY: size * 0.26,
+        angle: spin,
+        alpha: 0,
+        duration: 620,
+        ease: "Cubic.out",
+        onComplete: () => rune.destroy(),
+      });
+    }
+  }
+
+  // A column of light, for tier 3 impacts.
+  function pillar(x, ground, tint, height = 1.1, width = 1) {
+    const beam = sprite("cfx-beam", x, ground, tint, 32)
+      .setOrigin(0.5, 1)
+      .setScale(width, 0.1);
+    scene.tweens.add({
+      targets: beam,
+      scaleY: height,
+      duration: 130,
+      yoyo: true,
+      hold: 140,
+      ease: "Quad.out",
+      onComplete: () => beam.destroy(),
+    });
+  }
+
   function attack(e) {
     const dir = e.direction || 1,
       range = e.range || 130,
-      color = e.color;
+      color = e.color,
+      tier = Math.min(3, Math.max(1, e.tier || 1)),
+      k = TIER_SCALE[tier - 1],
+      accent = tierAccent(tier, color);
+    if (e.skill && tier >= 2) tierAura(e.x, e.y + 50, tier, color, accent);
     if (e.class === "archer") {
-      const count = e.skill === 2 ? 3 : 1;
+      // Volley: 3 / 4 / 5 arrows by tier; other skills gain a ghost arrow.
+      const count =
+        e.skill === 2 ? 2 + tier : e.skill && tier >= 2 ? 2 : 1;
       for (let n = 0; n < count; n++)
         scene.time.delayedCall(n * 70, () =>
           projectile(
             e.x + dir * 40,
             e.y - 4 + (n - (count - 1) / 2) * 16,
             dir,
-            e.skill ? 600 : 410,
-            color,
+            e.skill ? 600 + (tier - 1) * 60 : 410,
+            n % 2 && tier >= 2 ? accent : color,
             {
               arrow: true,
-              size: e.skill === 3 ? 2 : e.skill ? 1.3 : 1,
+              size: (e.skill === 3 ? 2 : e.skill ? 1.3 : 1) * (e.skill ? k : 1),
               ms: e.skill === 3 ? 300 : 340,
             },
           ),
         );
-      flare(e.x + dir * 40, e.y - 4, color, 0.6);
+      flare(e.x + dir * 40, e.y - 4, color, 0.6 * (e.skill ? k : 1));
+      if (e.skill && tier >= 3)
+        scene.time.delayedCall(260, () => {
+          const hx = e.x + dir * 520;
+          pillar(hx, e.y + 50, accent, 1, 0.8);
+          ring(hx, e.y, accent, 2.6, 380);
+          blast(sparks, hx, e.y, 16, accent, { speed: [220, 560] });
+        });
     } else if (e.class === "mage") {
-      const size = [1, 1.4, 1.8, 2.4][e.skill || 0];
+      const size = [1, 1.4, 1.8, 2.4][e.skill || 0] * (e.skill ? k : 1);
       projectile(e.x + dir * 30, e.y, dir, 350, color, { size, ms: 420 });
       ring(e.x + dir * 30, e.y, color, 0.9 * size, 260);
+      // Tier 2+: twin satellite orbs; tier 3: lightning pillar where it lands.
+      if (e.skill && tier >= 2)
+        for (const off of [-26, 26])
+          scene.time.delayedCall(70, () =>
+            projectile(e.x + dir * 20, e.y + off, dir, 330, accent, {
+              size: size * 0.45,
+              ms: 430,
+            }),
+          );
+      if (e.skill && tier >= 3)
+        scene.time.delayedCall(420, () => {
+          const hx = e.x + dir * 380;
+          pillar(hx, e.y + 50, 0xffffff, 1.2, 0.6);
+          pillar(hx, e.y + 50, accent, 1, 1.2);
+          ring(hx, e.y + 40, accent, 3.4, 480, 0.3);
+          flare(hx, e.y, 0xffffff, 2, 260);
+          shake(120, 0.004);
+        });
     } else if (!e.skill) {
       // Three-hit combo: down-cut, up-cut, then a wide horizontal finisher.
       const combo = e.combo || 0;
       slash(e.x + dir * range * 0.32, e.y + 6, dir, color, {
-        scale: combo === 2 ? 1.35 : 1.1,
+        scale: (combo === 2 ? 1.35 : 1.1) * (1 + (tier - 1) * 0.12),
         angle: [-22, 26, 0][combo],
         flipY: combo === 1,
       });
     }
 
     if (e.class === "swordsman" && e.skill === 1) {
-      for (let n = 0; n < 3; n++)
-        scene.time.delayedCall(n * 60, () => {
+      // Dash cuts: 3 / 4 / 5 afterimages by tier, in the accent colour.
+      const cuts = 2 + tier;
+      for (let n = 0; n < cuts; n++)
+        scene.time.delayedCall(n * 55, () => {
           const img = sprite(
             "cfx-slash2",
             e.x + dir * 50,
             e.y + 4,
-            n === 1 ? 0xffffff : color,
+            n === 1 ? 0xffffff : n >= 3 ? accent : color,
           )
             .setFlipX(dir < 0)
-            .setScale(0.75 - n * 0.08)
+            .setFlipY(n % 2 === 1 && tier >= 2)
+            .setScale((0.75 - Math.min(n, 3) * 0.08) * k)
             .setAlpha(0.9);
           scene.tweens.add({
             targets: img,
@@ -365,10 +459,14 @@ export function createCombatFx(scene) {
     if (e.class === "swordsman" && e.skill === 2) {
       const cx = e.x + dir * range * 0.45,
         cy = e.y + 20;
-      flare(cx, cy, 0xffe5a0, 2.2, 320);
-      ring(cx, cy + 25, 0xffb34a, 3, 420, 0.32);
-      ring(cx, cy, 0xffe5a0, 2, 320);
-      blast(embers, cx, cy, 26, 0xffb34a, {
+      flare(cx, cy, 0xffe5a0, 2.2 * k, 320);
+      ring(cx, cy + 25, 0xffb34a, 3 * k, 420, 0.32);
+      ring(cx, cy, 0xffe5a0, 2 * k, 320);
+      if (tier >= 2) ring(cx, cy + 25, accent, 4.2 * k, 560, 0.28);
+      if (tier >= 3)
+        for (const off of [-90, 0, 90])
+          pillar(cx + off, cy + 30, off ? accent : 0xffffff, off ? 0.8 : 1.15);
+      blast(embers, cx, cy, 26 + (tier - 1) * 14, 0xffb34a, {
         speed: [180, 480],
         angle: { min: 200, max: 340 },
       });
@@ -379,23 +477,32 @@ export function createCombatFx(scene) {
     if (e.skill === 3) {
       const cx = e.class === "swordsman" ? e.x : e.x + dir * 160,
         ground = e.y + 50;
-      if (!reduced) cam.flash(140, 255, 245, 210, true);
-      ring(cx, ground, color, 5, 600, 0.22);
-      ring(cx, ground, 0xffffff, 3.5, 450, 0.22);
-      for (let n = -3; n <= 3; n++)
+      if (!reduced) cam.flash(140 + tier * 40, 255, 245, 210, true);
+      ring(cx, ground, color, 5 * k, 600, 0.22);
+      ring(cx, ground, 0xffffff, 3.5 * k, 450, 0.22);
+      // Ultimate: 7 / 9 / 11 pillars by tier; tier 3 lands a second wave.
+      const span = 2 + tier;
+      if (tier >= 3)
+        scene.time.delayedCall(380, () => {
+          ring(cx, ground, accent, 7, 700, 0.22);
+          flare(cx, ground - 80, 0xffffff, 3.2, 420);
+          blast(sparks, cx, ground - 40, 30, accent, { speed: [300, 800] });
+          shake(260, 0.008);
+        });
+      for (let n = -span; n <= span; n++)
         scene.time.delayedCall(Math.abs(n) * 45, () => {
           const beam = sprite(
             "cfx-beam",
             cx + n * 70,
             ground + 10,
-            n % 2 ? 0xfff4c4 : color,
+            n % 2 ? (tier >= 2 ? accent : 0xfff4c4) : color,
             32,
           )
             .setOrigin(0.5, 1)
-            .setScale(n % 2 ? 0.7 : 1.1, 0.1);
+            .setScale((n % 2 ? 0.7 : 1.1) * (1 + (tier - 1) * 0.15), 0.1);
           scene.tweens.add({
             targets: beam,
-            scaleY: 1.2 - Math.abs(n) * 0.08,
+            scaleY: (1.2 - Math.abs(n) * 0.07) * (1 + (tier - 1) * 0.2),
             duration: 140,
             yoyo: true,
             hold: 120,
@@ -410,7 +517,7 @@ export function createCombatFx(scene) {
       shake(320, 0.007);
       punch(0.06, 140);
     } else if (e.skill && e.class !== "swordsman") {
-      shake(90, 0.002);
+      shake(90 + tier * 30, 0.002 * tier);
     }
   }
 

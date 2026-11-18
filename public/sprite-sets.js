@@ -21,8 +21,9 @@ const GROUPS = ["sets", "monsters", "npcs"];
 const MONSTER_STATES = ["idle", "move", "attack", "hit", "death", "spawn"];
 const NPC_STATES = ["idle", "talk"];
 // On-screen size per group, on top of index.json's height: heroes and
-// townsfolk read smaller against the painted town so the scene has depth.
-const GROUP_SCALE = { sets: 0.86, npcs: 0.84, monsters: 1 };
+// townsfolk read smaller against the painted town. NPC sheets are authored a
+// little smaller than heroes, so they scale less to stand eye to eye.
+const GROUP_SCALE = { sets: 0.86, npcs: 0.9, monsters: 1 };
 const STATES = [
   "idle",
   "walk",
