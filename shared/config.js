@@ -68,6 +68,7 @@ export const WORLD = {
     {
       id: "elder",
       x: TOWN_SPOTS.elder,
+      y: 584, // a step behind the walking line
       name: "ผู้ใหญ่คำ",
       role: "เควส",
       icon: "📜",
@@ -75,6 +76,7 @@ export const WORLD = {
     {
       id: "potion",
       x: TOWN_SPOTS.potion,
+      y: 578, // a step behind the walking line
       name: "มีรา",
       role: "ร้านยา",
       icon: "🧪",
@@ -82,6 +84,7 @@ export const WORLD = {
     {
       id: "weapon",
       x: TOWN_SPOTS.weapon,
+      y: 584, // a step behind the walking line
       name: "อริน",
       role: "ร้านอาวุธ",
       icon: "⚔",
@@ -89,6 +92,7 @@ export const WORLD = {
     {
       id: "forge",
       x: TOWN_SPOTS.forge,
+      y: 580, // a step behind the walking line
       name: "ลุงเหล็ก",
       role: "ตีบวก",
       icon: "⚒",

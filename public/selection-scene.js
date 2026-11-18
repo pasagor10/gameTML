@@ -2,7 +2,7 @@ import {
   queueSpriteSets,
   createSpriteRegistry,
   playSpriteSet,
-} from "/sprite-sets.js?v=0.16.0";
+} from "/sprite-sets.js?v=0.16.1";
 // Presentation only. Character creation and authentication stay in game.js.
 export function createSelectionPreview() {
   const host = document.querySelector("#hero-preview");

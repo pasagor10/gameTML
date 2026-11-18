@@ -1,8 +1,27 @@
-import { playNpcSet } from "/sprite-sets.js?v=0.16.0";
+import { playNpcSet } from "/sprite-sets.js?v=0.16.1";
 
 // Role-specific townsfolk. Painted idle/talk sets (assets/sprites/npcs) are
 // used once loaded; until then, and if a set is missing, the procedural rig
 // below draws the NPC with limbs and tools articulated around local pivots.
+// Soft additive light under a character's feet (cfx-glow is combat-fx's
+// radial texture). Returns null before that texture exists.
+export function footGlow(scene, x, y, alpha = 0.32) {
+  if (!scene.textures.exists("cfx-glow")) return null;
+  return scene.add
+    .image(x, y, "cfx-glow")
+    .setDisplaySize(96, 24)
+    .setTint(0xffe2a0)
+    .setAlpha(alpha)
+    .setBlendMode(Phaser.BlendModes.ADD);
+}
+
+// Thin dark rim around a sprite (WebGL only), so characters and stalls read
+// against the busy painted background.
+export function outline(image, distance = 8, strength = 2.4) {
+  image.preFX?.addGlow(0x0d1a22, strength, 0, false, 0.1, distance);
+  return image;
+}
+
 export function createTownNpcs(scene, definitions, sprites) {
   const objects = [],
     rigs = [];
@@ -15,18 +34,25 @@ export function createTownNpcs(scene, definitions, sprites) {
   for (const n of definitions) {
     const root = scene.add.container(n.x, n.y ?? 600).setDepth(7);
     const g = scene.add.graphics(),
-      image = scene.add.image(0, 0, "__WHITE").setVisible(false);
+      image = scene.add.image(0, 0, "__WHITE").setVisible(false),
+      // Warm pool of light at the feet, and a dark rim so the painted NPC
+      // stands off the equally painted shop fronts behind it.
+      footLight = footGlow(scene, 0, 0, 0.3);
+    if (footLight) root.add(footLight);
     root.add([g, image]);
+    outline(image);
     sprites?.want("npcs", n.id);
     const label = scene.add
-      .text(n.x, (n.y ?? 600) - 145, `${n.name}\n${n.role}`, {
+      .text(n.x, (n.y ?? 600) - 146, `${n.name}\n${n.role}`, {
         fontFamily: "Noto Sans Thai",
-        fontSize: "12px",
+        fontSize: "15px",
+        fontStyle: "bold",
         color: "#ffe6ac",
         align: "center",
-        stroke: "#17384e",
+        lineSpacing: -2,
+        stroke: "#0f2633",
         strokeThickness: 4,
-        backgroundColor: "#142f3cbb",
+        backgroundColor: "#0f2633dd",
         padding: { x: 9, y: 4 },
       })
       .setOrigin(0.5, 0)

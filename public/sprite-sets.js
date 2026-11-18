@@ -20,6 +20,9 @@ const ROOT = "/assets/sprites/";
 const GROUPS = ["sets", "monsters", "npcs"];
 const MONSTER_STATES = ["idle", "move", "attack", "hit", "death", "spawn"];
 const NPC_STATES = ["idle", "talk"];
+// On-screen size per group, on top of index.json's height: heroes and
+// townsfolk read smaller against the painted town so the scene has depth.
+const GROUP_SCALE = { sets: 0.86, npcs: 0.84, monsters: 1 };
 const STATES = [
   "idle",
   "walk",
@@ -172,7 +175,7 @@ function buildSet(scene, group, name, set) {
     if (!clips.idle) return null;
     return {
       name,
-      height: set.height || 118,
+      height: Math.round((set.height || 118) * GROUP_SCALE[group]),
       facing: set.facing || 1,
       // A single painted still: keep the procedural bob/tilt/lunge on it.
       still: !!set.still,

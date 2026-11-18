@@ -1,0 +1,311 @@
+/* Minimap: a framed scout map with a crest header, live markers and two
+   travel buttons styled like game action plates. Loaded after game-ui.css. */
+
+#game-screen #minimap {
+  width: 214px;
+  padding: 8px 9px 9px;
+  opacity: 1;
+  border: 1px solid #8a6a33;
+  border-radius: 6px;
+  background:
+    radial-gradient(120% 70% at 50% 0%, #2b4a4655, transparent 70%),
+    linear-gradient(160deg, #142625f2, #07110fef 60%, #0b1714f2);
+  box-shadow:
+    inset 0 0 0 1px #050c0b,
+    inset 0 1px 0 #f4d89a33,
+    0 6px 18px #000a,
+    0 0 0 1px #00000066;
+}
+#game-screen #minimap::before,
+#game-screen #minimap::after {
+  width: 7px;
+  height: 7px;
+  top: -4px;
+  background: linear-gradient(135deg, #fff1c2, #c4923f);
+  transform: rotate(45deg);
+  box-shadow: 0 0 6px #ffcf6e88;
+}
+
+/* Header: crest, title + zone, online pill. */
+#minimap .map-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #8a6a3355;
+  box-shadow: 0 1px 0 #00000066;
+}
+#minimap .map-emblem {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  font-style: normal;
+  font-size: 11px;
+  color: #3a2508;
+  background: radial-gradient(circle at 35% 30%, #fff3c4, #e0aa4c 55%, #8d5a1e);
+  border: 1px solid #fff0bf;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px #0a1514,
+    0 0 10px #ffc96b77;
+}
+#minimap .map-names {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  line-height: 1.15;
+}
+#game-screen #minimap #map-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: linear-gradient(#fff4cf, #e4b864);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 1px 0 #000);
+}
+#minimap #map-zone {
+  font-style: normal;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  color: #8fb7a8;
+}
+#minimap.in-dungeon #map-zone {
+  color: #f0a77c;
+}
+#game-screen #minimap #online-count {
+  flex: none;
+  align-self: flex-start;
+  font-size: 8px;
+  font-weight: 600;
+  padding: 2px 6px;
+  color: #a6f0c4;
+  background: #0d2a1fcc;
+  border: 1px solid #3fae7466;
+  border-radius: 999px;
+  text-shadow: 0 0 6px #4cf09a99;
+}
+
+/* Map frame with gold corner brackets. */
+#minimap .map-frame {
+  position: relative;
+  margin: 7px 0 8px;
+}
+#game-screen #minimap .map-frame svg {
+  display: block;
+  width: 100%;
+  height: 58px;
+  margin: 0;
+  border-radius: 3px;
+  background:
+    radial-gradient(70% 90% at 50% 120%, #2f6b5a44, transparent 70%),
+    radial-gradient(circle at 88% 25%, #67ddf026, transparent 45%),
+    linear-gradient(#0a1c2c, #0e2532 70%, #10261f);
+  box-shadow:
+    inset 0 0 0 1px #000,
+    inset 0 0 0 2px #e2b76433,
+    inset 0 0 18px #000c;
+}
+#game-screen #minimap.in-dungeon .map-frame svg {
+  background:
+    radial-gradient(70% 90% at 50% 120%, #5f4a9455, transparent 70%),
+    linear-gradient(#120f22, #1a1630 70%, #161225);
+}
+#minimap .map-corner {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border: 0 solid #e9c27a;
+  pointer-events: none;
+  filter: drop-shadow(0 0 3px #ffc96b88);
+}
+#minimap .map-corner.tl { top: -2px; left: -2px; border-width: 2px 0 0 2px; }
+#minimap .map-corner.tr { top: -2px; right: -2px; border-width: 2px 2px 0 0; }
+#minimap .map-corner.bl { bottom: -2px; left: -2px; border-width: 0 0 2px 2px; }
+#minimap .map-corner.br { bottom: -2px; right: -2px; border-width: 0 2px 2px 0; }
+
+/* Markers. */
+#map-platforms {
+  fill: none;
+  stroke: #b9dc8e;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 2px #9fe07a99);
+}
+#minimap.in-dungeon #map-platforms {
+  stroke: #9fb6e8;
+  filter: drop-shadow(0 0 2px #7f9fff99);
+}
+#map-npcs circle {
+  fill: #ffcf6e;
+  stroke: #3a2508;
+  stroke-width: 1;
+}
+#map-allies circle {
+  fill: #7fe3ff;
+  stroke: #062430;
+  stroke-width: 1;
+  filter: drop-shadow(0 0 2px #7fe3ff);
+}
+#map-gate path {
+  fill: #0b2a36;
+  stroke: #67ddf0;
+  stroke-width: 1.6;
+}
+#map-gate .gate-glow {
+  fill: #67ddf0;
+  opacity: 0.18;
+  animation: map-gate 2.4s ease-in-out infinite;
+}
+#map-dot {
+  fill: #ffe7a6;
+  stroke: #5a3a0a;
+  stroke-width: 1;
+  filter: drop-shadow(0 0 3px #ffd36a);
+  animation: none;
+}
+#map-ping {
+  fill: none;
+  stroke: #ffd36a;
+  stroke-width: 1.2;
+  transform-box: fill-box;
+  animation: map-ping 1.6s ease-out infinite;
+}
+@keyframes map-ping {
+  from { r: 3; opacity: 0.9; }
+  to { r: 11; opacity: 0; }
+}
+@keyframes map-gate {
+  50% { opacity: 0.42; }
+}
+
+/* Travel buttons. */
+#game-screen #minimap button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 32px;
+  padding: 4px 9px 4px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: left;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: transform 0.12s, filter 0.12s, box-shadow 0.12s;
+}
+#game-screen #minimap button:hover:not(:disabled) {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+#game-screen #minimap button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+#minimap .map-btn-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  font-size: 13px;
+  border-radius: 4px;
+}
+#minimap .map-btn-text {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#minimap .map-btn-go {
+  float: none;
+  font-size: 13px;
+  animation: map-nudge 1.4s ease-in-out infinite;
+}
+@keyframes map-nudge {
+  50% { transform: translateX(3px); }
+}
+
+#game-screen #minimap #dungeon-open {
+  color: #3a2508;
+  text-shadow: 0 1px 0 #ffeec4;
+  background: linear-gradient(#ffe7a6, #e0a84c 48%, #b0732a 52%, #8f5a1f);
+  border: 1px solid #fff0bf;
+  box-shadow:
+    0 3px 0 #4f3210,
+    0 0 16px #ffc96b55,
+    inset 0 1px 0 #fffbe8;
+}
+#minimap #dungeon-open .map-btn-icon {
+  color: #ffe7a6;
+  background: linear-gradient(#5a3a12, #2c1a07);
+  box-shadow: inset 0 0 0 1px #c4923f;
+}
+
+#game-screen #minimap #training-open {
+  margin-top: 6px;
+  min-height: 28px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #cfe6ff;
+  text-shadow: 0 1px 2px #000;
+  background: linear-gradient(#24385a, #142238);
+  border: 1px solid #5e7fb0;
+  box-shadow:
+    0 2px 0 #070d18,
+    inset 0 1px 0 #a9c6ff33;
+}
+#minimap #training-open .map-btn-icon {
+  width: 20px;
+  height: 20px;
+  font-size: 11px;
+  color: #cfe6ff;
+  background: #0b1526;
+  box-shadow: inset 0 0 0 1px #5e7fb0aa;
+}
+#game-screen #minimap #training-open:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #map-ping,
+  #map-gate .gate-glow,
+  #minimap .map-btn-go,
+  #minimap #dungeon-open::after {
+    animation: none;
+  }
+}
+
+/* Narrow screens keep the existing compact layouts: hide the extras. */
+@media (max-width: 760px) {
+  #game-screen #minimap { width: 150px; padding: 6px; }
+  /* Phones show only the two travel buttons (mobile.css). */
+  #game-screen #minimap .map-head,
+  #game-screen #minimap .map-frame { display: none; }
+  #game-screen #minimap #dungeon-open { margin-top: 0; }
+  #game-screen #minimap button { min-height: 28px; font-size: 10px; gap: 5px; }
+  #game-screen #minimap button { padding: 4px 8px; }
+  #minimap .map-btn-icon { display: none; }
+}
+@media (max-width: 480px) {
+  #game-screen #minimap { width: 124px; }
+}
+
+/* The training button's icon is an inline SVG: undo the map svg styles. */
+#game-screen #minimap .map-btn-icon svg {
+  display: block;
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+}

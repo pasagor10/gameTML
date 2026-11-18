@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="/lobby.css?v=2" />
     <link rel="stylesheet" href="/select.css?v=10" />
     <link rel="stylesheet" href="/game-ui.css?v=2" />
+    <link rel="stylesheet" href="/minimap.css?v=3" />
     <link rel="stylesheet" href="/actionbar.css?v=2" />
     <link rel="stylesheet" href="/touch.css?v=4" />
   </head>
@@ -226,22 +227,49 @@
         <small id="quest-counter">ดันเจียนที่พิชิต 0 / 10</small>
       </aside>
       <aside id="minimap" class="ornate">
-        <div>
-          <span id="map-title">เมืองหน้าถ้ำหลวง</span
+        <div class="map-head">
+          <i class="map-emblem" aria-hidden="true">✦</i>
+          <span class="map-names"
+            ><span id="map-title">เมืองหน้าถ้ำหลวง</span
+            ><em id="map-zone">CH.1 · เขตปลอดภัย</em></span
           ><small id="online-count">● 1 ออนไลน์</small>
         </div>
-        <svg viewBox="0 0 220 65">
-          <path
-            id="map-platforms"
-            d="M8 52H211"
-            stroke="#a4c982"
-            stroke-width="4"
-            fill="none"
-          />
-          <path d="M200 50V15" stroke="#67ddf0" stroke-width="4" />
-          <circle id="map-dot" cx="32" cy="47" r="5" fill="#ffe2a0" /></svg
-        ><button id="dungeon-open">♜ เลือกดันเจียน <span>➜</span></button>
-        <button id="training-open">⚔ สนามฝึก · ซ้อมกับสไลม์</button>
+        <div class="map-frame">
+          <svg viewBox="0 0 220 65" aria-label="แผนที่">
+            <defs>
+              <pattern id="map-grid" width="11" height="11" patternUnits="userSpaceOnUse">
+                <path d="M11 0H0V11" fill="none" stroke="#7fb8c214" stroke-width="1" />
+              </pattern>
+              <linearGradient id="map-earth" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#3f5a3a" />
+                <stop offset="1" stop-color="#16241d" />
+              </linearGradient>
+            </defs>
+            <rect width="220" height="65" fill="url(#map-grid)" />
+            <rect x="0" y="53" width="220" height="12" fill="url(#map-earth)" />
+            <path id="map-platforms" d="M8 52H211" />
+            <g id="map-npcs"></g>
+            <g id="map-gate" transform="translate(200 52)">
+              <ellipse class="gate-glow" cx="0" cy="-14" rx="9" ry="16" />
+              <path d="M-6 0V-18a6 6 0 0 1 12 0V0" />
+            </g>
+            <g id="map-allies"></g>
+            <circle id="map-ping" cx="0" cy="0" r="5" transform="translate(32 47)" />
+            <path id="map-dot" d="M0 -6L5 0L0 6L-5 0Z" transform="translate(32 47)" />
+          </svg>
+          <i class="map-corner tl"></i><i class="map-corner tr"></i
+          ><i class="map-corner bl"></i><i class="map-corner br"></i>
+        </div>
+        <button id="dungeon-open">
+          <b class="map-btn-icon">♜</b><span class="map-btn-text">เลือกดันเจียน</span
+          ><span class="map-btn-go">➜</span>
+        </button>
+        <button id="training-open">
+          <b class="map-btn-icon"
+            ><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true">
+              <path d="M2 2l9 9M14 2l-9 9M9.5 12.5l4 -4M6.5 12.5l-4 -4M12 12l2 2M4 12l-2 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none" /></svg
+          ></b><span class="map-btn-text">สนามฝึก · ซ้อมกับสไลม์</span>
+        </button>
       </aside>
       <button
         id="walkability-toggle"
@@ -385,6 +413,6 @@
     </div>
     <script src="/vendor/phaser.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <script type="module" src="/game.js?v=0.29.0"></script>
+    <script type="module" src="/game.js?v=0.30.0"></script>
   </body>
 </html>

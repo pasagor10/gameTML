@@ -25,7 +25,7 @@ import {
   SPECIALIZATIONS,
   heroSkins,
 } from "/shared/rpg.js";
-import { createTownNpcs } from "/town-npcs.js?v=3";
+import { createTownNpcs, footGlow, outline } from "/town-npcs.js?v=5";
 import { marketHtml, shopManagerHtml, marketState } from "/market-ui.js?v=2";
 import { sampleMotion } from "/shared/smoothing.js";
 import { ACTIONS } from "/shared/motion.js";
@@ -59,7 +59,7 @@ import {
   playSpriteSet,
   playMonsterSet,
   playMonsterDeath,
-} from "/sprite-sets.js?v=0.16.0";
+} from "/sprite-sets.js?v=0.16.1";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 let lobbyCharacterId = null;
@@ -571,6 +571,13 @@ async function transaction(event, data = {}) {
     soundCue("buy", result.rarity);
   return result;
 }
+// Minimap marker layers: rewrite the SVG only when the markers moved.
+function setMapLayer(selector, markup) {
+  const layer = $(selector);
+  if (layer.dataset.markup === markup) return;
+  layer.dataset.markup = markup;
+  layer.innerHTML = markup;
+}
 function enterGame() {
   $("#prologue").classList.add("hidden");
   $("#landing").classList.add("hidden");
@@ -732,12 +739,39 @@ function updateHUD() {
       ? "ถ้ำหลวง · ชั้น " + d.floor
       : "เมืองหน้าถ้ำหลวง";
   $("#online-count").textContent = "● " + state.online + " ออนไลน์";
-  const mapW = areaWidth(state.area);
-  $("#map-dot").setAttribute("cx", String(8 + (p.x / mapW) * 200));
-  $("#map-dot").setAttribute(
-    "cy",
-    String(52 - ((WORLD.ground - p.y) / 450) * 43),
+  const mapW = areaWidth(state.area),
+    mapX = (x) => 8 + (x / mapW) * 200,
+    mapY = (y) => 52 - ((WORLD.ground - y) / 450) * 43,
+    town = state.area === "town";
+  $("#map-zone").textContent = d?.training
+    ? "TRAINING · ไม่มีรางวัล"
+    : d
+      ? `ชั้น ${d.floor} · ด่าน ${d.stage} / 3`
+      : "CH.1 · เขตปลอดภัย";
+  $("#minimap").classList.toggle("in-dungeon", !town);
+  const dotAt = `translate(${mapX(p.x).toFixed(1)} ${mapY(p.y).toFixed(1)})`;
+  $("#map-dot").setAttribute("transform", dotAt);
+  $("#map-ping").setAttribute("transform", dotAt);
+  $("#map-gate").setAttribute(
+    "transform",
+    `translate(${town ? mapX(WORLD.portal).toFixed(1) : 205} ${town ? mapY(WORLD.portalY + 245) : 52})`,
   );
+  const npcDots = town
+    ? WORLD.npcs
+        .map(
+          (n) =>
+            `<circle cx="${mapX(n.x).toFixed(1)}" cy="${mapY(n.y ?? WORLD.ground) - 3}" r="2.6"/>`,
+        )
+        .join("")
+    : "";
+  setMapLayer("#map-npcs", npcDots);
+  const allyDots = state.players
+    .map(
+      (m) =>
+        `<circle cx="${mapX(m.x).toFixed(0)}" cy="${(mapY(m.y) - 3).toFixed(0)}" r="3"/>`,
+    )
+    .join("");
+  setMapLayer("#map-allies", allyDots);
   $("#map-platforms").setAttribute(
     "d",
     "M8 52H211" +
@@ -1567,7 +1601,8 @@ class Adventure extends Phaser.Scene {
       );
     this.load.image(
       "player-market-stall",
-      "/assets/town-kit/player-market-stall.png?v=1",
+      // 2x its display size: a 9x downscale shimmered and looked oversharp.
+      "/assets/town-kit/player-market-stall.webp?v=2",
     );
     this.load.image("cave", "/assets/cave.png");
     this.load.image("knight-motion", "/assets/animations/knight-female.png");
@@ -1584,6 +1619,12 @@ class Adventure extends Phaser.Scene {
   create() {
     scene = this;
     this.ready = true;
+    // World text is drawn into a texture, then scaled by the camera zoom and
+    // the screen's pixel ratio; at resolution 1 small Thai names go soft.
+    // Render every world label at a higher resolution so it stays crisp.
+    const addText = this.add.text.bind(this.add),
+      textRes = Math.min(4, Math.ceil((devicePixelRatio || 1) * 2));
+    this.add.text = (...args) => addText(...args).setResolution(textRes);
     this.knightAtlas = registerMotionAtlas(this, "knight-motion", 8);
     this.sprites = createSpriteRegistry(this);
     this.spriteSets = this.sprites.heroes;
@@ -1756,12 +1797,14 @@ class Adventure extends Phaser.Scene {
         image = this.add
           .image(p.x, p.y, "heroes", frame(p.class, p.gender))
           .setOrigin(0.5, 1)
-          .setDisplaySize(125, 125)
+          .setDisplaySize(108, 108)
           .setDepth(10),
+        footLight = footGlow(this, p.x, p.y, 0.34)?.setDepth(6),
         label = this.add
           .text(p.x, p.y - 142, p.name, {
             fontFamily: "Noto Sans Thai",
-            fontSize: "12px",
+            fontSize: "14px",
+            fontStyle: "bold",
             color: p.id === state.self.id ? "#fff0b5" : "#e4fff6",
             stroke: "#193c51",
             strokeThickness: 4,
@@ -1792,11 +1835,13 @@ class Adventure extends Phaser.Scene {
               .setOrigin(0.5)
               .setDepth(14)
           : null;
+      outline(image);
       a = {
         image,
         label,
         gearBadge,
         shadow,
+        footLight,
         marker,
         target: p,
         wasGrounded: p.grounded,
@@ -1952,10 +1997,15 @@ class Adventure extends Phaser.Scene {
           .setOrigin(0.5, 1)
           .setDisplaySize(152, 127)
           .setDepth(4);
+        outline(stall, 6, 2);
+        const light = footGlow(this, shop.x, WORLD.ground - 2, 0.26)
+          ?.setDisplaySize(170, 30)
+          .setDepth(3);
         const label = this.add
           .text(shop.x, WORLD.ground - 141, shop.name, {
             fontFamily: "Noto Sans Thai",
-            fontSize: "10px",
+            fontSize: "12px",
+            fontStyle: "bold",
             align: "center",
             wordWrap: { width: 138 },
             backgroundColor: "#243a32dd",
@@ -1968,6 +2018,7 @@ class Adventure extends Phaser.Scene {
           .setDepth(14);
         this.shopObjects.push(
           shadow,
+          ...(light ? [light] : []),
           stall,
           label,
           this.hotspot(shop.x, WORLD.ground, 152, 127, () =>
@@ -2276,6 +2327,9 @@ class Adventure extends Phaser.Scene {
         .setPosition(a.image.x, p.grounded ? p.y : 600)
         .setAlpha(p.grounded ? 0.35 : 0.16)
         .setScale(p.grounded ? 1 : 0.65);
+      a.footLight
+        ?.setPosition(a.image.x, p.grounded ? p.y - 2 : 598)
+        .setAlpha(p.hp <= 0 ? 0 : p.grounded ? 0.34 : 0.14);
       if (p.grounded && !a.wasGrounded && p.hp > 0) {
         this.dust(a.image.x, p.y);
         a.landAt = time;
