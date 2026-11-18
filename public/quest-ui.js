@@ -22,6 +22,7 @@ const PORTRAITS = {
   mushroom: ["monsters/mushroom", 145, 153],
   goblin: ["monsters/goblin", 159, 167],
   wolf: ["monsters/wolf", 274, 131],
+  batking: ["monsters/batking", 256, 270],
 };
 const QUEST_ICONS = {
   kill: "⚔",
@@ -137,10 +138,9 @@ function bookPage(p) {
 }
 
 function journeyPage(p) {
-  const icons = ["🦇", "🪨", "🐍", "🌿", "🔥", "❄", "⚡", "☽", "🐉", "✺"];
   return `<p>“เจ้าได้ยินเสียงนั้นไหม… แสงจากหัวใจถ้ำกำลังปลุกผู้พิทักษ์ทั้งสิบ จงตามเสียงนั้นลงไปให้ถึงชั้นสุดท้าย”</p>${FLOORS.map(
     (f, i) =>
-      `<div class="item-row"><span>${icons[i]}</span><div><strong>ชั้น ${i + 1} · ${esc(f.name)}</strong><small>${esc(f.boss)} · 3 ด่าน · ${p.quest > i ? "พิชิตแล้ว ✓" : "ยังไม่พิชิต"}</small></div></div>`,
+      `<div class="item-row"><span>${f.icon}</span><div><strong>ชั้น ${i + 1} · ${esc(f.name)}</strong><small>${esc(f.boss)} · 3 ด่าน · ${p.quest > i ? "พิชิตแล้ว ✓" : "ยังไม่พิชิต"}${f.deep ? " · ห้วงลึก" : ""}</small></div></div>`,
   ).join("")}<button id="elder-heal" class="primary-button">พักฟื้น HP / MP เต็ม</button><p class="hint">พิชิตครบ 10 ชั้นเพื่อเปิดของตำนานทั้งหมด</p>`;
 }
 

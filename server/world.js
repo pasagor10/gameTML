@@ -6,7 +6,8 @@ import {
   climbStep,
   DUNGEON_JUMP,
   isElite,
-  DUNGEON_ROSTERS,
+  rosterEntry,
+  traitOf,
   enemyStep,
   dungeonSigns,
   withinDungeonSign,
@@ -41,6 +42,7 @@ import {
   CLASSES,
   ITEMS,
   FLOORS,
+  MAIN_FLOORS,
   WORLD,
   areaWidth,
   maxHp,
@@ -754,10 +756,13 @@ function spawnStage(i) {
     const boss = i.stage === 3 && n === 0,
       slot = i.stage === 3 ? n - 1 : n,
       elite = !boss && isElite(i.floor, i.stage, slot),
+      entry = boss ? null : rosterEntry(i.floor, slot + i.stage),
+      trait = entry?.variant?.trait || null,
+      mods = traitOf({ trait }),
       base = boss
         ? Math.round((300 + i.floor * 220 + i.floor * i.floor * 55) * 1.2)
         : 55 + i.floor * 24 + i.stage * 14,
-      max = Math.round(base * (elite ? 2.2 : 1)),
+      max = Math.round(base * (elite ? 2.2 : 1) * (mods.hp || 1)),
       spot = dungeonSpawn(i.floor, i.stage, slot, boss, count);
     i.enemies.push({
       id: randomUUID(),
@@ -767,13 +772,15 @@ function spawnStage(i) {
       grounded: true,
       hp: max,
       maxHp: max,
-      type: boss
-        ? ["batking", "golem", "serpent"][(i.floor - 1) % 3]
-        : DUNGEON_ROSTERS[i.floor - 1][(slot + i.stage) % 3],
+      type: boss ? FLOORS[i.floor - 1].bossType : entry.type,
+      variant: entry?.variant?.name || null,
+      trait,
       boss,
       elite,
       aggro: boss,
-      speed: boss ? 75 : 85 + i.floor * 5 + (elite ? 15 : 0),
+      speed: boss
+        ? 75
+        : Math.round((85 + i.floor * 5 + (elite ? 15 : 0)) * (mods.speed || 1)),
       spawnAt: now() + n * 0.06,
       attackCount: 0,
       direction: -1,
@@ -1000,7 +1007,8 @@ function resolveAttack(p, t) {
     const crit = Math.random() < 0.12,
       amount =
         damage(combatStats(p).atk, i.floor * 5, [1, 1.6, 2, 2.5][skill]) *
-        (crit ? 1.5 : 1) * (t < (e.exposedUntil || 0) ? 1.5 : 1);
+        (crit ? 1.5 : 1) * (t < (e.exposedUntil || 0) ? 1.5 : 1) *
+        (traitOf(e).taken || 1);
     e.hp -= Math.floor(amount);
     e.hitAt = t;
     e.aggro = true;
@@ -1119,7 +1127,9 @@ function resolveAttack(p, t) {
           );
           m.gold += 40;
           if (i.rewards?.[m.id]) i.rewards[m.id].gold += 40;
-          const item = rollBossLoot(m, i.floor, firstClear);
+          // Deep floors keep dropping the floor-10 legendary pool.
+          const deep = i.floor > MAIN_FLOORS,
+            item = rollBossLoot(m, deep ? MAIN_FLOORS : i.floor, firstClear && !deep);
           if (item) {
             m.ownedEquipment.push(item);
             i.rewards?.[m.id]?.items.push(item);
@@ -1134,7 +1144,7 @@ function resolveAttack(p, t) {
               at: t,
             });
           } else {
-            const ore = i.floor >= 6 ? 2 : 1;
+            const ore = deep ? 2 + (i.floor - MAIN_FLOORS) : i.floor >= 6 ? 2 : 1;
             if (i.rewards?.[m.id]) i.rewards[m.id].ore += ore;
             m.inventory.ore = (m.inventory.ore || 0) + ore;
             i.events.push({
@@ -1443,6 +1453,7 @@ function dealDungeonDamage(i, p, base, actorId, direction, t) {
     p.input = 0;
     savePlayer(p);
   }
+  return amount;
 }
 function updateCrystalHazards(i, t) {
   if (i.training || i.clear) {
@@ -1552,6 +1563,10 @@ export function tick(dt, t = now()) {
         .filter((p) => p && p.hp > 0)
         .sort((a, b) => Math.abs(a.x - e.x) - Math.abs(b.x - e.x))[0];
       e.moving = false;
+      const mods = traitOf(e),
+        frenzied = mods.frenzy && e.hp <= e.maxHp * 0.5;
+      if (mods.regen && e.hp > 0 && t - (e.hitAt || 0) > 3)
+        e.hp = Math.min(e.maxHp, e.hp + e.maxHp * mods.regen * dt);
       if (!p) {
         e.action = null;
         continue;
@@ -1621,18 +1636,37 @@ export function tick(dt, t = now()) {
             Math.abs(p.x - e.x) < (e.boss ? 130 : 100) &&
             Math.abs(p.y - e.y) < 100
           ) {
-            dealDungeonDamage(
+            const dealt = dealDungeonDamage(
               i,
               p,
               i.training
                 ? 18
                 : e.boss
                   ? 28 + i.floor * 6
-                  : Math.round((15 + i.floor * 4) * (e.elite ? 1.5 : 1)),
+                  : Math.round(
+                      (15 + i.floor * 4) *
+                        (e.elite ? 1.5 : 1) *
+                        (mods.damage || 1) *
+                        (frenzied ? 1.3 : 1),
+                    ),
               e.id,
               a.direction,
               t,
             );
+            if (mods.drain && dealt > 0) {
+              const heal = Math.min(e.maxHp - e.hp, Math.round(dealt * mods.drain));
+              e.hp += heal;
+              if (heal > 0)
+                i.events.push({
+                  id: randomUUID(),
+                  kind: "heal",
+                  targetId: e.id,
+                  x: e.x,
+                  y: e.y - 90,
+                  amount: heal,
+                  at: t,
+                });
+            }
           }
         }
         if (t >= a.endsAt) e.action = null;
@@ -1654,7 +1688,10 @@ export function tick(dt, t = now()) {
             ? Math.sign(distance)
             : 0;
       if (step) {
-        e.x += step * (e.boss ? (enraged ? 110 : 75) : e.speed || 90) * dt;
+        e.x +=
+          step *
+          (e.boss ? (enraged ? 110 : 75) : (e.speed || 90) * (frenzied ? 1.4 : 1)) *
+          dt;
         e.moving = true;
       }
       if (
@@ -1665,7 +1702,10 @@ export function tick(dt, t = now()) {
             ? enraged
               ? 1.05
               : 1.4
-            : Math.max(0.95, 1.4 - i.floor * 0.03) * (e.elite ? 0.85 : 1))
+            : Math.max(0.95, 1.4 - Math.min(i.floor, 12) * 0.03) *
+              (e.elite ? 0.85 : 1) *
+              (mods.cooldown || 1) *
+              (frenzied ? 0.7 : 1))
       ) {
         e.attackAt = t;
         e.attackCount = (e.attackCount || 0) + 1;

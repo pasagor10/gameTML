@@ -1,4 +1,5 @@
 import { WORLD } from "/shared/config.js";
+import { dungeonPlatforms } from "/shared/dungeons.js";
 import { TOWN_PROPS, TOWN_SPOTS } from "/shared/town-layout.js";
 // Playable edges stay in world space. Decorative motion never moves collision art.
 export function createWorldDetails(scene) {
@@ -77,7 +78,11 @@ export function createWorldDetails(scene) {
       });
       edges.clear();
       landing.clear();
-      const platforms = town ? WORLD.platforms : WORLD.dungeonPlatforms;
+      // Same ledges the server collides with: each floor/stage has its own.
+      const d = state.dungeon,
+        platforms = town
+          ? WORLD.platforms
+          : dungeonPlatforms(d?.floor, d?.stage, d?.training);
       for (const q of [
         ...platforms,
         { x: 0, y: WORLD.ground, w: town ? WORLD.townWidth : WORLD.width },

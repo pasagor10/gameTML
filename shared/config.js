@@ -45,18 +45,36 @@ export const ITEMS = {
   weapon: { name: "อาวุธผู้พิทักษ์", icon: "⚔", price: 70 },
   armor: { name: "เกราะนักเดินทาง", icon: "🛡", price: 60 },
 };
+// Floors 1-10 are the main story; 11-15 are the deep cave ("ห้วงลึก"),
+// opened by beating floor 10, with their own monster variants (shared/dungeons.js).
+export const MAIN_FLOORS = 10;
 export const FLOORS = [
-  { name: "ปากถ้ำต้องคำสาป", boss: "ราชาค้างคาว", color: 0x9870df },
-  { name: "ถ้ำหินเรืองแสง", boss: "ผู้พิทักษ์หิน", color: 0x64d9f7 },
-  { name: "โพรงน้ำใต้ดิน", boss: "อสรพิษถ้ำ", color: 0x52d7b8 },
-  { name: "สุสานเถาวัลย์", boss: "ราชินีรากไม้", color: 0x7abf62 },
-  { name: "เตาหลอมใต้พิภพ", boss: "ยักษ์เตาหลอม", color: 0xef7048 },
-  { name: "วิหารน้ำแข็ง", boss: "ผู้พิทักษ์เหมันต์", color: 0x8fd9ef },
-  { name: "รังอัสนี", boss: "วิหคสายฟ้า", color: 0xd8ba55 },
-  { name: "หอเงาสะท้อน", boss: "ฝาแฝดเงา", color: 0x8c72c7 },
-  { name: "ประตูมังกร", boss: "นายทวารมังกร", color: 0xb34f5e },
-  { name: "หัวใจถ้ำหลวง", boss: "มังกรจันทราทมิฬ", color: 0x5f4a94 },
+  { name: "ปากถ้ำต้องคำสาป", boss: "ราชาค้างคาว", color: 0x9870df, tint: 0xe5d5ff, prefix: "ค้างคาวถ้ำ", bossType: "batking", icon: "🦇" },
+  { name: "ถ้ำหินเรืองแสง", boss: "ผู้พิทักษ์หิน", color: 0x64d9f7, tint: 0xddd0b8, prefix: "ศิลาผา", bossType: "golem", icon: "🪨" },
+  { name: "โพรงน้ำใต้ดิน", boss: "อสรพิษถ้ำ", color: 0x52d7b8, tint: 0xafffe0, prefix: "วารี", bossType: "serpent", icon: "🐍" },
+  { name: "สุสานเถาวัลย์", boss: "ราชินีรากไม้", color: 0x7abf62, tint: 0xc8efa9, prefix: "รากไพร", bossType: "batking", icon: "🌿" },
+  { name: "เตาหลอมใต้พิภพ", boss: "ยักษ์เตาหลอม", color: 0xef7048, tint: 0xffb18a, prefix: "เพลิง", bossType: "golem", icon: "🔥" },
+  { name: "วิหารน้ำแข็ง", boss: "ผู้พิทักษ์เหมันต์", color: 0x8fd9ef, tint: 0xbdeaff, prefix: "เหมันต์", bossType: "serpent", icon: "❄" },
+  { name: "รังอัสนี", boss: "วิหคสายฟ้า", color: 0xd8ba55, tint: 0xffe7a3, prefix: "อัสนี", bossType: "batking", icon: "⚡" },
+  { name: "หอเงาสะท้อน", boss: "ฝาแฝดเงา", color: 0x8c72c7, tint: 0xcab1ef, prefix: "เงา", bossType: "golem", icon: "☽" },
+  { name: "ประตูมังกร", boss: "นายทวารมังกร", color: 0xb34f5e, tint: 0xffc0a3, prefix: "มังกร", bossType: "serpent", icon: "🐉" },
+  { name: "หัวใจถ้ำหลวง", boss: "มังกรจันทราทมิฬ", color: 0x5f4a94, tint: 0xd4d4ff, prefix: "จันทรา", bossType: "batking", icon: "✺" },
+  { name: "ห้วงน้ำไร้แสง", boss: "เจ้าแม่วารีมืด", color: 0x2f7d99, tint: 0x8fd0e8, prefix: "ห้วงน้ำ", bossType: "serpent", icon: "🌊", deep: true },
+  { name: "ป่าเห็ดต้องสาป", boss: "ยักษ์เห็ดศิลา", color: 0xa4569c, tint: 0xf0b6e6, prefix: "ราสาป", bossType: "golem", icon: "🍄", deep: true },
+  { name: "เหมืองเพลิงร้าง", boss: "พญาค้างคาวลาวา", color: 0xd8462c, tint: 0xff9c78, prefix: "ลาวา", bossType: "batking", icon: "🌋", deep: true },
+  { name: "หุบเงาวิญญาณ", boss: "นาคาเงาวิญญาณ", color: 0x4c6f8f, tint: 0xa8c4ff, prefix: "วิญญาณ", bossType: "serpent", icon: "👻", deep: true },
+  { name: "บัลลังก์จันทราดับ", boss: "จักรพรรดิหินจันทรา", color: 0x3b2c63, tint: 0xc9a8ff, prefix: "จันทราดับ", bossType: "golem", icon: "🌑", deep: true },
 ];
+// Difficulty bands shown on the dungeon cards.
+export function floorDifficulty(floor) {
+  if (floor > MAIN_FLOORS) return { id: "abyss", label: "ห้วงลึก" };
+  if (floor >= 8) return { id: "extreme", label: "ยากมาก" };
+  if (floor >= 5) return { id: "hard", label: "ยาก" };
+  if (floor >= 3) return { id: "normal", label: "ปานกลาง" };
+  return { id: "easy", label: "ปกติ" };
+}
+export const recommendedLevel = (floor) =>
+  floor > MAIN_FLOORS ? 30 + (floor - MAIN_FLOORS) * 2 : Math.max(1, floor * 3 - 2);
 export const WORLD = {
   width: 2400,
   ground: 600,

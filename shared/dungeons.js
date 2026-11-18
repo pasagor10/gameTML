@@ -64,6 +64,8 @@ const ledges = [
     [2050, 465, 220],
   ],
 ];
+// Rosters list the sprite type of each monster slot; floors 11-15 add a
+// named variant with a trait per slot so every deep floor fights differently.
 export const DUNGEON_ROSTERS = [
   ["bat", "slime", "bat"],
   ["golem", "boar", "slime"],
@@ -75,7 +77,57 @@ export const DUNGEON_ROSTERS = [
   ["goblin", "bat", "slime"],
   ["serpent", "wolf", "goblin"],
   ["serpent", "golem", "bat"],
+  ["slime", "serpent", "bat"],
+  ["mushroom", "goblin", "boar"],
+  ["golem", "goblin", "wolf"],
+  ["wolf", "bat", "mushroom"],
+  ["golem", "serpent", "boar"],
 ];
+// Trait multipliers: hp, move speed, attack cooldown, damage dealt, damage
+// taken; regen is max-HP share healed per second while not hit; drain is the
+// share of damage dealt the monster heals; frenzy kicks in below half health.
+export const TRAITS = {
+  swift: { name: "ว่องไว", icon: "💨", text: "เดินและโจมตีเร็ว", speed: 1.45, cooldown: 0.72 },
+  armored: { name: "เกราะหนา", icon: "🛡", text: "รับดาเมจลดลง 40%", taken: 0.6, speed: 0.9 },
+  drain: { name: "ดูดเลือด", icon: "🩸", text: "ฟื้น HP เมื่อโจมตีโดน", drain: 0.6 },
+  giant: { name: "ยักษ์", icon: "⛰", text: "HP และพลังโจมตีสูง ตัวใหญ่ช้า", hp: 1.7, damage: 1.3, speed: 0.8, scale: 1.3 },
+  frenzy: { name: "คลั่ง", icon: "🔥", text: "เลือดต่ำกว่าครึ่งจะโหดขึ้น", frenzy: true },
+  regen: { name: "ฟื้นตัว", icon: "✚", text: "ฟื้น HP หากไม่ถูกตี 3 วินาที", regen: 0.04 },
+};
+export const FLOOR_VARIANTS = {
+  11: [
+    { name: "สไลม์บึงมืด", trait: "regen" },
+    { name: "อสรพิษเงาน้ำ", trait: "swift" },
+    { name: "ค้างคาวดูดเลือด", trait: "drain" },
+  ],
+  12: [
+    { name: "เห็ดยักษ์ต้องสาป", trait: "giant" },
+    { name: "ก็อบลินคลั่ง", trait: "frenzy" },
+    { name: "หมูป่าเกราะหิน", trait: "armored" },
+  ],
+  13: [
+    { name: "โกเลมลาวา", trait: "armored" },
+    { name: "ก็อบลินจุดระเบิด", trait: "swift" },
+    { name: "หมาป่าเพลิง", trait: "frenzy" },
+  ],
+  14: [
+    { name: "หมาป่าวิญญาณ", trait: "swift" },
+    { name: "ค้างคาวผี", trait: "regen" },
+    { name: "เห็ดสูบวิญญาณ", trait: "drain" },
+  ],
+  15: [
+    { name: "ทวารบาลจันทรา", trait: "giant" },
+    { name: "อสรพิษจันทรา", trait: "drain" },
+    { name: "หมูป่าคลั่งจันทรา", trait: "frenzy" },
+  ],
+};
+// The monster in roster slot `index` of a floor: sprite type plus variant.
+export function rosterEntry(floor, index) {
+  const roster = DUNGEON_ROSTERS[floor - 1] || DUNGEON_ROSTERS[0],
+    variant = FLOOR_VARIANTS[floor]?.[index % roster.length] || null;
+  return { type: roster[index % roster.length], variant };
+}
+export const traitOf = (e) => TRAITS[e?.trait] || {};
 // Dungeon jumps stay short; tall ledges get stairs instead of super jumps.
 export const DUNGEON_JUMP = 620; // ≈167 px apex under 1150 gravity
 export const STEP_RISE = 110;
@@ -109,7 +161,8 @@ export function dungeonPlatforms(floor = 1, stage = 1, training = false) {
       { x: 1100, y: 440, w: 260 },
       { x: 1620, y: 470, w: 210 },
     ]);
-  const source = ledges[Math.max(0, Math.min(9, floor - 1))];
+  // Deep floors reuse the cave layouts in order.
+  const source = ledges[Math.max(0, floor - 1) % ledges.length];
   return withStairs(
     source.map(([x, y, w]) => ({
       x: stage === 2 ? 2400 - x - w : x,
@@ -162,8 +215,10 @@ export const withinDungeonSign = (player, sign) =>
 
 // Monsters per stage: deep floors fill the whole cave, the boss brings guards.
 export function dungeonEnemyCount(floor, stage) {
-  if (stage === 3) return 1 + 2 + Math.floor(floor / 2);
-  return 8 + floor * 2 + (stage === 2 ? 2 : 0);
+  // Deep floors stay at floor-12 crowd size; their variants make them harder.
+  const crowd = Math.min(floor, 12);
+  if (stage === 3) return 1 + 2 + Math.floor(crowd / 2);
+  return 8 + crowd * 2 + (stage === 2 ? 2 : 0);
 }
 // Every few monsters is an elite pack leader with more health and bite.
 export const isElite = (floor, stage, n) =>

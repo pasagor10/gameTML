@@ -32,6 +32,7 @@ Choose one of 6 heroes (male/female × swordsman/archer/mage), name the characte
 - Use the **สนามฝึก** button below the minimap for a private slime practice arena. Female swordsman uses the first full 32-frame motion sheet; slime uses 24 frames. Practice grants no gold/EXP/progression, potions are unlimited and slime respawns. Return to town to revive.
 - Attacks now have server-controlled windup/impact/recovery; moving away or jumping out of an enemy telegraph can avoid damage. Hit reactions interrupt a pending player attack. Three consecutive normal strikes alternate swing effects.
 - 10 dungeon floors × 3 stages, with six regular monster types and three current boss visual rigs reused across ten named bosses. Unlock later floors by beating the previous floor's boss.
+- Deep cave (ห้วงลึก): floors 11–15 unlock after the floor-10 boss. Each has its own lineup of named monster variants with traits (swift, armored, drain, giant, frenzy, regen; `shared/dungeons.js`), drops the floor-10 gear pool and more ore. Recommended Lv.32–40.
 - Each dungeon floor costs 1 energy per character. Energy refills by 1 every 30 minutes up to 5, including while offline. The practice arena is free.
 - Auto combat runs on the server while connected, uses skills/potions, advances stages and returns to town after a floor.
 - Party: create/join through menu, max 3. Non-leaders mark ready; leader selects a floor unlocked by everyone.

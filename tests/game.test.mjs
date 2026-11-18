@@ -361,7 +361,7 @@ test("every dungeon floor spawns its monsters inside the arena", async () => {
     if (p.energy) p.energy.nextAt -= DUNGEON_ENERGY_INTERVAL;
     world.beginDungeon(p, floor);
     const i = world.instances.get(p.instance);
-    assert.equal(i.enemies.length, 8 + floor * 2);
+    assert.equal(i.enemies.length, 8 + Math.min(floor, 12) * 2);
     for (const e of i.enemies)
       assert.ok(
         e.x >= 70 && e.x <= WORLD.width - 70,

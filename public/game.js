@@ -13,7 +13,7 @@ import {
   musicOn,
 } from "/sound.js?v=20261118-combat2";
 import { TOWN_ANIMS, TOWN_LAYOUT, TOWN_PROPS } from "/shared/town-layout.js";
-import { createWorldDetails } from "/world-details.js?v=3";
+import { createWorldDetails } from "/world-details.js?v=4";
 import {
   rpgPanel,
   bindRpgPanel,
@@ -41,7 +41,9 @@ import {
   setQuestTab,
   trackerHtml,
   claimable,
-} from "/quest-ui.js?v=2";
+} from "/quest-ui.js?v=3";
+import { dungeonPanelHtml, energyHeader } from "/dungeon-ui.js?v=1";
+import { traitOf, TRAITS } from "/shared/dungeons.js";
 import { MONSTERS } from "/shared/quests.js";
 import { ACTIONS } from "/shared/motion.js";
 import {
@@ -55,6 +57,7 @@ import {
   CLASSES,
   ITEMS,
   FLOORS,
+  MAIN_FLOORS,
   WORLD,
   areaWidth,
   combatStats,
@@ -389,6 +392,7 @@ function modal(title, html, panel) {
     ["inventory", "class", "weapon"].includes(panel),
   );
   $("#modal").classList.toggle("quest-modal", panel === "quest");
+  $("#modal").classList.toggle("dungeon-modal", panel === "dungeon");
   $("#modal").classList.toggle(
     "market-modal",
     ["market", "shop"].includes(panel),
@@ -782,12 +786,13 @@ function updateHUD() {
     : d
       ? `ชั้น ${d.floor} · ด่าน ${d.stage} / 3`
       : energyText(p);
-  const energyDetail = $("#dungeon-energy-detail");
-  if (energyDetail) {
-    const minutes = Math.max(1, Math.ceil(((p.energy?.nextAt ?? state.time) - state.time) / 60));
-    energyDetail.textContent = p.energy?.nextAt
-      ? `${energyText(p)} · ฟื้นอีก 1 แต้มในประมาณ ${minutes} นาที`
-      : energyText(p);
+  const energyBox = $("#dungeon-energy");
+  if (energyBox) {
+    const html = energyHeader(p, state.time);
+    if (energyBox.dataset.html !== html) {
+      energyBox.dataset.html = html;
+      energyBox.innerHTML = html;
+    }
     $$("[data-floor]:not([data-locked])").forEach((b) => {
       b.disabled = p.energy?.points === 0;
     });
@@ -855,7 +860,9 @@ function updateHUD() {
         ? "เส้นทางเปิดแล้ว! เดินหน้าสู่ด่านต่อไป"
         : `กำจัด${d.stage === 3 ? FLOORS[d.floor - 1].boss : "มอนสเตอร์ทั้งหมด"} · เหลือ ${d.enemies.length} ตัว`
       : p.quest >= FLOORS.length
-        ? "ตำนานบทแรกสำเร็จ! กลับไปท้าทายดันเจียนได้อีกครั้ง"
+        ? "พิชิตห้วงลึกครบทุกชั้น! ท้าทายซ้ำเพื่อของตำนาน"
+        : p.quest >= MAIN_FLOORS
+          ? "ตำนานบทแรกสำเร็จ! ห้วงลึกถ้ำหลวงเปิดแล้ว"
         : "คุยกับผู้ใหญ่คำ แล้วเข้าสู่ประตูถ้ำหลวง";
   const streak =
     d && d.streakUntil > state.time && d.streak > 1
@@ -1344,20 +1351,9 @@ function showPanel(panel) {
     );
     if ($("#elder-heal")) $("#elder-heal").onclick = () => emit("player:heal");
   } else if (panel === "dungeon") {
-    modal(
-      "ประตูถ้ำหลวง · เลือกดันเจียน",
-      `<p id="dungeon-energy-detail">${energyText(p)}</p><p>ใช้ 1 พลังงานต่อชั้นต่อคน ฟื้นเองทุก 30 นาที สนามฝึกเล่นฟรี</p><p>แต่ละชั้นมี 3 ด่าน: มอนสเตอร์ → อีลิท → บอส<br>ปาร์ตี้สูงสุด 3 คน สมาชิกต้องกดพร้อมก่อนหัวหน้าเริ่ม</p><p class="hint">SPACE กระโดดหลบคริสตัลและบอสทุบพื้น · รอบแรกได้อาวุธประจำอาชีพแน่นอน · เล่นซ้ำมีโอกาสได้อุปกรณ์สูงสุด 35%</p>${FLOORS.map(
-        (f, i) => {
-          const table = FLOOR_LOOT[i + 1];
-          const featured = [table?.weapons[p.class], ...(table?.pool || [])]
-            .filter(Boolean)
-            .slice(0, 4)
-            .map((id) => `${GEAR[id].icon} ${GEAR[id].name}`)
-            .join(" · ");
-          return `<div class="dungeon-card"><h3>${String(i + 1).padStart(2, "0")} / ${f.name}</h3><p>บอส: ${f.boss} · 3 ด่าน · ${i === 0 ? "เริ่มต้นการผจญภัย" : "ผ่านชั้น " + i + " ก่อน"}</p><small>ของเด่น: ${featured}</small><button data-floor="${i + 1}" ${p.unlocked < i + 1 ? "data-locked disabled" : p.energy?.points === 0 ? "disabled" : ""}>${p.unlocked < i + 1 ? "🔒 ยังไม่ปลดล็อก" : "ใช้ 1 พลังงาน ➜"}</button></div>`;
-        },
-      ).join("")}`,
-    );
+    modal("ประตูถ้ำหลวง · เลือกดันเจียน", dungeonPanelHtml(p, state.time), "dungeon");
+    // Open on the newest floor the hero can enter.
+    $(`[data-card="${Math.min(p.unlocked, FLOORS.length)}"]`)?.scrollIntoView({ block: "center" });
     $$("[data-floor]").forEach(
       (b) =>
         (b.onclick = async () => {
@@ -2099,7 +2095,8 @@ class Adventure extends Phaser.Scene {
         const mset = this.monsterSets.get(e.type),
           size =
             (mset ? mset.height + 12 : e.boss ? 210 : 95) *
-            (e.elite ? 1.25 : 1);
+            (e.elite ? 1.25 : 1) *
+            (traitOf(e).scale || 1);
         const image = this.add
           .image(e.x, e.y, "monsters", types.indexOf(e.type))
           .setDisplaySize(size, size)
@@ -2111,7 +2108,9 @@ class Adventure extends Phaser.Scene {
             e.y - size - 15,
             e.boss
               ? FLOORS[s.dungeon.floor - 1].boss
-              : `${e.elite ? "★ หัวหน้า " : ""}${["ค้างคาวถ้ำ", "ศิลาผา", "วารี", "รากไพร", "เพลิง", "เหมันต์", "อัสนี", "เงา", "มังกร", "จันทรา"][s.dungeon.floor - 1]} · ${{ slime: "สไลม์", bat: "ค้างคาว", boar: "หมูป่า", mushroom: "เห็ดพิษ", wolf: "หมาป่า", goblin: "ก็อบลิน", golem: "โกเลม", serpent: "อสรพิษ" }[e.type] || e.type}`,
+              : e.variant
+                ? `${e.elite ? "★ หัวหน้า " : ""}${TRAITS[e.trait]?.icon || ""} ${e.variant}`
+                : `${e.elite ? "★ หัวหน้า " : ""}${FLOORS[s.dungeon.floor - 1].prefix} · ${{ slime: "สไลม์", bat: "ค้างคาว", boar: "หมูป่า", mushroom: "เห็ดพิษ", wolf: "หมาป่า", goblin: "ก็อบลิน", golem: "โกเลม", serpent: "อสรพิษ" }[e.type] || e.type}`,
             {
               fontFamily: "Noto Sans Thai",
               fontSize: "14px",
@@ -2322,6 +2321,28 @@ class Adventure extends Phaser.Scene {
         soundCue("material");
         this.showDrop(e, "drop-ore", "#9fe6ff", 48);
       }
+      return;
+    }
+    if (e.kind === "heal") {
+      const text = this.add
+        .text(e.x, e.y, `+${e.amount}`, {
+          fontFamily: "Noto Sans Thai",
+          fontSize: "20px",
+          fontStyle: "bold",
+          color: "#7dff9a",
+          stroke: "#0b3318",
+          strokeThickness: 5,
+        })
+        .setOrigin(0.5)
+        .setDepth(36);
+      this.tweens.add({
+        targets: text,
+        y: e.y - 40,
+        alpha: 0,
+        duration: 900,
+        ease: "Cubic.Out",
+        onComplete: () => text.destroy(),
+      });
       return;
     }
     if (e.kind === "quest") {
@@ -2654,7 +2675,8 @@ class Adventure extends Phaser.Scene {
         // A set that finished loading after spawn: adopt its size.
         if (!m.setSized) {
           m.setSized = true;
-          m.size = (mset.height + 12) * (e.elite ? 1.25 : 1);
+          m.size =
+            (mset.height + 12) * (e.elite ? 1.25 : 1) * (traitOf(e).scale || 1);
         }
         playMonsterSet(m.image, mset, e, mpose, serverTime);
       }
@@ -2662,11 +2684,11 @@ class Adventure extends Phaser.Scene {
       m.image.setPosition(point.x, point.y);
       animateMonsterBody(m, e, serverTime, time, this.slimeAtlas);
       if (serverTime - (e.hitAt || 0) > 0.18 && !state.dungeon?.training) {
+        // Frenzied variants flush red once below half health.
         m.image.setTint(
-          [
-            0xe5d5ff, 0xddd0b8, 0xafffe0, 0xc8efa9, 0xffb18a, 0xbdeaff,
-            0xffe7a3, 0xcab1ef, 0xffc0a3, 0xd4d4ff,
-          ][state.dungeon.floor - 1],
+          traitOf(e).frenzy && e.hp <= e.maxHp * 0.5
+            ? 0xff7a6a
+            : FLOORS[state.dungeon.floor - 1].tint,
         );
       }
       this.fx.applyKick(m, m.image);
