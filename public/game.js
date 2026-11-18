@@ -1,7 +1,7 @@
 import { SLOT_MACHINE } from "/shared/slots.js";
 import { slotPanelHtml, bindSlotPanel } from "/slots-ui.js?v=2";
 import { heroPortraitStyle } from "/hero-appearance.js?v=2";
-import { skillIcon, potionIcon, autoIcon } from "/skill-icons.js?v=1";
+import { skillIcon, potionIcon, autoIcon } from "/skill-icons.js?v=2";
 import { dungeonPlatforms, withinDungeonSign } from "/shared/dungeons.js";
 import { supplyArt, itemArtPath } from "/item-art.js";
 import {
@@ -18,7 +18,7 @@ import {
   rpgPanel,
   bindRpgPanel,
   gearShop,
-} from "/rpg-ui.js?v=7";
+} from "/rpg-ui.js?v=8";
 import {
   GEAR,
   RARITIES,
@@ -39,10 +39,20 @@ import { sampleMotion } from "/shared/smoothing.js";
 import {
   questPanelHtml,
   setQuestTab,
+  portrait,
   trackerHtml,
   claimable,
 } from "/quest-ui.js?v=3";
 import { dungeonPanelHtml, energyHeader } from "/dungeon-ui.js?v=1";
+import { createNightSky } from "/night-sky.js?v=2";
+import {
+  nightInfo,
+  nightBoss,
+  nightFloor,
+  nightReward,
+  NIGHT_CAVE,
+  NIGHT_BOSS,
+} from "/shared/night.js";
 import { traitOf, TRAITS } from "/shared/dungeons.js";
 import { MONSTERS } from "/shared/quests.js";
 import { ACTIONS } from "/shared/motion.js";
@@ -63,9 +73,11 @@ import {
   combatStats,
   DUNGEON_ENERGY_MAX,
 } from "/shared/config.js";
-import { createParallax } from "/parallax.js?v=0.7.0";
-import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.1";
-import { createCombatFx } from "/combat-fx.js?v=0.6.0";
+import { createParallax } from "/parallax.js?v=0.8.1";
+import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.3";
+import { createCombatFx } from "/combat-fx.js?v=0.7.0";
+import { activeEffects, effectTint, effectRow, hudEffects } from "/status-ui.js?v=1";
+import { STATUSES, BUFFS } from "/shared/skills.js";
 import {
   animateHeroBody,
   animateMonsterBody,
@@ -86,6 +98,9 @@ let lobbyMode = "loading";
 let lastRpgPanelHash = "";
 let lastQuestHash = "",
   lastTrackerHash = "";
+// Floor data for the current dungeon; the night cave stands in for a floor.
+const floorInfo = (d) =>
+  d?.night ? nightInfo(d.night) : FLOORS[(d?.floor || 1) - 1];
 const questHash = (p) =>
   JSON.stringify([p.daily, p.bestiary, p.level, p.quest, state.area]);
 let job = "swordsman",
@@ -302,7 +317,7 @@ function renderCards() {
           `<div class="attribute" data-stat="${key}"><div><span><b>${key}</b> <small>${label}</small></span><strong>${value}</strong></div><div class="attribute-track"><i style="width:${Math.min(100, (value / max) * 100)}%"></i></div></div>`,
       )
       .join("")}
-  <div class="stats-heading skill-heading"><span>สกิลประจำคลาส</span><small>SKILL PREVIEW</small></div><div class="lobby-skills">${CLASS_SKILLS[job].map((skill, i) => `<button data-lobby-skill="${i}" title="${skill.name} · ${skill.detail} · ${ACTIONS[i + 1].mp} MP"><span>${skillIcon(job, i + 1)}</span><div><strong>${skill.name}</strong><small>${ACTIONS[i + 1].mp} MP · ${ACTIONS[i + 1].cooldown} วินาที</small></div><b>${["Q", "W", "E"][i]}</b></button>`).join("")}</div>`;
+  <div class="stats-heading skill-heading"><span>สกิลประจำคลาส</span><small>SKILL PREVIEW</small></div><div class="lobby-skills">${CLASS_SKILLS[job].map((skill, i) => `<button data-lobby-skill="${i}" title="${skill.name} · ${skill.detail} · ${ACTIONS[i + 1].mp} MP"><span>${skillIcon(job, i + 1)}</span><div><strong>${skill.name}</strong><small>${ACTIONS[i + 1].mp} MP · ${ACTIONS[i + 1].cooldown} วินาที</small></div><b>${["Q", "W", "E", "S"][i]}</b></button>`).join("")}</div>`;
   $$("[data-lobby-skill]").forEach(
     (b) =>
       (b.onclick = () => {
@@ -535,8 +550,11 @@ function loadingArrived(s) {
     set(".loading-title", "สนามฝึก");
     set(".loading-sub", "ซ้อมท่าได้ไม่จำกัด ไม่เสียความคืบหน้า");
   } else if (d) {
-    const floor = FLOORS[d.floor - 1];
-    set(".loading-kicker", "ชั้น " + d.floor + " / " + FLOORS.length);
+    const floor = floorInfo(d);
+    set(
+      ".loading-kicker",
+      d.night ? "ยามราตรี · ถ้ำลึกลับ" : "ชั้น " + d.floor + " / " + FLOORS.length,
+    );
     set(".loading-title", floor.name);
     set(
       ".loading-sub",
@@ -668,6 +686,11 @@ function enterGame() {
 }
 const forgeHash = (p) =>
   JSON.stringify([p.equipment, p.upgrade, p.enhancements, p.gold, p.inventory.ore]);
+function skyText(sky, time) {
+  if (!sky) return "";
+  const left = Math.max(1, Math.ceil((sky.changeAt - time) / 60));
+  return sky.night ? `🌙 ถ้ำลึกลับเปิด ${left} น.` : `☀ มืดใน ${left} น.`;
+}
 function energyText(p) {
   return `พลังงาน ${p.energy?.points ?? DUNGEON_ENERGY_MAX} / ${DUNGEON_ENERGY_MAX}`;
 }
@@ -754,6 +777,7 @@ function updateHUD() {
       "[data-action=skill1]",
       "[data-action=skill2]",
       "[data-action=skill3]",
+      "[data-action=skill4]",
     ].join(","),
   ).forEach((b) =>
     b.classList.toggle(
@@ -764,16 +788,20 @@ function updateHUD() {
   $("#location-name").textContent = d?.training
     ? "ลานฝึกผู้พิทักษ์"
     : d
-      ? FLOORS[d.floor - 1].name
+      ? floorInfo(d).name
       : "เมืองหน้าถ้ำหลวง";
   $("#stage-label").textContent = d?.training
     ? "สนามฝึก · ไม่มีรางวัล · สไลม์เกิดใหม่อัตโนมัติ"
-    : d
+    : d?.night
+      ? `ยามราตรี · บอสใหญ่ ${d.night.name} · พลังเทียบชั้น ${d.floor}`
+      : d
       ? `ชั้น ${d.floor} / ${FLOORS.length} · ด่าน ${d.stage} / 3 · ${d.stage === 3 ? "BOSS STAGE" : d.stage === 2 ? "ELITE STAGE" : "MONSTER STAGE"}`
       : "เมืองกลาง · CH.1 · เขตปลอดภัย";
   $("#map-title").textContent = d?.training
     ? "สนามฝึกผู้พิทักษ์"
-    : d
+    : d?.night
+      ? "ถ้ำลึกลับ"
+      : d
       ? "ถ้ำหลวง · ชั้น " + d.floor
       : "เมืองหน้าถ้ำหลวง";
   $("#online-count").textContent = "● " + state.online + " ออนไลน์";
@@ -784,8 +812,10 @@ function updateHUD() {
   $("#map-zone").textContent = d?.training
     ? "TRAINING · ไม่มีรางวัล"
     : d
-      ? `ชั้น ${d.floor} · ด่าน ${d.stage} / 3`
-      : energyText(p);
+      ? d.night
+        ? "ถ้ำลึกลับ · ยามราตรี"
+        : `ชั้น ${d.floor} · ด่าน ${d.stage} / 3`
+      : `${energyText(p)} · ${skyText(state.sky, state.time)}`;
   const energyBox = $("#dungeon-energy");
   if (energyBox) {
     const html = energyHeader(p, state.time);
@@ -858,7 +888,7 @@ function updateHUD() {
     : d
       ? d.clear
         ? "เส้นทางเปิดแล้ว! เดินหน้าสู่ด่านต่อไป"
-        : `กำจัด${d.stage === 3 ? FLOORS[d.floor - 1].boss : "มอนสเตอร์ทั้งหมด"} · เหลือ ${d.enemies.length} ตัว`
+        : `กำจัด${d.stage === 3 ? floorInfo(d).boss : "มอนสเตอร์ทั้งหมด"} · เหลือ ${d.enemies.length} ตัว`
       : p.quest >= FLOORS.length
         ? "พิชิตห้วงลึกครบทุกชั้น! ท้าทายซ้ำเพื่อของตำนาน"
         : p.quest >= MAIN_FLOORS
@@ -913,7 +943,7 @@ function updateHUD() {
   if (p.hp <= 0 && wasAlive) sfx("death", null, 0);
   wasCleared = cleared;
   wasAlive = p.hp > 0;
-  for (let i = 1; i <= 3; i++) {
+  for (let i = 1; i <= 4; i++) {
     const button = $(`[data-action="skill${i}"] i`),
       remaining = ACTIONS[i].cooldown - (state.time - (p.cooldowns[i] || 0));
     const skillButton = button.parentElement;
@@ -971,6 +1001,9 @@ function nearby() {
   }
   if (Math.abs(p.x - SLOT_MACHINE.x) <= SLOT_MACHINE.reach && Math.abs(p.y - SLOT_MACHINE.y) < 90)
     return { id: "slots", label: "ตู้สมบัติจันทรา · หมุน 1,000 ทอง" };
+  // Everything left of the cave mouth is the cave (it is the town's edge).
+  if (state.sky?.night && p.x < NIGHT_CAVE.x + 110)
+    return { id: "nightcave", label: "ถ้ำลึกลับ · บอสยามราตรี" };
   const npc = WORLD.npcs.find(
     (n) =>
       Math.abs(n.x - p.x) < 105 && Math.abs((n.y ?? WORLD.ground) - p.y) < 90,
@@ -1004,6 +1037,7 @@ function openTown(id) {
     return showPanel("slots");
   }
   if (id === "portal") return showPanel("dungeon");
+  if (id === "nightcave") return showPanel("nightcave");
   if (id === "market") return showPanel("market");
   if (id.startsWith("shop:")) {
     const shop = state.shops.find((s) => s.id === id.slice(5));
@@ -1053,7 +1087,7 @@ function showFloorResult(r) {
     row = (label, value, extra = "") =>
       `<div><dt>${label}</dt><dd>${value}${extra ? `<small>${extra}</small>` : ""}</dd></div>`;
   $("#result-title").textContent =
-    "ชั้น " + r.floor + " · " + FLOORS[r.floor - 1].name;
+    r.night ? "ถ้ำลึกลับ · " + r.night : "ชั้น " + r.floor + " · " + FLOORS[r.floor - 1].name;
   const rank = $("#floor-result .result-rank");
   rank.dataset.rank = r.rank;
   rank.querySelector("b").textContent = r.rank;
@@ -1350,6 +1384,30 @@ function showPanel(panel) {
         }),
     );
     if ($("#elder-heal")) $("#elder-heal").onclick = () => emit("player:heal");
+  } else if (panel === "nightcave") {
+    const sky = state.sky;
+    if (!sky?.night) {
+      closeModal();
+      return toast("ถ้ำลึกลับหายไปกับแสงรุ่งอรุณ กลับมาใหม่ตอนกลางคืน", true);
+    }
+    const boss = nightBoss(sky.cycle),
+      party = state.party,
+      floor = nightFloor([p]),
+      reward = nightReward(floor),
+      done = state.nightCleared === sky.cycle,
+      left = Math.max(1, Math.ceil((sky.changeAt - state.time) / 60));
+    modal(
+      "ถ้ำลึกลับ · ยามราตรี",
+      `<div class="night-cave"><div class="night-boss">${portrait(boss.type)}</div><div class="night-info"><small>บอสใหญ่ประจำคืนนี้</small><h3>${escape(boss.name)}</h3><p>ถ้ำโบราณที่โผล่ขึ้นใต้ต้นไม้ใหญ่เฉพาะยามค่ำคืน ภายในมีบอสร่างยักษ์ที่แข็งแกร่งกว่าบอสชั้นปกติหลายเท่า พร้อมลูกสมุน</p><div class="night-tags"><span>HP ×${NIGHT_BOSS.hp}</span><span>ตีแรงขึ้น ${Math.round((NIGHT_BOSS.damage - 1) * 100)}%</span><span>พลังเทียบชั้น ${floor}${party ? " (ตามสมาชิกที่เก่งสุด)" : ""}</span><span>ไม่ใช้พลังงาน</span></div><div class="night-reward ${done ? "done" : ""}"><strong>${done ? "รับรางวัลใหญ่คืนนี้แล้ว · ชนะอีกครั้งได้ทองเล็กน้อย" : "รางวัลชนะครั้งแรกของคืนนี้"}</strong><div><b class="chip chip-gold">◈ ${reward.gold}</b><b class="chip chip-ore">◆ แร่ ×${reward.ore}</b><b class="chip chip-exp">EXP ${300 + floor * 30}</b><b class="chip chip-energy">${Math.round(reward.itemChance * 100)}% อุปกรณ์บอสที่ยังไม่มี</b></div></div><p class="night-left">🌙 ถ้ำจะปิดเมื่อรุ่งสางในอีก ${left} นาที</p></div></div><button id="night-enter" class="primary-button">${party && party.leader !== p.id ? "รอหัวหน้าปาร์ตี้พาเข้า" : "ก้าวเข้าถ้ำ ➜"}</button>`,
+      "nightcave",
+    );
+    $("#night-enter").disabled = !!party && party.leader !== p.id;
+    $("#night-enter").onclick = async () => {
+      $("#night-enter").disabled = true;
+      const r = await emit("night:enter");
+      if (r) closeModal();
+      else $("#night-enter").disabled = false;
+    };
   } else if (panel === "dungeon") {
     modal("ประตูถ้ำหลวง · เลือกดันเจียน", dungeonPanelHtml(p, state.time), "dungeon");
     // Open on the newest floor the hero can enter.
@@ -1589,6 +1647,7 @@ addEventListener("keydown", (e) => {
     KeyQ: "skill1",
     KeyW: "skill2",
     KeyE: "skill3",
+    KeyS: "skill4",
     KeyR: "hp",
     KeyT: "auto",
   };
@@ -1865,6 +1924,7 @@ class Adventure extends Phaser.Scene {
     this.npcs.push(slotGlow, slotImage, slotLabel);
     this.hotspots.push(this.hotspot(SLOT_MACHINE.x, WORLD.ground, 150, 185, () => openTown("slots")));
     this.tweens.add({targets:slotGlow,alpha:0.4,duration:1300,yoyo:true,repeat:-1});
+    this.nightSky = createNightSky(this, () => openTown("nightcave"));
     this.makePlatforms();
     this.cameras.main.centerOn(380, this.camY ?? 340);
     this.scale.on("resize", () => this.resize());
@@ -1939,7 +1999,7 @@ class Adventure extends Phaser.Scene {
         this.decor.lineBetween(x + 4, p.y + 10, x + 27, p.y + 10);
       }
       this.decor.fillStyle(
-        cave ? FLOORS[(state?.dungeon?.floor || 1) - 1].color : 0x83b952,
+        cave ? floorInfo(state?.dungeon).color : 0x83b952,
       );
       this.decor.fillRoundedRect(p.x - 3, p.y, p.w + 6, 9, 4);
       for (let x = p.x + 6; x < p.x + p.w; x += 13) {
@@ -2050,7 +2110,7 @@ class Adventure extends Phaser.Scene {
       this.cameras.main.setBounds(0, -100, areaWidth(s.area), 950);
       this.parallax.setArea(
         town ? "town" : "cave",
-        town ? null : FLOORS[s.dungeon.floor - 1].color,
+        town ? null : floorInfo(s.dungeon).color,
       );
       this.lookX = 0;
       this.npcs.forEach((n) => n.setVisible(town));
@@ -2096,7 +2156,8 @@ class Adventure extends Phaser.Scene {
           size =
             (mset ? mset.height + 12 : e.boss ? 210 : 95) *
             (e.elite ? 1.25 : 1) *
-            (traitOf(e).scale || 1);
+            (traitOf(e).scale || 1) *
+            (e.night ? NIGHT_BOSS.scale : 1);
         const image = this.add
           .image(e.x, e.y, "monsters", types.indexOf(e.type))
           .setDisplaySize(size, size)
@@ -2107,10 +2168,10 @@ class Adventure extends Phaser.Scene {
             e.x,
             e.y - size - 15,
             e.boss
-              ? FLOORS[s.dungeon.floor - 1].boss
+              ? floorInfo(s.dungeon).boss
               : e.variant
                 ? `${e.elite ? "★ หัวหน้า " : ""}${TRAITS[e.trait]?.icon || ""} ${e.variant}`
-                : `${e.elite ? "★ หัวหน้า " : ""}${FLOORS[s.dungeon.floor - 1].prefix} · ${{ slime: "สไลม์", bat: "ค้างคาว", boar: "หมูป่า", mushroom: "เห็ดพิษ", wolf: "หมาป่า", goblin: "ก็อบลิน", golem: "โกเลม", serpent: "อสรพิษ" }[e.type] || e.type}`,
+                : `${e.elite ? "★ หัวหน้า " : ""}${floorInfo(s.dungeon).prefix} · ${{ slime: "สไลม์", bat: "ค้างคาว", boar: "หมูป่า", mushroom: "เห็ดพิษ", wolf: "หมาป่า", goblin: "ก็อบลิน", golem: "โกเลม", serpent: "อสรพิษ" }[e.type] || e.type}`,
             {
               fontFamily: "Noto Sans Thai",
               fontSize: "14px",
@@ -2245,6 +2306,30 @@ class Adventure extends Phaser.Scene {
       onComplete: () => drop.destroy(),
     });
   }
+  // "❄ แช่แข็ง!" over whoever just picked up a status.
+  statusPop(x, y, st, loud) {
+    const text = this.add
+      .text(x, y, `${st.icon} ${st.name}!`, {
+        fontFamily: "Noto Sans Thai",
+        fontSize: loud ? "18px" : "15px",
+        fontStyle: "bold",
+        color: st.color,
+        stroke: "#0b0f1a",
+        strokeThickness: 5,
+      })
+      .setOrigin(0.5)
+      .setDepth(43)
+      .setScale(0.5);
+    this.tweens.add({ targets: text, scale: 1, duration: 180, ease: "Back.Out" });
+    this.tweens.add({
+      targets: text,
+      y: y - 36,
+      alpha: 0,
+      delay: 650,
+      duration: 500,
+      onComplete: () => text.destroy(),
+    });
+  }
   floatBanner(x, y, label, color, stroke) {
     const text = this.add
       .text(x, y, label, {
@@ -2321,6 +2406,23 @@ class Adventure extends Phaser.Scene {
         soundCue("material");
         this.showDrop(e, "drop-ore", "#9fe6ff", 48);
       }
+      return;
+    }
+    if (e.kind === "buff") {
+      const b = BUFFS[e.buff];
+      if (b && e.targetId === state.self.id) {
+        this.floatBanner(e.x, e.y, `${b.icon} ${b.name}`, b.color, "#1a1208");
+        sfx("spell", null, 0.1);
+      }
+      if (b) {
+        const target = this.actors.get(e.targetId)?.image;
+        this.fx.ring(target?.x ?? e.x, (target?.y ?? e.y + 120) - 60, Phaser.Display.Color.HexStringToColor(b.color).color, 2.4, 480);
+      }
+      return;
+    }
+    if (e.kind === "status") {
+      const st = STATUSES[e.status];
+      if (st) this.statusPop(e.x, e.y, st, e.targetId === state.self.id);
       return;
     }
     if (e.kind === "heal") {
@@ -2408,6 +2510,9 @@ class Adventure extends Phaser.Scene {
         );
       const monster = this.monsters.get(e.targetId),
         actor = this.actors.get(e.targetId);
+      if (e.status && !e.tick && STATUSES[e.status])
+        this.statusPop(e.x, e.y - 70, STATUSES[e.status], false);
+      if (e.tick) e.icon = STATUSES[e.status]?.icon;
       this.fx.hit(
         e,
         source?.x,
@@ -2568,6 +2673,13 @@ class Adventure extends Phaser.Scene {
       // Name sits just above the head: painted sets know their height.
       const headroom = spriteSet ? spriteSet.height + 24 : 158;
       a.label.setPosition(a.image.x, a.image.y - (p.hp <= 0 ? 60 : headroom));
+      effectRow(
+        this,
+        a,
+        p.hp > 0 && state.area === "dungeon" ? activeEffects(p, serverTime) : [],
+        a.image.x,
+        a.image.y - headroom - (id === state.self.id ? 34 : 12),
+      );
       const visibleGear = Object.values(p.equipment || {})
         .map((itemId) => GEAR[itemId])
         .filter(Boolean);
@@ -2676,28 +2788,42 @@ class Adventure extends Phaser.Scene {
         if (!m.setSized) {
           m.setSized = true;
           m.size =
-            (mset.height + 12) * (e.elite ? 1.25 : 1) * (traitOf(e).scale || 1);
+            (mset.height + 12) *
+            (e.elite ? 1.25 : 1) *
+            (traitOf(e).scale || 1) *
+            (e.night ? NIGHT_BOSS.scale : 1);
         }
         playMonsterSet(m.image, mset, e, mpose, serverTime);
       }
       const point = sampleMotion(m.history, serverTime - 0.08);
       m.image.setPosition(point.x, point.y);
       animateMonsterBody(m, e, serverTime, time, this.slimeAtlas);
-      if (serverTime - (e.hitAt || 0) > 0.18 && !state.dungeon?.training) {
-        // Frenzied variants flush red once below half health.
+      const effects = activeEffects(e, serverTime),
+        statusTint = effectTint(effects);
+      if (serverTime - (e.hitAt || 0) > 0.18 && (statusTint || !state.dungeon?.training)) {
+        // Status colours win; frenzied variants flush red below half health.
         m.image.setTint(
-          traitOf(e).frenzy && e.hp <= e.maxHp * 0.5
-            ? 0xff7a6a
-            : FLOORS[state.dungeon.floor - 1].tint,
+          statusTint ??
+            (traitOf(e).frenzy && e.hp <= e.maxHp * 0.5
+              ? 0xff7a6a
+              : floorInfo(state.dungeon).tint),
         );
       }
       this.fx.applyKick(m, m.image);
       if (e.boss)
         m.label.setText(
-          FLOORS[state.dungeon.floor - 1].boss +
+          floorInfo(state.dungeon).boss +
             (e.hp <= e.maxHp * 0.5 ? " · คลั่ง!" : ""),
         );
       m.label.setPosition(m.image.x, m.image.y - m.size - 14);
+      // Stunned monsters get bobbing stars; the row lists every status.
+      effectRow(
+        this,
+        m,
+        effects,
+        m.image.x,
+        m.image.y - m.size - 26 + (effects.some((s) => s.type === "stun") ? Math.sin(time * 0.012) * 3 : 0),
+      );
       m.bar.setPosition(m.image.x, m.image.y);
       m.lagHp ??= e.hp;
       if (m.lagHp < e.hp) m.lagHp = e.hp;
@@ -2771,6 +2897,10 @@ class Adventure extends Phaser.Scene {
       this.reducedMotion,
     );
     this.parallax.update(time);
+    this.nightSky.update(state, time, () =>
+      toast("ราตรีมาเยือน… ถ้ำลึกลับปรากฏใต้ต้นไม้ใหญ่ทางซ้ายของเมือง"),
+    );
+    this.parallax.setDark(state?.area === "town" ? state.sky?.dark || 0 : 0);
   }
 }
 

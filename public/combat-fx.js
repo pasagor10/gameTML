@@ -367,6 +367,17 @@ export function createCombatFx(scene) {
       tier = Math.min(3, Math.max(1, e.tier || 1)),
       k = TIER_SCALE[tier - 1],
       accent = tierAccent(tier, color);
+    if (e.skill === 4) {
+      // Party buff: a rising column and a ring at the feet.
+      pillar(e.x, e.y + 50, color, 1, 1.1);
+      ring(e.x, e.y + 40, color, 3, 520, 0.3);
+      ring(e.x, e.y - 10, 0xffffff, 1.6, 360);
+      blast(embers, e.x, e.y + 40, 18, color, {
+        speed: [120, 320],
+        angle: { min: 240, max: 300 },
+      });
+      return;
+    }
     if (e.skill && tier >= 2) tierAura(e.x, e.y + 50, tier, color, accent);
     if (e.class === "archer") {
       // Volley: 3 / 4 / 5 arrows by tier; other skills gain a ghost arrow.
@@ -521,81 +532,119 @@ export function createCombatFx(scene) {
     }
   }
 
-  // Per-target stacking so simultaneous numbers don't overlap.
+  // Damage numbers, arcade style: every strike of a skill is its own line,
+  // popping in one after another and stacking upward, then the whole stack
+  // floats off together. Orange for hits, red-pink for crits (with a burst
+  // badge), violet when a hero is hurt, status colours for damage over time.
+  const NUMBER_STYLES = {
+    hit: ["#fffbe0", "#ffc23d", "#ff7a00", "#3d1500"],
+    crit: ["#fff0f6", "#ff5a8c", "#d1103a", "#3d0014"],
+    hurt: ["#f6eaff", "#c08bff", "#7a3cf0", "#1f0748"],
+    burn: ["#fff1d6", "#ffab4a", "#ff5a1f", "#3d1200"],
+    poison: ["#f4ffe0", "#a8f05a", "#3fae2a", "#0f2e08"],
+    bleed: ["#ffe6ea", "#ff6b82", "#b0102e", "#33000c"],
+  };
   const stacks = new Map();
-  function number(x, y, amount, crit, targetId) {
+  function paint(label, style) {
+    const [a, b, c, stroke] = NUMBER_STYLES[style] || NUMBER_STYLES.hit;
+    const g = label.context.createLinearGradient(0, 0, 0, label.height);
+    g.addColorStop(0, a);
+    g.addColorStop(0.45, b);
+    g.addColorStop(1, c);
+    label.setFill(g).setStroke(stroke, label.style.strokeThickness);
+  }
+  function digits(x, y, text, style, size, crit) {
+    const label = scene.add
+      .text(x, y, text, {
+        fontFamily: "Chonburi, Noto Sans Thai",
+        fontSize: size + "px",
+        color: "#ffffff",
+        stroke: "#000000",
+        strokeThickness: crit ? 8 : 6,
+        padding: { x: 4, y: 4 },
+      })
+      .setOrigin(0.5)
+      .setDepth(42);
+    label.setShadow(0, 3, "#000000", 3, true, true);
+    paint(label, style);
+    return label;
+  }
+  // lines: [{ amount, crit }]; hurt numbers are negative amounts.
+  function number(x, y, amount, crit, targetId, opts = {}) {
     const now = scene.time.now,
-      s = stacks.get(targetId);
-    const slot = s && now - s.at < 400 ? (s.slot + 1) % 4 : 0;
-    stacks.set(targetId, { at: now, slot });
-    if (stacks.size > 50) stacks.clear();
-    const hurt = amount < 0,
-      label = scene.add
-        .text(
-          x + (Math.random() - 0.5) * 24,
-          y - slot * 22,
-          String(Math.abs(amount)),
-          {
-            fontFamily: "Chonburi, Noto Sans Thai",
-            fontSize: crit ? "34px" : hurt ? "24px" : "26px",
-            color: hurt ? "#ff6b6b" : crit ? "#ffe066" : "#ffffff",
-            stroke: hurt ? "#3a0610" : crit ? "#6b2d00" : "#1d2a44",
-            strokeThickness: crit ? 7 : 5,
-          },
-        )
-        .setOrigin(0.5)
-        .setDepth(42)
-        .setScale(0.3);
-    label.setShadow(0, 3, "#000000", 4, true, true);
-    if (crit) {
-      const g = label.context.createLinearGradient(0, 0, 0, label.height);
-      g.addColorStop(0, "#fffbe0");
-      g.addColorStop(0.5, "#ffd34d");
-      g.addColorStop(1, "#ff8a1f");
-      label.setFill(g);
-    }
-    const tag = crit
-      ? scene.add
-          .text(label.x, label.y - 26, "CRITICAL!", {
-            fontFamily: "Chonburi, Noto Sans Thai",
-            fontSize: "13px",
-            color: "#fff3b0",
-            stroke: "#6b2d00",
-            strokeThickness: 4,
-          })
-          .setOrigin(0.5)
-          .setDepth(42)
-          .setAlpha(0)
-      : null;
-    const drift = (Math.random() - 0.5) * 50;
-    scene.tweens.add({
-      targets: label,
-      scale: crit ? 1.25 : 1,
-      duration: 140,
-      ease: "Back.out",
-      onComplete: () =>
+      hurt = amount < 0,
+      tick = !!opts.tick,
+      lines = opts.lines?.length ? opts.lines : [{ amount: Math.abs(amount), crit }];
+    // Start above a stack that is still on screen for this target.
+    const prev = stacks.get(targetId),
+      base = prev && now < prev.until ? prev.top - 8 : y;
+    const step = tick ? 0 : 30,
+      top = base - (lines.length - 1) * step - 34;
+    stacks.set(targetId, { until: now + 420 + lines.length * 70, top });
+    if (stacks.size > 60) stacks.clear();
+    const jitter = (Math.random() - 0.5) * 18,
+      drift = (Math.random() - 0.5) * 30;
+    lines.forEach((line, n) => {
+      const style = opts.status
+          ? opts.status
+          : hurt
+            ? "hurt"
+            : line.crit
+              ? "crit"
+              : "hit",
+        size = tick ? 20 : line.crit ? 36 : hurt ? 28 : 30,
+        lx = x + jitter + (tick ? 34 : 0),
+        ly = base - n * step;
+      scene.time.delayedCall(n * 70, () => {
+        const parts = [digits(lx, ly, String(Math.abs(line.amount)), style, size, line.crit)];
+        if (line.crit) {
+          // Burst badge to the left of a critical line.
+          const badge = sprite("cfx-glow", lx - parts[0].width / 2 - 10, ly, 0xff4f8a, 43)
+            .setDisplaySize(34, 34);
+          const star = scene.add
+            .text(badge.x, ly, "✸", {
+              fontFamily: "Noto Sans Thai",
+              fontSize: "24px",
+              color: "#ffe0ec",
+              stroke: "#5a0020",
+              strokeThickness: 5,
+            })
+            .setOrigin(0.5)
+            .setDepth(43);
+          parts.push(badge, star);
+        }
+        if (opts.status && n === 0) {
+          const icon = scene.add
+            .text(lx - parts[0].width / 2 - 6, ly, opts.icon || "", {
+              fontFamily: "Noto Sans Thai",
+              fontSize: "15px",
+            })
+            .setOrigin(1, 0.5)
+            .setDepth(42);
+          parts.push(icon);
+        }
+        for (const p of parts) p.setScale(tick ? 0.6 : 1.7).setAlpha(0);
         scene.tweens.add({
-          targets: label,
-          y: label.y - 55,
-          x: label.x + drift,
-          scale: crit ? 1 : 0.85,
+          targets: parts,
+          scale: 1,
+          alpha: 1,
+          duration: 110,
+          ease: "Back.out",
+        });
+        // The stack holds, then rises and fades as one.
+        const hold = Math.max(0, (lines.length - 1 - n) * 70) + (tick ? 260 : 420);
+        scene.tweens.add({
+          targets: parts,
+          y: `-=${tick ? 34 : 46}`,
+          x: `+=${drift}`,
           alpha: 0,
-          delay: crit ? 380 : 240,
-          duration: 520,
+          delay: 110 + hold,
+          duration: 480,
           ease: "Quad.in",
-          onComplete: () => label.destroy(),
-        }),
-    });
-    if (tag)
-      scene.tweens.add({
-        targets: tag,
-        alpha: 1,
-        y: tag.y - 8,
-        duration: 160,
-        yoyo: true,
-        hold: 420,
-        onComplete: () => tag.destroy(),
+          onComplete: () => parts.forEach((p) => p.destroy()),
+        });
       });
+    });
   }
 
   // `from` is the attacker's x, used to throw sparks away from them.
@@ -604,11 +653,21 @@ export function createCombatFx(scene) {
       dir = from === undefined ? 1 : Math.sign(e.x - from) || 1,
       color = hurt ? 0xff4d4d : e.crit ? 0xffc23d : 0xff9a3c,
       y = e.y + 30;
-    flare(e.x, y, color, e.crit ? 2 : 1.3, e.crit ? 280 : 200);
-    blast(sparks, e.x, y, e.crit ? 22 : 12, color, {
-      speed: [240, e.crit ? 700 : 520],
-      angle: dir > 0 ? { min: -55, max: 55 } : { min: 125, max: 235 },
-    });
+    if (e.tick) {
+      number(e.x, e.y, e.amount, false, e.targetId, { tick: true, status: e.status, icon: e.icon });
+      return;
+    }
+    // One spark burst per strike, in step with the stacked numbers.
+    (e.lines?.length ? e.lines : [{ crit: e.crit }]).forEach((line, n) =>
+      scene.time.delayedCall(n * 70, () => {
+        const c = hurt ? 0xff4d4d : line.crit ? 0xff4f8a : 0xff9a3c;
+        flare(e.x + (Math.random() - 0.5) * 20, y - n * 6, c, line.crit ? 2 : 1.3, line.crit ? 280 : 200);
+        blast(sparks, e.x, y, line.crit ? 18 : 10, c, {
+          speed: [240, line.crit ? 700 : 520],
+          angle: dir > 0 ? { min: -55, max: 55 } : { min: 125, max: 235 },
+        });
+      }),
+    );
     if (e.crit) {
       ring(e.x, y, 0xffd34d, 1.6, 260);
       shake(110, 0.004);
@@ -617,7 +676,7 @@ export function createCombatFx(scene) {
     if (hurt && isSelf) shake(120, 0.005);
     if (target)
       target.kick = { at: scene.time.now, dir, power: e.crit ? 14 : 8 };
-    number(e.x, e.y, e.amount, e.crit, e.targetId);
+    number(e.x, e.y, e.amount, e.crit, e.targetId, { lines: e.lines });
   }
 
   // Applies the knockback wobble set by hit() on top of interpolated position.
@@ -667,5 +726,5 @@ export function createCombatFx(scene) {
     }
   }
 
-  return { attack, hit, death, charge, applyKick };
+  return { attack, hit, death, charge, applyKick, number, ring, flare };
 }

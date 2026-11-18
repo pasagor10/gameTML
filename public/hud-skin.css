@@ -456,6 +456,7 @@ body #game-screen #minimap #training-open .map-btn-icon {
   body #game-screen .hud-bottom .skillbar .skill.blue { color: #7fd9ff; }
   body #game-screen .hud-bottom .skillbar .skill.orange { color: #ff9a4a; }
   body #game-screen .hud-bottom .skillbar .skill.violet { color: #c58bff; }
+  body #game-screen .hud-bottom .skillbar .skill.gold { color: #ffd34d; }
   body #game-screen .hud-bottom .skillbar .skill.basic {
     border-width: 4px;
     color: #ffe7a6;

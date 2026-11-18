@@ -1,3 +1,4 @@
+import { SKILL_KITS } from "./skills.js";
 import { bestiaryBonuses } from "./quests.js";
 export const SLOTS = {
   weapon: "อาวุธ",
@@ -549,23 +550,10 @@ export const SPECIALIZATIONS = {
     },
   ],
 };
-export const CLASS_SKILLS = {
-  swordsman: [
-    { name: "คลื่นดาบ", icon: "〆", detail: "ฟันเป็นแนวหน้า · พลัง 160%" },
-    { name: "ฟันทะลวง", icon: "⚔", detail: "ดาบหนักโจมตีหมู่ · พลัง 200%" },
-    { name: "พลังจันทรา", icon: "☽", detail: "กวาดรอบตัว · พลัง 250%" },
-  ],
-  archer: [
-    { name: "ศรสายลม", icon: "➶", detail: "ยิงเป้าหมายระยะไกล · พลัง 160%" },
-    { name: "ศรทะลวง", icon: "⋙", detail: "ศรเจาะแนวศัตรู · พลัง 200%" },
-    { name: "ฝนลูกศร", icon: "⤓", detail: "โจมตีหมู่รอบตัว · พลัง 250%" },
-  ],
-  mage: [
-    { name: "ลูกพลัง", icon: "✧", detail: "เวทโจมตีด้านหน้า · พลัง 160%" },
-    { name: "เวทระเบิด", icon: "❖", detail: "ระเบิดเวทโจมตีหมู่ · พลัง 200%" },
-    { name: "พายุดารา", icon: "✦", detail: "พายุกวาดรอบตัว · พลัง 250%" },
-  ],
-};
+// Q, W, E attacks and the S party buff (shared/skills.js).
+export const CLASS_SKILLS = Object.fromEntries(
+  Object.entries(SKILL_KITS).map(([cls, kit]) => [cls, kit.slice(1)]),
+);
 export const ENHANCEMENT_BONUSES = {
   weapon: { atk: 8 },
   armor: { hp: 8, def: 2 },

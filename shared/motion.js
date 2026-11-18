@@ -4,6 +4,8 @@ export const ACTIONS = [
   { windup: 0.22, recovery: 0.34, cooldown: 2, rangeBonus: 140, mp: 8 },
   { windup: 0.3, recovery: 0.4, cooldown: 4, rangeBonus: 80, mp: 16 },
   { windup: 0.42, recovery: 0.48, cooldown: 7, rangeBonus: 220, mp: 24 },
+  // Party buff.
+  { windup: 0.3, recovery: 0.36, cooldown: 24, rangeBonus: 0, mp: 30 },
 ];
 export const HERO_ROWS = {
   idle: 0,

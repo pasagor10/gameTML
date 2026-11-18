@@ -1,5 +1,6 @@
 // HUD feedback driven by each world snapshot: damage trails, hit shake,
 // low-HP warning, cooldown sweeps, gold count-up, level-up banner, area intro.
+import { hudEffects } from "/status-ui.js?v=1";
 import { ACTIONS } from "/shared/motion.js";
 import { FLOORS } from "/shared/config.js";
 import { sfx } from "/sound.js?v=20261118-combat2";
@@ -64,7 +65,8 @@ export function updateHudFx(state) {
   $(".stat-bar.hp").classList.toggle("low", p.hp > 0 && hpPct <= 30);
   screen.classList.toggle("danger", p.hp > 0 && hpPct <= 30);
 
-  for (let i = 1; i <= 3; i++) {
+  hudEffects($("#self-effects"), p, state.time);
+  for (let i = 1; i <= 4; i++) {
     const btn = $(`[data-action="skill${i}"]`),
       remaining = ACTIONS[i].cooldown - (state.time - (p.cooldowns[i] || 0)),
       cd = Math.max(0, Math.min(1, remaining / ACTIONS[i].cooldown));
@@ -78,7 +80,7 @@ export function updateHudFx(state) {
   bossBar.classList.toggle("hidden", !boss);
   if (boss) {
     const pct = Math.max(0, (boss.hp / boss.maxHp) * 100);
-    $("#boss-name").textContent = FLOORS[state.dungeon.floor - 1]?.boss || "";
+    $("#boss-name").textContent = state.dungeon.night?.name || FLOORS[state.dungeon.floor - 1]?.boss || "";
     $("#boss-fill").style.width = pct + "%";
     $("#boss-trail").style.width = pct + "%";
     $("#boss-hp").textContent = `${Math.ceil(boss.hp)} / ${boss.maxHp}`;

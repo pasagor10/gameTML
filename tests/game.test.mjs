@@ -536,7 +536,12 @@ test("boss slam locks its aim, supports jump dodges, and accelerates below half 
   world.attack(p, 0, t + 1.4);
   world.tick(0.05, t + 1.57);
   const hit = i.events.find((e) => e.targetId === boss.id && e.actorId === p.id);
-  assert.equal(hit.amount, Math.floor(damage(combatStats(p).atk, 5) * (hit.crit ? 1.5 : 1) * 1.5));
+  // Exposed bosses take 1.5×; each hit spreads ±8%.
+  const exposed = damage(combatStats(p).atk, 5) * (hit.crit ? 1.5 : 1) * 1.5;
+  assert.ok(
+    hit.amount >= Math.floor(exposed * 0.92) && hit.amount <= Math.floor(exposed * 1.08),
+    `${hit.amount} near ${exposed}`,
+  );
   assert.equal(boss.action, null, "boss cannot attack during the opening");
   boss.attackCount = 0;
   boss.attackAt = 0;

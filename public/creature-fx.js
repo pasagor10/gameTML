@@ -139,6 +139,7 @@ export function destroyMonsterExtras(m) {
   m.shadow?.destroy();
   m.alert?.destroy();
   m.aura?.destroy();
+  m.effects?.destroy();
 }
 
 // Call after animateSlime() and the interpolated setPosition().

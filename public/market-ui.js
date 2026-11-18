@@ -2,7 +2,7 @@
 import { itemArt, supplyArt } from "/item-art.js";
 import { GEAR, SLOTS, RARITIES } from "/shared/rpg.js";
 import { ITEMS, CLASSES } from "/shared/config.js";
-import { statText } from "/rpg-ui.js?v=7";
+import { statText } from "/rpg-ui.js?v=8";
 
 const STACKS = ["hp", "mp", "ore"];
 const FILTERS = [

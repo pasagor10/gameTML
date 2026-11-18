@@ -474,3 +474,99 @@
     font-size: 14px;
   }
 }
+
+/* Night cave panel */
+.night-cave {
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  gap: 18px;
+  align-items: center;
+}
+.night-boss {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 190px;
+  border-radius: 12px;
+  border: 1px solid #9b6bff88;
+  background:
+    radial-gradient(circle at 50% 70%, #6a3fd088, transparent 65%),
+    linear-gradient(#140b2a, #07040f);
+  box-shadow: 0 0 24px #7a4cff44 inset;
+}
+.night-boss .mon-portrait {
+  height: 90%;
+  width: auto;
+  max-width: 95%;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 0 12px #9b6bffaa);
+}
+.night-info small {
+  color: #b9a3ff;
+  letter-spacing: 1px;
+}
+.night-info h3 {
+  margin: 2px 0 6px;
+  font-size: 22px;
+  color: #e6d6ff;
+  text-shadow: 0 0 12px #9b6bff88;
+}
+.night-info > p {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #cfc6e6;
+}
+.night-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+.night-tags span {
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: #e6d6ff;
+  background: #2a1450;
+  border: 1px solid #9b6bff55;
+}
+.night-reward {
+  padding: 9px 11px;
+  border-radius: 8px;
+  border: 1px solid #ffd48666;
+  background: #1c1530aa;
+}
+.night-reward.done {
+  border-color: #8ff0b866;
+}
+.night-reward strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 12px;
+  color: #ffe1a1;
+}
+.night-reward > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.night-left {
+  margin: 8px 0 0;
+  font-size: 11px;
+  color: #81e1ff;
+}
+#modal[data-panel="nightcave"] .modal-box {
+  background:
+    radial-gradient(ellipse at 30% 0, #4b2f7a66, transparent 60%),
+    linear-gradient(#120c24, #090616);
+  border-color: #9b6bffaa;
+}
+@media (max-width: 640px) {
+  .night-cave {
+    grid-template-columns: 1fr;
+  }
+  .night-boss {
+    height: 150px;
+  }
+}

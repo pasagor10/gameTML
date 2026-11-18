@@ -27,16 +27,16 @@
     <link rel="stylesheet" href="/select.css?v=10" />
     <link rel="stylesheet" href="/game-ui.css?v=4" />
     <link rel="stylesheet" href="/minimap.css?v=3" />
-    <link rel="stylesheet" href="/actionbar.css?v=2" />
-    <link rel="stylesheet" href="/touch.css?v=4" />
-    <link rel="stylesheet" href="/hud-skin.css?v=4" />
+    <link rel="stylesheet" href="/actionbar.css?v=3" />
+    <link rel="stylesheet" href="/touch.css?v=5" />
+    <link rel="stylesheet" href="/hud-skin.css?v=5" />
     <link rel="stylesheet" href="/inventory.css?v=8" />
     <link rel="stylesheet" href="/orientation.css?v=1" />
     <link rel="stylesheet" href="/sanctuary-select.css?v=3" />
     <link rel="stylesheet" href="/install.css?v=1" />
     <link rel="stylesheet" href="/slots.css?v=1" />
     <link rel="stylesheet" href="/quests.css?v=2" />
-    <link rel="stylesheet" href="/dungeon.css?v=2" />
+    <link rel="stylesheet" href="/dungeon.css?v=4" />
     <script src="/install.js?v=3" defer></script>
   </head>
   <body>
@@ -218,6 +218,7 @@
               <div class="stat-bar exp"><i id="exp-fill"></i></div>
               <small id="exp-label">0 EXP</small>
             </div>
+            <div id="self-effects" class="self-effects"></div>
             <div class="profile-meta">
               <button id="player-class" data-panel="class">นักดาบ</button>
             </div>
@@ -390,6 +391,9 @@
           ><button data-action="skill3" class="skill violet">
             <b>✦</b><span>E</span><small>ท่าไม้ตาย</small
             ><em class="skill-cost"></em><i></i></button
+          ><button data-action="skill4" class="skill gold">
+            <b>♛</b><span>S</span><small>บัฟ</small
+            ><em class="skill-cost"></em><i></i></button
           ><button data-action="hp" class="skill green">
             <b>✚</b><span>R</span
             ><small id="hp-potions">ยา HP ×5</small></button
@@ -461,7 +465,7 @@
     </div>
     <script src="/vendor/phaser.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <script type="module" src="/game.js?v=0.35.1"></script>
+    <script type="module" src="/game.js?v=0.37.0"></script>
     <script type="module" src="/orientation.js?v=1"></script>
   </body>
 </html>

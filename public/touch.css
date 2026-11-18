@@ -205,6 +205,15 @@
     right: 30px;
     bottom: 146px;
   }
+  #game-screen .hud-bottom .skillbar [data-action="skill4"] {
+    right: 100px;
+    bottom: 200px;
+    width: 52px;
+    height: 52px;
+  }
+  #game-screen .hud-bottom .skillbar [data-action="skill4"] b {
+    font-size: 22px;
+  }
   #game-screen .hud-bottom .skillbar .skill.jump {
     display: grid;
     place-items: center;

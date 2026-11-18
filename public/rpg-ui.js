@@ -12,7 +12,7 @@ import {
 } from "/shared/rpg.js";
 import { CLASSES, combatPower } from "/shared/config.js";
 import { ACTIONS } from "/shared/motion.js";
-import { skillIcon } from "/skill-icons.js?v=1";
+import { skillIcon } from "/skill-icons.js?v=2";
 const statNames = {
   atk: "ATK",
   def: "DEF",
@@ -297,7 +297,7 @@ function classPage(p, area, spec, cls) {
     ${skills
       .map(
         (sk, i) =>
-          `<article><b class="sk-icon sk-${i}">${skillIcon(p.class, i)}</b><div><h4>${sk.name}</h4><p>${sk.detail}</p><small>${i ? `${ACTIONS[i].mp} MP · คูลดาวน์ ${ACTIONS[i].cooldown} วิ` : "พื้นฐาน"}</small></div><kbd>${["J", "Q", "W", "E"][i]}</kbd></article>`,
+          `<article><b class="sk-icon sk-${i}">${skillIcon(p.class, i)}</b><div><h4>${sk.name}</h4><p>${sk.detail}</p><small>${i ? `${ACTIONS[i].mp} MP · คูลดาวน์ ${ACTIONS[i].cooldown} วิ` : "พื้นฐาน"}</small></div><kbd>${["J", "Q", "W", "E", "S"][i]}</kbd></article>`,
       )
       .join("")}
   </section>

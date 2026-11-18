@@ -27,6 +27,17 @@ import {
 } from "../shared/rpg.js";
 import { ACTIONS } from "../shared/motion.js";
 import {
+  SKILL_KITS,
+  STATUSES,
+  BUFFS,
+  BASE_CRIT,
+  skillOf,
+  buffActive,
+  statusActive,
+  controlled,
+  applyStatus,
+} from "../shared/skills.js";
+import {
   recordKill,
   ensureDaily,
   advanceQuests,
@@ -35,6 +46,17 @@ import {
   questResetAt,
   DAILY_BONUS,
 } from "../shared/quests.js";
+import {
+  skyAt,
+  nightBoss,
+  nightFloor,
+  nightReward,
+  NIGHT_BOSS,
+  NIGHT_CAVE,
+} from "../shared/night.js";
+// SKY_OFFSET (seconds) shifts the day/night clock, e.g. to test the night cave.
+const SKY_OFFSET = Number(process.env.SKY_OFFSET) || 0;
+export const skyNow = () => skyAt(Date.now() / 1000 + SKY_OFFSET);
 import { autoBrain } from "./auto.js";
 import { randomUUID } from "node:crypto";
 import { db, loadCharacter, persist, atomic, log } from "./database.js";
@@ -242,6 +264,58 @@ export function enhance(p, key, slot = "weapon") {
   savePlayer(p);
   if (done.length) result.message += " · ภารกิจสำเร็จ: " + questText(done[0]);
   return result;
+}
+// Night boss: the first clear each night pays in full (plus a chance at an
+// unowned boss item); later clears that night give a small purse only.
+function nightRewards(i, m, t) {
+  const first = m.nightClear !== i.night.cycle,
+    r = nightReward(i.floor),
+    gold = first ? r.gold : Math.round(r.gold * 0.2),
+    ore = first ? r.ore : 0,
+    gained = first ? 300 + i.floor * 30 : 40,
+    reward = i.rewards?.[m.id],
+    spot = { x: i.lastDrop?.x ?? m.x, y: i.lastDrop?.y ?? m.y - 110 };
+  m.gold += gold;
+  m.inventory.ore = (m.inventory.ore || 0) + ore;
+  exp(m, gained);
+  if (reward) {
+    reward.gold += gold;
+    reward.ore += ore;
+    reward.exp += gained;
+  }
+  if (ore)
+    i.events.push({
+      id: randomUUID(),
+      kind: "material",
+      actorId: m.id,
+      ...spot,
+      item: "ore",
+      amount: ore,
+      at: t,
+    });
+  if (first) {
+    m.nightClear = i.night.cycle;
+    const pool = bossLootCandidates(
+      Math.min(i.floor, MAIN_FLOORS),
+      m.class,
+      m.ownedEquipment,
+    );
+    if (pool.length && Math.random() < r.itemChance) {
+      const item = pool[Math.floor(Math.random() * pool.length)];
+      m.ownedEquipment.push(item);
+      reward?.items.push(item);
+      i.events.push({
+        id: randomUUID(),
+        kind: "loot",
+        actorId: m.id,
+        ...spot,
+        item,
+        rarity: GEAR[item].rarity,
+        at: t,
+      });
+    }
+  }
+  questEvents(i, m, advanceQuests(m, wallClock(), "boss"), m.x, m.y - 160, t);
 }
 // Daily quests use the real calendar even when combat runs on a test clock.
 const wallClock = () => Date.now() / 1000;
@@ -591,6 +665,7 @@ export function stored(p) {
     "advanced",
     "daily",
     "bestiary",
+    "nightClear",
   ];
   return {
     id: p.id,
@@ -640,11 +715,37 @@ export function beginDungeon(p, floor) {
   if (party && members.some((m) => m.id !== p.id && !party.ready.has(m.id)))
     throw Error("สมาชิกทุกคนต้องกดพร้อมก่อน");
   spendDungeonEnergy(members);
+  openInstance(members, floor, 1);
+  if (party) party.ready.clear();
+  return { message: "เข้าสู่ " + FLOORS[floor - 1].name };
+}
+// The night cave: free, boss stage only, open while it is night.
+export function beginNightCave(p) {
+  const sky = skyNow();
+  if (!sky.night) throw Error("ถ้ำลึกลับปรากฏเฉพาะตอนกลางคืน");
+  const party = parties.get(p.party),
+    members = party ? party.members.map(live).filter(Boolean) : [p];
+  if (party && party.leader !== p.id) throw Error("ให้หัวหน้าปาร์ตี้พาเข้าถ้ำ");
+  if (members.some((m) => m.area !== "town" || m.hp <= 0))
+    throw Error("สมาชิกทุกคนต้องอยู่ในเมือง");
+  if (p.x > NIGHT_CAVE.x + NIGHT_CAVE.reach)
+    throw Error("เดินไปที่ปากถ้ำลึกลับก่อน");
+  if (party && members.some((m) => m.id !== p.id && !party.ready.has(m.id)))
+    throw Error("สมาชิกทุกคนต้องกดพร้อมก่อน");
+  const boss = nightBoss(sky.cycle);
+  openInstance(members, nightFloor(members), 3, {
+    night: { ...boss, cycle: sky.cycle },
+  });
+  if (party) party.ready.clear();
+  return { message: "ก้าวเข้าสู่ถ้ำลึกลับ… " + boss.name + " ตื่นแล้ว!" };
+}
+function openInstance(members, floor, stage, extra = {}) {
   const id = randomUUID(),
     instance = {
       id,
       floor,
-      stage: 1,
+      stage,
+      ...extra,
       members: members.map((m) => m.id),
       enemies: [],
       clear: false,
@@ -681,8 +782,7 @@ export function beginDungeon(p, floor) {
     m.jump = false;
     m.input = 0;
   }
-  if (party) party.ready.clear();
-  return { message: "เข้าสู่ " + FLOORS[floor - 1].name };
+  return instance;
 }
 export function beginTraining(p) {
   ensureTown(p);
@@ -760,7 +860,11 @@ function spawnStage(i) {
       trait = entry?.variant?.trait || null,
       mods = traitOf({ trait }),
       base = boss
-        ? Math.round((300 + i.floor * 220 + i.floor * i.floor * 55) * 1.2)
+        ? Math.round(
+            (300 + i.floor * 220 + i.floor * i.floor * 55) *
+              1.2 *
+              (i.night ? NIGHT_BOSS.hp : 1),
+          )
         : 55 + i.floor * 24 + i.stage * 14,
       max = Math.round(base * (elite ? 2.2 : 1) * (mods.hp || 1)),
       spot = dungeonSpawn(i.floor, i.stage, slot, boss, count);
@@ -772,7 +876,10 @@ function spawnStage(i) {
       grounded: true,
       hp: max,
       maxHp: max,
-      type: boss ? FLOORS[i.floor - 1].bossType : entry.type,
+      type: boss
+        ? i.night?.type || FLOORS[i.floor - 1].bossType
+        : entry.type,
+      night: boss && !!i.night,
       variant: entry?.variant?.name || null,
       trait,
       boss,
@@ -850,7 +957,7 @@ export function nextStage(p) {
     if (!i.completed || !i.results) throw Error("รอสรุปผลก่อน");
     if (i.members.length > 1 && parties.get(p.party)?.leader !== p.id)
       throw Error("ให้หัวหน้าปาร์ตี้เลือกไปชั้นถัดไป");
-    if (i.floor >= FLOORS.length) return returnTown(p);
+    if (i.night || i.floor >= FLOORS.length) return returnTown(p);
     const members = i.members.map(live).filter(Boolean);
     if (members.some((m) => m.unlocked < i.floor + 1))
       throw Error("สมาชิกยังไม่ปลดล็อกชั้นถัดไป");
@@ -934,6 +1041,7 @@ export function attack(p, skill = 0, t = now()) {
   if (
     !ACTIONS[skill] ||
     p.area !== "dungeon" ||
+    statusActive(p, "stun", t) ||
     p.hp <= 0 ||
     t - (p.hitAt || 0) < 0.14 ||
     p.pending ||
@@ -993,7 +1101,29 @@ function resolveAttack(p, t) {
     combo: a.combo,
     at: t,
   });
+  const kit = skillOf(p.class, skill);
+  if (kit.buff) {
+    // Party buff: everyone alive in this instance.
+    for (const id of i.members) {
+      const m = live(id);
+      if (!m || m.hp <= 0) continue;
+      m.buffs = { ...(m.buffs || {}), [kit.buff]: { until: t + kit.duration } };
+      i.events.push({
+        id: randomUUID(),
+        kind: "buff",
+        targetId: m.id,
+        actorId: p.id,
+        buff: kit.buff,
+        x: m.x,
+        y: m.y - 120,
+        at: t,
+      });
+    }
+    return;
+  }
   const range = combatStats(p).range + ACTIONS[skill].rangeBonus;
+  const critChance = BASE_CRIT + (buffActive(p, "focus", t) ? BUFFS.focus.crit : 0),
+    rage = buffActive(p, "rage", t) ? 1 + BUFFS.rage.damage : 1;
   let hits = 0;
   for (const e of i.enemies) {
     if (
@@ -1004,12 +1134,33 @@ function resolveAttack(p, t) {
     )
       continue;
     if (p.class === "archer" && skill < 2 && hits > 0) continue;
-    const crit = Math.random() < 0.12,
-      amount =
-        damage(combatStats(p).atk, i.floor * 5, [1, 1.6, 2, 2.5][skill]) *
-        (crit ? 1.5 : 1) * (t < (e.exposedUntil || 0) ? 1.5 : 1) *
-        (traitOf(e).taken || 1);
-    e.hp -= Math.floor(amount);
+    // Every strike of a skill rolls its own crit, like a stack of numbers.
+    const mult =
+        (t < (e.exposedUntil || 0) ? 1.5 : 1) *
+        (traitOf(e).taken || 1) *
+        (statusActive(e, "weaken", t) ? STATUSES.weaken.taken : 1) *
+        rage,
+      lines = Array.from({ length: kit.hits }, () => {
+        const crit = Math.random() < critChance;
+        return {
+          amount: Math.max(
+            1,
+            // ±8% spread so a stack never reads as one number repeated.
+            Math.floor(
+              damage(combatStats(p).atk, i.floor * 5, kit.power) *
+                (crit ? 1.5 : 1) *
+                mult *
+                (0.92 + Math.random() * 0.16),
+            ),
+          ),
+          crit,
+        };
+      }),
+      amount = lines.reduce((n, l) => n + l.amount, 0),
+      crit = lines.some((l) => l.crit);
+    e.hp -= amount;
+    const status = e.hp > 0 && applyStatus(e, kit.status, lines[0].amount, t) ? kit.status.type : null;
+    if (status && STATUSES[status].control) e.action = null;
     e.hitAt = t;
     e.aggro = true;
     e.hitDirection = a.direction;
@@ -1028,89 +1179,99 @@ function resolveAttack(p, t) {
       actorId: p.id,
       x: e.x,
       y: e.y - 80,
-      amount: Math.floor(amount),
+      amount,
       crit,
+      lines,
+      status,
       at: t,
     });
-    if (e.hp <= 0 && !i.training) {
-      i.killCount = (i.killCount || 0) + 1;
-      i.lastDrop = { x: e.x, y: e.y - 70 };
-      i.defeated = (i.defeated || 0) + 1;
-      i.streak = t <= (i.streakUntil || 0) ? i.streak + 1 : 1;
-      i.streakUntil = t + 5;
-      const bonus = Math.min(4, i.streak - 1);
-      if (bonus)
+    if (e.hp <= 0) enemyDown(i, e, t);
+  }
+  checkClear(i, t, p);
+}
+// A monster fell: count it, pay every hero in the instance, advance quests.
+function enemyDown(i, e, t) {
+  if (e.hp <= 0 && !i.training) {
+    i.killCount = (i.killCount || 0) + 1;
+    i.lastDrop = { x: e.x, y: e.y - 70 };
+    i.defeated = (i.defeated || 0) + 1;
+    i.streak = t <= (i.streakUntil || 0) ? i.streak + 1 : 1;
+    i.streakUntil = t + 5;
+    const bonus = Math.min(4, i.streak - 1);
+    if (bonus)
+      i.events.push({
+        id: randomUUID(),
+        kind: "streak",
+        x: e.x,
+        y: e.y - 115,
+        streak: i.streak,
+        bonus,
+        at: t,
+      });
+    for (const id of i.members) {
+      const m = live(id);
+      if (m && m.hp > 0) {
+        const gold =
+            (e.boss
+              ? 28 + i.floor * 10
+              : (4 + i.floor) * (e.elite ? 2 : 1)) + bonus,
+          gained = e.boss ? 110 : e.elite ? 45 : 20,
+          reward = i.rewards?.[m.id];
+        m.gold += gold;
+        m.mp = Math.min(maxMp(m), m.mp + (bonus ? 4 : 0));
+        if (reward) {
+          reward.gold += gold;
+          reward.exp += gained;
+        }
+        exp(m, gained);
         i.events.push({
           id: randomUUID(),
-          kind: "streak",
-          x: e.x,
-          y: e.y - 115,
-          streak: i.streak,
-          bonus,
+          kind: "drop",
+          actorId: m.id,
+          x: e.x - 24,
+          y: e.y - 45,
+          item: "gold",
           at: t,
         });
-      for (const id of i.members) {
-        const m = live(id);
-        if (m && m.hp > 0) {
-          const gold =
-              (e.boss
-                ? 28 + i.floor * 10
-                : (4 + i.floor) * (e.elite ? 2 : 1)) + bonus,
-            gained = e.boss ? 110 : e.elite ? 45 : 20,
-            reward = i.rewards?.[m.id];
-          m.gold += gold;
-          m.mp = Math.min(maxMp(m), m.mp + (bonus ? 4 : 0));
-          if (reward) {
-            reward.gold += gold;
-            reward.exp += gained;
-          }
-          exp(m, gained);
+        if (Math.random() < (e.boss ? 0.5 : e.elite ? 0.35 : 0.12)) {
+          m.inventory.ore++;
+          if (i.rewards?.[m.id]) i.rewards[m.id].ore++;
           i.events.push({
             id: randomUUID(),
             kind: "drop",
             actorId: m.id,
-            x: e.x - 24,
-            y: e.y - 45,
-            item: "gold",
+            x: e.x + 32,
+            y: e.y - 55,
+            item: "ore",
             at: t,
           });
-          if (Math.random() < (e.boss ? 0.5 : e.elite ? 0.35 : 0.12)) {
-            m.inventory.ore++;
-            if (i.rewards?.[m.id]) i.rewards[m.id].ore++;
+        }
+        const wall = wallClock(),
+          done = advanceQuests(m, wall, "killAny");
+        if (!e.boss) {
+          done.push(...advanceQuests(m, wall, "kill", e.type));
+          const stars = recordKill(m, e.type);
+          if (stars)
             i.events.push({
               id: randomUUID(),
-              kind: "drop",
+              kind: "bestiary",
               actorId: m.id,
-              x: e.x + 32,
-              y: e.y - 55,
-              item: "ore",
+              type: e.type,
+              stars,
+              x: e.x,
+              y: e.y - 150,
               at: t,
             });
-          }
-          const wall = wallClock(),
-            done = advanceQuests(m, wall, "killAny");
-          if (!e.boss) {
-            done.push(...advanceQuests(m, wall, "kill", e.type));
-            const stars = recordKill(m, e.type);
-            if (stars)
-              i.events.push({
-                id: randomUUID(),
-                kind: "bestiary",
-                actorId: m.id,
-                type: e.type,
-                stars,
-                x: e.x,
-                y: e.y - 150,
-                at: t,
-              });
-          }
-          if (e.elite) done.push(...advanceQuests(m, wall, "elite"));
-          questEvents(i, m, done, e.x, e.y - 130, t);
-          savePlayer(m);
         }
+        if (e.elite) done.push(...advanceQuests(m, wall, "elite"));
+        questEvents(i, m, done, e.x, e.y - 130, t);
+        savePlayer(m);
       }
     }
   }
+}
+// The last monster fell: clear the stage, and finish the run after a boss.
+function checkClear(i, t, p) {
   i.enemies = i.enemies.filter((e) => e.hp > 0);
   if (!i.enemies.length) {
     if (!i.clear) i.clearedAt = t;
@@ -1119,6 +1280,11 @@ function resolveAttack(p, t) {
       i.completed = true;
       for (const id of i.members) {
         const m = live(id);
+        if (m && i.night) {
+          nightRewards(i, m, t);
+          savePlayer(m);
+          continue;
+        }
         if (m) {
           const firstClear = m.quest < i.floor;
           m.unlocked = Math.min(
@@ -1219,7 +1385,9 @@ function resolveAttack(p, t) {
                 i.floor,
                 m ? maxHp(m) : 100,
               ),
+              night: i.night?.name || null,
               hasNext:
+                !i.night &&
                 i.floor < FLOORS.length &&
                 i.members
                   .map(live)
@@ -1426,9 +1594,43 @@ function physics(p, dt, t) {
   if (p.action && t < p.action.endsAt) p.direction = p.action.direction;
   else if (p.input) p.direction = Math.sign(p.input);
 }
+// Monsters whose bite leaves a status on heroes.
+const VENOM = {
+  serpent: { type: "poison", chance: 0.35, duration: 5 },
+  mushroom: { type: "poison", chance: 0.3, duration: 5 },
+  wolf: { type: "bleed", chance: 0.3, duration: 4 },
+  golem: { type: "slow", chance: 0.3, duration: 2.5 },
+};
+// Damage-over-time ticks once a second. Heroes never die to it (min 1 HP).
+function tickStatuses(i, x, t, hero) {
+  for (const [type, s] of Object.entries(x.status || {})) {
+    if (t >= s.until) {
+      delete x.status[type];
+      continue;
+    }
+    if (!s.dps || t < s.tickAt) continue;
+    s.tickAt = t + 1;
+    let amount = s.dps * s.stacks;
+    if (hero) amount = Math.min(amount, x.hp - 1);
+    if (amount <= 0) continue;
+    x.hp -= amount;
+    i.events.push({
+      id: randomUUID(),
+      kind: "damage",
+      targetId: x.id,
+      x: x.x,
+      y: x.y - 80,
+      amount: hero ? -amount : amount,
+      status: type,
+      tick: true,
+      at: t,
+    });
+  }
+}
 // All damage and rewards stay authoritative, including environmental attacks.
-function dealDungeonDamage(i, p, base, actorId, direction, t) {
-  const amount = damage(base, combatStats(p).def);
+function dealDungeonDamage(i, p, base, actorId, direction, t, status = null) {
+  const guard = buffActive(p, "barrier", t) ? 1 - BUFFS.barrier.guard : 1,
+    amount = Math.max(1, Math.round(damage(base, combatStats(p).def) * guard));
   if (i.rewards?.[p.id]) i.rewards[p.id].damage += Math.min(p.hp, amount);
   p.hp = Math.max(0, p.hp - amount);
   p.hitAt = t;
@@ -1447,6 +1649,21 @@ function dealDungeonDamage(i, p, base, actorId, direction, t) {
     amount: -amount,
     at: t,
   });
+  if (p.hp > 0 && status && applyStatus(p, status, amount, t)) {
+    if (status.type === "stun") {
+      p.input = 0;
+      p.pending = null;
+    }
+    i.events.push({
+      id: randomUUID(),
+      kind: "status",
+      targetId: p.id,
+      status: status.type,
+      x: p.x,
+      y: p.y - 130,
+      at: t,
+    });
+  }
   if (!p.hp) {
     p.diedAt = t;
     p.auto = false;
@@ -1510,6 +1727,8 @@ export function tick(dt, t = now()) {
     }
     if (t - p.lastInput > 0.3) p.input = 0;
     const i = instances.get(p.instance);
+    if (i && p.status) tickStatuses(i, p, t, true);
+    if (statusActive(p, "stun", t)) p.input = 0;
     if (p.auto && i) {
       if (t - (i.stageAt || 0) < STAGE_INTRO) {
         // Still behind the loading card: stand still, don't swing yet.
@@ -1547,6 +1766,7 @@ export function tick(dt, t = now()) {
       }
     }
     resolveAttack(p, t);
+    if (statusActive(p, "stun", t)) p.input = 0;
     physics(p, dt, t);
     p.mp = Math.min(maxMp(p), p.mp + dt * 2);
   }
@@ -1557,6 +1777,18 @@ export function tick(dt, t = now()) {
       if (t >= i.respawnAt) spawnTraining(i);
     }
     updateCrystalHazards(i, t);
+    if (!i.clear) {
+      for (const e of i.enemies) {
+        if (!e.status || e.hp <= 0) continue;
+        tickStatuses(i, e, t, false);
+        if (e.hp <= 0) enemyDown(i, e, t);
+      }
+      if (i.enemies.some((e) => e.hp <= 0)) {
+        const m = i.members.map(live).find(Boolean);
+        if (m) checkClear(i, t, m);
+        else i.enemies = i.enemies.filter((e) => e.hp > 0);
+      }
+    }
     for (const e of i.enemies) {
       const p = i.members
         .map(live)
@@ -1565,7 +1797,12 @@ export function tick(dt, t = now()) {
       e.moving = false;
       const mods = traitOf(e),
         frenzied = mods.frenzy && e.hp <= e.maxHp * 0.5;
-      if (mods.regen && e.hp > 0 && t - (e.hitAt || 0) > 3)
+      if (controlled(e, t)) {
+        e.action = null;
+        continue;
+      }
+      const slowed = statusActive(e, "slow", t) ? STATUSES.slow.speed : 1;
+      if (mods.regen && e.hp > 0 && t - (e.hitAt || 0) > 3 && !e.status?.burn && !e.status?.poison && !e.status?.bleed)
         e.hp = Math.min(e.maxHp, e.hp + e.maxHp * mods.regen * dt);
       if (!p) {
         e.action = null;
@@ -1616,10 +1853,11 @@ export function tick(dt, t = now()) {
                 dealDungeonDamage(
                   i,
                   target,
-                  30 + i.floor * 6,
+                  Math.round((30 + i.floor * 6) * (e.night ? NIGHT_BOSS.damage : 1)),
                   e.id,
                   a.direction,
                   t,
+                  { type: "stun", chance: 1, duration: 0.9 },
                 );
               }
             }
@@ -1642,7 +1880,7 @@ export function tick(dt, t = now()) {
               i.training
                 ? 18
                 : e.boss
-                  ? 28 + i.floor * 6
+                  ? Math.round((28 + i.floor * 6) * (e.night ? NIGHT_BOSS.damage : 1))
                   : Math.round(
                       (15 + i.floor * 4) *
                         (e.elite ? 1.5 : 1) *
@@ -1652,6 +1890,7 @@ export function tick(dt, t = now()) {
               e.id,
               a.direction,
               t,
+              VENOM[e.type],
             );
             if (mods.drain && dealt > 0) {
               const heal = Math.min(e.maxHp - e.hp, Math.round(dealt * mods.drain));
@@ -1691,6 +1930,7 @@ export function tick(dt, t = now()) {
         e.x +=
           step *
           (e.boss ? (enraged ? 110 : 75) : (e.speed || 90) * (frenzied ? 1.4 : 1)) *
+          slowed *
           dt;
         e.moving = true;
       }
@@ -1705,7 +1945,8 @@ export function tick(dt, t = now()) {
             : Math.max(0.95, 1.4 - Math.min(i.floor, 12) * 0.03) *
               (e.elite ? 0.85 : 1) *
               (mods.cooldown || 1) *
-              (frenzied ? 0.7 : 1))
+              (frenzied ? 0.7 : 1)) /
+            slowed
       ) {
         e.attackAt = t;
         e.attackCount = (e.attackCount || 0) + 1;
@@ -1756,6 +1997,8 @@ export function snapshot(p) {
     equipment: m.equipment,
     upgrade: m.upgrade,
     attackAt: m.attackAt,
+    buffs: m.buffs || null,
+    status: m.status || null,
   });
   return {
     time: t,
@@ -1797,6 +2040,7 @@ export function snapshot(p) {
           completed: i.completed,
           result: i.results?.[p.id] || null,
           training: !!i.training,
+          night: i.night || null,
           instanceId: i.id,
           enemies: i.enemies,
           hazards: i.hazards || [],
@@ -1812,6 +2056,8 @@ export function snapshot(p) {
           events: i.events,
         }
       : null,
+    sky: skyNow(),
+    nightCleared: p.nightClear,
     shops: shopList(),
     party: party
       ? {

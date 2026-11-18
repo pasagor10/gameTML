@@ -2,6 +2,7 @@
 // only swing when something is really in reach, pick skills by the situation,
 // and step or hop out of telegraphed attacks. Pure decisions; the world applies them.
 import { ACTIONS } from "../shared/motion.js";
+import { skillOf } from "../shared/skills.js";
 import { climbStep } from "../shared/dungeons.js";
 
 const GROUND = 600,
@@ -122,7 +123,11 @@ export function autoBrain(p, i, t, { range, mpMax, platforms }) {
       (s === 3 && count(3) > 0),
     big = target.boss || target.elite,
     reserve = mpMax * 0.25; // keep enough for a big skill when it matters
-  if (ready(3) && hitsTarget(3) && (count(3) >= 3 || big)) plan.skill = 3;
+  // Party buff first when a fight is on and nobody has it.
+  const buff = skillOf(p.class, 4).buff;
+  if (ready(4) && (p.buffs?.[buff]?.until || 0) <= t && (big || count(3) >= 2) && mp - ACTIONS[4].mp >= reserve * 0.5)
+    plan.skill = 4;
+  else if (ready(3) && hitsTarget(3) && (count(3) >= 3 || big)) plan.skill = 3;
   else if (ready(2) && hitsTarget(2) && (count(2) >= 2 || big)) plan.skill = 2;
   else if (
     ready(1) &&

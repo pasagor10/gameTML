@@ -16,6 +16,7 @@ import {
   TOWN_ANIMS,
   TOWN_GROUND,
 } from "/shared/town-layout.js";
+import { skyColor } from "/night-sky.js?v=2";
 
 const WORLD_W = 2400,
   BACK_Y = -180,
@@ -736,5 +737,15 @@ export function createParallax(scene) {
     }
   }
 
-  return { setArea, resize, update };
+  // Night: foreground layers in front of the night shade darken with it.
+  let lastDark = -1;
+  function setDark(k) {
+    if (Math.abs(k - lastDark) < 0.01) return;
+    lastDark = k;
+    const c = skyColor(k);
+    fgBottom.setTint(c);
+    fgTop.setTint(c);
+    props.forEach((img, i) => TOWN_PROPS[i].front && img.setTint(c));
+  }
+  return { setArea, resize, update, setDark };
 }
