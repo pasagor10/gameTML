@@ -1239,3 +1239,10 @@ test("potion sizes: buy many at once and quick-use picks the best fit", async ()
   assert.throws(() => world.potion(p, "hp_s", 1001), /ยังไม่พร้อม/);
   assert.equal(POTIONS.hp_l.restore > POTIONS.hp.restore, true);
 });
+
+test("replaying a floor needs a finished floor and a valid run count", () => {
+  const p = create("replay-guard");
+  assert.throws(() => world.replayFloor(p, 3), /สรุปผล/);
+  assert.equal(world.MAX_REPLAYS, 99);
+  assert.deepEqual(Object.keys(world.stopReplay(p)), ["message"]);
+});

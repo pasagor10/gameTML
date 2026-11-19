@@ -443,3 +443,33 @@ html body #modal[data-panel="poster"] #modal-body { padding: 0; }
 .buy-qty button { min-width: 52px; padding: 8px 10px; border: 1px solid #b59454; border-radius: 6px; background: #102237; color: #efd399; }
 .buy-qty button.active { background: #efd399; color: #172238; }
 html body #modal .buy-qty input { flex: 0 0 84px; width: 84px !important; min-width: 0; padding: 8px; border: 1px solid #c1dce240; border-radius: 6px; background: #0d1b26; color: #e8f1f3; font: inherit; }
+
+/* Floor clear: replay this floor N times. */
+#game-screen #floor-result .result-replay { display: grid; gap: 8px; margin: 2px 0 12px; justify-items: center; }
+#game-screen #floor-result .result-replay[hidden] { display: none; }
+#game-screen #floor-result .replay-pick { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; }
+#game-screen #floor-result .replay-pick[hidden] { display: none; }
+#game-screen #floor-result .replay-pick span { color: #c9bfa4; font-size: 12px; margin-right: 2px; }
+#game-screen #floor-result .replay-pick button { min-width: 44px; padding: 7px 9px; border: 1px solid #b59454; border-radius: 6px; background: #102237; color: #efd399; font: 700 12px/1 inherit; cursor: pointer; }
+#game-screen #floor-result .replay-pick button.active { background: #efd399; color: #172238; }
+#game-screen #floor-result .replay-pick input { width: 58px !important; flex: 0 0 58px; padding: 7px; border: 1px solid #c1dce240; border-radius: 6px; background: #0d1b26; color: #e8f1f3; font: inherit; text-align: center; }
+#game-screen #floor-result #result-replay { width: 100%; }
+#game-screen #floor-result .replay-status { margin: 0; color: #efd399; font-size: 13px; text-align: center; }
+
+/* AUTO pill: icon, label and on/off state all inside the pill (the older
+   round-button rules pushed the label below and hid the rest). */
+html body #game-screen#game-screen .hud-bottom .skillbar .skill.auto {
+  display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: center !important;
+}
+html body #game-screen#game-screen .hud-bottom .skillbar .skill.auto > :is(b, span, small) {
+  display: block !important; position: static !important; inset: auto !important; transform: none !important; translate: none !important;
+  margin: 0 !important; width: auto !important; height: auto !important; padding: 0 !important; opacity: 1 !important;
+  background: none !important; border: 0 !important; box-shadow: none !important;
+}
+html body #game-screen#game-screen .hud-bottom .skillbar .skill.auto > b { font-size: 14px !important; line-height: 1 !important; color: #a2b9c0 !important; filter: none !important; }
+html body #game-screen#game-screen .hud-bottom .skillbar .skill.auto > span { color: #e3f0f2 !important; }
+html body #game-screen#game-screen .hud-bottom .skillbar .skill.auto.on > :is(b, span) { color: #b9f0d6 !important; }
+html body #game-screen#game-screen .hud-bottom .skillbar .skill.auto > :is(b, span, small) { flex: 0 0 auto !important; min-width: max-content !important; white-space: nowrap !important; }
+html body #game-screen#game-screen .hud-bottom .skillbar .skill.auto > b { width: 20px !important; height: 20px !important; min-width: 0 !important; flex: 0 0 20px !important; }
+html body #game-screen#game-screen .hud-bottom .skillbar .skill.auto > b svg { display: block; width: 20px !important; height: 20px !important; }
+#game-screen #floor-result .result-replay [hidden] { display: none !important; }

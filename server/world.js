@@ -1253,20 +1253,32 @@ export function nextStage(p) {
     const members = i.members.map(live).filter(Boolean);
     if (members.some((m) => m.unlocked < i.floor + 1))
       throw Error("สมาชิกยังไม่ปลดล็อกชั้นถัดไป");
-      i.floor++;
-    i.stage = 0;
-    i.completed = false;
-    i.results = null;
-    i.startedAt = now();
-    i.killCount = 0;
-    i.rewards = Object.fromEntries(
-      i.members.map((id) => [
-        id,
-        { gold: 0, exp: 0, ore: 0, items: [], damage: 0 },
-      ]),
-    );
+    i.replay = null;
+    i.floor++;
+    resetFloor(i);
   }
   const newFloor = i.stage === 0;
+  enterStage(i);
+  return {
+    message: newFloor
+      ? "ลงสู่ชั้น " + i.floor + " · " + FLOORS[i.floor - 1].name
+      : "เข้าสู่ด่าน " + i.stage,
+  };
+}
+function resetFloor(i) {
+  i.stage = 0;
+  i.completed = false;
+  i.results = null;
+  i.startedAt = now();
+  i.killCount = 0;
+  i.rewards = Object.fromEntries(
+    i.members.map((id) => [
+      id,
+      { gold: 0, exp: 0, ore: 0, items: [], damage: 0 },
+    ]),
+  );
+}
+function enterStage(i) {
   i.stage++;
   spawnStage(i);
   for (const id of i.members) {
@@ -1286,11 +1298,37 @@ export function nextStage(p) {
       m.mp = Math.min(maxMp(m), m.mp + 35);
     }
   }
-  return {
-    message: newFloor
-      ? "ลงสู่ชั้น " + i.floor + " · " + FLOORS[i.floor - 1].name
-      : "เข้าสู่ด่าน " + i.stage,
-  };
+}
+// Replay the floor just cleared, `runs` times in all (the first starts now).
+// Heroes that were on auto when the floor ended go back on auto each run.
+export const MAX_REPLAYS = 99;
+export const REPLAY_DELAY = 4;
+const canReplay = (i) => !i.night && !i.world && !i.training;
+export function replayFloor(p, runs = 1) {
+  const i = instances.get(p.instance);
+  if (!i || !i.completed || !i.results) throw Error("รอสรุปผลก่อน");
+  if (!canReplay(i)) throw Error("ด่านนี้เล่นซ้ำไม่ได้");
+  if (i.members.length > 1 && parties.get(p.party)?.leader !== p.id)
+    throw Error("ให้หัวหน้าปาร์ตี้เลือกเล่นซ้ำ");
+  if (!validInt(runs, 1, MAX_REPLAYS)) throw Error("จำนวนรอบไม่ถูกต้อง");
+  i.replay = { left: runs - 1, total: runs, at: 0 };
+  restartFloor(i);
+  return { message: `เล่นชั้น ${i.floor} ซ้ำ · ${runs} รอบ` };
+}
+export function stopReplay(p) {
+  const i = instances.get(p.instance);
+  if (i?.replay) i.replay.left = 0;
+  return { message: "หยุดเล่นซ้ำแล้ว" };
+}
+function restartFloor(i) {
+  const run = (i.replay?.total || 1) - (i.replay?.left || 0);
+  resetFloor(i);
+  enterStage(i);
+  for (const id of i.autoOnClear || []) {
+    const m = live(id);
+    if (m && m.hp > 0 && i.members.includes(id)) m.auto = true;
+  }
+  return run;
 }
 export function returnTown(p) {
   if (p.instance) {
@@ -1752,6 +1790,8 @@ function checkClear(i, t, p) {
       }
       if (i.world) worldBossDown(i, t);
       const seconds = Math.max(0, Math.round(t - i.startedAt));
+      const autoOnClear = [];
+      if (i.replay?.left > 0) i.replay.at = t + REPLAY_DELAY;
       i.results = Object.fromEntries(
         i.members.map((id) => {
           const rewards = i.rewards?.[id] || {
@@ -1762,6 +1802,7 @@ function checkClear(i, t, p) {
             damage: 0,
           };
           const m = live(id);
+          if (m?.auto) autoOnClear.push(id);
           if (m) {
             m.auto = false;
             m.input = 0;
@@ -1791,6 +1832,7 @@ function checkClear(i, t, p) {
                     heroes: i.ranking?.length || 0,
                   }
                 : null,
+              canReplay: canReplay(i),
               hasNext:
                 !i.night &&
                 !i.world &&
@@ -1803,6 +1845,7 @@ function checkClear(i, t, p) {
           ];
         }),
       );
+      i.autoOnClear = autoOnClear;
       log(p?.id ?? null, "boss:clear", { floor: i.floor, instance: i.id });
     }
   }
@@ -2230,6 +2273,14 @@ export function tick(dt, t = now()) {
   }
   updateWorldBoss();
   for (const i of instances.values()) {
+    if (i.replay?.left > 0 && i.completed && i.results && i.replay.at && t >= i.replay.at) {
+      if (i.members.map(live).some((m) => !m || m.hp <= 0)) i.replay.left = 0;
+      else {
+        i.replay.left--;
+        i.replay.at = 0;
+        restartFloor(i);
+      }
+    }
     i.events = i.events.filter((e) => t - e.at < 1.2);
     if (i.world && !i.clear) worldSummons(i, t);
     if (i.training && i.clear) {
@@ -2506,6 +2557,14 @@ export function snapshot(p) {
           clear: i.clear,
           completed: i.completed,
           result: i.results?.[p.id] || null,
+          replay: i.replay
+            ? {
+                left: i.replay.left,
+                total: i.replay.total,
+                run: i.replay.total - i.replay.left,
+                in: i.replay.at ? Math.max(0, Math.ceil(i.replay.at - t)) : 0,
+              }
+            : null,
           training: !!i.training,
           night: i.night || null,
           world: i.world || null,

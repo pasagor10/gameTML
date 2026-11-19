@@ -604,6 +604,7 @@ $("#story-skip").onclick = enterGame;
 const TRAVEL = new Set([
   "dungeon:enter",
   "dungeon:next",
+  "dungeon:replay",
   "dungeon:leave",
   "training:enter",
 ]);
@@ -1296,7 +1297,7 @@ function updateHUD() {
   setText($("#dock-label"), p.quest > 0
     ? `เล่นต่อ ชั้น ${Math.min(p.unlocked || 1, FLOORS.length)}`
     : "ผจญภัย");
-  setText($("#floor-chip"), d?.world ? "บอสโลก" : d?.night ? "ถ้ำลึกลับ" : d ? `ชั้น ${d.floor} · ${d.stage}/3` : "");
+  setText($("#floor-chip"), d?.world ? "บอสโลก" : d?.night ? "ถ้ำลึกลับ" : d ? `ชั้น ${d.floor} · ${d.stage}/3${d.replay?.total > 1 ? ` · รอบ ${d.replay.run}/${d.replay.total}` : ""}` : "");
   setText($("#quest-description"), d?.training
     ? "ฝึกเดิน กระโดด ฟัน และ Q/W/E · หลบเมื่อสไลม์ขึ้นวงเตือน"
     : d
@@ -1350,6 +1351,7 @@ function updateHUD() {
     !d?.clear || d?.training || p.hp <= 0 || p.auto || !!result,
   );
   showFloorResult(result);
+  showReplayStatus(d);
   $("#next-stage").textContent =
     d?.stage === 3 ? "รับชัยชนะ · กลับเมือง ➜" : "เข้าสู่ด่านต่อไป ➜";
   $("#death").classList.toggle("hidden", p.hp > 0);
@@ -1513,6 +1515,32 @@ $("#training-open").onclick = async () => {
 $("#next-stage").onclick = () => emit("dungeon:next");
 $("#result-next").onclick = () => emit("dungeon:next");
 $("#result-leave").onclick = () => emit("dungeon:leave");
+// Replay the cleared floor N times; the server restarts each run on its own.
+let replayRuns = 1;
+function setReplayRuns(n) {
+  replayRuns = Math.max(1, Math.min(99, Math.floor(Number(n)) || 1));
+  $("#replay-runs").value = replayRuns;
+  $$("[data-replay-runs]").forEach((b) => b.classList.toggle("active", Number(b.dataset.replayRuns) === replayRuns));
+  $("#result-replay").textContent = `↻ เล่นชั้นนี้ซ้ำ ×${replayRuns}`;
+}
+$$("[data-replay-runs]").forEach((b) => (b.onclick = () => setReplayRuns(b.dataset.replayRuns)));
+$("#replay-runs").onchange = (e) => setReplayRuns(e.target.value);
+setReplayRuns(1);
+$("#result-replay").onclick = () => emit("dungeon:replay", { runs: replayRuns });
+$("#replay-stop").onclick = () => emit("dungeon:replay-stop");
+// Live part of the result card: queued replays count down to the next run.
+function showReplayStatus(d) {
+  const r = d?.result,
+    q = d?.replay,
+    queued = !!(r && q && q.left > 0);
+  $("#floor-result .result-replay").hidden = !r?.canReplay;
+  $("#floor-result .replay-pick").hidden = queued;
+  $("#result-replay").hidden = queued;
+  $("#replay-stop").hidden = !queued;
+  $("#floor-result .replay-status").hidden = !queued;
+  if (queued)
+    setText($("#floor-result .replay-status"), `เล่นซ้ำ รอบ ${q.run} / ${q.total} จบแล้ว · เริ่มรอบถัดไปใน ${q.in} วิ`);
+}
 // End-of-floor summary: time, score, loot and an SSS–C rank, built once per clear.
 let shownResult = "";
 function showFloorResult(r) {
