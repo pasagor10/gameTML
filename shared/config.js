@@ -121,7 +121,10 @@ export function floorDifficulty(floor) {
   if (floor >= 3) return { id: "normal", label: "ปานกลาง" };
   return { id: "easy", label: "ปกติ" };
 }
-// Monster strength by floor. Heroes stop growing at Lv.40 (reached around
+// Heroes grow up to MAX_LEVEL; levels past 40 are for the world boss.
+export const MAX_LEVEL = 60;
+export const expToLevel = (level) => level * 80;
+// Monster strength by floor. Floor monsters stop growing with heroes at Lv.40 (reached around
 // floor 15), so past it monsters grow at 40% of the old pace: floor 40 fights
 // like floor 25. Rewards keep using the real floor.
 export const SCALE_FLOOR = 15;

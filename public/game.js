@@ -80,6 +80,8 @@ import {
   CLASSES,
   ITEMS,
   POTIONS,
+  MAX_LEVEL,
+  expToLevel,
   POTION_SIZES,
   STACK_SUPPLIES,
   MAX_BUY,
@@ -1068,7 +1070,7 @@ function updateHUD() {
   $("#player-class").textContent =
     SPECIALIZATIONS[p.class].find((s) => s.id === p.specialization)?.name ||
     CLASSES[p.class].name;
-  setText($("#exp-label"), `${p.exp} / ${p.level * 80} EXP`);
+  setText($("#exp-label"), p.level >= MAX_LEVEL ? `Lv.${MAX_LEVEL} สูงสุด` : `${p.exp} / ${expToLevel(p.level)} EXP`);
   // Unspent status points: a badge on the status menu button.
   const statusMenu = $("#status-menu");
   if (statusMenu) {
@@ -1150,7 +1152,7 @@ function updateHUD() {
   $("#mp-fill").style.width = (p.mp / p.maxMp) * 100 + "%";
   setText($("#hp-label"), `HP ${Math.ceil(p.hp)} / ${p.maxHp}`);
   setText($("#mp-label"), `MP ${Math.floor(p.mp)} / ${p.maxMp}`);
-  $("#exp-fill").style.width = (p.exp / (p.level * 80)) * 100 + "%";
+  $("#exp-fill").style.width = (p.level >= MAX_LEVEL ? 100 : Math.min(100, (p.exp / expToLevel(p.level)) * 100)) + "%";
   // HP (R) and MP (G) potions, each with its own cooldown ring.
   for (const type of ["hp", "mp"]) {
     const button = $(`[data-action="${type}"]`),

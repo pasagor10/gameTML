@@ -170,6 +170,20 @@ test("auto play spends new points along the build on level up", () => {
   assert.ok(p.attrs.int > 1);
 });
 
+test("heroes level past 40 up to Lv.60 and stop there", async () => {
+  const { MAX_LEVEL, expToLevel } = await import("../shared/config.js");
+  assert.equal(MAX_LEVEL, 60);
+  const p = create("lv-cap", "swordsman", 40);
+  const hp40 = maxHp(p), atk40 = combatStats(p).atk, pts40 = freePoints(p);
+  world.grantExp(p, expToLevel(40));
+  assert.equal(p.level, 41);
+  assert.ok(maxHp(p) > hp40 && combatStats(p).atk > atk40 && freePoints(p) > pts40);
+  let rest = 0;
+  for (let l = 41; l < 60; l++) rest += expToLevel(l);
+  world.grantExp(p, rest + 999999);
+  assert.equal(p.level, 60);
+});
+
 test("HP and MP potions each have their own cooldown", () => {
   const p = create("potion-cd", "mage", 5),
     t = Date.now() / 1000;

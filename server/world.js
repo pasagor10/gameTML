@@ -93,6 +93,8 @@ import {
   FLOORS,
   MAIN_FLOORS,
   powerFloor,
+  MAX_LEVEL,
+  expToLevel,
   WORLD,
   areaWidth,
   maxHp,
@@ -1359,8 +1361,8 @@ export function returnTown(p) {
 }
 function exp(p, n) {
   p.exp += n;
-  while (p.exp >= p.level * 80 && p.level < 40) {
-    p.exp -= p.level * 80;
+  while (p.level < MAX_LEVEL && p.exp >= expToLevel(p.level)) {
+    p.exp -= expToLevel(p.level);
     p.level++;
     // Auto play spends the new status points along the class build.
     if (p.auto) autoStats(p, true);
