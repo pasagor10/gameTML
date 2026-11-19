@@ -134,6 +134,7 @@ export function createPerfOverlay({ el, game, scene, quality, socket, build }) {
       `heap ${m.heapMb ?? "–"} MB · tex ${m.texMb} MB (${m.textures})`,
       `objects ${m.visible}/${m.objects} · draws ${perFrame} · particles ${m.particles}`,
       `tweens ${m.tweens} · timers ${m.clocks} · intervals ${m.intervals}`,
+      window.__viewport?.() ?? "",
       build,
     ].join("\n");
   }, 1000);

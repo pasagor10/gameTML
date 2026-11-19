@@ -16,22 +16,47 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/assets/app/icon-32.png" />
     <script>
       // iOS 26 home-screen app bug: the page is laid out one status-bar
-      // height short of the screen, leaving a band under the game. Size the
-      // page to the real screen there; elsewhere --app-h stays 100%.
+      // height short of the screen, leaving a band under the game. When the
+      // missing height equals the top safe area (no browser bars), size the
+      // page to the real screen; elsewhere --app-h stays 100%.
       (() => {
         const ios = /iP(hone|od|ad)/.test(navigator.userAgent) ||
           (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-        const standalone = navigator.standalone ||
-          matchMedia("(display-mode: standalone)").matches;
-        if (!ios || !standalone) return;
-        const fit = () => {
-          const portrait = innerHeight >= innerWidth,
-            full = portrait ? Math.max(screen.width, screen.height)
-              : Math.min(screen.width, screen.height);
-          document.documentElement.style.setProperty(
-            "--app-h", innerHeight < full ? full + "px" : "100%");
+        const standalone = !!navigator.standalone ||
+          matchMedia("(display-mode: standalone)").matches ||
+          matchMedia("(display-mode: fullscreen)").matches;
+        let probe;
+        const insets = () => {
+          if (!probe) {
+            probe = document.createElement("div");
+            probe.style.cssText = "position:fixed;left:0;top:0;width:0;visibility:hidden;pointer-events:none;" +
+              "padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)";
+            document.documentElement.appendChild(probe);
+          }
+          const cs = getComputedStyle(probe);
+          return [parseFloat(cs.paddingTop) || 0, parseFloat(cs.paddingBottom) || 0];
         };
-        fit();
+        const full = () => innerHeight >= innerWidth
+          ? Math.max(screen.width, screen.height)
+          : Math.min(screen.width, screen.height);
+        let applied = "no";
+        const fit = () => {
+          if (!ios) return;
+          const [top] = insets(),
+            gap = full() - innerHeight,
+            short = gap > 0 && (standalone || Math.abs(gap - top) <= 4);
+          applied = short ? "yes" : "no";
+          document.documentElement.style.setProperty("--app-h", short ? full() + "px" : "100%");
+        };
+        // Shown in the performance overlay, to check this on a device.
+        window.__viewport = () => {
+          const [top, bottom] = insets(),
+            gs = document.getElementById("game-screen")?.getBoundingClientRect();
+          return `view ${innerWidth}x${innerHeight} · screen ${screen.width}x${screen.height} · vv ${Math.round(visualViewport?.height ?? 0)}` +
+            `\nsafe ${top}/${bottom} · app ${standalone ? "standalone" : "browser"} · ios ${ios} · fix ${applied} · game ${Math.round(gs?.height ?? 0)}`;
+        };
+        if (document.readyState === "loading") addEventListener("DOMContentLoaded", fit);
+        else fit();
         addEventListener("resize", fit);
         addEventListener("orientationchange", () => setTimeout(fit, 300));
       })();
@@ -443,7 +468,7 @@
     </div>
     <script src="/vendor/phaser.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <script type="module" src="/game.js?v=0.53.1"></script>
+    <script type="module" src="/game.js?v=0.53.2"></script>
     <script type="module" src="/orientation.js?v=3"></script>
     <script type="module" src="/screen-awake.js?v=1"></script>
   </body>
