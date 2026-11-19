@@ -732,28 +732,31 @@ const BUILD_LABEL = [
 ].join(" · ");
 if ($("#build-version")) $("#build-version").textContent = BUILD_LABEL;
 console.info("TML build", BUILD_LABEL);
-// FPS / ping readout for checking a device: tap the build number in the
-// lobby to switch it on or off (remembered on this device).
-{
-  const readout = $("#perf-readout"),
-    label = $("#build-version");
-  let on = false;
+// FPS / ping readout for checking a device: switched in Settings, or by
+// tapping the build number in the lobby (remembered on this device).
+let perfOn = false;
+try {
+  perfOn = localStorage.getItem("tml-perf") === "1";
+} catch {}
+function togglePerf() {
+  perfOn = !perfOn;
   try {
-    on = localStorage.getItem("tml-perf") === "1";
+    localStorage.setItem("tml-perf", perfOn ? "1" : "0");
   } catch {}
-  const show = () => readout && (readout.hidden = !on);
-  show();
-  label?.addEventListener("click", () => {
-    on = !on;
-    try {
-      localStorage.setItem("tml-perf", on ? "1" : "0");
-    } catch {}
-    show();
-    toast(on ? "เปิดตัววัด FPS / ping แล้ว" : "ปิดตัววัด FPS / ping แล้ว");
-  });
+  showPerf();
+  toast(perfOn ? "เปิดตัววัด FPS / ping แล้ว" : "ปิดตัววัด FPS / ping แล้ว");
+}
+function showPerf() {
+  const readout = $("#perf-readout");
+  if (readout) readout.hidden = !perfOn;
+}
+showPerf();
+$("#build-version")?.addEventListener("click", togglePerf);
+{
   let ping = null;
   setInterval(() => {
-    if (!on || !readout) return;
+    const readout = $("#perf-readout");
+    if (!perfOn || !readout) return;
     if (socket?.connected) {
       const sent = performance.now();
       socket.timeout(3000).emit("net:ping", {}, (err) => {
@@ -1802,7 +1805,7 @@ function showPanel(panel) {
   } else if (panel === "settings") {
     modal(
       "บันทึกการเดินทาง",
-      `<p>เกมบันทึกตัวละคร เงิน อุปกรณ์ และดันเจียนบนเซิร์ฟเวอร์อัตโนมัติ<br>บัญชีผู้มาเยือนผูกกับคุกกี้ในเบราว์เซอร์นี้</p><button id="open-announcements" class="primary-button">📣 ประกาศจากระบบ · บอสโลก 20:00 น.</button><button id="toggle-sound" class="primary-button">${muted ? "เปิดเสียงทั้งหมด" : "ปิดเสียงทั้งหมด"}</button><button id="toggle-music" class="primary-button">${musicOn() ? "ปิดเพลงประกอบ" : "เปิดเพลงประกอบ"}</button><button id="back-selection" class="text-button">กลับหน้าเลือกตัวละคร</button><p class="hint">Demo v0.3 · นักดาบหญิงและสไลม์มีเฟรมแอนิเมชันชุดแรก · ตัวอื่นยังใช้ภาพ idle · เป้าหมาย 20–30 คนต่อห้องยังไม่ได้ยืนยันด้วย load test</p>`,
+      `<p>เกมบันทึกตัวละคร เงิน อุปกรณ์ และดันเจียนบนเซิร์ฟเวอร์อัตโนมัติ<br>บัญชีผู้มาเยือนผูกกับคุกกี้ในเบราว์เซอร์นี้</p><button id="open-announcements" class="primary-button">📣 ประกาศจากระบบ · บอสโลก 20:00 น.</button><button id="toggle-sound" class="primary-button">${muted ? "เปิดเสียงทั้งหมด" : "ปิดเสียงทั้งหมด"}</button><button id="toggle-music" class="primary-button">${musicOn() ? "ปิดเพลงประกอบ" : "เปิดเพลงประกอบ"}</button><button id="toggle-perf" class="primary-button">${perfOn ? "ซ่อนตัววัด FPS / ping" : "แสดงตัววัด FPS / ping"}</button><button id="back-selection" class="text-button">กลับหน้าเลือกตัวละคร</button><p class="hint">Demo v0.3 · นักดาบหญิงและสไลม์มีเฟรมแอนิเมชันชุดแรก · ตัวอื่นยังใช้ภาพ idle · เป้าหมาย 20–30 คนต่อห้องยังไม่ได้ยืนยันด้วย load test</p>`,
     );
     $("#open-announcements").onclick = () => showPanel("announcements");
     $("#toggle-sound").onclick = () => {
@@ -1813,6 +1816,11 @@ function showPanel(panel) {
     };
     $("#toggle-music").onclick = () => {
       setMusic(!musicOn());
+      sfx("click");
+      closeModal();
+    };
+    $("#toggle-perf").onclick = () => {
+      togglePerf();
       sfx("click");
       closeModal();
     };
