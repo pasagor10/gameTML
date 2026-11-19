@@ -1,3 +1,4 @@
+import { TOWNS, townOf, TRAVEL_GATE, MINE_INFO } from "/shared/towns.js";
 import { EXTRA_MONSTERS } from "/shared/extra-monsters.js";
 import { createDungeonProps } from "/dungeon-props.js?v=1";
 import { updateDivineAura } from "/divine-fx.js?v=1";
@@ -140,7 +141,7 @@ let lastQuestHash = "",
 let autoInstance = null;
 // Floor data for the current dungeon; the night cave stands in for a floor.
 const floorInfo = (d) =>
-  d?.world
+  d?.mine ? { ...FLOORS[(d?.floor || 1) - 1], ...MINE_INFO } : d?.world
     ? worldInfo(d.world)
     : d?.night
       ? nightInfo(d.night)
@@ -618,6 +619,8 @@ const TRAVEL = new Set([
   "dungeon:replay",
   "dungeon:leave",
   "training:enter",
+  "town:travel",
+  "mine:enter",
 ]);
 const TIPS = [
   "SPACE กระโดดหลบวงเตือนบนพื้นและบอสทุบพื้น",
@@ -667,7 +670,7 @@ function loadingArrived(s) {
     set = (sel, text) => ($("#area-loading " + sel).textContent = text);
   if (s.area === "town") {
     set(".loading-kicker", "กลับสู่ความปลอดภัย");
-    set(".loading-title", "เมืองหน้าถ้ำหลวง");
+    set(".loading-title", townOf(s.self).name);
     set(".loading-sub", "พักฟื้น ซื้อของ และเตรียมตัวลงถ้ำอีกครั้ง");
   } else if (d?.training) {
     set(".loading-kicker", "ลานฝึกซ้อม");
@@ -677,7 +680,7 @@ function loadingArrived(s) {
     const floor = floorInfo(d);
     set(
       ".loading-kicker",
-      d.world
+      d.mine ? "เหมืองแร่แรร์เอิร์ธ" : d.world
         ? "บอสโลก · ทุกคนร่วมกันตี"
         : d.night
           ? "ยามราตรี · ถ้ำลึกลับ"
@@ -1217,9 +1220,11 @@ function updateHUD() {
     ? "ลานฝึกผู้พิทักษ์"
     : d
       ? floorInfo(d).name
-      : "เมืองหน้าถ้ำหลวง");
+      : townOf(p).name);
   setText($("#stage-label"), d?.training
     ? "สนามฝึก · ไม่มีรางวัล · สไลม์เกิดใหม่อัตโนมัติ"
+    : d?.mine
+      ? `เหมือง · ด่าน ${d.stage} / 3`
     : d?.world
       ? `บอสโลก · ${d.world.name} · ร่วมกันตีกับผู้กล้าทุกคน`
       : d?.night
@@ -1234,8 +1239,8 @@ function updateHUD() {
       : d?.night
       ? "ถ้ำลึกลับ"
       : d
-      ? "ถ้ำหลวง · ชั้น " + d.floor
-      : "เมืองหน้าถ้ำหลวง");
+      ? (d.mine ? MINE_INFO.name : "ถ้ำหลวง · ชั้น " + d.floor)
+      : townOf(p).name);
   setText($("#online-count"), "● " + state.online + " ออนไลน์");
   const mapW = areaWidth(state.area),
     mapX = (x) => 8 + (x / mapW) * 200,
@@ -1244,7 +1249,7 @@ function updateHUD() {
   setText($("#map-zone"), d?.training
     ? "TRAINING · ไม่มีรางวัล"
     : d
-      ? d.world
+      ? d.mine ? `เหมืองแร่ · ด่าน ${d.stage} / 3` : d.world
         ? `บอสโลก · ⏳ ${wbClock(state.worldBoss?.left || 0)}`
         : d.night
         ? "ถ้ำลึกลับ · ยามราตรี"
@@ -1291,7 +1296,7 @@ function updateHUD() {
     "d",
     "M8 52H211" +
       (state.area === "town"
-        ? WORLD.platforms
+        ? (townOf(p).id === "riverside" ? [] : WORLD.platforms)
         : dungeonPlatforms(
             state?.dungeon?.floor,
             state?.dungeon?.stage,
@@ -1317,10 +1322,10 @@ function updateHUD() {
     if (!p.auto && p.hp > 0) emit("player:auto", { enabled: true });
   }
   if (area === "town") autoInstance = null;
-  setText($("#dock-label"), p.quest > 0
+  setText($("#dock-label"), townOf(p).id === "riverside" ? "สำรวจเหมือง" : p.quest > 0
     ? `เล่นต่อ ชั้น ${Math.min(p.unlocked || 1, FLOORS.length)}`
     : "ผจญภัย");
-  setText($("#floor-chip"), d?.world ? "บอสโลก" : d?.night ? "ถ้ำลึกลับ" : d ? `ชั้น ${d.floor} · ${d.stage}/3${d.replay?.total > 1 ? ` · รอบ ${d.replay.run}/${d.replay.total}` : ""}` : "");
+  setText($("#floor-chip"), d?.mine ? `เหมือง · ${d.stage}/3` : d?.world ? "บอสโลก" : d?.night ? "ถ้ำลึกลับ" : d ? `ชั้น ${d.floor} · ${d.stage}/3${d.replay?.total > 1 ? ` · รอบ ${d.replay.run}/${d.replay.total}` : ""}` : "");
   setText($("#quest-description"), d?.training
     ? "ฝึกเดิน กระโดด ฟัน และ Q/W/E · หลบเมื่อสไลม์ขึ้นวงเตือน"
     : d
@@ -1448,10 +1453,12 @@ function nearby() {
       ? { id: "next", label: "เข้าสู่ด่านต่อไป" }
       : null;
   }
+  if (Math.abs(p.x - TRAVEL_GATE.x) < TRAVEL_GATE.reach && Math.abs(p.y - TRAVEL_GATE.y) < 90)
+    return { id: "travel", label: "วาร์ปไป " + TOWNS[townOf(p).destination].name };
   if (Math.abs(p.x - SLOT_MACHINE.x) <= SLOT_MACHINE.reach && Math.abs(p.y - SLOT_MACHINE.y) < 90)
     return { id: "slots", label: "ตู้สมบัติจันทรา · หมุน 1,000 ทอง" };
   // Everything left of the cave mouth is the cave (it is the town's edge).
-  if (state.sky?.night && p.x < NIGHT_CAVE.x + 110)
+  if (townOf(p).id === "cave" && state.sky?.night && p.x < NIGHT_CAVE.x + 110)
     return { id: "nightcave", label: "ถ้ำลึกลับ · บอสยามราตรี" };
   const npc = WORLD.npcs.find(
     (n) =>
@@ -1459,7 +1466,7 @@ function nearby() {
   );
   if (npc) return { ...npc, label: npc.name + " · " + npc.role };
   if (Math.abs(p.x - WORLD.portal) < 140)
-    return { id: "portal", label: "เข้าสู่ดันเจียนถ้ำหลวง" };
+    return { id: "portal", label: townOf(p).id === "riverside" ? "เข้าสู่เหมืองแร่แรร์เอิร์ธ" : "เข้าสู่ดันเจียนถ้ำหลวง" };
   const shop = state.shops.find((s) => Math.abs(s.x - p.x) < 65);
   if (shop) return { id: "shop:" + shop.id, label: "ร้าน " + shop.name };
   return null;
@@ -1487,7 +1494,8 @@ function openTown(id) {
       return toast("เดินเข้าใกล้ตู้สล็อตกลางเมืองก่อน", true);
     return showPanel("slots");
   }
-  if (id === "portal") return showPanel("dungeon");
+  if (id === "travel") return showPanel("travel");
+  if (id === "portal") return showPanel(townOf(state.self).id === "riverside" ? "mine" : "dungeon");
   if (id === "nightcave") return showPanel("nightcave");
   if (id === "market") return showPanel("market");
   if (id.startsWith("shop:")) {
@@ -1517,7 +1525,7 @@ $$("[data-panel]").forEach(
   (b) => (b.onclick = () => showPanel(b.dataset.panel)),
 );
 $("#dungeon-open").onclick = () => showPanel("dungeon");
-$("#dock-adventure").onclick = () => showPanel("dungeon");
+$("#dock-adventure").onclick = () => openTown("portal");
 $("#avatar").onclick = () => showPanel("status");
 // Pause menu: leaving the dungeon lives here so it is never hit mid-fight.
 {
@@ -1580,7 +1588,7 @@ function showFloorResult(r) {
     row = (label, value, extra = "") =>
       `<div><dt>${label}</dt><dd>${value}${extra ? `<small>${extra}</small>` : ""}</dd></div>`;
   $("#result-title").textContent =
-    r.world
+    r.mine ? MINE_INFO.name : r.world
       ? "บอสโลก · " + r.world.name
       : r.night
         ? "ถ้ำลึกลับ · " + r.night
@@ -1625,7 +1633,7 @@ $("#town-return").onclick = () => {
     emit("player:heal");
   } else {
     modal(
-      "กลับเมืองหน้าถ้ำหลวง",
+      "กลับสู่ " + townOf(state.self).name,
       '<p>ออกจากดันเจียนรอบนี้? ทองและไอเทมที่ได้รับยังอยู่ แต่ต้องเริ่มด่านใหม่เมื่อกลับเข้าไป</p><button id="confirm-town" class="primary-button">กลับเมือง</button>',
     );
     $("#confirm-town").onclick = async () => {
@@ -1776,6 +1784,17 @@ function showPanel(panel) {
       currentPlayer: () => state?.self,
       onSettled: () => { if (activePanel === "slots") showPanel("slots"); },
     });
+  } else if (panel === "travel") {
+    const target = TOWNS[townOf(p).destination];
+    modal("ประตูวาร์ปข้ามเมือง", `<p>ปลายทาง: <strong>${target.name}</strong></p><p>เดินเข้าใกล้ประตูวาร์ปแล้วกดเดินทาง · ใช้ได้ฟรี</p><button id="travel-go" class="primary-button">เดินทางไป ${target.name} ➜</button>`, "travel");
+    $("#travel-go").onclick = async () => {
+      if (await emit("town:travel", { destination: target.id })) { closeModal(); sfx("portal"); }
+    };
+  } else if (panel === "mine") {
+    modal(MINE_INFO.name, `<p>สำรวจอุโมงค์เหมือง ผลึกแร่เรืองแสง และทางรถแร่ใต้ภูเขา</p><p>รอบละ 3 ด่าน · ใช้มอนสเตอร์และรางวัลเดิมตามความคืบหน้าของทีม · จบรอบกลับชุมชนริมน้ำสาย</p><button id="mine-enter" class="primary-button">เข้าสู่เหมือง ➜</button>`, "mine");
+    $("#mine-enter").onclick = async () => {
+      if (await emit("mine:enter")) closeModal();
+    };
   } else if (panel === "trainer") {
     showPanel("class");
   } else if (["inventory", "class", "status", "wardrobe"].includes(panel)) {
@@ -2431,6 +2450,8 @@ class Adventure extends Phaser.Scene {
       $("#connection-state").textContent = `กำลังโหลดทรัพยากร ${Math.round(value * 100)}%`;
     });
     queueSpriteSets(this);
+    this.load.image("riverside-town", "/assets/regions/riverside-town.webp?v=1");
+    this.load.image("rare-earth-mine", "/assets/regions/rare-earth-mine.webp?v=1");
     // Town kit: pieces, props, animated props and far layers (tools/town-kit).
     const kit = (key) => `/assets/town-kit/${key}.webp?v=11`;
     for (const piece of new Set(TOWN_LAYOUT.map((p) => p.piece)))
@@ -2586,6 +2607,10 @@ class Adventure extends Phaser.Scene {
       })
       .setOrigin(0.5)
       .setDepth(12);
+    this.travelGlow = this.add.ellipse(TRAVEL_GATE.x, WORLD.ground - 60, 76, 132, 0x53dbc0, 0.32).setDepth(4).setStrokeStyle(3, 0xf2d497, 0.9);
+    this.travelLabel = this.add.text(TRAVEL_GATE.x, WORLD.ground - 155, "ประตูวาร์ป\nชุมชนริมน้ำสาย", { fontFamily: "Noto Sans Thai", fontSize: "15px", align: "center", color: "#ecfff7", stroke: "#112d35", strokeThickness: 4 }).setOrigin(0.5).setDepth(12);
+    this.npcs.push(this.travelGlow, this.travelLabel);
+    this.tweens.add({ targets: this.travelGlow, alpha: 0.65, duration: 1300, yoyo: true, repeat: -1 });
     // Click or tap NPCs, the cave gate and stalls to open them directly.
     this.hoverRing = this.add
       .ellipse(0, WORLD.ground + 4, 120, 26, 0xffe6a5, 0.28)
@@ -2593,6 +2618,7 @@ class Adventure extends Phaser.Scene {
       .setDepth(2)
       .setVisible(false);
     this.hotspots = [
+      this.hotspot(TRAVEL_GATE.x, WORLD.ground, 120, 180, () => openTown("travel")),
       ...WORLD.npcs.map((n) =>
         this.hotspot(n.x, n.y ?? WORLD.ground, 110, 175, () => openTown(n.id)),
       ),
@@ -2828,7 +2854,7 @@ class Adventure extends Phaser.Scene {
   applySnapshot(s) {
     const area =
       s.area === "town"
-        ? "town"
+        ? "town:" + townOf(s.self).id
         : "dungeon" +
           s.dungeon.instanceId +
           ":" +
@@ -2838,7 +2864,7 @@ class Adventure extends Phaser.Scene {
     const areaChanged = area !== this.lastArea;
     if (areaChanged) {
       loadingArrived(s);
-      const fromTown = this.lastArea === "town";
+      const fromTown = this.lastArea?.startsWith("town:");
       this.lastArea = area;
       const town = s.area === "town";
       const bossStage = !town && s.dungeon?.stage === 3 && !s.dungeon?.training;
@@ -2846,7 +2872,7 @@ class Adventure extends Phaser.Scene {
       if (fromTown && !town) sfx("portal");
       if (bossStage) setTimeout(() => sfx("roar"), 600);
       this.parallax.setArea(
-        town ? "town" : "cave",
+        town ? (townOf(s.self).id === "riverside" ? "riverside" : "town") : s.dungeon?.mine ? "mine" : "cave",
         town ? null : floorInfo(s.dungeon).color,
       );
       this.resize(); // the town and the dungeons frame the camera differently
@@ -2855,6 +2881,8 @@ class Adventure extends Phaser.Scene {
       this.hotspots.forEach((z) => (z.input.enabled = town));
       this.hoverRing.setVisible(false);
       this.portalLabel.setVisible(town);
+      this.portalLabel.setText(townOf(s.self).id === "riverside" ? "เหมืองแร่แรร์เอิร์ธ\nทางเข้าเหมือง" : "ถ้ำหลวง\nประตูสู่ดอยนางนอน");
+      this.travelLabel.setText("ประตูวาร์ป\n" + TOWNS[townOf(s.self).destination].name);
       this.portal.setVisible(town);
       this.portalGlow.setVisible(town);
       this.makePlatforms();

@@ -82,6 +82,7 @@ export function persist(p) {
       "statResets",
       "skin",
       "autoCfg",
+      "townId",
     ].map((k) => [k, p[k]]),
   );
   db.prepare("UPDATE characters SET state=? WHERE id=?").run(

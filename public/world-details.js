@@ -79,7 +79,7 @@ export function createWorldDetails(scene) {
       // Same ledges the server collides with: each floor/stage has its own.
       const d = state.dungeon,
         platforms = town
-          ? WORLD.platforms
+          ? (state.self.townId === "riverside" ? [] : WORLD.platforms)
           : dungeonPlatforms(d?.floor, d?.stage, d?.training);
       // Ledge lines and the landing ring are a debug aid (walkability toggle) only.
       if (full) for (const q of [

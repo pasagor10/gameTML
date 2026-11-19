@@ -422,6 +422,8 @@ export function createParallax(scene) {
     .setOrigin(0).setScrollFactor(.76, 1).setDepth(-29).setVisible(false);
   // Kit pieces on the street tile, then props: behind the heroes, or in
   // front of them for a little foreground depth.
+  const regionBase = scene.add.rectangle(0, -1000, TOWN_WIDTH, 2400, 0x173f42).setOrigin(0).setDepth(-29).setVisible(false);
+  const regionPainting = scene.add.image(0, 0, "riverside-town").setOrigin(0).setDepth(-28).setVisible(false);
   const animated = [];
   const props = TOWN_PROPS.map((p, i) => {
     const anim = p.key.startsWith("anim-"),
@@ -637,6 +639,7 @@ export function createParallax(scene) {
     ),
   ];
 
+  let customRegion = false;
   let kind = "town",
     split = SPLIT.town,
     rayTweens = [],
@@ -680,7 +683,8 @@ export function createParallax(scene) {
   function setArea(area, tint) {
     lastArea = area;
     lastTint = tint;
-    kind = area === "town" ? "town" : "cave";
+    customRegion = area === "riverside" || area === "mine";
+    kind = area === "town" || area === "riverside" ? "town" : "cave";
     const theme = THEMES[kind],
       tex = scene.textures.get("cave").getSourceImage(),
       th = tex.height,
@@ -688,15 +692,15 @@ export function createParallax(scene) {
     split = SPLIT[kind];
     const cut = Math.round(th * split),
       isTown = kind === "town";
-    kit.forEach((o) => o.setVisible(isTown));
+    kit.forEach((o) => o.setVisible(isTown && !customRegion));
     for (const l of far) if (l.drift && lite) l.layer.setVisible(false);
     for (const o of [fog, fogBack, vignette, grade]) o.setVisible(!lite);
-    scenery.setVisible(!isTown);
-    for (const layer of [depthBase, deepFloor, depthFade]) layer.setVisible(!isTown);
+    scenery.setVisible(!isTown && !customRegion);
+    for (const layer of [depthBase, deepFloor, depthFade]) layer.setVisible(!isTown && !customRegion);
     deepFloor.clearTint();
     if (tint) deepFloor.setTint(tint);
-    cavernDepth.setVisible(!isTown);
-    floor.setVisible(!isTown);
+    cavernDepth.setVisible(!isTown && !customRegion);
+    floor.setVisible(!isTown && !customRegion);
     // Cave path is painted at pixel y=733. Its top must meet world ground=600,
     // rather than leaving feet ~64px below the stone walkway.
     const backY = kind === "cave" ? -116 : BACK_Y;
@@ -719,6 +723,16 @@ export function createParallax(scene) {
       kind === "town" ? Phaser.BlendModes.SCREEN : Phaser.BlendModes.MULTIPLY,
     );
     grade.setAlpha(theme.gradeAlpha);
+    regionBase.setVisible(customRegion).setFillStyle(isTown ? 0x173f42 : 0x101c26);
+    regionPainting.setVisible(customRegion);
+    seam.setVisible(!customRegion);
+    fgBottom.setVisible(!customRegion);
+    fgTop.setVisible(!customRegion && !lowPower);
+    if (customRegion) {
+      const width = isTown ? TOWN_WIDTH : WORLD_W, height = isTown ? width / 3 : 1200;
+      regionPainting.setTexture(isTown ? "riverside-town" : "rare-earth-mine")
+        .setPosition(0, TOWN_GROUND - height * (isTown ? 0.735 : 0.685)).setDisplaySize(width, height);
+    }
     town.forEach((e) => e.setVisible(kind === "town" && !lite).stop());
     cave.forEach((e) => e.setVisible(kind === "cave" && !lite).stop());
     for (const e of emitters)
@@ -750,11 +764,11 @@ export function createParallax(scene) {
         50,
         220,
       );
-    fgBottom.setPosition(w / 2, bottom + 6).setSize(vw + 40, room);
+    fgBottom.setPosition(w / 2, bottom + 6).setSize(vw + 40, room).setVisible(!customRegion);
     fgBottom.tilePositionY = 220 - room;
     fgTop.setPosition(w / 2, top - 4).setSize(vw + 40, 200);
     // Phones: no blurred foliage across the top of the screen.
-    fgTop.setScale(1, 0.85).setVisible(!lowPower);
+    fgTop.setScale(1, 0.85).setVisible(!lowPower && !customRegion);
     // Keep each far strip where its `top` says while the camera rests at camY;
     // a scroll factor below 1 then moves it less as the camera climbs.
     const restY = (scene.camY ?? 340) - h / 2;

@@ -1,3 +1,4 @@
+import { TOWNS, townOf, TRAVEL_GATE } from "../shared/towns.js";
 import { BOSSES } from "../shared/bosses.js";
 import {
   bossMechanics,
@@ -1044,6 +1045,7 @@ export function makeRuntime(c, socket) {
     jump: false,
     grounded: true,
     area: "town",
+    townId: townOf(c).id,
     instance: null,
     auto: false,
     attackAt: 0,
@@ -1081,6 +1083,7 @@ export function stored(p) {
     "statResets",
     "skin",
     "autoCfg",
+    "townId",
   ];
   return {
     id: p.id,
@@ -1107,7 +1110,7 @@ export function beginDungeon(p, floor) {
   const party = parties.get(p.party),
     members = party ? party.members.map(live).filter(Boolean) : [p];
   if (party && party.leader !== p.id) throw Error("ให้หัวหน้าปาร์ตี้เริ่มดันเจียน");
-  if (members.some((m) => m.area !== "town" || m.unlocked < floor || m.hp <= 0))
+  if (members.some((m) => m.area !== "town" || townOf(m).id !== townOf(p).id || m.unlocked < floor || m.hp <= 0))
     throw Error("สมาชิกต้องอยู่เมืองและปลดล็อกชั้นนี้แล้ว");
   if (party && members.some((m) => m.id !== p.id && !party.ready.has(m.id)))
     throw Error("สมาชิกทุกคนต้องกดพร้อมก่อน");
@@ -1116,14 +1119,41 @@ export function beginDungeon(p, floor) {
   if (party) party.ready.clear();
   return { message: "เข้าสู่ " + FLOORS[floor - 1].name };
 }
+// Travel gates are server-authoritative and cannot interrupt a trade.
+export function travelTown(p, destination) {
+  ensureTown(p);
+  if (!Object.hasOwn(TOWNS, destination) || destination !== townOf(p).destination)
+    throw Error("ปลายทางไม่ถูกต้อง");
+  if (Math.abs(p.x - TRAVEL_GATE.x) > TRAVEL_GATE.reach || Math.abs(p.y - TRAVEL_GATE.y) > 90)
+    throw Error("เดินเข้าใกล้ประตูวาร์ปก่อน");
+  if ([...trades.values()].some(t => t.members.includes(p.id))) throw Error("จบการแลกเปลี่ยนก่อนเดินทาง");
+  p.townId = destination;
+  returnTown(p);
+  p.x = TRAVEL_GATE.x + 170;
+  parties.get(p.party)?.ready.delete(p.id);
+  savePlayer(p);
+  return { message: "เดินทางถึง " + TOWNS[destination].name };
+}
+export function beginMine(p) {
+  ensureTown(p);
+  if (townOf(p).id !== "riverside") throw Error("เข้าสู่เหมืองได้จากชุมชนริมน้ำสาย");
+  if (Math.abs(p.x - WORLD.portal) > 160 || Math.abs(p.y - WORLD.ground) > 100)
+    throw Error("เดินไปที่ทางเข้าเหมืองก่อน");
+  const members = parties.get(p.party)?.members.map(live).filter(Boolean) || [p];
+  const floor = Math.max(1, Math.min(13, ...members.map(m => m.unlocked)));
+  beginDungeon(p, floor);
+  instances.get(p.instance).mine = true;
+  return { message: "เข้าสู่เหมืองแร่แรร์เอิร์ธ · ใช้มอนสเตอร์และรางวัลเดิม" };
+}
 // The night cave: free, boss stage only, open while it is night.
 export function beginNightCave(p) {
+  if (townOf(p).id !== "cave") throw Error("ถ้ำยามราตรีอยู่ที่เมืองหน้าถ้ำหลวง");
   const sky = skyNow();
   if (!sky.night) throw Error("ถ้ำลึกลับปรากฏเฉพาะตอนกลางคืน");
   const party = parties.get(p.party),
     members = party ? party.members.map(live).filter(Boolean) : [p];
   if (party && party.leader !== p.id) throw Error("ให้หัวหน้าปาร์ตี้พาเข้าถ้ำ");
-  if (members.some((m) => m.area !== "town" || m.hp <= 0))
+  if (members.some((m) => m.area !== "town" || townOf(m).id !== townOf(p).id || m.hp <= 0))
     throw Error("สมาชิกทุกคนต้องอยู่ในเมือง");
   if (p.x > NIGHT_CAVE.x + NIGHT_CAVE.reach)
     throw Error("เดินไปที่ปากถ้ำลึกลับก่อน");
@@ -1365,7 +1395,7 @@ export function nextStage(p) {
     if (!i.completed || !i.results) throw Error("รอสรุปผลก่อน");
     if (i.members.length > 1 && parties.get(p.party)?.leader !== p.id)
       throw Error("ให้หัวหน้าปาร์ตี้เลือกไปชั้นถัดไป");
-    if (i.night || i.world || i.floor >= FLOORS.length) return returnTown(p);
+    if (i.night || i.world || i.mine || i.floor >= FLOORS.length) return returnTown(p);
     const members = i.members.map(live).filter(Boolean);
     if (members.some((m) => m.unlocked < i.floor + 1))
       throw Error("สมาชิกยังไม่ปลดล็อกชั้นถัดไป");
@@ -1471,7 +1501,7 @@ export function returnTown(p) {
   p.hp = maxHp(p);
   p.mp = maxMp(p);
   p.vy = 0;
-  return { message: "กลับเมืองหน้าถ้ำหลวง" };
+  return { message: "กลับสู่ " + townOf(p).name };
 }
 function exp(p, n) {
   p.exp += n;
@@ -1976,6 +2006,7 @@ function checkClear(i, t, p) {
                 i.floor,
                 m ? maxHp(m) : 100,
               ),
+              mine: !!i.mine,
               night: i.night?.name || null,
               world: i.world
                 ? {
@@ -1989,6 +2020,7 @@ function checkClear(i, t, p) {
               hasNext:
                 !i.night &&
                 !i.world &&
+                !i.mine &&
                 i.floor < FLOORS.length &&
                 i.members
                   .map(live)
@@ -2072,7 +2104,7 @@ export function tradeAction(
     if (
       !other ||
       other.id === p.id ||
-      other.area !== "town" ||
+      other.area !== "town" || townOf(other).id !== townOf(p).id ||
       [...trades.values()].some(
         (t) => t.members.includes(p.id) || t.members.includes(other.id),
       )
@@ -2206,7 +2238,7 @@ function physics(p, dt, t) {
   let floor = WORLD.ground;
   if (p.vy >= 0)
     for (const platform of p.area === "town"
-      ? WORLD.platforms
+      ? (townOf(p).id === "riverside" ? [] : WORLD.platforms)
       : dungeonPlatforms(
           instances.get(p.instance)?.floor,
           instances.get(p.instance)?.stage,
@@ -2746,6 +2778,7 @@ export function snapshot(p) {
   const publicPlayer = (m) => ({
     id: m.id,
     name: m.name,
+    townId: townOf(m).id,
     class: m.class,
     gender: m.gender,
     specialization: m.specialization || null,
@@ -2807,14 +2840,16 @@ export function snapshot(p) {
       potionCd: p.potionCd || {},
     },
     area: p.area,
+    town: townOf(p),
     players: [...players.values()]
       .filter(
-        (m) => m.id !== p.id && m.area === p.area && m.instance === p.instance,
+        (m) => m.id !== p.id && m.area === p.area && m.instance === p.instance && (p.area !== "town" || townOf(m).id === townOf(p).id),
       )
       .map(publicPlayer),
     dungeon: i
       ? {
           floor: i.floor,
+          mine: !!i.mine,
           stage: i.stage,
           clear: i.clear,
           completed: i.completed,

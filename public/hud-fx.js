@@ -89,7 +89,7 @@ export function updateHudFx(state) {
 
   const area =
     state.area === "town"
-      ? "town"
+      ? "town:" + (p.townId || "cave")
       : `${state.dungeon?.floor}:${state.dungeon?.stage}:${state.dungeon?.training}`;
   if (area !== lastArea) {
     if (lastArea !== null) pulse(screen, "area-change", 1200);

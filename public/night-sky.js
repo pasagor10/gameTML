@@ -129,8 +129,9 @@ export function createNightSky(scene, openCave) {
       torch.setAlpha(dark * 0.3);
 
       // The cave rises with dusk and is open only at night.
-      const open = town && sky?.night,
-        show = town && sky ? (open ? 1 : Math.max(0, dark - 0.4) * 0.6) : 0;
+      const allowCave = state?.self?.townId !== "riverside",
+        open = town && allowCave && sky?.night,
+        show = town && allowCave && sky ? (open ? 1 : Math.max(0, dark - 0.4) * 0.6) : 0;
       cave?.setAlpha(show);
       rim?.setAlpha(show * (0.42 + Math.sin(time * 0.002) * 0.08));
       mouth.setAlpha(show * (0.55 + Math.sin(time * 0.003) * 0.2));
@@ -147,7 +148,7 @@ export function createNightSky(scene, openCave) {
       }
       zone.input.enabled = !!open;
 
-      if (town && sky && lastNight === false && sky.night) onNightfall?.();
+      if (town && allowCave && sky && lastNight === false && sky.night) onNightfall?.();
       if (sky) lastNight = sky.night;
     },
   };
