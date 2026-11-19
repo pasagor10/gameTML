@@ -359,3 +359,23 @@ html body #perf-readout { white-space: pre; text-align: left; line-height: 1.45;
 .quality-picker button.active { background: #e8d39a; color: #1b1a12; border-color: #e8d39a; font-weight: 700; }
 /* Low preset: the canvas renders below CSS resolution and is stretched back. */
 #game-canvas.scaled canvas { transform: scale(var(--render-up)); transform-origin: 0 0; }
+/* Edge-to-edge world; only interactive HUD respects the device safe areas. */
+html, body { width:100%; height:100%; margin:0; padding:0; }
+html body #game-screen { position:fixed !important; inset:0 !important; width:100% !important; height:100% !important; min-height:0 !important; padding:0 !important; }
+html body #game-screen #game-canvas { position:absolute !important; inset:0 !important; width:100% !important; height:100% !important; }
+html body #game-screen .hud-top { backdrop-filter:none !important; -webkit-backdrop-filter:none !important; box-shadow:none !important; }
+html body #game-screen .hud-top::before,html body #game-screen .hud-top::after { display:none !important; }
+html body #game-screen .profile-panel .profile-info .stat-bar span {
+  display:flex !important; align-items:center !important; justify-content:center !important;
+  position:absolute !important; inset:0 !important; width:100% !important; height:100% !important;
+  padding:0 !important; white-space:nowrap !important; line-height:1 !important; font-size:8px !important;
+  overflow:hidden; text-overflow:clip;
+}
+html body #game-screen:is([data-area="dungeon"],[data-area="training"]) #quests { --quest-top:inherit; }
+html body #game-screen #quests { top:var(--quest-top,120px) !important; }
+@media(pointer:coarse) {
+  html body #game-screen .profile-panel { flex:0 1 214px !important; min-width:190px !important; max-width:214px !important; }
+  html body #game-screen .profile-panel .profile-info .stat-bar { height:13px !important; }
+  html body #game-screen #toast { bottom:calc(var(--dock-b) + 16px) !important; }
+}
+html body #toast { bottom:calc(90px + env(safe-area-inset-bottom)) !important; }

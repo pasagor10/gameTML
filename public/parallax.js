@@ -325,6 +325,14 @@ export function createParallax(scene) {
     lowPower = scene.scale.width < 700,
     cam = () => scene.cameras.main;
 
+  const caveTexture = scene.textures.get("cave");
+  const caveSource = caveTexture.getSourceImage();
+  if (!caveTexture.has("lower-depth"))
+    caveTexture.add("lower-depth", 0, 0, Math.floor(caveSource.height * .84),
+      caveSource.width, caveSource.height - Math.floor(caveSource.height * .84));
+  caveTexture.firstFrame = "__BASE";
+  const deepFloor = scene.add.image(0, 780, "cave", "lower-depth")
+    .setOrigin(0).setDisplaySize(WORLD_W, 1400).setDepth(-25).setVisible(false);
   const scenery = scene.add
       .image(0, BACK_Y, "cave")
       .setOrigin(0)
@@ -664,6 +672,7 @@ export function createParallax(scene) {
     for (const l of far) if (l.drift && lite) l.layer.setVisible(false);
     for (const o of [fog, fogBack, vignette, grade]) o.setVisible(!lite);
     scenery.setVisible(!isTown);
+    deepFloor.setVisible(!isTown);
     cavernDepth.setVisible(!isTown);
     floor.setVisible(!isTown);
     // Cave path is painted at pixel y=733. Its top must meet world ground=600,
@@ -722,7 +731,8 @@ export function createParallax(scene) {
     fgBottom.setPosition(w / 2, bottom + 6).setSize(vw + 40, room);
     fgBottom.tilePositionY = 220 - room;
     fgTop.setPosition(w / 2, top - 4).setSize(vw + 40, 200);
-    fgTop.setScale(1, lowPower ? 0.6 : 0.85);
+    fgTop.setScale(1, lowPower ? 0.35 : 0.85);
+    fgTop.setAlpha(lowPower ? 0.35 : 1);
     // Keep each far strip where its `top` says while the camera rests at camY;
     // a scroll factor below 1 then moves it less as the camera climbs.
     const restY = (scene.camY ?? 340) - h / 2;

@@ -2505,7 +2505,7 @@ class Adventure extends Phaser.Scene {
       // Portrait phones: frame by width so heroes stay readable, and put the
       // ground near 2/3 of the screen so thumb controls sit below the action.
       const zoom = portrait
-          ? Phaser.Math.Clamp(Math.max(w / 520, h / 940), 0.6, 1.2)
+          ? Phaser.Math.Clamp(w / 760, 0.42, 0.95)
           : w < 700
             ? Math.max(0.5, h / 1050)
             : Math.max(0.6, h / 950),
@@ -2515,7 +2515,7 @@ class Adventure extends Phaser.Scene {
       // Portrait: ground at ~64% like the town, so monsters walk above the
       // skill arc; the camera may look past the painting's bottom there
       // (the controls and the foreground strip cover it).
-      const bottom = portrait ? 1000 : 850;
+      const bottom = portrait ? Math.max(1000, WORLD.ground + 0.36 * viewH) : 850;
       this.camY = portrait
         ? Math.min(bottom - viewH / 2, WORLD.ground - 0.14 * viewH)
         : h < 520
@@ -3539,7 +3539,9 @@ class Adventure extends Phaser.Scene {
     const me = this.actors.get(state.self.id);
     if (me) {
       const c = this.cameras.main,
-        lead = Phaser.Math.Clamp((me.target.vx || 0) * 0.35, -110, 110);
+        lead = this.portrait && state.area !== "town" && ["archer", "mage", "priest"].includes(state.self.class)
+          ? (me.target.direction || state.self.direction || 1) * 90
+          : Phaser.Math.Clamp((me.target.vx || 0) * 0.35, -110, 110);
       // Look ahead in the walking direction and lift the camera on jumps.
       this.lookX = Phaser.Math.Linear(this.lookX || 0, lead, 0.04);
       const targetX = Phaser.Math.Clamp(
