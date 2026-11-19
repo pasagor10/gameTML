@@ -1000,16 +1000,16 @@ export function createCombatFx(scene) {
   }
   function digits(x, y, text, style, size, crit) {
     const label = pooledText(x, y, text, {
-        fontFamily: "Chonburi, Noto Sans Thai",
+        fontFamily: "Tahoma, Noto Sans Thai, sans-serif",
         fontSize: size + "px",
         color: "#ffffff",
         stroke: "#000000",
-        strokeThickness: crit ? 10 : 8,
+        strokeThickness: crit ? 3 : 2,
         padding: { x: 4, y: 4 },
       })
       .setOrigin(0.5)
       .setDepth(42);
-    label.setShadow(0, 4, "#000000", 4, true, true);
+    label.setShadow(0, 2, "#000000", 0, false, true);
     paint(label, style);
     return label;
   }
@@ -1057,7 +1057,7 @@ export function createCombatFx(scene) {
           // Burst behind, a white flash copy on top, a star badge, and a kick.
           const burst = sprite("cfx-glow", lx, ly, 0xff3d6e, 41).setDisplaySize(main.width * 1.6, 90);
           const flash = pooledText(lx, ly, text, {
-              fontFamily: "Chonburi, Noto Sans Thai",
+              fontFamily: "Tahoma, Noto Sans Thai, sans-serif",
               fontSize: size + "px",
               color: "#ffffff",
               padding: { x: 4, y: 4 },
@@ -1079,7 +1079,7 @@ export function createCombatFx(scene) {
               fontSize: "32px",
               color: "#ffe0ec",
               stroke: "#5a0020",
-              strokeThickness: 6,
+              strokeThickness: 2,
             })
             .setOrigin(0.5)
             .setDepth(43);
@@ -1136,11 +1136,11 @@ export function createCombatFx(scene) {
     // One shout over a stack with crits in it.
     if (!hurt && !tick && lines.some((l) => l.crit)) {
       const tag = pooledText(x + jitter, top - 6, "CRITICAL!", {
-          fontFamily: "Chonburi, Noto Sans Thai",
+          fontFamily: "Tahoma, Noto Sans Thai, sans-serif",
           fontSize: "20px",
           color: "#ffffff",
           stroke: "#5a0020",
-          strokeThickness: 6,
+          strokeThickness: 2,
           padding: { x: 4, y: 4 },
         })
         .setOrigin(0.5)

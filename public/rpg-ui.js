@@ -175,7 +175,7 @@ function inventoryPage(p, area, stats, owned, spec, cls) {
       g = supply ? supplyInfo(supply) : GEAR[key],
       count = supply ? p.inventory[supply] : counts.get(key);
     // Same picture, different tier: the level tag tells them apart.
-    return `<button data-inspect="${key}" aria-pressed="${selected === key}" title="${g.name}${supply ? "" : ` · Lv.${g.level}`}" class="inv-cell ${rarity(g)} ${selected === key ? "selected" : ""}">${supply ? "" : `<em class="inv-lv">Lv.${g.level}</em>`}<b>${supply ? supplyArt(supply) : itemArt(key, g)}</b><small>${count}</small></button>`;
+    return `<button data-inspect="${key}" aria-pressed="${selected === key}" title="${g.name}${supply ? "" : ` · Lv.${g.level}`}" class="inv-cell ${rarity(g)} ${selected === key ? "selected" : ""}">${supply ? "" : `<em class="inv-lv">Lv.${g.level}</em>`}<b>${supply ? supplyArt(supply) : itemArt(key, g)}</b><small class="inv-count">×${count}</small></button>`;
   };
   // Fill to whole rows of six, at least four rows.
   const empty = Math.max(24, Math.ceil(cells.length / 6) * 6) - cells.length;

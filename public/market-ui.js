@@ -3,7 +3,7 @@ import { itemArt, supplyArt } from "/item-art.js";
 import { GEAR, SLOTS, RARITIES } from "/shared/rpg.js";
 import { ITEMS, CLASSES } from "/shared/config.js";
 import { COSTUME_ITEMS, costumeFits } from "/shared/costumes.js";
-import { statText } from "/rpg-ui.js?v=17";
+import { statText } from "/rpg-ui.js?v=18";
 
 // Stacks sell by count: supplies, and costumes (shared/costumes.js).
 const STACKS = ["hp", "mp", "ore", ...Object.keys(COSTUME_ITEMS)];
@@ -124,7 +124,7 @@ export function shopManagerHtml(state) {
   if (m.pick && !stock.some((s) => s.id === m.pick && !s.locked)) m.pick = null;
   const picked = stock.find((s) => s.id === m.pick);
   if (picked) {
-    m.qty = Math.max(1, Math.min(picked.have, m.qty || 1));
+    m.qty = Math.max(1, Math.min(isStack(picked.id) ? picked.have : 1, m.qty || 1));
     m.price ??= suggestPrice(picked.id);
   }
   const listed = (shop?.listings || [])
@@ -137,12 +137,12 @@ export function shopManagerHtml(state) {
     ? stock
         .map((s) => {
           const it = info(s.id);
-          return `<button class="stock-pick ${s.id === m.pick ? "active" : ""} ${isStack(s.id) && !isCostume(s.id) ? "" : "rarity-" + it.rarity}" data-pick="${s.id}" ${s.locked ? "disabled" : ""} title="${esc(it.name)}">${art(s.id)}<small>${s.locked ? "สวมอยู่" : isStack(s.id) ? "×" + s.have : esc(it.name)}</small></button>`;
+          return `<button class="stock-pick ${s.id === m.pick ? "active" : ""} ${isStack(s.id) && !isCostume(s.id) ? "" : "rarity-" + it.rarity}" data-pick="${s.id}" ${s.locked ? "disabled" : ""} title="${esc(it.name)}">${art(s.id)}<small>${s.locked ? "สวมอยู่" : "×" + s.have + " · " + esc(it.name)}</small></button>`;
         })
         .join("")
     : `<p class="market-empty">กระเป๋าว่าง · ลงดันเจียนหาของมาขายก่อน</p>`;
   const form = picked
-    ? `<div class="sell-form"><div class="sell-item">${art(picked.id)}<div><strong>${esc(info(picked.id).name)}</strong><small>${esc(detail(picked.id))}</small></div></div>${isStack(picked.id) ? `<label>จำนวน (มี ${picked.have})<input id="sell-qty" type="number" min="1" max="${picked.have}" value="${m.qty}"></label>` : ""}<label>ราคาต่อชิ้น (ทอง)<input id="sell-price" type="number" min="1" max="1000000" value="${m.price}"><small>แนะนำ ${suggestPrice(picked.id).toLocaleString()} ทอง</small></label>${shop ? "" : `<label>ชื่อร้าน<input id="sell-shop-name" maxlength="35" placeholder="ร้านของ ${esc(p.name)}" value="${esc(m.name)}"></label>`}<button id="sell-confirm" class="primary-button">${shop ? "วางขาย" : "เปิดร้านและวางขาย"} · รวม ${(m.qty * m.price).toLocaleString()} ◈</button></div>`
+    ? `<div class="sell-form"><div class="sell-item">${art(picked.id)}<div><strong>${esc(info(picked.id).name)}</strong><small>${esc(detail(picked.id))}</small></div></div>${isStack(picked.id) ? `<label>จำนวน (มี ${picked.have})<input id="sell-qty" type="number" min="1" max="${picked.have}" value="${m.qty}"></label>` : ""}<label>ราคาต่อชิ้น (ทอง)<input id="sell-price" type="number" min="1" max="1000000" value="${m.price}"><small>แนะนำ ${suggestPrice(picked.id).toLocaleString()} ทอง</small></label>${shop ? "" : `<label>ชื่อร้าน<input id="sell-shop-name" maxlength="35" placeholder="ร้านของ ${esc(p.name)}" value="${esc(m.name)}"></label>`}<button id="sell-confirm" class="primary-button">${shop ? "วางขาย" : "เปิดร้านและวางขาย"} ×${isStack(picked.id) ? m.qty : 1} ชิ้น · รวม ${(m.qty * m.price).toLocaleString()} ◈</button></div>`
     : `<p class="hint">เลือกของจากกระเป๋าด้านบนเพื่อตั้งราคาและวางขาย</p>`;
   const head = shop
     ? `<div class="shop-stats"><div><small>ร้าน</small><strong>${esc(shop.name)}</strong></div><div><small>ขายไปแล้ว</small><strong>${shop.sold || 0} ชิ้น</strong></div><div><small>รายได้รวม</small><strong>${(shop.earned || 0).toLocaleString()} ◈</strong></div></div><h4 class="rpg-section-title">กำลังวางขาย <span>${shop.listings?.length || 0} / 12</span></h4>${listed || `<p class="market-empty">ขายหมดแล้ว! วางของเพิ่มได้ด้านล่าง</p>`}`

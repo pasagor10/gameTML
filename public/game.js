@@ -26,7 +26,7 @@ import {
   rpgPanel,
   bindRpgPanel,
   gearShop,
-} from "/rpg-ui.js?v=17";
+} from "/rpg-ui.js?v=18";
 import {
   GEAR,
   RARITIES,
@@ -42,7 +42,7 @@ import {
 } from "/shared/rpg.js";
 import { createTownNpcs, footGlow, createRim } from "/town-npcs.js?v=11";
 import { updateEnhanceAura, AURA_LEVEL } from "/enhance-aura.js?v=3";
-import { marketHtml, shopManagerHtml, marketState } from "/market-ui.js?v=10";
+import { marketHtml, shopManagerHtml, marketState } from "/market-ui.js?v=11";
 import { sampleMotion } from "/shared/smoothing.js";
 import { mergeSnapshot, SNAPSHOT_PROTOCOL } from "/shared/snapshot-delta.js?v=1";
 import {
@@ -86,7 +86,7 @@ import { createParallax } from "/parallax.js?v=0.11.0";
 import { PRESETS, CHOICES, autoLevel, createAutoTuner } from "/graphics-quality.js";
 import { createPerfOverlay, logEvent, readLog, textureStats } from "/perf-overlay.js";
 import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.7";
-import { createCombatFx } from "/combat-fx.js?v=0.12.2";
+import { createCombatFx } from "/combat-fx.js?v=0.13.0";
 import { activeEffects, effectTint, effectRow, hudEffects } from "/status-ui.js?v=1";
 import { STATUSES, BUFFS } from "/shared/skills.js";
 import { WORLD_BOSS, worldInfo } from "/shared/world-boss.js";
@@ -1635,12 +1635,14 @@ function bindMarket(panel) {
     const btn = $("#sell-confirm");
     if (btn)
       btn.textContent =
-        btn.textContent.replace(/ · รวม .*$/, "") +
+        btn.textContent.replace(/ ×\d+ ชิ้น · รวม .*$/, "") +
+        ` ×${m.qty} ชิ้น` +
         ` · รวม ${(m.qty * m.price).toLocaleString()} ◈`;
   };
   if ($("#sell-qty"))
     $("#sell-qty").oninput = (e) => {
-      m.qty = Math.max(1, Math.floor(Number(e.target.value) || 1));
+      m.qty = Math.min(Number(e.target.max) || 999, Math.max(1, Math.floor(Number(e.target.value) || 1)));
+      e.target.value = m.qty;
       total();
     };
   if ($("#sell-price"))
@@ -2346,7 +2348,7 @@ class Adventure extends Phaser.Scene {
     const addText = this.add.text.bind(this.add);
     this.add.text = (...args) =>
       addText(...args).setResolution(
-        Math.min(preset().textRes, Math.ceil((devicePixelRatio || 1) * 1.5)),
+        Math.max(2, Math.min(preset().textRes, Math.ceil((devicePixelRatio || 1) * 1.5))),
       );
     this.knightAtlas = registerMotionAtlas(this, "knight-motion", 8);
     this.sprites = createSpriteRegistry(this);
@@ -2389,7 +2391,7 @@ class Adventure extends Phaser.Scene {
         fontSize: "15px",
         color: "#ffe8a8",
         stroke: "#322847",
-        strokeThickness: 5,
+        strokeThickness: 2,
         align: "center",
       })
       .setOrigin(0.5)
@@ -2433,7 +2435,7 @@ class Adventure extends Phaser.Scene {
         align: "center",
         color: "#d4fbff",
         stroke: "#173756",
-        strokeThickness: 5,
+        strokeThickness: 2,
       })
       .setOrigin(0.5)
       .setDepth(12);
@@ -2465,7 +2467,7 @@ class Adventure extends Phaser.Scene {
       if (!this.load.isLoading()) this.load.start();
     }
     const slotLabel = this.add.text(SLOT_MACHINE.x, WORLD.ground - 195, "ตู้สมบัติจันทรา\n1,000 ทอง / ครั้ง", {
-      fontFamily: "Noto Sans Thai", fontSize: "12px", align: "center", color: "#ffe3a1", stroke: "#102829", strokeThickness: 4,
+      fontFamily: "Noto Sans Thai", fontSize: "12px", align: "center", color: "#ffe3a1", stroke: "#102829", strokeThickness: 2,
     }).setOrigin(0.5).setDepth(14);
     this.npcs.push(slotGlow, slotImage, slotLabel);
     this.hotspots.push(this.hotspot(SLOT_MACHINE.x, WORLD.ground, 150, 185, () => openTown("slots")));
@@ -2619,7 +2621,7 @@ class Adventure extends Phaser.Scene {
             fontStyle: "bold",
             color: p.id === state.self.id ? "#fff0b5" : "#e4fff6",
             stroke: "#193c51",
-            strokeThickness: 4,
+            strokeThickness: 2,
           })
           .setOrigin(0.5)
           .setDepth(14),
@@ -2630,7 +2632,7 @@ class Adventure extends Phaser.Scene {
             fontStyle: "bold",
             color: "#d9e3df",
             stroke: "#07131e",
-            strokeThickness: 4,
+            strokeThickness: 2,
           })
           .setOrigin(0.5)
           .setDepth(14);
@@ -2642,7 +2644,7 @@ class Adventure extends Phaser.Scene {
                 fontSize: "16px",
                 color: "#ffd86b",
                 stroke: "#5a3a0a",
-                strokeThickness: 4,
+                strokeThickness: 2,
               })
               .setOrigin(0.5)
               .setDepth(14)
@@ -2772,7 +2774,7 @@ class Adventure extends Phaser.Scene {
               fontSize: "14px",
               color: "#ffe1b5",
               stroke: "#152b4b",
-              strokeThickness: 4,
+              strokeThickness: 2,
             },
           )
           .setOrigin(0.5)
@@ -2842,7 +2844,7 @@ class Adventure extends Phaser.Scene {
             wordWrap: { width: 138 },
             color: "#fff2cd",
             stroke: "#10202a",
-            strokeThickness: 4,
+            strokeThickness: 2,
             shadow: { offsetX: 0, offsetY: 2, color: "#000", blur: 6, fill: true, stroke: true },
           })
           .setOrigin(0.5)
@@ -2922,7 +2924,7 @@ class Adventure extends Phaser.Scene {
         fontStyle: "bold",
         color: st.color,
         stroke: "#0b0f1a",
-        strokeThickness: 5,
+        strokeThickness: 2,
       })
       .setOrigin(0.5)
       .setDepth(43)
@@ -2945,7 +2947,7 @@ class Adventure extends Phaser.Scene {
         fontStyle: "bold",
         color,
         stroke,
-        strokeThickness: 6,
+        strokeThickness: 3,
       })
       .setOrigin(0.5)
       .setDepth(46)
@@ -2992,7 +2994,7 @@ class Adventure extends Phaser.Scene {
             fontSize: item.rarity === "legendary" ? "20px" : "16px",
             color,
             stroke: "#07131e",
-            strokeThickness: 5,
+            strokeThickness: 2,
           })
           .setOrigin(0.5)
           .setDepth(45);
@@ -3068,7 +3070,7 @@ class Adventure extends Phaser.Scene {
           fontStyle: "bold",
           color: "#7dff9a",
           stroke: "#0b3318",
-          strokeThickness: 5,
+          strokeThickness: 2,
         })
         .setOrigin(0.5)
         .setDepth(36);
@@ -3108,7 +3110,7 @@ class Adventure extends Phaser.Scene {
           fontSize: "18px",
           color: "#ffe29a",
           stroke: "#44301f",
-          strokeThickness: 4,
+          strokeThickness: 2,
         })
         .setOrigin(0.5)
         .setDepth(35);
@@ -3324,6 +3326,7 @@ class Adventure extends Phaser.Scene {
       else if (a.layers) a.layers.destroy();
       // Name sits just above the head: painted sets know their height.
       const headroom = spriteSet ? spriteSet.height + 24 : 158;
+      a.label.setScale(Math.max(1, 0.85 / (this.cameras.main.zoom / this.renderScale())));
       a.label.setPosition(a.image.x, a.image.y - (p.hp <= 0 ? 60 : headroom));
       effectRow(
         this,
@@ -3483,6 +3486,7 @@ class Adventure extends Phaser.Scene {
           floorInfo(state.dungeon).boss +
             (e.hp <= e.maxHp * 0.5 ? " · คลั่ง!" : ""),
         );
+      m.label.setScale(Math.max(1, 0.85 / (this.cameras.main.zoom / this.renderScale())));
       m.label.setPosition(m.image.x, m.image.y - m.size - 14);
       // Stunned monsters get bobbing stars; the row lists every status.
       effectRow(

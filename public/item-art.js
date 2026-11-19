@@ -59,7 +59,7 @@ function image([group, index], name) {
 }
 // A costume item shows the costume's own pixel portrait.
 export const costumeArtPath = (id) =>
-  COSTUME_ITEMS[id] ? `/assets/sprites/${COSTUME_ITEMS[id].set}/portrait.webp` : null;
+  COSTUME_ITEMS[id] ? `/assets/sprites/${COSTUME_ITEMS[id].set}/portrait.webp?v=2` : null;
 export function supplyArt(id) {
   if (COSTUME_ITEMS[id])
     return `<img class="item-art costume-art" src="${costumeArtPath(id)}" alt="${escape(COSTUME_ITEMS[id].name)}" width="80" height="80" loading="lazy" decoding="async">`;

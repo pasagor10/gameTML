@@ -379,3 +379,17 @@ html body #game-screen #quests { top:var(--quest-top,120px) !important; }
   html body #game-screen #toast { bottom:calc(var(--dock-b) + 16px) !important; }
 }
 html body #toast { bottom:calc(90px + env(safe-area-inset-bottom)) !important; }
+/* Readability: clean numerals and explicit stack counts, no decorative face. */
+html body #game-screen :is(#hp-label,#mp-label,#exp-label,.skill-cost,.skill > i),
+html body #modal :is(.inv-count,.inv-lv,.inv-detail-stats b,.market-price,.qty-step b) {
+  font-family:Tahoma,'Noto Sans Thai',sans-serif !important;
+  font-variant-numeric:tabular-nums; letter-spacing:0 !important; text-shadow:none !important;
+}
+html body #game-screen .profile-panel .profile-info .stat-bar span { font-size:10px !important; font-weight:700 !important; }
+html body #game-screen .profile-panel .profile-info .stat-bar { height:15px !important; }
+html body #modal .inv-cell .inv-count {
+  position:absolute !important; right:3px !important; bottom:3px !important;
+  display:block !important; z-index:4; padding:2px 4px; border-radius:4px !important;
+  color:#fff !important; background:#07121dee !important; font-size:12px !important; line-height:1.2 !important;
+}
+html body #modal :is(.stock-pick small,.market-price small) { font-size:12px !important; line-height:1.5 !important; color:#e1eeeb !important; }

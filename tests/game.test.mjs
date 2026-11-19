@@ -1145,3 +1145,24 @@ test("costumes: owned to wear, female only, sold through shops and taken off wit
   assert.throws(() => world.wearCostume(b, "5"), /ไม่ตรงกับเพศ/);
   world.closeShop(a, "request-costume-close");
 });
+
+test('costume listings remove only requested copies and preserve costume identities', () => {
+  const a = create('costume-stack-seller'), b = create('costume-stack-buyer');
+  a.inventory.costume_mtang = 5;
+  a.inventory.costume_mbeach = 3;
+  b.gold = 1000;
+  persist(a); persist(b);
+  const shop = world.createShop(a, {
+    name: 'Costume quantity check', item: 'costume_mtang', qty: 2, price: 10,
+    key: 'costume-stack-create',
+  });
+  assert.equal(loadCharacter(a.id).inventory.costume_mtang, 3);
+  assert.equal(loadCharacter(a.id).inventory.costume_mbeach, 3);
+  world.buyShop(b, { id: shop.id, qty: 1, key: 'costume-stack-buy' });
+  world.buyShop(b, { id: shop.id, qty: 1, key: 'costume-stack-buy' });
+  assert.equal(loadCharacter(b.id).inventory.costume_mtang, 1, 'retry cannot buy twice');
+  assert.equal(loadCharacter(b.id).inventory.costume_mbeach || 0, 0);
+  world.closeShop(a, 'costume-stack-close');
+  assert.equal(loadCharacter(a.id).inventory.costume_mtang, 4, 'unsold copy is returned');
+  assert.equal(loadCharacter(a.id).inventory.costume_mbeach, 3, 'other outfit is untouched');
+});
