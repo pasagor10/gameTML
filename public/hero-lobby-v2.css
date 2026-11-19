@@ -199,5 +199,5 @@ html body #landing.hero-lobby .hl-backdrop::before {
 }
 /* Pixel terrace has a higher walking surface than the previous painting. */
 @media(min-width:701px) {
-  html body #landing.hero-lobby #hero-preview { transform:translateY(-5vh) !important; }
+  html body #landing.hero-lobby #hero-preview { transform:translateY(-1.5vh) !important; }
 }

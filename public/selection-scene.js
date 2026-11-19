@@ -22,7 +22,7 @@ export function createSelectionPreview({ onPick } = {}) {
     H = 600,
     FEET = 490,
     // Display height per set height unit, by distance from the front.
-    SIZE = [3.1, 1.7, 1.3],
+    SIZE = [2.45, 1.4, 1.05],
     SPREAD = [0, 170, 290],
     LIFT = [0, 26, 44];
   let lineup = [],
