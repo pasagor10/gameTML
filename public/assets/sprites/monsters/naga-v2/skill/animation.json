@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "3.0",
+  "name": "skill",
+  "artSource": "original detailed painted serpent redesign",
+  "sourceSize": [
+    265,
+    219
+  ],
+  "sourceAnchor": [
+    133.61,
+    215
+  ],
+  "frameCount": 4,
+  "durationsMs": [
+    160,
+    180,
+    100,
+    180
+  ],
+  "durationSeconds": 0.62,
+  "fps": 6.452,
+  "loop": false,
+  "bodyHeightPx": 191,
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 340,
+      "frame": 2
+    }
+  ],
+  "sampling": "linear",
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      265,
+      219
+    ],
+    "pages": [
+      {
+        "file": "skill-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  }
+}

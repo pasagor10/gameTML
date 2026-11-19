@@ -1346,11 +1346,13 @@
       "pixel": true
     },
     "serpent": {
-      "dir": "monsters/serpent",
+      "dir": "monsters/serpent-v2",
       "height": 190,
-      "facing": 1,
+      "facing": -1,
       "flyer": false,
-      "source": "supplied pixel sheet (import_pixel_monsters.py)",
+      "pixel": false,
+      "portrait": "portrait.webp",
+      "source": "painted redesign (import_serpent_redesigns.py)",
       "actions": {
         "idle": "idle",
         "move": "move",
@@ -1358,8 +1360,7 @@
         "hit": "hit",
         "death": "death",
         "spawn": "spawn"
-      },
-      "pixel": true
+      }
     },
     "wolf": {
       "dir": "monsters/wolf",
@@ -1481,12 +1482,13 @@
       "pixel": true
     },
     "naga": {
-      "dir": "monsters/naga",
+      "dir": "monsters/naga-v2",
       "height": 300,
       "facing": -1,
       "flyer": false,
-      "source": "supplied world boss sheet (import_world_bosses.py)",
+      "pixel": false,
       "portrait": "portrait.webp",
+      "source": "painted redesign (import_serpent_redesigns.py)",
       "actions": {
         "idle": "idle",
         "move": "move",
@@ -1495,8 +1497,7 @@
         "hit": "hit",
         "death": "death",
         "spawn": "spawn"
-      },
-      "pixel": false
+      }
     },
     "frost-scarab": {
       "dir": "monsters/frost-scarab",
@@ -1595,7 +1596,7 @@
       }
     }
   },
-  "version": 1795129255672683000,
+  "version": 1795129585753117000,
   "npcs": {
     "elder": {
       "dir": "npcs/elder",

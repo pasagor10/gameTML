@@ -20,7 +20,6 @@ const PORTRAITS = {
   bat: ["monsters/bat", 168, 177],
   golem: ["monsters/golem", 362, 195],
   boar: ["monsters/boar", 253, 136],
-  serpent: ["monsters/serpent", 256, 270],
   mushroom: ["monsters/mushroom", 145, 153],
   goblin: ["monsters/goblin", 159, 167],
   wolf: ["monsters/wolf", 274, 131],
@@ -43,8 +42,9 @@ const esc = (s) =>
   String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 export function portrait(type, seen = true) {
-  if (BOSSES[type] || EXTRA_MONSTERS[type])
-    return `<i class="mon-portrait ${seen ? "" : "unseen"}" style="width:100%;height:100%;background:url(/assets/sprites/monsters/${type}/portrait.webp?v=1) center / contain no-repeat"></i>`;
+  const redesigned = { serpent: "serpent-v2", naga: "naga-v2" }[type];
+  if (BOSSES[type] || EXTRA_MONSTERS[type] || redesigned)
+    return `<i class="mon-portrait ${seen ? "" : "unseen"}" style="width:100%;height:100%;background:url(/assets/sprites/monsters/${redesigned || type}/portrait.webp?v=2) center / contain no-repeat"></i>`;
   const [src, w, h, cols = 4, rows = 1] = PORTRAITS[type] || [];
   if (!src) return "";
   const url = src.startsWith("/")

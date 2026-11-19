@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "3.0",
+  "name": "idle",
+  "artSource": "original detailed painted serpent redesign",
+  "sourceSize": [
+    256,
+    263
+  ],
+  "sourceAnchor": [
+    128.51,
+    253
+  ],
+  "frameCount": 4,
+  "durationsMs": [
+    150,
+    150,
+    150,
+    150
+  ],
+  "durationSeconds": 0.6,
+  "fps": 6.667,
+  "loop": true,
+  "bodyHeightPx": 247,
+  "events": [],
+  "sampling": "linear",
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      256,
+      263
+    ],
+    "pages": [
+      {
+        "file": "idle-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  }
+}

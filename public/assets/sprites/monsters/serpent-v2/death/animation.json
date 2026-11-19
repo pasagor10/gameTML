@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "3.0",
+  "name": "death",
+  "artSource": "original detailed painted serpent redesign",
+  "sourceSize": [
+    256,
+    263
+  ],
+  "sourceAnchor": [
+    128.51,
+    253
+  ],
+  "frameCount": 4,
+  "durationsMs": [
+    110,
+    130,
+    170,
+    220
+  ],
+  "durationSeconds": 0.63,
+  "fps": 6.349,
+  "loop": false,
+  "bodyHeightPx": 247,
+  "events": [],
+  "sampling": "linear",
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      256,
+      263
+    ],
+    "pages": [
+      {
+        "file": "death-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  }
+}
