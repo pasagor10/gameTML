@@ -393,3 +393,14 @@ html body #modal .inv-cell .inv-count {
   color:#fff !important; background:#07121dee !important; font-size:12px !important; line-height:1.2 !important;
 }
 html body #modal :is(.stock-pick small,.market-price small) { font-size:12px !important; line-height:1.5 !important; color:#e1eeeb !important; }
+/* A fixed toast must anchor to one vertical edge. Keeping both top and
+   bottom on desktop stretched a short message across the whole screen. */
+html body #toast {
+  top:18px !important; bottom:auto !important; left:50% !important; right:auto !important;
+  width:max-content !important; height:auto !important; min-height:0 !important;
+  max-width:calc(100vw - 32px) !important; box-sizing:border-box;
+  padding:10px 16px; font:500 13px/1.5 'Noto Sans Thai',sans-serif;
+}
+@media(pointer:coarse) {
+  html body #toast { top:auto !important; bottom:calc(90px + env(safe-area-inset-bottom)) !important; }
+}
