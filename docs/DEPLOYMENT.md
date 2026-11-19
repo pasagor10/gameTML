@@ -6,7 +6,7 @@
 - App: `/opt/tml/app`; systemd service `tml-game.service`, runs as `tml`.
 - Database: `/opt/tml/data/game.sqlite` (keep outside the checkout).
 - Update with a fast-forward Git pull, run checks/tests, and take a verified SQLite online backup before restarting server code. Static file changes do not need a restart.
-- Public entrance: `/`; registered-player lobby: `/play`. Existing guest sessions can register on the entrance page to keep their original user id and characters.
+- Public entrance: `/`; member/guest lobby: `/play`. The guest button reuses existing sessions and characters. Guests can register on the entrance page or in the in-game Settings → account panel, retaining their original user id and all progress.
 
 ## Previous Mac hosting (legacy)
 

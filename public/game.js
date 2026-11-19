@@ -469,7 +469,7 @@ $("#start").onclick = async () => {
   const b = $("#start");
   b.disabled = true;
   try {
-    if (!account?.registered) { location.href = "/?account=login#account"; return; }
+    if (!account) { location.href = "/#account"; return; }
     if (lobbyCharacterId) {
       selectedId = lobbyCharacterId;
       enterGame();
@@ -532,8 +532,29 @@ $("#modal").addEventListener("click", (e) => {
   if (e.target === $("#modal")) closeModal();
 });
 $("#account-open").onclick = () => {
-  modal("บัญชีผู้เล่น", `<p>เข้าสู่ระบบด้วยบัญชีเดิมบนเครื่องอื่น เพื่อเล่นตัวละครนี้ต่อได้</p><button id="account-home" class="primary-button">หน้าหลัก / จัดการบัญชี</button>`);
-  $("#account-home").onclick = () => { location.href = "/#account"; };
+  if (account?.registered) {
+    modal("บัญชีผู้เล่น", `<p>เข้าสู่ระบบด้วยบัญชีเดิมบนเครื่องอื่น เพื่อเล่นตัวละครนี้ต่อได้</p><button id="account-home" class="primary-button">หน้าหลัก / จัดการบัญชี</button>`);
+    $("#account-home").onclick = () => { location.href = "/#account"; };
+    return;
+  }
+  modal("ผูกตัวละครกับบัญชี", `<p>ตั้งชื่อบัญชีและรหัสผ่านเพื่อเก็บตัวละคร เลเวล และของทั้งหมดไว้ เล่นต่อบนเครื่องอื่นได้ด้วยบัญชีนี้</p><form id="bind-account-form"><label>ชื่อบัญชี (3–30 ตัวอักษร)<input id="bind-name" autocomplete="username" minlength="3" maxlength="30" required></label><label>รหัสผ่าน (8–128 ตัวอักษร)<input id="bind-password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required></label><label>ยืนยันรหัสผ่าน<input id="bind-confirm" type="password" autocomplete="new-password" minlength="8" maxlength="128" required></label><p id="bind-error" role="alert" class="error"></p><button type="submit" id="bind-submit" class="primary-button">สมัครสมาชิกและเก็บตัวละครเดิม</button></form>`);
+  $("#bind-account-form").onsubmit = async (event) => {
+    event.preventDefault();
+    if ($("#bind-password").value !== $("#bind-confirm").value) {
+      $("#bind-error").textContent = "รหัสผ่านทั้งสองช่องไม่ตรงกัน"; return;
+    }
+    $("#bind-submit").disabled = true;
+    try {
+      await api("auth/register", { name: $("#bind-name").value.trim(), password: $("#bind-password").value });
+      await refreshAccount();
+      closeModal();
+      toast("ผูกบัญชีแล้ว ตัวละครและของเดิมอยู่ครบ ใช้บัญชีนี้เล่นต่อได้ทุกเครื่อง");
+    } catch (error) {
+      if ($("#bind-error")) $("#bind-error").textContent = error.message;
+    } finally {
+      if ($("#bind-submit")) $("#bind-submit").disabled = false;
+    }
+  };
 };
 const stories = [
   [
@@ -1914,8 +1935,9 @@ function showPanel(panel) {
   } else if (panel === "settings") {
     modal(
       "บันทึกการเดินทาง",
-      `<p>เกมบันทึกตัวละคร เงิน อุปกรณ์ และดันเจียนบนเซิร์ฟเวอร์อัตโนมัติ<br>บัญชีผู้มาเยือนผูกกับคุกกี้ในเบราว์เซอร์นี้</p><button id="open-announcements" class="primary-button">📣 ประกาศจากระบบ · บอสโลก 20:00 น.</button><button id="toggle-sound" class="primary-button">${muted ? "เปิดเสียงทั้งหมด" : "ปิดเสียงทั้งหมด"}</button><button id="toggle-music" class="primary-button">${musicOn() ? "ปิดเพลงประกอบ" : "เปิดเพลงประกอบ"}</button><div class="quality-picker"><small>คุณภาพกราฟิก · ตอนนี้ ${qualityLabel()}</small><div>${CHOICES.map((c) => `<button data-quality="${c}" class="${c === qualityChoice ? "active" : ""}">${c === "auto" ? "อัตโนมัติ" : PRESETS[c].name}</button>`).join("")}</div></div><button id="toggle-perf" class="primary-button">${perfOn ? "ซ่อนตัววัดประสิทธิภาพ" : "แสดงตัววัดประสิทธิภาพ"}</button><button id="back-selection" class="text-button">กลับหน้าเลือกตัวละคร</button><p class="hint">Demo v0.3 · นักดาบหญิงและสไลม์มีเฟรมแอนิเมชันชุดแรก · ตัวอื่นยังใช้ภาพ idle · เป้าหมาย 20–30 คนต่อห้องยังไม่ได้ยืนยันด้วย load test</p>`,
+      `<p>เกมบันทึกตัวละคร เงิน อุปกรณ์ และดันเจียนบนเซิร์ฟเวอร์อัตโนมัติ<br>บัญชีผู้มาเยือนผูกกับคุกกี้ในเบราว์เซอร์นี้</p><button id="open-account-link" class="primary-button">${account?.registered ? "บัญชีผู้เล่น" : "ผูกบัญชี · เก็บตัวละครและเล่นต่อเครื่องอื่น"}</button><button id="open-announcements" class="primary-button">📣 ประกาศจากระบบ · บอสโลก 20:00 น.</button><button id="toggle-sound" class="primary-button">${muted ? "เปิดเสียงทั้งหมด" : "ปิดเสียงทั้งหมด"}</button><button id="toggle-music" class="primary-button">${musicOn() ? "ปิดเพลงประกอบ" : "เปิดเพลงประกอบ"}</button><div class="quality-picker"><small>คุณภาพกราฟิก · ตอนนี้ ${qualityLabel()}</small><div>${CHOICES.map((c) => `<button data-quality="${c}" class="${c === qualityChoice ? "active" : ""}">${c === "auto" ? "อัตโนมัติ" : PRESETS[c].name}</button>`).join("")}</div></div><button id="toggle-perf" class="primary-button">${perfOn ? "ซ่อนตัววัดประสิทธิภาพ" : "แสดงตัววัดประสิทธิภาพ"}</button><button id="back-selection" class="text-button">กลับหน้าเลือกตัวละคร</button><p class="hint">Demo v0.3 · นักดาบหญิงและสไลม์มีเฟรมแอนิเมชันชุดแรก · ตัวอื่นยังใช้ภาพ idle · เป้าหมาย 20–30 คนต่อห้องยังไม่ได้ยืนยันด้วย load test</p>`,
     );
+    $("#open-account-link").onclick = () => $("#account-open").click();
     $("#open-announcements").onclick = () => showPanel("announcements");
     $("#toggle-sound").onclick = () => {
       setSound(!soundOn());

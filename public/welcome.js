@@ -30,6 +30,9 @@ function showAccount(account) {
   $('#account-loading').hidden = true;
   const member = !!user?.registered;
   $('#member').hidden = !member; $('#auth').hidden = member;
+  $('#guest-entry').hidden = member;
+  $('#guest-play').innerHTML = (user ? 'เล่นต่อด้วยตัวละครผู้มาเยือนเดิม' : 'เล่นแบบผู้มาเยือน') + ' <span>→</span>';
+  $('#guest-hint').textContent = user ? 'ใช้ตัวละครเดิมที่เคยสร้างในเบราว์เซอร์นี้ แล้วผูกบัญชีได้ในเกม' : 'ลองเล่นก่อนได้ แล้วผูกบัญชีจากในเกมเพื่อเล่นต่อบนเครื่องอื่น';
   $('#guest-note').hidden = !user || member;
   if (member) $('#member-name').textContent = user.name;
   for (const link of document.querySelectorAll('[data-play]')) link.href = member ? '/play' : '#account';
@@ -67,6 +70,18 @@ $('#logout').onclick = async () => {
   try { await api('auth/logout', {}); showAccount(null); }
   catch (error) { $('#auth-error').textContent = error.message; }
   finally { $('#logout').disabled = false; }
+};
+$('#guest-play').onclick = async () => {
+  if (busy) return;
+  busy = true; $('#guest-play').disabled = true; $('#guest-error').textContent = '';
+  try {
+    if (!user) { const result = await api('auth/guest', {}); user = result.user; }
+    location.assign('/play');
+  } catch (error) {
+    $('#guest-error').textContent = error.message;
+  } finally {
+    busy = false; $('#guest-play').disabled = false;
+  }
 };
 setMode(mode);
 api('me').then(({ user }) => showAccount(user)).catch(() => {

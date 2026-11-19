@@ -112,7 +112,11 @@ app.post("/api/auth/:action", async (req, res) => {
       throw Error("ไม่พบคำสั่ง");
     let user;
     if (action === "guest") {
-      return res.status(403).json({ error: "กรุณาสมัครสมาชิกก่อนเริ่มเล่น" });
+      const existing = sessions(req);
+      if (existing) return res.json({ user: existing });
+      const id = randomUUID();
+      user = { id, name: "guest-" + id, registered: 0 };
+      db.prepare("INSERT INTO users VALUES(?,?,?,?)").run(id, user.name, null, Date.now());
     } else {
       if (
         typeof name !== "string" ||
@@ -156,7 +160,7 @@ app.post("/api/auth/:action", async (req, res) => {
 app.post("/api/characters", (req, res) => {
   try {
     const user = sessions(req);
-    if (!user?.registered) return res.status(401).json({ error: "กรุณาสมัครสมาชิกหรือเข้าสู่ระบบ" });
+    if (!user) return res.status(401).json({ error: "กรุณาเข้าสู่ระบบหรือเข้าแบบผู้มาเยือน" });
     if (limited("char:" + user.id, 10)) throw Error("สร้างตัวละครถี่เกินไป");
     const { name, class: job, gender } = req.body;
     if (
@@ -203,7 +207,7 @@ app.post("/api/characters", (req, res) => {
 });
 app.post("/api/characters/:id/delete", (req, res) => {
   const user = sessions(req);
-  if (!user?.registered) return res.status(401).json({ error: "กรุณาสมัครสมาชิกหรือเข้าสู่ระบบ" });
+  if (!user) return res.status(401).json({ error: "กรุณาเข้าสู่ระบบหรือเข้าแบบผู้มาเยือน" });
   const character = db.prepare("SELECT id FROM characters WHERE id=? AND user_id=?")
     .get(req.params.id, user.id);
   if (!character) return res.status(404).json({ error: "ไม่พบตัวละคร" });
@@ -232,7 +236,7 @@ app.use((req, res, next) => {
   if (!["GET", "HEAD"].includes(req.method)) return next();
   if (req.path === "/") req.url = "/welcome.html";
   else if (["/play", "/play/", "/index.html"].includes(req.path)) {
-    if (!sessions(req)?.registered) return res.redirect("/?account=login#account");
+    if (!sessions(req)) return res.redirect("/?account=login#account");
     req.url = "/index.html";
   }
   next();
@@ -254,7 +258,7 @@ const io = new Server(server, {
 });
 io.use((socket, next) => {
   const user = sessions(socket.request);
-  if (!user?.registered) return next(Error("กรุณาสมัครสมาชิกหรือเข้าสู่ระบบ"));
+  if (!user) return next(Error("กรุณาเข้าสู่ระบบหรือเข้าแบบผู้มาเยือน"));
   socket.data.user = user;
   next();
 });

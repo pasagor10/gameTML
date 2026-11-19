@@ -21,12 +21,12 @@ before(async () => {
   throw Error('Test server did not start');
 });
 after(async()=>{ if(child?.exitCode===null){child.kill();await once(child,'exit');}rmSync(dir,{recursive:true,force:true}); });
-test('central entrance requires membership and a registered account opens the game', async()=>{
+test('central entrance requires a session and registered accounts open the game', async()=>{
   const home=await (await fetch(base+'/')).text();
   assert.match(home,/welcome.js/); assert.doesNotMatch(home,/vendor\/phaser/);
   const blocked=await fetch(base+'/play',{redirect:'manual'});
   assert.equal(blocked.status,302); assert.match(blocked.headers.get('location'),/account=login/);
-  assert.equal((await post('/api/auth/guest',{})).status,403);
+  assert.equal((await post('/api/auth/guest',{})).status,200);
   const reg=await post('/api/auth/register',{name:'entry-member',password:'EntryPassword42'});
   assert.equal(reg.status,200); const cookie=cookieOf(reg);
   const play=await fetch(base+'/play',{headers:{Cookie:cookie}});
@@ -56,4 +56,18 @@ test('registering an existing guest preserves their id, characters and progress'
   assert.equal(me.characters[0].gold,12345);assert.equal(me.characters[0].inventory.costume_5,2);
   assert.equal(db.prepare('SELECT count(*) n FROM users WHERE id=?').get('legacy-guest').n,1);
   db.close();
+});
+
+test('guest entry resumes the same account and original characters on repeated visits',async()=>{
+  const initial=await post('/api/auth/guest',{});
+  const cookie=cookieOf(initial), user=(await initial.json()).user;
+  const created=await post('/api/characters',{name:'ReturningGuest',class:'priest',gender:'female'},cookie);
+  assert.equal(created.status,200);const character=await created.json();
+  const repeat=await post('/api/auth/guest',{},cookie);
+  assert.equal((await repeat.json()).user.id,user.id);
+  assert.equal(repeat.headers.get('set-cookie'),null,'must not replace guest cookie');
+  const play=await fetch(base+'/play',{headers:{Cookie:cookie},redirect:'manual'});
+  assert.equal(play.status,200);
+  const me=await (await fetch(base+'/api/me',{headers:{Cookie:cookie}})).json();
+  assert.equal(me.characters[0].id,character.id);
 });
