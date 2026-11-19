@@ -1,0 +1,255 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Thai+Looped:wght@700&text=%E0%B8%A7%E0%B8%B4&display=swap");
+/* HUD v3: two modes with the move and jump buttons in the same place.
+   game.js sets #game-screen[data-area="town|dungeon|training"].
+   Town: the scene and NPCs come first. Compact hero card, one quest line,
+   one ☰ menu, joystick left, jump right (talk prompt above it), menu bar.
+   Dungeon: hero card + floor + pause on top, one status line (objective or
+   boss bar), the cast warning in orange under it, joystick + AUTO left,
+   attack / jump / two pairs of skills / potions right.
+   Green = on (AUTO, attack), orange = danger. Navy with thin gold edges. */
+
+html body #game-screen {
+  --dock-h: 66px;
+  --dock-b: calc(var(--dock-h) + env(safe-area-inset-bottom));
+  --pad-b: env(safe-area-inset-bottom);
+  --warn: #ff9a3c;
+  --on: #8ef08a;
+}
+
+/* Old pieces this layout replaces. */
+html body #game-screen #dungeon-open { display: none !important; }
+html body #game-screen .skillbar .skill.recall { display: none !important; }
+
+/* ---------- Hero card: compact; tap the face for stats and gear ---------- */
+html body #game-screen .profile-panel { max-width: 214px !important; }
+html body #game-screen #avatar { cursor: pointer; }
+html body #game-screen .self-effects { display: none !important; }
+
+/* ---------- Quest: one "next step" line; tap for the title and details ---------- */
+html body #game-screen #quests:not(.open) h3 { display: none !important; }
+html body #game-screen #quests:not(.open) p {
+  display: block !important; margin: 0 !important; max-width: min(300px, 64vw); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font: 700 13px/20px 'Noto Sans Thai', sans-serif !important; color: var(--hud-gold-hi) !important;
+}
+
+/* ---------- Town menu bar ---------- */
+html body #game-screen #town-dock {
+  display: none; position: absolute; left: 0; right: 0; bottom: 0; z-index: 30;
+  height: var(--dock-b); padding: 0 calc(6px + env(safe-area-inset-right)) var(--pad-b) calc(6px + env(safe-area-inset-left));
+  grid-template-columns: repeat(5, 1fr); align-items: end;
+  background: linear-gradient(#1d2a55, #121a3c 60%, #0c1230);
+  box-shadow: 0 -2px 0 var(--hud-ink), 0 -3px 0 var(--hud-gold-lo), 0 -8px 12px #0006;
+}
+html body #game-screen[data-area="town"] #town-dock { display: grid; }
+html body #game-screen #town-dock > button {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 1px;
+  height: var(--dock-h); min-width: 0; margin: 0; padding: 0 0 7px; border: 0; border-radius: 0; background: none; box-shadow: none;
+  color: #e9dcbc; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+html body #game-screen #town-dock > button:active { filter: brightness(1.3); translate: 0 1px; }
+html body #game-screen #town-dock .dock-icon {
+  display: block; width: 32px; height: 32px; background: center / contain no-repeat; image-rendering: pixelated;
+  filter: drop-shadow(0 2px 0 #000a) saturate(.85);
+}
+html body #game-screen #town-dock .dock-hero { background-image: url('/assets/ui/px-hero.webp'); }
+html body #game-screen #town-dock .dock-bag { background-image: url('/assets/ui/px-bag.webp'); }
+html body #game-screen #town-dock .dock-quest { background-image: url('/assets/ui/px-quest.webp'); }
+html body #game-screen #town-dock .dock-party { background-image: url('/assets/ui/px-party.webp'); }
+html body #game-screen #town-dock > button > span {
+  font: 600 11px/1.1 'Noto Sans Thai', sans-serif !important; white-space: nowrap;
+  text-shadow: 0 1px 0 #000, 1px 0 0 #000, -1px 0 0 #000, 0 -1px 0 #000;
+}
+html body #game-screen #town-dock > [data-panel="quest"].has-reward::after {
+  content: '!'; position: absolute; top: 6px; right: calc(50% - 22px); width: 15px; height: 15px; display: grid; place-items: center;
+  background: #e8413a; color: #fff; font: 900 11px/1 Georgia, serif; box-shadow: 0 0 0 2px var(--hud-ink);
+}
+/* The one standout: "Adventure / continue floor N" on gold. */
+html body #game-screen #town-dock #dock-adventure {
+  align-self: stretch; height: auto; margin: -14px 2px 6px; padding: 4px 2px 6px; justify-content: center;
+  background: linear-gradient(#ffe7a0, #e2ac45 55%, #b97d24) !important; color: #3a2108;
+  box-shadow: 0 0 0 2px var(--hud-ink), inset 0 2px 0 #fff4c9, inset 0 -3px 0 #8a5a18, 0 4px 0 2px #0007;
+}
+html body #game-screen #town-dock #dock-adventure .dock-go { width: 30px; height: 30px; background-image: url('/assets/ui/px-attack.webp'); filter: drop-shadow(0 1px 0 #fff6); }
+html body #game-screen #town-dock #dock-adventure > span {
+  color: #3a2108; font: 800 11px/1.15 'Noto Sans Thai', sans-serif !important; text-shadow: none; white-space: normal; text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Town top right: one ☰ menu ---------- */
+html body #game-screen[data-area="town"] #top-menu > :is([data-panel="inventory"], [data-panel="class"], [data-panel="quest"], [data-panel="party"], [data-panel="settings"]) { display: none !important; }
+html body #game-screen #top-menu #menu-more { position: relative !important; top: 0 !important; width: 42px !important; height: 42px !important; }
+html body #game-screen #top-menu #menu-more > b {
+  width: 22px !important; height: 18px !important;
+  background: linear-gradient(var(--hud-gold-hi) 0 0) 0 0 / 100% 3px no-repeat, linear-gradient(var(--hud-gold-hi) 0 0) 0 50% / 100% 3px no-repeat, linear-gradient(var(--hud-gold-hi) 0 0) 0 100% / 100% 3px no-repeat !important;
+}
+/* Open: one column under ☰ with a label on each. */
+html body #game-screen[data-area="town"] #top-menu.open > :is([data-panel="status"], [data-panel="market"], [data-panel="players"], [data-panel="settings"]) {
+  display: grid !important; position: absolute !important; right: 0;
+}
+html body #game-screen[data-area="town"] #top-menu.open > [data-panel="status"] { top: 50px !important; }
+html body #game-screen[data-area="town"] #top-menu.open > [data-panel="market"] { top: 98px !important; }
+html body #game-screen[data-area="town"] #top-menu.open > [data-panel="players"] { top: 146px !important; }
+html body #game-screen[data-area="town"] #top-menu.open > [data-panel="settings"] { top: 194px !important; }
+html body #game-screen #top-menu.open > button[data-panel="settings"] > span {
+  display: block !important; position: absolute !important; left: auto !important; bottom: auto !important; right: calc(100% + 8px) !important; top: 50% !important; translate: 0 -50%;
+  white-space: nowrap; padding: 0 !important; background: none !important; border: 0 !important; width: auto !important; height: auto !important; opacity: 1 !important; overflow: visible !important;
+  color: var(--hud-text); font: 700 12px/1 'Noto Sans Thai', sans-serif; text-shadow: 0 1px 0 #000, 1px 0 0 #000, -1px 0 0 #000, 0 -1px 0 #000, 0 2px 4px #000;
+}
+html body #game-screen[data-area="town"] #minimap { top: var(--hud-edge-t) !important; right: var(--hud-edge-r) !important; }
+html body #game-screen[data-area="town"]:has(#top-menu.open) #minimap { visibility: visible; }
+html body #game-screen[data-area="town"]:has(#top-menu.open) #training-open:not(:disabled) { top: 290px !important; right: 0 !important; }
+
+/* ---------- Dungeon top bar: floor + pause (leave lives in pause) ---------- */
+html body #game-screen #dungeon-bar,
+html body #game-screen #cast-warning { display: none; }
+html body #game-screen:is([data-area="dungeon"], [data-area="training"]) #top-menu,
+html body #game-screen:is([data-area="dungeon"], [data-area="training"]) #minimap { display: none !important; }
+html body #game-screen:is([data-area="dungeon"], [data-area="training"]) #dungeon-bar {
+  display: flex; align-items: center; gap: 8px; position: absolute; z-index: 25; top: var(--hud-edge-t); right: var(--hud-edge-r);
+}
+html body #game-screen #floor-chip {
+  padding: 5px 10px; background: linear-gradient(#24346a, var(--hud-navy)); box-shadow: var(--hud-frame);
+  color: var(--hud-gold-hi); font: 800 13px/1.1 'Noto Sans Thai', sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+html body #game-screen[data-area="training"] #floor-chip { display: none; }
+html body #game-screen #dungeon-pause {
+  width: 40px; height: 40px; padding: 0; border: 0; border-radius: 0; cursor: pointer;
+  background: linear-gradient(#2a3a6e, var(--hud-navy)); box-shadow: var(--hud-frame);
+  color: var(--hud-text); font: 900 16px/1 Georgia, serif;
+}
+/* Pause menu. */
+html body #game-screen #pause-menu {
+  position: absolute; inset: 0; z-index: 60; display: grid; place-items: center; background: #05081acc;
+}
+html body #game-screen #pause-menu.hidden { display: none; }
+html body #game-screen #pause-menu .pause-card {
+  display: grid; gap: 8px; width: min(280px, 82vw); padding: 16px; text-align: center;
+  background: linear-gradient(var(--hud-navy-2), var(--hud-navy)); box-shadow: var(--hud-frame);
+}
+html body #game-screen #pause-menu h3 { margin: 0; color: var(--hud-gold-hi); font: 800 17px/1.3 'Noto Sans Thai', sans-serif; }
+html body #game-screen #pause-menu small { margin-top: -4px; color: #c9bfa4; font: 11px/1.4 'Noto Sans Thai', sans-serif; }
+html body #game-screen #pause-menu button {
+  min-height: 42px; border: 0; border-radius: 0; cursor: pointer; background: linear-gradient(#2a3a6e, #172250);
+  box-shadow: 0 0 0 2px var(--hud-ink), inset 0 0 0 1px var(--hud-gold-lo); color: var(--hud-text); font: 700 14px/1 'Noto Sans Thai', sans-serif;
+}
+html body #game-screen #pause-menu .pause-main { background: linear-gradient(#3fc56c, #1a7d3e); color: #fff; }
+html body #game-screen #pause-menu .pause-leave { background: linear-gradient(#7a2d2a, #4a1716); color: #ffd9cf; }
+
+/* ---------- Dungeon status line: objective, or the boss when it is up ---------- */
+html body #game-screen:is([data-area="dungeon"], [data-area="training"]) #quests { --quest-top: 112px; }
+html body #game-screen[data-area="dungeon"]:has(#boss-bar:not(.hidden)) #quests { display: none !important; }
+html body #game-screen[data-area="dungeon"] #boss-bar {
+  position: absolute !important; z-index: 19; top: calc(var(--hud-edge-t) + 104px) !important; bottom: auto !important;
+  left: var(--hud-edge-l) !important; right: var(--hud-edge-r) !important; width: auto !important; max-width: none !important;
+  margin: 0 !important; padding: 0 !important; transform: none !important; translate: none !important;
+  display: flex !important; flex-direction: column; gap: 3px; background: none !important; border: 0 !important; box-shadow: none !important;
+}
+html body #game-screen[data-area="dungeon"] #boss-bar.hidden { display: none !important; }
+html body #game-screen[data-area="dungeon"] #boss-bar::before,
+html body #game-screen[data-area="dungeon"] #boss-bar::after { display: none !important; }
+html body #game-screen[data-area="dungeon"] #boss-bar .boss-name {
+  display: flex !important; align-items: baseline; gap: 6px; min-width: 0; margin: 0 !important; padding: 0 !important; background: none !important;
+  color: var(--hud-text) !important; text-shadow: 0 1px 0 #000, 1px 0 0 #000, -1px 0 0 #000, 0 -1px 0 #000 !important;
+}
+html body #game-screen[data-area="dungeon"] #boss-bar .boss-name small { flex: 0 0 auto; color: #ff8a7a !important; font: 900 10px/1 Georgia, serif !important; letter-spacing: .1em; }
+html body #game-screen[data-area="dungeon"] #boss-bar .boss-name b { min-width: 0; font: 700 14px/1.2 'Noto Sans Thai', sans-serif !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html body #game-screen[data-area="dungeon"] #boss-bar .boss-track {
+  position: relative; height: 14px !important; margin: 0 !important; border: 0 !important; border-radius: 0 !important;
+  background: #0a0b1c !important; box-shadow: 0 0 0 2px var(--hud-ink), inset 0 0 0 1px #5a2030 !important; overflow: hidden;
+}
+html body #game-screen[data-area="dungeon"] #boss-bar .boss-track i { border-radius: 0 !important; background: linear-gradient(#ff8a5c, #d63a2a 55%, #8e1a1a) !important; }
+html body #game-screen[data-area="dungeon"] #boss-bar .boss-track span {
+  position: absolute; inset: 0; display: grid; place-items: center; color: #fff !important;
+  font: 700 10px/1 'Noto Sans Thai', sans-serif !important; font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 0 #000, 1px 0 0 #000, -1px 0 0 #000, 0 -1px 0 #000 !important;
+}
+/* Boss cast: orange line under the status line. */
+html body #game-screen:is([data-area="dungeon"], [data-area="training"]) #cast-warning:not([hidden]) {
+  display: block; position: absolute; z-index: 19; left: var(--hud-edge-l); right: var(--hud-edge-r); top: calc(var(--hud-edge-t) + 146px);
+  margin: 0; color: var(--warn); font: 800 14px/1.3 'Noto Sans Thai', sans-serif; font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 0 #000, 1px 0 0 #000, -1px 0 0 #000, 0 -1px 0 #000, 0 2px 6px #000; animation: warn-blink .5s steps(2) infinite;
+}
+@keyframes warn-blink { 50% { color: #ffd27a; } }
+
+/* ---------- Combat buttons by mode ---------- */
+html body #game-screen#game-screen[data-area="town"] .hud-bottom .skillbar > .skill:not(.jump) { display: none !important; }
+
+/* =================== Touch screens =================== */
+@media (pointer: coarse) {
+  /* Shared anchors: the joystick and the jump button sit in the same spots in
+     both modes (just above the town menu bar). */
+  html body #game-screen #joystick-zone { bottom: var(--dock-b) !important; }
+  html body #game-screen#game-screen .hud-bottom {
+    inset: auto var(--hud-edge-r) 0 auto !important; width: 240px !important; height: 330px !important;
+  }
+  html body #game-screen#game-screen .hud-bottom .skillbar .skill { inset: auto !important; }
+  html body #game-screen#game-screen .hud-bottom .skillbar .skill.jump {
+    right: 0 !important; bottom: calc(var(--dock-b) + 12px) !important; width: 58px !important; height: 58px !important;
+  }
+  /* Talk prompt right above the jump button. */
+  html body #game-screen #mobile-interact {
+    left: auto !important; right: var(--hud-edge-r) !important; translate: none !important;
+    bottom: calc(var(--dock-b) + 82px) !important; max-width: 62vw !important; justify-content: flex-end;
+  }
+
+  /* Dungeon: attack biggest under the thumb, two pairs of skills above it,
+     potions above those, AUTO above the joystick. */
+  html body #game-screen#game-screen .hud-bottom .skillbar .skill.basic {
+    right: 66px !important; bottom: calc(var(--pad-b) + 12px) !important; width: 90px !important; height: 90px !important;
+  }
+  html body #game-screen#game-screen .hud-bottom .skillbar [data-action^="skill"] { width: 52px !important; height: 52px !important; }
+  html body #game-screen#game-screen .hud-bottom .skillbar [data-action="skill1"] { right: 126px !important; bottom: calc(var(--pad-b) + 112px) !important; }
+  html body #game-screen#game-screen .hud-bottom .skillbar [data-action="skill2"] { right: 66px !important; bottom: calc(var(--pad-b) + 112px) !important; }
+  html body #game-screen#game-screen .hud-bottom .skillbar [data-action="skill3"] { right: 126px !important; bottom: calc(var(--pad-b) + 172px) !important; }
+  html body #game-screen#game-screen .hud-bottom .skillbar [data-action="skill4"] { right: 66px !important; bottom: calc(var(--pad-b) + 172px) !important; }
+  html body #game-screen#game-screen .hud-bottom .skillbar :is([data-action="hp"], [data-action="mp"]) {
+    width: 44px !important; height: 44px !important; right: 7px !important;
+  }
+  /* A column on the right edge above jump, below the ground line. */
+  html body #game-screen#game-screen .hud-bottom .skillbar [data-action="hp"] { bottom: calc(var(--dock-b) + 88px) !important; }
+  html body #game-screen#game-screen .hud-bottom .skillbar [data-action="mp"] { bottom: calc(var(--dock-b) + 152px) !important; }
+  /* Bottles left: a small count under each potion. */
+  html body #game-screen#game-screen .hud-bottom .skillbar :is([data-action="hp"], [data-action="mp"])::after {
+    content: '×' attr(data-count) !important; display: block !important; position: absolute !important; left: 50% !important; top: calc(100% + 1px) !important;
+    right: auto !important; bottom: auto !important; translate: -50% 0; width: auto !important; height: auto !important;
+    padding: 0 4px; background: var(--hud-ink) !important; color: #fff; font: 700 10px/1.3 'Noto Sans Thai', sans-serif; white-space: nowrap;
+    border: 0 !important; clip-path: none !important; opacity: 1 !important;
+  }
+  /* Cooldown text with its unit ("4 วิ"). */
+  html body #game-screen#game-screen .hud-bottom .skillbar .skill > i {
+    grid-auto-flow: column; justify-content: center; align-content: center; align-items: baseline; color: #fff; font: 800 13px/1 'Noto Sans Thai', sans-serif !important; font-variant-numeric: tabular-nums;
+    text-shadow: 0 1px 0 #000, 1px 0 0 #000, -1px 0 0 #000, 0 -1px 0 #000;
+  }
+  /* Loopless Thai "วิ" reads like a 5 at this size: use the looped face for the unit. */
+  html body #game-screen#game-screen .hud-bottom .skillbar .skill > i > small {
+    all: unset; display: inline; margin-left: 2px; font: 700 11px/1 'Noto Sans Thai Looped', 'Noto Sans Thai', sans-serif !important; color: #ffe6a8;
+  }
+  /* AUTO on/off sits above the joystick; green while it plays for you. */
+  html body #game-screen#game-screen .hud-bottom .skillbar .skill.auto {
+    position: fixed !important; inset: auto auto calc(var(--dock-b) + 128px) var(--hud-edge-l) !important;
+    width: auto !important; height: 34px !important; padding: 0 12px 0 8px !important; border-radius: 0 !important; gap: 6px;
+    display: flex !important; align-items: center; flex-direction: row;
+    background: linear-gradient(#24346a, var(--hud-navy)) !important; box-shadow: var(--hud-frame) !important;
+  }
+  html body #game-screen#game-screen .hud-bottom .skillbar .skill.auto > b { width: 22px !important; height: 22px !important; flex: 0 0 22px; }
+  html body #game-screen#game-screen .hud-bottom .skillbar .skill.auto > span {
+    display: block !important; position: static !important; inset: auto !important; translate: none !important; transform: none !important; margin: 0 !important; width: auto !important; height: auto !important; padding: 0 !important; background: none !important; border: 0 !important;
+    color: var(--hud-text) !important; font: 900 12px/1 Georgia, serif !important; letter-spacing: .06em;
+  }
+  html body #game-screen#game-screen .hud-bottom .skillbar .skill.auto > small {
+    display: block !important; position: static !important; padding: 0 !important; background: none !important; border: 0 !important;
+    color: #c9bfa4 !important; font: 700 11px/1 'Noto Sans Thai', sans-serif !important; opacity: 1 !important; transform: none !important;
+  }
+  html body #game-screen#game-screen .hud-bottom .skillbar .skill.auto.on {
+    background: linear-gradient(#3fc56c, #1a7d3e) !important;
+    box-shadow: 0 0 0 2px var(--hud-ink), inset 0 0 0 2px var(--on), 0 0 12px #8ef08a88 !important;
+  }
+  html body #game-screen#game-screen .hud-bottom .skillbar .skill.auto.on > :is(span, small) { color: #fff !important; }
+}
+
+/* =================== Mouse & keyboard =================== */
+@media (pointer: fine) {
+  html body #game-screen #town-dock { left: 50%; right: auto; width: min(520px, 100vw); translate: -50% 0; }
+  html body #game-screen[data-area="town"] .hud-bottom { display: none !important; }
+  html body #game-screen[data-area="town"] #chat { bottom: calc(var(--dock-b) + 12px) !important; }
+}

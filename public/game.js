@@ -114,6 +114,8 @@ let lobbyMode = "loading";
 let lastRpgPanelHash = "";
 let lastQuestHash = "",
   lastTrackerHash = "";
+// The dungeon run that already got its automatic AUTO switch-on.
+let autoInstance = null;
 // Floor data for the current dungeon; the night cave stands in for a floor.
 const floorInfo = (d) =>
   d?.world
@@ -863,7 +865,7 @@ function updateHUD() {
         : `ยา ${name} · ฟื้นฟู ${restore} ${name} · คูลดาวน์ ${cooldown} วิ (${type === "hp" ? "R" : "G"})`;
     button.style.setProperty("--cd", Math.max(0, Math.min(1, left / cooldown)).toFixed(3));
     ring.style.display = left > 0 ? "grid" : "none";
-    ring.textContent = left > 0 ? Math.ceil(left) : "";
+    ring.innerHTML = left > 0 ? `${Math.ceil(left)}<small>วิ</small>` : "";
   }
   $("#training-open").disabled = state.area !== "town";
   $$(
@@ -974,12 +976,26 @@ function updateHUD() {
   $("#auto-button").classList.toggle("on", p.auto);
   $("#auto-button").setAttribute("aria-pressed", String(!!p.auto));
   $("#auto-button small").textContent = p.auto ? "เปิด" : "ปิด";
+  // Two HUD modes: town (no combat buttons) and dungeon. Each new dungeon
+  // starts on AUTO; steering the joystick hands control back (see below).
+  const area = !d ? "town" : d.training ? "training" : "dungeon";
+  $("#game-screen").dataset.area = area;
+  $("#game-screen").classList.toggle("auto-on", !!p.auto);
+  if (area === "dungeon" && d.instanceId !== autoInstance) {
+    autoInstance = d.instanceId;
+    if (!p.auto && p.hp > 0) emit("player:auto", { enabled: true });
+  }
+  if (area === "town") autoInstance = null;
+  $("#dock-label").textContent = p.quest > 0
+    ? `เล่นต่อ ชั้น ${Math.min(p.unlocked || 1, FLOORS.length)}`
+    : "ผจญภัย";
+  $("#floor-chip").textContent = d?.world ? "บอสโลก" : d?.night ? "ถ้ำลึกลับ" : d ? `ชั้น ${d.floor} · ${d.stage}/3` : "";
   $("#quest-description").textContent = d?.training
     ? "ฝึกเดิน กระโดด ฟัน และ Q/W/E · หลบเมื่อสไลม์ขึ้นวงเตือน"
     : d
       ? d.clear
         ? "เส้นทางเปิดแล้ว! เดินหน้าสู่ด่านต่อไป"
-        : `กำจัด${d.stage === 3 ? floorInfo(d).boss : "มอนสเตอร์ทั้งหมด"} · เหลือ ${d.enemies.length} ตัว`
+        : `กำจัด${d.stage === 3 ? floorInfo(d).boss : "มอนสเตอร์"} ${d.defeated || 0}/${d.totalEnemies || d.enemies.length}`
       : p.quest >= FLOORS.length
         ? "พิชิตห้วงลึกครบทุกชั้น! ท้าทายซ้ำเพื่อของตำนาน"
         : p.quest >= MAIN_FLOORS
@@ -1000,7 +1016,9 @@ function updateHUD() {
     const ready = claimable(p.daily);
     $("#quests").classList.toggle("has-reward", ready > 0);
     $(".quest-badge").textContent = ready ? String(ready) : "!";
-    $('#top-menu [data-panel="quest"]').classList.toggle("has-reward", ready > 0);
+    $$('#top-menu [data-panel="quest"], #town-dock [data-panel="quest"]').forEach((b) =>
+      b.classList.toggle("has-reward", ready > 0),
+    );
   }
   const explored = signs.filter((sign) => sign.collected).length;
   const explore = $("#dungeon-explore");
@@ -1046,7 +1064,7 @@ function updateHUD() {
     skillButton.title =
       p.mp < ACTIONS[i].mp ? "MP ไม่พอ" : skillButton.dataset.tip;
     button.style.display = remaining > 0 ? "grid" : "none";
-    button.textContent = remaining > 0 ? Math.ceil(remaining) : "";
+    button.innerHTML = remaining > 0 ? `${Math.ceil(remaining)}<small>วิ</small>` : "";
   }
   updateHudFx(state);
   updateWorldBossHud(state, joinWorldBoss);
@@ -1165,6 +1183,22 @@ $$("[data-panel]").forEach(
   (b) => (b.onclick = () => showPanel(b.dataset.panel)),
 );
 $("#dungeon-open").onclick = () => showPanel("dungeon");
+$("#dock-adventure").onclick = () => showPanel("dungeon");
+$("#avatar").onclick = () => showPanel("status");
+// Pause menu: leaving the dungeon lives here so it is never hit mid-fight.
+{
+  const pause = $("#pause-menu"),
+    setPause = (open) => pause.classList.toggle("hidden", !open);
+  $("#dungeon-pause").onclick = () => setPause(true);
+  $("#pause-resume").onclick = () => setPause(false);
+  $("#pause-leave").onclick = () => {
+    setPause(false);
+    $("#town-return").click();
+  };
+  pause.addEventListener("click", (e) => {
+    if (e.target === pause || e.target.closest("[data-panel]")) setPause(false);
+  });
+}
 $("#training-open").onclick = async () => {
   const r = await emit("training:enter");
   if (r) closeModal();
@@ -1841,6 +1875,8 @@ for (const root of [$("#mobile-controls"), $(".skillbar")])
     e.stopPropagation();
     if (stick || activePanel || !state) return;
     e.preventDefault();
+    // Steering takes over from AUTO at once.
+    if (state.self?.auto) emit("player:auto", { enabled: false });
     try {
       zone.setPointerCapture(e.pointerId);
     } catch {} // capture is a nicety; never let it block the stick
@@ -2828,15 +2864,19 @@ class Adventure extends Phaser.Scene {
     const g = this.telegraphs,
       d = state.dungeon;
     this.dangerHint.setVisible(false);
-    if (!d || d.clear) return;
+    // Cast name and time sit in the HUD under the boss bar (orange), so the
+    // ground around the hero stays clear; the ring on the floor shows where.
+    const cast = document.getElementById("cast-warning");
+    let castText = "";
+    const showCast = () => {
+      if (cast.textContent !== castText) cast.textContent = castText;
+      cast.hidden = !castText;
+    };
+    if (!d || d.clear) return showCast();
     const exposed = d.enemies.find((e) => e.boss && time < e.exposedUntil);
     if (exposed) {
       g.lineStyle(3, 0x8ef6e5, 0.95);
       g.strokeEllipse(exposed.x, exposed.y - 3, 156, 28);
-      this.dangerHint
-        .setVisible(true)
-        .setPosition(exposed.x, exposed.y - 160)
-        .setText("บอสเสียหลัก · ตีสวน +50%");
     }
     const threats = [
       ...(d.hazards || []).map((h) => ({ ...h, crystal: true })),
@@ -2876,12 +2916,9 @@ class Adventure extends Phaser.Scene {
       if (charging && Math.abs(h.x - state.self.x) < h.radius + 180) hint = h;
     }
     if (hint)
-      this.dangerHint
-        .setVisible(true)
-        .setPosition(hint.x, WORLD.ground - 105)
-        .setText(
-          `${hint.crystal ? "คริสตัลปะทุ" : "บอสทุบพื้น"} · ${Math.max(0, hint.impactAt - time).toFixed(1)}s\nSPACE กระโดด หรือเดินหลบวง`,
-        );
+      castText = `${hint.crystal ? "คริสตัลปะทุ" : "บอสทุบพื้น"} · ${Math.max(0, hint.impactAt - time).toFixed(1)} วิ · กระโดดหรือเดินหลบวง`;
+    else if (exposed) castText = "บอสเสียหลัก · ตีสวน +50%";
+    showCast();
   }
   dust(x, y, count = 7) {
     if (this.reducedMotion || this.children.length > 180) return;
