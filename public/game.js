@@ -100,7 +100,7 @@ import { createParallax } from "/parallax.js?v=0.12.1";
 import { PRESETS, CHOICES, autoLevel, createAutoTuner } from "/graphics-quality.js";
 import { createPerfOverlay, logEvent, readLog, textureStats } from "/perf-overlay.js";
 import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.7";
-import { createCombatFx } from "/combat-fx.js?v=0.15.0";
+import { createCombatFx } from "/combat-fx.js?v=0.15.1";
 import { activeEffects, effectTint, effectRow, hudEffects } from "/status-ui.js?v=1";
 import { STATUSES, BUFFS } from "/shared/skills.js";
 import { worldInfo } from "/shared/world-boss.js";
