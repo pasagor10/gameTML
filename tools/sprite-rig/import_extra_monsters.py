@@ -8,9 +8,9 @@ from slice_monsters import ROWS, TIMING
 
 SOURCE = Path(__file__).parent / "source/extra-monsters"
 SPECS = {
-    "frost-scarab": (92, False), "lava-salamander": (88, False),
-    "thorn-mantis": (106, False), "storm-harpy": (104, True),
-    "moon-reaper": (112, True), "mimic": (90, False),
+    "frost-scarab": (148, False), "lava-salamander": (140, False),
+    "thorn-mantis": (170, False), "storm-harpy": (166, True),
+    "moon-reaper": (180, True), "mimic": (144, False),
 }
 
 

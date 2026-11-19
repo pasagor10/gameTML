@@ -3716,6 +3716,7 @@ class Adventure extends Phaser.Scene {
             (e.elite ? 1.25 : 1) *
             (traitOf(e).scale || 1) *
             (e.night ? NIGHT_BOSS.scale : 1);
+          m.shadow?.setSize(m.size * 0.62, m.size * 0.13);
         }
         playMonsterSet(m.image, mset, e, mpose, serverTime);
       }

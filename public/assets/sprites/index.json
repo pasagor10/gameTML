@@ -1500,7 +1500,7 @@
     },
     "frost-scarab": {
       "dir": "monsters/frost-scarab",
-      "height": 92,
+      "height": 148,
       "facing": -1,
       "flyer": false,
       "pixel": true,
@@ -1516,7 +1516,7 @@
     },
     "lava-salamander": {
       "dir": "monsters/lava-salamander",
-      "height": 88,
+      "height": 140,
       "facing": -1,
       "flyer": false,
       "pixel": true,
@@ -1532,7 +1532,7 @@
     },
     "thorn-mantis": {
       "dir": "monsters/thorn-mantis",
-      "height": 106,
+      "height": 170,
       "facing": -1,
       "flyer": false,
       "pixel": true,
@@ -1548,7 +1548,7 @@
     },
     "storm-harpy": {
       "dir": "monsters/storm-harpy",
-      "height": 104,
+      "height": 166,
       "facing": -1,
       "flyer": true,
       "pixel": true,
@@ -1564,7 +1564,7 @@
     },
     "moon-reaper": {
       "dir": "monsters/moon-reaper",
-      "height": 112,
+      "height": 180,
       "facing": -1,
       "flyer": true,
       "pixel": true,
@@ -1580,7 +1580,7 @@
     },
     "mimic": {
       "dir": "monsters/mimic",
-      "height": 90,
+      "height": 144,
       "facing": -1,
       "flyer": false,
       "pixel": true,
@@ -1595,7 +1595,7 @@
       }
     }
   },
-  "version": 1795129036529138000,
+  "version": 1795129255672683000,
   "npcs": {
     "elder": {
       "dir": "npcs/elder",
