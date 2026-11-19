@@ -41,9 +41,11 @@ import {
   enhancementLevel,
   enhancementCost,
   enhancementChance,
+  MAX_ENHANCE,
+  ENHANCE_BREAK_LEVEL,
 } from "/shared/rpg.js";
 import { createTownNpcs, footGlow, createRim } from "/town-npcs.js?v=11";
-import { updateEnhanceAura, AURA_LEVEL } from "/enhance-aura.js?v=3";
+import { updateEnhanceAura, updateSetGlow, AURA_LEVEL } from "/enhance-aura.js?v=4";
 import { marketHtml, shopManagerHtml, marketState } from "/market-ui.js?v=11";
 import { sampleMotion } from "/shared/smoothing.js";
 import { mergeSnapshot, SNAPSHOT_PROTOCOL } from "/shared/snapshot-delta.js?v=1";
@@ -1789,16 +1791,16 @@ function showPanel(panel) {
         .map(([stat, value]) => `${stat.toUpperCase()} +${value}`).join(" · ");
       const description = !item
         ? "สวมอุปกรณ์ช่องนี้ก่อน"
-        : level >= 10
+        : level >= MAX_ENHANCE
           ? `${item.name} · ถึงระดับสูงสุด`
-          : `${item.name} · ${bonus} ต่อขั้น · สำเร็จ ${Math.round(enhancementChance(level) * 100)}% · ${gold} ทอง + แร่ ×${ore}`;
-      const disabled = !item || level >= 10 || p.gold < gold || p.inventory.ore < ore;
+          : `${item.name} · ${bonus} ต่อขั้น · สำเร็จ ${Math.round(enhancementChance(level) * 100)}% · ${gold} ทอง + แร่ ×${ore}${level >= ENHANCE_BREAK_LEVEL ? " · ⚠ ล้มเหลวกลับเป็น +0" : ""}`;
+      const disabled = !item || level >= MAX_ENHANCE || p.gold < gold || p.inventory.ore < ore;
       return row(item?.icon || "⚒", `${label} +${level}`, description,
-        btn(`data-enhance="${slot}" ${disabled ? "disabled" : ""}`, level >= 10 ? "เต็มแล้ว" : `ตี +${level + 1}`));
+        btn(`data-enhance="${slot}" ${disabled ? "disabled" : ""}`, level >= MAX_ENHANCE ? "เต็มแล้ว" : `ตี +${level + 1}`));
     }).join("");
     modal(
       "ลุงเหล็ก · โรงตีอุปกรณ์",
-      `<p>มี ${p.gold.toLocaleString()} ทอง · แร่จันทรา ${p.inventory.ore} ชิ้น</p>${slots}<p class="hint">ระดับตีบวกติดกับช่องอุปกรณ์ เปลี่ยนของในช่องเดิมแล้วใช้โบนัสต่อได้ ตีไม่สำเร็จจะเสียทองและแร่ แต่ระดับเท่าเดิม</p>`,
+      `<p>มี ${p.gold.toLocaleString()} ทอง · แร่จันทรา ${p.inventory.ore} ชิ้น</p>${slots}<p class="hint">ระดับตีบวกติดกับช่องอุปกรณ์ เปลี่ยนของในช่องเดิมแล้วใช้โบนัสต่อได้ ตีบวกได้ถึง +${MAX_ENHANCE} · ต่ำกว่า +${ENHANCE_BREAK_LEVEL} ตีไม่สำเร็จจะเสียทองและแร่แต่ระดับเท่าเดิม · ตั้งแต่ +${ENHANCE_BREAK_LEVEL} ขึ้นไปถ้าล้มเหลวอุปกรณ์จะกลับเป็น +0 · ครบทั้งตัว +12 ขึ้นไปมีแสงวิ่งรอบตัว · ครบ +15 แสงเทพเต็มตัว</p>`,
       "forge",
     );
     $$("[data-enhance]").forEach((button) => {
@@ -3412,6 +3414,8 @@ class Adventure extends Phaser.Scene {
         p.y - 2,
         time,
       );
+      // Full set +12/+15: light orbiting the body with rising bubbles.
+      updateSetGlow(this, a, p.hp > 0 ? p.setGlow || 0 : 0, a.image.x, p.y, headroom, time);
       if (p.grounded && !a.wasGrounded && p.hp > 0) {
         this.dust(a.image.x, p.y);
         a.landAt = time;

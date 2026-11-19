@@ -1,4 +1,4 @@
-// A +10 weapon (the enhancement cap) earns a golden aura under the hero's
+// A +10 weapon earns a golden aura under the hero's
 // feet: a pulsing pool of light, a ring rippling outward and gold sparks
 // rising from the ground. Uses combat-fx's cfx-glow / cfx-ring textures.
 
@@ -87,4 +87,104 @@ export function updateEnhanceAura(scene, holder, show, x, y, time) {
     holder.enhanceAura = createAura(scene, !!scene.reducedMotion);
   }
   holder.enhanceAura.set(show, x, y, time);
+}
+
+// Full enhanced set (every slot +12, or +15): comets of light spiral around
+// the hero's body, passing behind and in front of the sprite (depth 10),
+// while bubbles drift up. +15 adds a third comet, a soft body halo and
+// richer colours.
+const SET_STYLE = {
+  12: { comets: 2, tint: [0x8ff3ff, 0xfff0b0], halo: 0, bubbles: 140 },
+  15: { comets: 3, tint: [0xffe27a, 0xff9de2, 0x9ff7ff], halo: 0xffd76a, bubbles: 70 },
+};
+
+function createSetGlow(scene, tier, reduced) {
+  const style = SET_STYLE[tier],
+    halo = style.halo
+      ? scene.add.image(0, 0, "cfx-glow").setTint(style.halo).setBlendMode(ADD).setDepth(9)
+      : null,
+    comets = Array.from({ length: style.comets }, (_, i) => {
+      const tint = style.tint[i % style.tint.length],
+        head = scene.add.image(0, 0, "cfx-glow").setTint(tint).setBlendMode(ADD),
+        trail = reduced
+          ? null
+          : scene.add.particles(0, 0, "cfx-glow", {
+              lifespan: 380,
+              scale: { start: 0.16, end: 0 },
+              alpha: { start: 0.8, end: 0 },
+              tint: [tint, 0xffffff],
+              frequency: 22,
+              blendMode: ADD,
+            });
+      return { head, trail, phase: (i / style.comets) * Math.PI * 2 };
+    }),
+    bubbles = reduced
+      ? null
+      : scene.add
+          .particles(0, 0, "cfx-ring", {
+            x: { min: -30, max: 30 },
+            y: { min: -10, max: 0 },
+            lifespan: { min: 1400, max: 2200 },
+            speedY: { min: -60, max: -28 },
+            speedX: { min: -10, max: 10 },
+            scale: { start: 0.06, end: 0.16 },
+            alpha: { start: 0.85, end: 0 },
+            tint: [...style.tint, 0xffffff],
+            frequency: style.bubbles,
+            blendMode: ADD,
+          })
+          .setDepth(11);
+  const parts = [halo, bubbles, ...comets.flatMap((c) => [c.head, c.trail])].filter(Boolean);
+  return {
+    tier,
+    parts,
+    visible: true,
+    set(show, x, feet, height, time) {
+      if (show !== this.visible) {
+        this.visible = show;
+        parts.forEach((o) => o.setVisible(show));
+        for (const e of [bubbles, ...comets.map((c) => c.trail)])
+          if (e) show ? e.start() : e.stop();
+      }
+      if (!show) return;
+      const t = reduced ? 0 : time / 1000,
+        body = Math.max(60, height - 30),
+        mid = feet - body / 2;
+      halo
+        ?.setPosition(x, mid)
+        .setDisplaySize(110, body + 40)
+        .setAlpha(0.22 + Math.sin(t * 2.4) * 0.08);
+      for (const c of comets) {
+        const a = t * 3.2 + c.phase,
+          // Spiral: round the body while climbing from feet to head and back.
+          climb = 0.5 + Math.sin(t * 1.3 + c.phase) * 0.5,
+          cx = x + Math.cos(a) * 34,
+          cy = feet - 6 - climb * (body - 8) + Math.sin(a) * 9,
+          front = Math.sin(a) > 0;
+        c.head
+          .setPosition(cx, cy)
+          .setDepth(front ? 11 : 9)
+          .setScale(front ? 0.32 : 0.24)
+          .setAlpha(front ? 1 : 0.6);
+        c.trail?.setPosition(cx, cy).setDepth(front ? 11 : 9);
+      }
+      bubbles?.setPosition(x, feet - 8);
+    },
+    destroy() {
+      parts.forEach((o) => o.destroy());
+    },
+  };
+}
+
+// tier: 0 (none), 12 or 15 — from the server's per-hero `setGlow`.
+export function updateSetGlow(scene, holder, tier, x, feet, height, time) {
+  if (holder.setGlow && holder.setGlow.tier !== tier && tier) {
+    holder.setGlow.destroy();
+    holder.setGlow = null;
+  }
+  if (!holder.setGlow) {
+    if (!SET_STYLE[tier] || !scene.textures.exists("cfx-ring")) return;
+    holder.setGlow = createSetGlow(scene, tier, !!scene.reducedMotion);
+  }
+  holder.setGlow.set(!!tier, x, feet, height, time);
 }

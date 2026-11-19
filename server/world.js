@@ -26,6 +26,9 @@ import {
   enhancementLevel,
   enhancementChance,
   enhancementCost,
+  enhanceSetLevel,
+  MAX_ENHANCE,
+  ENHANCE_BREAK_LEVEL,
 } from "../shared/rpg.js";
 import { ACTIONS } from "../shared/motion.js";
 import { costumeOf, ownsCostume, isCostumeItem, COSTUME_ITEMS, rollCostumeDrop } from "../shared/costumes.js";
@@ -300,20 +303,25 @@ export function enhance(p, key, slot = "weapon") {
       level = enhancementLevel(c, slot),
       cost = enhancementCost(level);
     if (!c.equipment[slot]) throw Error("สวมอุปกรณ์ในช่องนี้ก่อน");
-    if (level >= 10) throw Error("อุปกรณ์ถึง +10 แล้ว");
+    if (level >= MAX_ENHANCE) throw Error(`อุปกรณ์ถึง +${MAX_ENHANCE} แล้ว`);
     if (c.gold < cost.gold || (c.inventory.ore || 0) < cost.ore)
       throw Error(`ต้องมีทอง ${cost.gold} และแร่จันทรา ${cost.ore} ชิ้น`);
     c.gold -= cost.gold;
     c.inventory.ore -= cost.ore;
-    const success = Math.random() < enhancementChance(level);
-    if (success) {
-      if (slot === "weapon") c.upgrade = level + 1;
-      else c.enhancements[slot] = level + 1;
-    }
+    const success = Math.random() < enhancementChance(level),
+      broke = !success && level >= ENHANCE_BREAK_LEVEL,
+      next = success ? level + 1 : broke ? 0 : level;
+    if (slot === "weapon") c.upgrade = next;
+    else c.enhancements[slot] = next;
     persist(c);
     return {
-      message: success ? `${SLOTS[slot]} ตีบวกสำเร็จ +${level + 1}` : "ตีบวกไม่สำเร็จ ระดับเดิมคงอยู่",
+      message: success
+        ? `${SLOTS[slot]} ตีบวกสำเร็จ +${next}`
+        : broke
+          ? `ตีบวกล้มเหลว! ${SLOTS[slot]} +${level} แตกกลับเป็น +0`
+          : "ตีบวกไม่สำเร็จ ระดับเดิมคงอยู่",
       success,
+      broke,
     };
   });
   sync(p);
@@ -2438,6 +2446,7 @@ export function snapshot(p) {
     level: m.level,
     equipment: m.equipment,
     upgrade: m.upgrade,
+    setGlow: enhanceSetLevel(m),
     attackAt: m.attackAt,
     buffs: m.buffs || null,
     status: m.status || null,

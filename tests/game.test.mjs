@@ -1166,3 +1166,46 @@ test('costume listings remove only requested copies and preserve costume identit
   assert.equal(loadCharacter(a.id).inventory.costume_mtang, 4, 'unsold copy is returned');
   assert.equal(loadCharacter(a.id).inventory.costume_mbeach, 3, 'other outfit is untouched');
 });
+
+test("enhancement caps at +15, breaks to +0 on failure from +10, and full sets glow", async () => {
+  const { enhanceSetLevel, enhancementChance, MAX_ENHANCE } = await import("../shared/rpg.js");
+  assert.equal(MAX_ENHANCE, 15);
+  assert.ok(enhancementChance(14) > 0 && enhancementChance(15) === 0);
+  const p = create("enhance-break");
+  p.gold = 100000;
+  p.inventory.ore = 500;
+  const c = loadCharacter(p.id);
+  c.upgrade = 10;
+  c.gold = 100000;
+  c.inventory.ore = 500;
+  persist(c);
+  const random = Math.random;
+  try {
+    Math.random = () => 0.99; // always fail
+    const fail = world.enhance(p, "forge-break-test-1", "weapon");
+    assert.equal(fail.broke, true);
+    assert.equal(loadCharacter(p.id).upgrade, 0);
+    const c2 = loadCharacter(p.id);
+    c2.upgrade = 9;
+    persist(c2);
+    assert.equal(world.enhance(p, "forge-break-test-2", "weapon").broke, false);
+    assert.equal(loadCharacter(p.id).upgrade, 9);
+    Math.random = () => 0; // always succeed
+    const c3 = loadCharacter(p.id);
+    c3.upgrade = 14;
+    persist(c3);
+    world.enhance(p, "forge-break-test-3", "weapon");
+    assert.equal(loadCharacter(p.id).upgrade, 15);
+    assert.throws(() => world.enhance(p, "forge-break-test-4", "weapon"), /\+15/);
+  } finally {
+    Math.random = random;
+  }
+  const full = (lv) => ({
+    equipment: { weapon: "w", armor: "a", charm: "c", boots: "b" },
+    upgrade: lv, enhancements: { armor: lv, charm: lv, boots: lv },
+  });
+  assert.equal(enhanceSetLevel(full(11)), 0);
+  assert.equal(enhanceSetLevel(full(12)), 12);
+  assert.equal(enhanceSetLevel(full(15)), 15);
+  assert.equal(enhanceSetLevel({ ...full(15), equipment: { weapon: "w", armor: "a", charm: "c", boots: null } }), 0);
+});
