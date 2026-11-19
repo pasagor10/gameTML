@@ -51,6 +51,8 @@ const escape = (value) =>
       ],
   );
 export function itemArtPath(id, item) {
+  if (item?.rarity === 'divine' && ['armor','charm','boots'].includes(item.slot))
+    return `/assets/items/divine/${item.slot}.webp`;
   const art = artOf(id, item);
   return art ? `/assets/items/px/${art[0]}-${art[1]}.webp` : null;
 }

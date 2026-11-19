@@ -38,6 +38,7 @@ import {
   SLOTS,
   FLOOR_LOOT,
   WORLD_BOSS_WEAPONS,
+  rollDivineLoot,
   bossLootCandidates,
   SPECIALIZATIONS,
   initializeGear,
@@ -614,6 +615,12 @@ function worldBossDown(i, t) {
       reward.items.push(item);
       if (m.instance === i.id) i.events.push({ id: randomUUID(), kind: "loot", actorId: m.id,
         x: i.lastDrop?.x ?? m.x, y: i.lastDrop?.y ?? m.y - 110, item, rarity: GEAR[item].rarity, at: t });
+    }
+    const relic = worldBoss.grand && rollDivineLoot(m, MAIN_FLOORS);
+    if (relic) {
+      m.ownedEquipment.push(relic); reward.items.push(relic);
+      if (m.instance === i.id) i.events.push({id:randomUUID(),kind:"loot",actorId:m.id,x:m.x,y:m.y-110,item:relic,rarity:"divine",at:t});
+      else m.socket?.emit?.("toast",{message:`ได้รับอุปกรณ์เทพ ${GEAR[relic].name} เข้ากระเป๋าแล้ว`});
     }
     if (m.instance === i.id) {
       questEvents(i, m, advanceQuests(m, wallClock(), "boss"), m.x, m.y - 160, t);
@@ -1798,6 +1805,11 @@ function checkClear(i, t, p) {
               amount: ore,
               at: t,
             });
+          }
+          const relic = rollDivineLoot(m, i.floor);
+          if (relic) {
+            m.ownedEquipment.push(relic); i.rewards?.[m.id]?.items.push(relic);
+            i.events.push({id:randomUUID(),kind:"loot",actorId:m.id,x:i.lastDrop?.x??m.x,y:i.lastDrop?.y??m.y-110,item:relic,rarity:"divine",at:t});
           }
           if (
             i.floor === 3 &&

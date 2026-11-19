@@ -108,7 +108,7 @@ const inventoryFilters = [
   ["supply", "วัตถุดิบ"],
   ["costume", "ชุด"],
 ];
-const RARITY_RANK = { common: 0, rare: 1, epic: 2, legendary: 3 };
+const RARITY_RANK = { common: 0, rare: 1, epic: 2, legendary: 3, divine: 4 };
 const SLOT_RANK = { weapon: 0, armor: 1, charm: 2, boots: 3 };
 let bagSort = "rarity";
 const bagSorts = [

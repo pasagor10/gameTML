@@ -1,7 +1,7 @@
 const labels = { level: "เลเวล", dungeon: "ชั้นที่พิชิต", gold: "ทอง" };
 const jobs = { swordsman: "นักดาบ", archer: "นักธนู", mage: "จอมเวท", priest: "พระ" };
 // Patch news: the Lv.60 update and the 20:00 grand boss, as two banners.
-export const NEWS_ID = "patch-lv60-grand-1";
+export const NEWS_ID = "patch-celestial-relics-1";
 const hms = (s) => {
   s = Math.max(0, Math.round(s));
   const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
@@ -13,6 +13,14 @@ function newsPanel({ modal, worldBoss, join }) {
     target = Date.now() + (worldBoss?.grandIn || 0) * 1000,
     when = () => (live ? "🔥 สนามเปิดอยู่ตอนนี้! เข้าร่วมก่อนบอสหนี" : `เริ่มในอีก ${hms((target - Date.now()) / 1000)}`);
   modal("ข่าวอัปเดต · TML ONLINE", `<div class="news">
+<article class="news-banner patch">
+  <span class="nb-tag">CELESTIAL RELICS</span>
+  <img src="/assets/items/divine/armor.webp" alt="เกราะเทพพิทักษ์ดารา" width="96" height="96">
+  <h3>สมบัติเทพแห่งดารา</h3>
+  <p>เกราะ · เครื่องราง · รองเท้าระดับเทพ พร้อมรัศมีเมื่อสวมใส่</p>
+  <p>Lv.40 ขึ้นไป ชนะบอสชั้น 10+ หรือมหาบอส 20:00 น. ลุ้น 5% ต่อรอบ สุ่มชิ้นที่ยังไม่มี ไม่ขายในร้านและไม่อยู่ในตู้สุ่ม</p>
+  <p class="nb-note">20 รอบมีโอกาสได้อย่างน้อยหนึ่งชิ้นประมาณ 64% ไม่การันตี · หีบเสบียงและรูนถ้ำมีภาพและเอฟเฟกต์ใหม่</p>
+</article>
 <article class="news-banner patch">
   <span class="nb-tag">PATCH UPDATE</span>
   <div class="nb-big" aria-label="เลเวลสูงสุด 60">Lv.<b>60</b></div>

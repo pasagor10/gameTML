@@ -12,6 +12,7 @@ export const RARITIES = {
   rare: "หายาก",
   epic: "มหากาพย์",
   legendary: "ตำนาน",
+  divine: "เทพ",
 };
 export const GEAR = {
   starter_swordsman: {
@@ -577,6 +578,23 @@ for (const [job, name, icon, stats] of [
   };
 }
 
+// Celestial relics complete the world-boss weapons without entering shops.
+export const GRAND_BOSS_RELICS = ["celestial_guard_armor", "celestial_heart_charm", "celestial_wing_boots"];
+for (const [id, name, slot, icon, stats, attrs] of [
+  [GRAND_BOSS_RELICS[0], "เกราะเทพพิทักษ์ดารา", "armor", "♜", {def:105,hp:420,mp:80}, {vit:14,str:7}],
+  [GRAND_BOSS_RELICS[1], "เครื่องรางหัวใจสวรรค์", "charm", "◆", {atk:42,hp:180,mp:220}, {int:12,luk:10}],
+  [GRAND_BOSS_RELICS[2], "รองเท้าปีกสุริยัน", "boots", "♧", {def:40,hp:200,speed:40}, {agi:14,dex:8}],
+]) GEAR[id] = {name,slot,icon,stats,attrs,rarity:"divine",level:40,source:"celestial-boss",
+  lore:"สมบัติเทพแห่งดารา · Lv.40 ขึ้นไป ลุ้น 5% หลังชนะบอสดันชั้น 10+ หรือมหาบอส 20:00 น. · สวมแล้วเปล่งรัศมีสวรรค์"};
+
+export const DIVINE_DROP_CHANCE = .05;
+export function rollDivineLoot(player, floor, random = Math.random) {
+  if (player.level < 40 || floor < 10) return null;
+  const pool = GRAND_BOSS_RELICS.filter(id => !player.ownedEquipment.includes(id));
+  if (!pool.length || random() >= DIVINE_DROP_CHANCE) return null;
+  return pool[Math.min(pool.length-1, Math.floor(random()*pool.length))];
+}
+
 // Base-stat bonuses on gear (RO style "+3 DEX"): weapons push their class's
 // attack stat, other slots a fixed pair. Higher level and rarity give more,
 // so two pieces that share a picture still differ by level and bonus.
@@ -591,7 +609,7 @@ const ATTR_LINES = {
   charm: ["int", "luk"],
   boots: ["agi", "luk"],
 };
-const RARITY_ATTR = { common: 0, rare: 0, epic: 1, legendary: 2 };
+const RARITY_ATTR = { common: 0, rare: 0, epic: 1, legendary: 2, divine: 4 };
 for (const g of Object.values(GEAR)) {
   if (g.attrs || g.rarity === "common") continue;
   const lines = g.slot === "weapon" ? ATTR_LINES.weapon[g.class] : ATTR_LINES[g.slot];

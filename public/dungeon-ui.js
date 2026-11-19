@@ -9,7 +9,7 @@ import {
   recommendedLevel,
 } from "/shared/config.js";
 import { rosterEntry, TRAITS } from "/shared/dungeons.js";
-import { FLOOR_LOOT, GEAR } from "/shared/rpg.js";
+import { FLOOR_LOOT, GEAR, GRAND_BOSS_RELICS } from "/shared/rpg.js";
 import { MONSTERS } from "/shared/quests.js";
 import { itemArt, supplyArt } from "/item-art.js";
 import { portrait } from "/quest-ui.js?v=4";
@@ -32,6 +32,7 @@ function lootIcons(p, floor) {
     cells.push(
       `<span class="dg-loot rarity-rare" title="แร่จันทรา ×${2 + floor - MAIN_FLOORS}">${supplyArt("ore")}<em>×${2 + floor - MAIN_FLOORS}</em></span>`,
     );
+  if (floor >= 10) cells.push(`<span class="dg-loot rarity-divine" title="Lv.40+ ชนะบอส ลุ้นอุปกรณ์เทพ 5% ต่อรอบ">${itemArt(GRAND_BOSS_RELICS[0], GEAR[GRAND_BOSS_RELICS[0]])}<em>5%</em></span>`);
   return cells.join("");
 }
 
@@ -77,6 +78,7 @@ export function dungeonPanelHtml(p, time) {
   return `<div class="dg-window">
 <header class="dg-head"><div class="dg-rules"><p>เข้าดันเจียนได้ไม่จำกัด · สนามฝึกเล่นฟรี</p><p>แต่ละชั้นมี 3 ด่าน: มอนสเตอร์ → อีลิท → บอส · ปาร์ตี้สูงสุด 3 คน สมาชิกต้องกดพร้อมก่อนหัวหน้าเริ่ม</p></div></header>
 <p class="dg-tip"><span>SPACE กระโดดหลบคริสตัลและบอสทุบพื้น · รอบแรกได้อาวุธประจำอาชีพแน่นอน · เล่นซ้ำมีโอกาสได้อุปกรณ์สูงสุด 35%</span></p>
+<p class="dg-warning">✦ อุปกรณ์เทพ: Lv.40+ ชนะบอสชั้น 10 ขึ้นไป ลุ้น 5% ต่อรอบ · สุ่มชิ้นที่ยังไม่มี · 20 รอบมีโอกาสได้อย่างน้อยหนึ่งชิ้นประมาณ 64% ไม่การันตี</p>
 <div class="dg-list">${main.map((f, i) => card(p, f, i)).join("")}
 <div class="dg-deep-banner ${deepOpen ? "open" : ""}"><strong>ห้วงลึกถ้ำหลวง · ชั้น 11–${FLOORS.length}</strong><span>${deepOpen ? "มอนสเตอร์กลายพันธุ์ แต่ละชั้นมีความสามารถพิเศษต่างกัน · ดรอปของตำนานชั้น 10 และแร่จำนวนมาก" : "ปลดล็อกเมื่อพิชิตชั้น 10 · มอนสเตอร์กลายพันธุ์ที่โหดกว่าเดิม"}</span></div>
 ${deep.map((f, i) => card(p, f, i + MAIN_FLOORS)).join("")}</div></div>`;

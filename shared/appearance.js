@@ -3,7 +3,7 @@
 // a costume in p.costume[slot] overrides the look without touching stats.
 import { GEAR } from "./rpg.js";
 
-const RANK = { common: 1, rare: 2, epic: 3, legendary: 4 };
+const RANK = { common: 1, rare: 2, epic: 3, legendary: 4, divine: 4 };
 // Look tier 1-4: floor gear by depth, shop and starter gear by rarity.
 export function lookTier(item) {
   if (!item) return 1;

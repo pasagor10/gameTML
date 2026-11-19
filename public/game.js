@@ -1,6 +1,8 @@
+import { createDungeonProps } from "/dungeon-props.js?v=1";
+import { updateDivineAura } from "/divine-fx.js?v=1";
 import { prepareUltimate, showUltimateCutin, showUltimateImpact } from "/ultimate-ui.js?v=1";
 import { ULTIMATES } from "/shared/ultimates.js";
-import { communityPanel, NEWS_ID } from "/community-ui.js?v=2";
+import { communityPanel, NEWS_ID } from "/community-ui.js?v=3";
 import { screenShakeEnabled, setScreenShakeEnabled, shakeCamera } from "/screen-shake.js?v=1";
 import { BOSSES } from "/shared/bosses.js";
 import { MECHANICS, WATER_Y, SPIKE_BAND } from "/shared/boss-mechanics.js";
@@ -31,7 +33,7 @@ import {
   rpgPanel,
   bindRpgPanel,
   gearShop,
-} from "/rpg-ui.js?v=19";
+} from "/rpg-ui.js?v=20";
 import {
   GEAR,
   RARITIES,
@@ -59,7 +61,7 @@ import {
   trackerHtml,
   claimable,
 } from "/quest-ui.js?v=4";
-import { dungeonPanelHtml } from "/dungeon-ui.js?v=41";
+import { dungeonPanelHtml } from "/dungeon-ui.js?v=42";
 import { createNightSky } from "/night-sky.js?v=3";
 import {
   nightInfo,
@@ -2452,6 +2454,8 @@ class Adventure extends Phaser.Scene {
     );
     this.load.image("slot-machine", "/assets/town-kit/slot-machine-v2.png?v=2");
     this.load.image("world-titan", "/assets/bosses/world-titan.webp?v=1");
+    this.load.image("explore-chest", "/assets/exploration/chest.webp?v=1");
+    this.load.image("explore-rune", "/assets/exploration/rune.webp?v=1");
     this.load.image("cave", "/assets/cave.webp?v=2");
     this.load.image("knight-motion", "/assets/animations/knight-female.png");
     this.load.image("slime-motion", "/assets/animations/slime.png?v=3");
@@ -3105,6 +3109,7 @@ class Adventure extends Phaser.Scene {
           rare: "#79d9f2",
           epic: "#d0a7ff",
           legendary: "#ffc35d",
+          divine: "#a9fff1",
         }[item.rarity];
         const path = itemArtPath(e.item, item);
         if (path)
@@ -3113,7 +3118,7 @@ class Adventure extends Phaser.Scene {
               e,
               key,
               color,
-              { common: 64, rare: 76, epic: 88, legendary: 104 }[item.rarity] ?? 64,
+              { common: 64, rare: 76, epic: 88, legendary: 104, divine: 120 }[item.rarity] ?? 64,
             ),
           );
         const text = this.add
@@ -3310,34 +3315,10 @@ class Adventure extends Phaser.Scene {
     }
   }
   showDungeonSigns(area, signs) {
-    const visible = signs.filter((sign) => !sign.collected);
-    const key = area + ":" + visible.map((sign) => sign.id).join(",");
-    if (key === this.dungeonSignKey) return;
-    this.dungeonSignKey = key;
-    this.dungeonSigns ??= this.add.graphics().setDepth(9);
-    const g = this.dungeonSigns;
-    g.clear();
-    for (const { x, y, id } of visible) {
-      g.fillStyle(0x54e4ce, 0.34);
-      g.fillEllipse(x, y - 3, 58, 14);
-      g.lineStyle(2, 0xbefef1, 0.9);
-      g.strokeEllipse(x, y - 3, 58, 14);
-      if (id === "supplies") {
-        g.fillStyle(0x5e4127);
-        g.fillRoundedRect(x - 20, y - 30, 40, 24, 4);
-        g.lineStyle(2, 0xffd990);
-        g.strokeRoundedRect(x - 20, y - 30, 40, 24, 4);
-        g.lineBetween(x - 20, y - 21, x + 20, y - 21);
-        g.fillStyle(0xffd990);
-        g.fillRect(x - 4, y - 24, 8, 9);
-      } else {
-        g.fillStyle(0x96ffed);
-        g.fillTriangle(x - 12, y - 29, x, y - 51, x + 12, y - 29);
-        g.fillStyle(0x429fbc);
-        g.fillTriangle(x - 12, y - 29, x, y - 13, x + 12, y - 29);
-      }
-    }
+    this.updateDungeonProps ??= createDungeonProps(this);
+    this.updateDungeonProps(area, signs);
   }
+
   drawDungeonHazards(time) {
     const g = this.telegraphs,
       d = state.dungeon;
@@ -3555,6 +3536,7 @@ class Adventure extends Phaser.Scene {
       );
       a.image.setPosition(point.x, point.y);
       animateHeroBody(a, p, pose, serverTime, time);
+      updateDivineAura(this, a, p, time);
       this.fx.applyKick(a, a.image);
       a.rim.sync(a.image);
       // Paper-doll heroes: worn gear stacked over the bare body.
@@ -3576,7 +3558,7 @@ class Adventure extends Phaser.Scene {
         .map((itemId) => GEAR[itemId])
         .filter(Boolean);
       const weapon = visibleGear.find((item) => item.slot === "weapon"),
-        rarityRank = { common: 0, rare: 1, epic: 2, legendary: 3 },
+        rarityRank = { common: 0, rare: 1, epic: 2, legendary: 3, divine: 4 },
         best = visibleGear.reduce(
           (top, item) =>
             !top || rarityRank[item.rarity] > rarityRank[top.rarity]
@@ -3589,6 +3571,7 @@ class Adventure extends Phaser.Scene {
           rare: "#79d9f2",
           epic: "#d0a7ff",
           legendary: "#ffc35d",
+          divine: "#a9fff1",
         }[best?.rarity || "common"];
       // Just the enhancement level, in the best item's rarity colour, beside
       // the name: text glyphs for weapon/armour read as clutter in the field.

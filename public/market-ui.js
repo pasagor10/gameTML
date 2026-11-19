@@ -3,7 +3,7 @@ import { itemArt, supplyArt } from "/item-art.js";
 import { GEAR, SLOTS, RARITIES } from "/shared/rpg.js";
 import { ITEMS, CLASSES, STACK_SUPPLIES } from "/shared/config.js";
 import { COSTUME_ITEMS, costumeFits } from "/shared/costumes.js";
-import { statText } from "/rpg-ui.js?v=19";
+import { statText } from "/rpg-ui.js?v=20";
 
 // Stacks sell by count: supplies, and costumes (shared/costumes.js).
 const STACKS = [...STACK_SUPPLIES, ...Object.keys(COSTUME_ITEMS)];
@@ -16,7 +16,7 @@ const FILTERS = [
   ["armor", "เกราะ"],
   ["accessory", "เครื่องราง & รองเท้า"],
 ];
-const RARITY_PRICE = { common: 60, rare: 250, epic: 800, legendary: 2500 };
+const RARITY_PRICE = { common: 60, rare: 250, epic: 800, legendary: 2500, divine: 6000 };
 const esc = (v) =>
   String(v ?? "").replace(
     /[&<>"']/g,

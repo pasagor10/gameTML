@@ -464,6 +464,7 @@ const SFX = {
         rare: [587, 784, 988],
         epic: [523, 659, 784, 1047],
         legendary: [523, 659, 784, 1047, 1319, 1568],
+        divine: [659, 988, 1319, 1568, 1976, 2637],
       }[rarity] || [659, 784];
     notes.forEach((f, i) => bar(d, { f, at: i * 0.09, dur: 0.8, vol: 0.13 }));
     if (rarity === "epic" || rarity === "legendary")
