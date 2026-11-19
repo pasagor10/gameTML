@@ -1,3 +1,4 @@
+import { EXTRA_MONSTERS } from "./extra-monsters.js";
 // Daily quests and the monster book (bestiary): the long-term goals that give
 // a reason to come back each day and to keep farming floors already cleared.
 import { DUNGEON_ROSTERS } from "./dungeons.js";
@@ -7,6 +8,7 @@ import { DUNGEON_ROSTERS } from "./dungeons.js";
 // star grants a small permanent stat bonus to the character.
 export const BESTIARY_TIERS = [50, 200, 1000];
 export const MONSTERS = {
+  ...EXTRA_MONSTERS,
   slime: { name: "สไลม์ถ้ำ", stat: "hp", per: 15, lore: "เมือกเรืองแสงที่ดูดซับพลังจันทรา" },
   bat: { name: "ค้างคาวรัตติกาล", stat: "speed", per: 4, lore: "บินเป็นฝูงตามแสงจากปากถ้ำ" },
   golem: { name: "โกเลมหินผลึก", stat: "def", per: 2, lore: "หินที่ตื่นขึ้นเพราะผลึกในอก" },

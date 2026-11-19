@@ -1,3 +1,4 @@
+import { EXTRA_MONSTERS } from "/shared/extra-monsters.js";
 import { createDungeonProps } from "/dungeon-props.js?v=1";
 import { updateDivineAura } from "/divine-fx.js?v=1";
 import { prepareUltimate, showUltimateCutin, showUltimateImpact } from "/ultimate-ui.js?v=2";
@@ -2910,7 +2911,7 @@ class Adventure extends Phaser.Scene {
               ? floorInfo(s.dungeon).boss
               : e.variant
                 ? `${e.elite ? "★ หัวหน้า " : ""}${TRAITS[e.trait]?.icon || ""} ${e.variant}`
-                : `${e.elite ? "★ หัวหน้า " : ""}${floorInfo(s.dungeon).prefix} · ${{ slime: "สไลม์", bat: "ค้างคาว", boar: "หมูป่า", mushroom: "เห็ดพิษ", wolf: "หมาป่า", goblin: "ก็อบลิน", golem: "โกเลม", serpent: "อสรพิษ" }[e.type] || e.type}`,
+                : `${e.elite ? "★ หัวหน้า " : ""}${floorInfo(s.dungeon).prefix} · ${MONSTERS[e.type]?.name || e.type}`,
             {
               fontFamily: "Noto Sans Thai",
               fontSize: "14px",
@@ -3729,7 +3730,7 @@ class Adventure extends Phaser.Scene {
           statusTint ??
             (traitOf(e).frenzy && e.hp <= e.maxHp * 0.5
               ? 0xff7a6a
-              : BOSSES[e.type] || e.world ? 0xffffff : floorInfo(state.dungeon).tint),
+              : BOSSES[e.type] || EXTRA_MONSTERS[e.type] || e.world ? 0xffffff : floorInfo(state.dungeon).tint),
         );
       }
       this.fx.applyKick(m, m.image);

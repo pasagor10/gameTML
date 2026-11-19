@@ -1,3 +1,4 @@
+import { BIOME_ROSTERS } from "./extra-monsters.js";
 // Floors 16–40: five original boss families, with a named encounter per floor.
 // Shared records drive the floor picker, server spawns and trait rosters.
 const regions = [
@@ -39,6 +40,6 @@ const regions = [
 ];
 export const DEEP_DUNGEONS = regions.flatMap(({ color, tint, icon, bossType, floors }) =>
   floors.map(([name, boss, prefix, roster, traits]) => ({
-    name, boss, prefix, bossType, roster, traits, color, tint, icon,
+    name, boss, prefix, bossType, roster: BIOME_ROSTERS[bossType] || roster, traits, color, tint, icon,
   })),
 );

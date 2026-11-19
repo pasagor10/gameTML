@@ -1,3 +1,4 @@
+import { flyingMonster } from "../shared/extra-monsters.js";
 // Auto-battle brain: lock onto one monster, close to a good fighting distance,
 // only swing when something is really in reach, pick skills by the situation,
 // and step or hop out of telegraphed attacks. Pure decisions; the world applies them.
@@ -11,7 +12,7 @@ const GROUND = 600,
   SWITCH_MARGIN = 260, // a new target must be this much "cheaper" to steal the lock
   STUCK_AFTER = 4; // seconds without getting closer before giving up a target
 
-const flying = (e) => e.type === "bat" || e.type === "batking";
+const flying = (e) => flyingMonster(e.type);
 
 // How much effort a target is: distance, with height costing extra, minus
 // bonuses for monsters already fighting us or nearly dead.

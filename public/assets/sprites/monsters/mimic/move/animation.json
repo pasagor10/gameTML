@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "3.0",
+  "name": "move",
+  "artSource": "generated original monster sprite sheet",
+  "sourceSize": [
+    144,
+    151
+  ],
+  "sourceAnchor": [
+    72.21,
+    131
+  ],
+  "frameCount": 4,
+  "durationsMs": [
+    110,
+    110,
+    110,
+    110
+  ],
+  "durationSeconds": 0.44,
+  "fps": 9.091,
+  "loop": true,
+  "bodyHeightPx": 109,
+  "events": [],
+  "sampling": "nearest",
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      144,
+      151
+    ],
+    "pages": [
+      {
+        "file": "move-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  }
+}

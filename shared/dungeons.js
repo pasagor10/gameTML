@@ -1,3 +1,4 @@
+import { EXTRA_MONSTERS, flyingMonster } from "./extra-monsters.js";
 import { DEEP_DUNGEONS } from "./deep-dungeons.js";
 // Shared geometry keeps server collisions, enemy spawns and the minimap aligned.
 const ledges = [
@@ -71,18 +72,18 @@ export const DUNGEON_ROSTERS = [
   ["bat", "slime", "bat"],
   ["golem", "boar", "slime"],
   ["serpent", "slime", "boar"],
-  ["mushroom", "goblin", "mushroom"],
-  ["golem", "goblin", "boar"],
-  ["wolf", "golem", "bat"],
-  ["bat", "wolf", "bat"],
-  ["goblin", "bat", "slime"],
-  ["serpent", "wolf", "goblin"],
+  ["mushroom", "goblin", "mimic"],
+  ["golem", "goblin", "lava-salamander"],
+  ["wolf", "frost-scarab", "bat"],
+  ["bat", "wolf", "storm-harpy"],
+  ["goblin", "bat", "moon-reaper"],
+  ["serpent", "wolf", "thorn-mantis"],
   ["serpent", "golem", "bat"],
-  ["slime", "serpent", "bat"],
-  ["mushroom", "goblin", "boar"],
-  ["golem", "goblin", "wolf"],
-  ["wolf", "bat", "mushroom"],
-  ["golem", "serpent", "boar"],
+  ["mimic", "serpent", "bat"],
+  ["mushroom", "thorn-mantis", "boar"],
+  ["lava-salamander", "goblin", "wolf"],
+  ["moon-reaper", "bat", "mushroom"],
+  ["golem", "serpent", "mimic"],
   ...DEEP_DUNGEONS.map((floor) => floor.roster),
 ];
 // Trait multipliers: hp, move speed, attack cooldown, damage dealt, damage
@@ -98,36 +99,36 @@ export const TRAITS = {
 };
 export const FLOOR_VARIANTS = {
   11: [
-    { name: "สไลม์บึงมืด", trait: "regen" },
+    { name: "หีบเขี้ยวบึงมืด", trait: "regen" },
     { name: "อสรพิษเงาน้ำ", trait: "swift" },
     { name: "ค้างคาวดูดเลือด", trait: "drain" },
   ],
   12: [
     { name: "เห็ดยักษ์ต้องสาป", trait: "giant" },
-    { name: "ก็อบลินคลั่ง", trait: "frenzy" },
+    { name: "ตั๊กแตนเคียวคลั่ง", trait: "frenzy" },
     { name: "หมูป่าเกราะหิน", trait: "armored" },
   ],
   13: [
-    { name: "โกเลมลาวา", trait: "armored" },
+    { name: "กิ้งก่าลาวาเกราะหนา", trait: "armored" },
     { name: "ก็อบลินจุดระเบิด", trait: "swift" },
     { name: "หมาป่าเพลิง", trait: "frenzy" },
   ],
   14: [
-    { name: "หมาป่าวิญญาณ", trait: "swift" },
+    { name: "ภูตเคียววิญญาณ", trait: "swift" },
     { name: "ค้างคาวผี", trait: "regen" },
     { name: "เห็ดสูบวิญญาณ", trait: "drain" },
   ],
   15: [
     { name: "ทวารบาลจันทรา", trait: "giant" },
     { name: "อสรพิษจันทรา", trait: "drain" },
-    { name: "หมูป่าคลั่งจันทรา", trait: "frenzy" },
+    { name: "หีบเขี้ยวจันทรา", trait: "frenzy" },
   ],
 };
 const monsterNames = { slime: "สไลม์", bat: "ค้างคาว", boar: "หมูป่า", mushroom: "เห็ด",
   goblin: "ก็อบลิน", wolf: "หมาป่า", golem: "โกเลม", serpent: "อสรพิษ" };
 DEEP_DUNGEONS.forEach((floor, index) => {
   FLOOR_VARIANTS[index + 16] = floor.roster.map((type, slot) => ({
-    name: `${monsterNames[type]}${floor.prefix}`, trait: floor.traits[slot],
+    name: `${EXTRA_MONSTERS[type]?.name || monsterNames[type]}${floor.prefix}`, trait: floor.traits[slot],
   }));
 });
 // The monster in roster slot `index` of a floor: sprite type plus variant.
@@ -294,7 +295,7 @@ export function dungeonSpawn(floor, stage, n, boss = false, count) {
   return { x, y: 600 };
 }
 export function enemyStep(e, target, platforms, dt, t) {
-  const flying = e.type === "bat" || e.type === "batking";
+  const flying = flyingMonster(e.type);
   if (flying) {
     const hover =
       target.y - (e.boss ? 25 : 45) + Math.sin(t * 2.2 + e.spawnAt) * 22;
