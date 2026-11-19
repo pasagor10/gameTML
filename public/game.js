@@ -23,7 +23,7 @@ import {
   prepareMusic,
 } from "/sound.js?v=20261119-perf";
 import { TOWN_ANIMS, TOWN_LAYOUT, TOWN_PROPS, TOWN_VIEW } from "/shared/town-layout.js";
-import { createWorldDetails } from "/world-details.js?v=4";
+import { createWorldDetails } from "/world-details.js?v=5";
 import {
   rpgPanel,
   bindRpgPanel,

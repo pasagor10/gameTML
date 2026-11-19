@@ -81,7 +81,8 @@ export function createWorldDetails(scene) {
         platforms = town
           ? WORLD.platforms
           : dungeonPlatforms(d?.floor, d?.stage, d?.training);
-      for (const q of [
+      // Ledge lines and the landing ring are a debug aid (walkability toggle) only.
+      if (full) for (const q of [
         ...platforms,
         { x: 0, y: WORLD.ground, w: town ? WORLD.townWidth : WORLD.width },
       ]) {
@@ -105,7 +106,7 @@ export function createWorldDetails(scene) {
             edges.lineBetween(x, q.y + 4, x + 7, q.y + 4);
       }
       // The projected landing ring follows the real one-way collision rules.
-      if (!p.grounded || full) {
+      if (full) {
         const surface = platforms
           .filter((q) => p.x >= q.x && p.x <= q.x + q.w && q.y >= p.y - 2)
           .reduce((y, q) => Math.min(y, q.y), WORLD.ground);
