@@ -203,3 +203,21 @@ html body #landing.hero-lobby .hl-backdrop::before {
 @media(min-width:701px) {
   html body #landing.hero-lobby #hero-preview { transform:translate(1.2vw,-2.5vh) !important; }
 }
+/* Compact phone console: keep the adventure visible above the selection UI. */
+@media(max-width:700px) {
+  html body #landing.hero-lobby .hl-sheet { padding:11px 12px; gap:8px; margin-bottom:8px; }
+  html body #landing.hero-lobby .hl-console-title { display:none; }
+  html body #landing.hero-lobby .hl-slots-head { min-height:12px; }
+  html body #landing.hero-lobby .hl-slot { min-height:60px; padding:6px 7px; gap:3px; }
+  html body #landing.hero-lobby .hl-slot-icon { width:23px; height:23px; }
+  html body #landing.hero-lobby .hl-slot > b { top:8px; }
+  html body #landing.hero-lobby #hero-stats { gap:5px 8px; }
+  html body #landing.hero-lobby #hero-stats .attribute strong { font-size:12px !important; }
+  html body #landing.hero-lobby #hero-stats [data-lobby-skill] { padding:3px 2px; }
+  html body #landing.hero-lobby #hero-stats [data-lobby-skill] > span,
+  html body #landing.hero-lobby #hero-stats [data-lobby-skill] > span svg { width:23px; height:23px; }
+  html body #landing.hero-lobby .hl-start,
+  html body #landing.hero-lobby[data-lobby-mode="roster"] .hl-start { height:42px !important; }
+  html body #landing.hero-lobby .hl-foot { gap:4px; }
+  html body #landing.hero-lobby .hl-foot > span { font-size:8px !important; }
+}
