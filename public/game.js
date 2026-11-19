@@ -1,6 +1,6 @@
 import { createDungeonProps } from "/dungeon-props.js?v=1";
 import { updateDivineAura } from "/divine-fx.js?v=1";
-import { prepareUltimate, showUltimateCutin, showUltimateImpact } from "/ultimate-ui.js?v=1";
+import { prepareUltimate, showUltimateCutin, showUltimateImpact } from "/ultimate-ui.js?v=2";
 import { ULTIMATES } from "/shared/ultimates.js";
 import { communityPanel, NEWS_ID } from "/community-ui.js?v=3";
 import { screenShakeEnabled, setScreenShakeEnabled, shakeCamera } from "/screen-shake.js?v=1";
@@ -86,6 +86,8 @@ import {
   ITEMS,
   POTIONS,
   BLESS_STONE,
+  HIGH_STONE,
+  HIGH_STONE_FROM,
   MAX_LEVEL,
   expToLevel,
   POTION_SIZES,
@@ -106,7 +108,7 @@ import { createCombatFx } from "/combat-fx.js?v=0.15.1";
 import { activeEffects, effectTint, effectRow, hudEffects } from "/status-ui.js?v=1";
 import { STATUSES, BUFFS } from "/shared/skills.js";
 import { worldInfo } from "/shared/world-boss.js";
-import { updateWorldBossHud, worldBossCountdown, clock as wbClock } from "/world-boss-ui.js?v=2";
+import { updateWorldBossHud, worldBossCountdown, clock as wbClock } from "/world-boss-ui.js?v=3";
 import {
   animateHeroBody,
   animateMonsterBody,
@@ -1034,7 +1036,7 @@ async function enterGame() {
   });
 }
 const forgeHash = (p) =>
-  JSON.stringify([p.equipment, p.upgrade, p.enhancements, p.gold, p.inventory.ore, p.inventory[BLESS_STONE]]);
+  JSON.stringify([p.equipment, p.upgrade, p.enhancements, p.gold, p.inventory.ore, p.inventory[BLESS_STONE], p.inventory[HIGH_STONE]]);
 let posterShown = false;
 let potionQty = 1;
 const potionHash = (p) => JSON.stringify([p.gold, p.inventory]);
@@ -1145,7 +1147,7 @@ function updateHUD() {
   });
   const ultimateButton = $('[data-action="skill5"]');
   const ultimate = ULTIMATES[p.class];
-  ultimateButton.dataset.tip = `${ultimate.name} · ศัตรูทั่วจอ · 50 MP · 45 วินาที`;
+  ultimateButton.dataset.tip = `${ultimate.name} · ศัตรูทั้งแผนที่ · 50 MP · 45 วินาที`;
   ultimateButton.setAttribute('aria-label', ultimateButton.dataset.tip);
   ultimateButton.querySelector('.skill-cost').textContent = '50 MP';
   prepareUltimate(p.gender);
@@ -1432,7 +1434,7 @@ function nearby() {
   if (!state) return null;
   const p = state.self;
   if (state.area === "dungeon") {
-    const sign = !p.auto && state.dungeon.signs?.find(
+    const sign = state.dungeon.signs?.find(
       (entry) => !entry.collected && withinDungeonSign(p, entry),
     );
     if (sign)
@@ -1461,6 +1463,8 @@ function nearby() {
   if (shop) return { id: "shop:" + shop.id, label: "ร้าน " + shop.name };
   return null;
 }
+// World boss sets are drawn at their index.json height times this.
+const WORLD_BOSS_SCALE = 1.15;
 function interact() {
   if (!state || activePanel || state.self.hp <= 0) return;
   const n = nearby();
@@ -1500,11 +1504,7 @@ function action(name) {
   if (!state || activePanel) return;
   if (name === "attack") emit("player:attack", { skill: 0 });
   else if (name.startsWith("skill"))
-    emit("player:attack", { skill: Number(name.slice(-1)),
-      ...(name === "skill5" && scene ? { view: {
-        x:scene.cameras.main.worldView.x, y:scene.cameras.main.worldView.y,
-        width:scene.cameras.main.worldView.width, height:scene.cameras.main.worldView.height,
-      } } : {}) });
+    emit("player:attack", { skill: Number(name.slice(-1)) });
   else if (name === "hp" || name === "mp")
     emit("player:potion", { type: name, auto: true }).then((r) => r && sfx("potion"));
   else if (name === "auto") emit("player:auto", { enabled: !state.self.auto });
@@ -1604,6 +1604,7 @@ function showFloorResult(r) {
     `<span class="loot-chip">🪙 ${r.gold.toLocaleString()} ทอง</span>`,
     `<span class="loot-chip">✦ ${r.exp} EXP</span>`,
     r.ore ? `<span class="loot-chip">⛏ แร่ ×${r.ore}</span>` : "",
+    r.stones ? `<span class="loot-chip rare" data-rarity="legendary">💠 หินตีบวกขั้นสูง 100% ×${r.stones}</span>` : "",
     ...r.items.map(
       (id) =>
         `<span class="loot-chip rare" data-rarity="${escape((GEAR[id] || COSTUME_ITEMS[id])?.rarity || "")}">${COSTUME_ITEMS[id] ? "👗" : "🎁"} ${escape((GEAR[id] || COSTUME_ITEMS[id])?.name || id)}</span>`,
@@ -1897,12 +1898,16 @@ function showPanel(panel) {
         blessed = item && level < MAX_ENHANCE && stones > 0
           ? btn(`data-enhance="${slot}" data-blessed="1" class="bless-button"`, `🌟 100% +${level + 1}`)
           : "";
+      const highStones = p.inventory[HIGH_STONE] || 0,
+        high = item && level >= HIGH_STONE_FROM && level < MAX_ENHANCE && highStones > 0
+          ? btn(`data-enhance="${slot}" data-stone="high" class="bless-button high-stone-button"`, `💠 100% +${level + 1}`)
+          : "";
       return row(item?.icon || "⚒", `${label} +${level}`, description,
-        blessed + btn(`data-enhance="${slot}" ${disabled ? "disabled" : ""}`, level >= MAX_ENHANCE ? "เต็มแล้ว" : `ตี +${level + 1}`));
+        high + blessed + btn(`data-enhance="${slot}" ${disabled ? "disabled" : ""}`, level >= MAX_ENHANCE ? "เต็มแล้ว" : `ตี +${level + 1}`));
     }).join("");
     modal(
       "ลุงเหล็ก · โรงตีอุปกรณ์",
-      `<p>มี ${p.gold.toLocaleString()} ทอง · แร่จันทรา ${p.inventory.ore} ชิ้น${p.inventory[BLESS_STONE] ? ` · 🌟 หินตีบวก 100% ×${p.inventory[BLESS_STONE]}` : ""}</p>${slots}<p class="hint">ระดับตีบวกติดกับช่องอุปกรณ์ เปลี่ยนของในช่องเดิมแล้วใช้โบนัสต่อได้ ตีบวกได้ถึง +${MAX_ENHANCE} · ต่ำกว่า +${ENHANCE_BREAK_LEVEL} ตีไม่สำเร็จจะเสียทองและแร่แต่ระดับเท่าเดิม · ตั้งแต่ +${ENHANCE_BREAK_LEVEL} ขึ้นไปถ้าล้มเหลวอุปกรณ์จะกลับเป็น +0 · อาวุธ +11 ขึ้นไปมีแสงวิ่งรอบตัวพร้อมฟอง สีเปลี่ยนตามระดับ +11 ถึง +15</p>`,
+      `<p>มี ${p.gold.toLocaleString()} ทอง · แร่จันทรา ${p.inventory.ore} ชิ้น${p.inventory[BLESS_STONE] ? ` · 🌟 หินตีบวก 100% ×${p.inventory[BLESS_STONE]}` : ""}${p.inventory[HIGH_STONE] ? ` · 💠 หินตีบวกขั้นสูง 100% ×${p.inventory[HIGH_STONE]} (ใช้ได้ตั้งแต่ +${HIGH_STONE_FROM})` : ""}</p>${slots}<p class="hint">ระดับตีบวกติดกับช่องอุปกรณ์ เปลี่ยนของในช่องเดิมแล้วใช้โบนัสต่อได้ ตีบวกได้ถึง +${MAX_ENHANCE} · ต่ำกว่า +${ENHANCE_BREAK_LEVEL} ตีไม่สำเร็จจะเสียทองและแร่แต่ระดับเท่าเดิม · ตั้งแต่ +${ENHANCE_BREAK_LEVEL} ขึ้นไปถ้าล้มเหลวอุปกรณ์จะกลับเป็น +0 · อาวุธ +11 ขึ้นไปมีแสงวิ่งรอบตัวพร้อมฟอง สีเปลี่ยนตามระดับ +11 ถึง +15</p>`,
       "forge",
     );
     $$("[data-enhance]").forEach((button) => {
@@ -1911,6 +1916,7 @@ function showPanel(panel) {
         await transaction("equipment:enhance", {
           slot: button.dataset.enhance,
           blessed: button.dataset.blessed === "1",
+          ...(button.dataset.stone === "high" ? { stone: "high" } : {}),
         });
         button.disabled = false;
       };
@@ -2046,11 +2052,11 @@ function showPanel(panel) {
       else b.disabled = false;
     });
   } else if (panel === "announcements") {
-    modal("ประกาศจากระบบ", `<p>เจ้าแม่นางนอน · ทุก 30 นาที (:00 และ :30) · เปิดรอบละ 20 นาที · อาวุธเทพเฉพาะบอสโลกตามอาชีพ 1 ชิ้นก่อนรางวัลตำนานที่เหลือ</p><p>รางวัลเมื่อปราบสำเร็จ: อันดับดาเมจ 1 ได้ตำนาน 3 ชิ้น · อันดับ 2–3 ได้ 2 ชิ้น · ผู้ทำดาเมจคนอื่นได้ 1 ชิ้น · มีของครบแล้วรับแร่แทน</p>${announcementHistory().map(a => `<article class="system-notice"><small>${new Date(a.at * 1000).toLocaleString("th-TH", {timeZone:"Asia/Bangkok"})}</small><p>${escape(a.message)}</p></article>`).join("") || "<p>ยังไม่มีประกาศใหม่</p>"}`, "announcements");
+    modal("ประกาศจากระบบ", `<p>บอสโลก · ยักษ์ทองเฝ้าถ้ำ และพญานาคเจ้าแม่นางนอน สลับกันออกทุก 30 นาที (:00 และ :30) · เปิดรอบละ 20 นาที · รางวัลคือ 💠 หินตีบวกขั้นสูง 100% (ใช้ตี +11 ถึง +15) อันดับ 1 ได้ 3 ก้อน อันดับ 2–3 ได้ 2 ก้อน คนอื่นที่ทำดาเมจได้ 1 ก้อน</p><p>ทุกคนได้ทอง แร่ และ EXP ตามสัดส่วนดาเมจด้วย · มหาบอส 2 ทุ่มแจกหินตีบวก 100% เพิ่มให้ทุกคนที่เข้าร่วม</p>${announcementHistory().map(a => `<article class="system-notice"><small>${new Date(a.at * 1000).toLocaleString("th-TH", {timeZone:"Asia/Bangkok"})}</small><p>${escape(a.message)}</p></article>`).join("") || "<p>ยังไม่มีประกาศใหม่</p>"}`, "announcements");
   } else if (panel === "settings") {
     modal(
       "บันทึกการเดินทาง",
-      `<p>เกมบันทึกตัวละคร เงิน อุปกรณ์ และดันเจียนบนเซิร์ฟเวอร์อัตโนมัติ<br>บัญชีผู้มาเยือนผูกกับคุกกี้ในเบราว์เซอร์นี้</p><button id="open-account-link" class="primary-button">${account?.registered ? "บัญชีผู้เล่น" : "ผูกบัญชี · เก็บตัวละครและเล่นต่อเครื่องอื่น"}</button><button id="open-announcements" class="primary-button">📣 ประกาศจากระบบ · บอสโลกทุก 30 นาที</button><button id="open-news" class="primary-button">📰 ข่าวอัปเดต · Lv.60 และมหาบอส 2 ทุ่ม</button><button id="open-poster" class="primary-button">🏹 โปสเตอร์ TML ONLINE</button><button id="toggle-sound" class="primary-button">${muted ? "เปิดเสียงทั้งหมด" : "ปิดเสียงทั้งหมด"}</button><button id="toggle-music" class="primary-button">${musicOn() ? "ปิดเพลงประกอบ" : "เปิดเพลงประกอบ"}</button><button id="toggle-screen-shake" class="primary-button" role="switch" aria-checked="${screenShakeEnabled()}">จอสั่น: ${screenShakeEnabled() ? "เปิด" : "ปิด"}</button><p class="hint">ปิดจอสั่นและซูมกระแทกเพื่อลดอาการเวียนหัว · บันทึกการตั้งค่าในเครื่องนี้</p><div class="quality-picker"><small>คุณภาพกราฟิก · ตอนนี้ ${qualityLabel()}</small><div>${CHOICES.map((c) => `<button data-quality="${c}" class="${c === qualityChoice ? "active" : ""}">${c === "auto" ? "อัตโนมัติ" : PRESETS[c].name}</button>`).join("")}</div></div><button id="toggle-perf" class="primary-button">${perfOn ? "ซ่อนตัววัดประสิทธิภาพ" : "แสดงตัววัดประสิทธิภาพ"}</button><button id="back-selection" class="text-button">กลับหน้าเลือกตัวละคร</button><p class="hint">Demo v0.3 · นักดาบหญิงและสไลม์มีเฟรมแอนิเมชันชุดแรก · ตัวอื่นยังใช้ภาพ idle · เป้าหมาย 20–30 คนต่อห้องยังไม่ได้ยืนยันด้วย load test</p>`,
+      `<p>เกมบันทึกตัวละคร เงิน อุปกรณ์ และดันเจียนบนเซิร์ฟเวอร์อัตโนมัติ<br>บัญชีผู้มาเยือนผูกกับคุกกี้ในเบราว์เซอร์นี้</p><button id="open-account-link" class="primary-button">${account?.registered ? "บัญชีผู้เล่น" : "ผูกบัญชี · เก็บตัวละครและเล่นต่อเครื่องอื่น"}</button><button id="open-announcements" class="primary-button">📣 ประกาศจากระบบ · บอสโลกทุก 30 นาที</button><button id="open-news" class="primary-button">📰 ข่าวอัปเดต · Lv.60 และมหาบอส 2 ทุ่ม</button><button id="open-poster" class="primary-button">🏹 โปสเตอร์ TML ONLINE</button><button id="toggle-sound" class="primary-button">${muted ? "เปิดเสียงทั้งหมด" : "ปิดเสียงทั้งหมด"}</button><button id="toggle-music" class="primary-button">${musicOn() ? "ปิดเพลงประกอบ" : "เปิดเพลงประกอบ"}</button><button id="toggle-screen-shake" class="primary-button" role="switch" aria-checked="${screenShakeEnabled()}">จอสั่น: ${screenShakeEnabled() ? "เปิด" : "ปิด"}</button><p class="hint">ปิดจอสั่นและซูมกระแทกเพื่อลดอาการเวียนหัว · บันทึกการตั้งค่าในเครื่องนี้</p><div class="auto-settings"><small>ออโต้ · ดื่มยาอัตโนมัติเมื่อต่ำกว่า</small>${["hp","mp"].map((k) => `<label><span>${k.toUpperCase()}</span><input type="range" min="0" max="95" step="5" data-auto-cfg="${k}" value="${state?.self.autoCfg?.[k] ?? (k === "hp" ? 65 : 45)}"><b>${state?.self.autoCfg?.[k] ?? (k === "hp" ? 65 : 45)}%</b></label>`).join("")}<p class="hint">0% = ไม่ใช้ยา · ออโต้จะเปิดกล่องเสบียงและเก็บรูนให้เองหลังเคลียร์มอนสเตอร์</p></div><div class="quality-picker"><small>คุณภาพกราฟิก · ตอนนี้ ${qualityLabel()}</small><div>${CHOICES.map((c) => `<button data-quality="${c}" class="${c === qualityChoice ? "active" : ""}">${c === "auto" ? "อัตโนมัติ" : PRESETS[c].name}</button>`).join("")}</div></div><button id="toggle-perf" class="primary-button">${perfOn ? "ซ่อนตัววัดประสิทธิภาพ" : "แสดงตัววัดประสิทธิภาพ"}</button><button id="back-selection" class="text-button">กลับหน้าเลือกตัวละคร</button><p class="hint">Demo v0.3 · นักดาบหญิงและสไลม์มีเฟรมแอนิเมชันชุดแรก · ตัวอื่นยังใช้ภาพ idle · เป้าหมาย 20–30 คนต่อห้องยังไม่ได้ยืนยันด้วย load test</p>`,
     );
     $("#open-account-link").onclick = () => $("#account-open").click();
     $("#open-announcements").onclick = () => showPanel("announcements");
@@ -2062,6 +2068,10 @@ function showPanel(panel) {
       sfx("click");
       closeModal();
     };
+    for (const input of $$("[data-auto-cfg]")) {
+      input.oninput = () => (input.nextElementSibling.textContent = input.value + "%");
+      input.onchange = () => emit("player:autoCfg", { [input.dataset.autoCfg]: Number(input.value) });
+    }
     $("#toggle-screen-shake").onclick = () => {
       const enabled = setScreenShakeEnabled(!screenShakeEnabled());
       const button = $("#toggle-screen-shake");
@@ -3097,6 +3107,13 @@ class Adventure extends Phaser.Scene {
       if (e.actorId === state?.self.id) showUltimateCutin(e.class, e.gender);
       return;
     }
+    if (e.kind === "stone") {
+      if (e.actorId === state.self.id) {
+        toast(`💠 ได้รับหินตีบวกขั้นสูง 100% ×${e.count} · ใช้ที่ลุงเหล็กกับอุปกรณ์ +${HIGH_STONE_FROM} ขึ้นไป`);
+        soundCue("loot", "legendary");
+      }
+      return;
+    }
     if (e.kind === "loot") {
       if (e.actorId === state.self.id) {
         const item = GEAR[e.item];
@@ -3676,7 +3693,14 @@ class Adventure extends Phaser.Scene {
       m.image.setVisible(
         !!mset || !this.sprites.listed("monsters", e.type) || time - m.bornAt > ART_WAIT_MS,
       );
-      if (e.world) {
+      if (e.world && mset) {
+        // World bosses: their own painted set, scaled up to giant size.
+        playMonsterSet(m.image, mset, e, mpose, serverTime);
+        const giant = (e.grand ? 1.35 : 1) * WORLD_BOSS_SCALE;
+        m.image._spriteScale *= giant; // creature-fx re-applies this scale
+        m.image.setScale(m.image._spriteScale).setVisible(true);
+        m.size = mset.height * giant + 12;
+      } else if (e.world) {
         m.image.setTexture("world-titan").setOrigin(.5, 1).setVisible(true)
           .setFlipX((e.direction || 1) > 0);
       } else if (mset) {
@@ -3702,7 +3726,7 @@ class Adventure extends Phaser.Scene {
           statusTint ??
             (traitOf(e).frenzy && e.hp <= e.maxHp * 0.5
               ? 0xff7a6a
-              : BOSSES[e.type] ? 0xffffff : floorInfo(state.dungeon).tint),
+              : BOSSES[e.type] || e.world ? 0xffffff : floorInfo(state.dungeon).tint),
         );
       }
       this.fx.applyKick(m, m.image);

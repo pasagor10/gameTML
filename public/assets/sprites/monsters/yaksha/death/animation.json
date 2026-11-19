@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "3.0",
+  "name": "death",
+  "artSource": "supplied world boss sheet",
+  "sourceSize": [
+    141,
+    122
+  ],
+  "sourceAnchor": [
+    70.5,
+    119
+  ],
+  "frameCount": 8,
+  "durationsMs": [
+    110,
+    120,
+    130,
+    150,
+    170,
+    190,
+    220,
+    300
+  ],
+  "durationSeconds": 1.39,
+  "fps": 5.755,
+  "loop": false,
+  "bodyHeightPx": 116,
+  "events": [],
+  "sampling": "nearest",
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      141,
+      122
+    ],
+    "pages": [
+      {
+        "file": "death-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 8,
+        "columns": 8
+      }
+    ]
+  }
+}

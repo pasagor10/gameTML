@@ -1,7 +1,6 @@
 // Auto-battle brain: lock onto one monster, close to a good fighting distance,
 // only swing when something is really in reach, pick skills by the situation,
 // and step or hop out of telegraphed attacks. Pure decisions; the world applies them.
-import { ultimateArea, inUltimateArea } from "../shared/ultimates.js";
 import { ACTIONS } from "../shared/motion.js";
 import { skillOf } from "../shared/skills.js";
 import { climbStep } from "../shared/dungeons.js";
@@ -157,10 +156,9 @@ export function autoBrain(p, i, t, { range, mpMax, platforms, aspd = 1 }) {
       (s === 3 && count(3) > 0),
     big = target.boss || target.elite,
     reserve = mpMax * 0.25; // keep enough for a big skill when it matters
-  // Use the ultimate for a visible boss/crowd, then normal party buffs and skills.
+  // The ultimate hits the whole map: spend it on a boss/elite or a crowd.
   const buff = skillOf(p.class, 4).buff;
-  const ultimateHits = enemies.filter(e => inUltimateArea(e, ultimateArea(p)));
-  if (!danger && ready(5) && (ultimateHits.length >= 3 || ultimateHits.some(e => e.boss || e.elite)))
+  if (!danger && ready(5) && (enemies.length >= 3 || enemies.some(e => e.boss || e.elite)))
     plan.skill = 5;
   else if (ready(4) && (p.buffs?.[buff]?.until || 0) <= t && (big ? hitsTarget(3) : count(3) >= 2) && mp - ACTIONS[4].mp >= reserve * 0.5)
     plan.skill = 4;

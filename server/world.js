@@ -1,4 +1,3 @@
-import { ultimateArea, inUltimateArea } from "../shared/ultimates.js";
 import { BOSSES } from "../shared/bosses.js";
 import {
   bossMechanics,
@@ -37,7 +36,6 @@ import {
   GEAR,
   SLOTS,
   FLOOR_LOOT,
-  WORLD_BOSS_WEAPONS,
   rollDivineLoot,
   bossLootCandidates,
   SPECIALIZATIONS,
@@ -66,6 +64,7 @@ import {
   WORLD_BOSS,
   GRAND_BOSS,
   worldBossAt,
+  worldBossOf,
   worldRanking,
   worldReward,
   nextGrandIn,
@@ -103,6 +102,7 @@ import {
 const SKY_OFFSET = Number(process.env.SKY_OFFSET) || 0;
 export const skyNow = () => skyAt(Date.now() / 1000 + SKY_OFFSET);
 import { autoBrain } from "./auto.js";
+import { track } from "./analytics.js";
 import { randomUUID } from "node:crypto";
 import { db, loadCharacter, persist, atomic, log } from "./database.js";
 import {
@@ -114,6 +114,8 @@ import {
   pickPotion,
   potionCount,
   BLESS_STONE,
+  HIGH_STONE,
+  HIGH_STONE_FROM,
   FLOORS,
   MAIN_FLOORS,
   powerFloor,
@@ -338,7 +340,12 @@ export function enhance(p, key, slot = "weapon", blessed = false) {
       cost = enhancementCost(level);
     if (!c.equipment[slot]) throw Error("สวมอุปกรณ์ในช่องนี้ก่อน");
     if (level >= MAX_ENHANCE) throw Error(`อุปกรณ์ถึง +${MAX_ENHANCE} แล้ว`);
-    if (blessed) {
+    if (blessed === "high") {
+      // High stone: always succeeds, only on gear already at +10 or more.
+      if (level < HIGH_STONE_FROM) throw Error(`หินตีบวกขั้นสูงใช้ได้ตั้งแต่ +${HIGH_STONE_FROM} → +${HIGH_STONE_FROM + 1} ขึ้นไป`);
+      if (!(c.inventory[HIGH_STONE] > 0)) throw Error("ไม่มีหินตีบวกขั้นสูง 100%");
+      c.inventory[HIGH_STONE]--;
+    } else if (blessed) {
       // Blessed stone: always succeeds, costs only the stone.
       if (!(c.inventory[BLESS_STONE] > 0)) throw Error("ไม่มีหินตีบวก 100%");
       c.inventory[BLESS_STONE]--;
@@ -348,7 +355,7 @@ export function enhance(p, key, slot = "weapon", blessed = false) {
       c.gold -= cost.gold;
       c.inventory.ore -= cost.ore;
     }
-    const success = blessed || Math.random() < enhancementChance(level),
+    const success = !!blessed || Math.random() < enhancementChance(level),
       broke = !success && level >= ENHANCE_BREAK_LEVEL,
       next = success ? level + 1 : broke ? 0 : level;
     if (slot === "weapon") c.upgrade = next;
@@ -356,7 +363,7 @@ export function enhance(p, key, slot = "weapon", blessed = false) {
     persist(c);
     return {
       message: success
-        ? `${blessed ? "🌟 หินตีบวก 100% · " : ""}${SLOTS[slot]} ตีบวกสำเร็จ +${next}`
+        ? `${blessed === "high" ? "💠 หินตีบวกขั้นสูง 100% · " : blessed ? "🌟 หินตีบวก 100% · " : ""}${SLOTS[slot]} ตีบวกสำเร็จ +${next}`
         : broke
           ? `ตีบวกล้มเหลว! ${SLOTS[slot]} +${level} แตกกลับเป็น +0`
           : "ตีบวกไม่สำเร็จ ระดับเดิมคงอยู่",
@@ -475,7 +482,7 @@ function openWorldBoss(sched) {
   };
   announce(`worldboss:${sched.cycle}:open`, sched.grand
     ? `🌟 มหาบอส 2 ทุ่ม · ${sched.name} ปรากฏแล้ว! ทุกคนที่เข้าร่วมและปราบได้ รับหินตีบวก 100% · พร้อมของตำนานตามอันดับดาเมจ`
-    : "เจ้าแม่นางนอนปรากฏแล้ว! ร่วมปราบบอสโลก รับของตำนานตามอันดับดาเมจ · เปิดสนามรอบละ 20 นาที · รับอาวุธเทพเฉพาะบอสโลก");
+    : `${sched.name}ปรากฏแล้ว! ร่วมปราบบอสโลก รับหินตีบวกขั้นสูง 100% (+11 ขึ้นไป) ตามอันดับดาเมจ · เปิดสนามรอบละ 20 นาที`);
   log(null, "worldboss:open", { cycle: sched.cycle, boss: sched.name });
   return i;
 }
@@ -487,14 +494,14 @@ export function updateWorldBoss(clock = worldBossClock()) {
     const minutes = until <= 60 ? 1 : until <= 300 ? 5 : 10;
     announce(`worldboss:${sched.cycle + 1}:warning:${minutes}`, sched.nextGrand
       ? `อีกไม่เกิน ${minutes} นาที มหาบอส 2 ทุ่ม ${GRAND_BOSS.name} จะปรากฏ! เข้าร่วมรับหินตีบวก 100% ทุกคน`
-      : `อีกไม่เกิน ${minutes} นาที เจ้าแม่นางนอนจะปรากฏในรอบถัดไป เตรียมรับอุปกรณ์ตำนานตามดาเมจ!`);
+      : `อีกไม่เกิน ${minutes} นาที ${worldBossOf(sched.cycle + 1).name}จะปรากฏในรอบถัดไป เตรียมรับหินตีบวกขั้นสูง 100% ตามดาเมจ!`);
   }
   if (sched.open && !completedWorldCycles.has(sched.cycle) && worldBoss?.cycle !== sched.cycle) {
     if (worldBoss) closeWorldBoss();
     openWorldBoss(sched);
   } else if (worldBoss && !worldBoss.done && clock >= worldBoss.endsAt) {
     worldBoss.done = "escaped";
-    announce(`worldboss:${worldBoss.cycle}:escaped`, `${worldBoss.name || "เจ้าแม่นางนอน"} ลับหายไปแล้ว พบกันรอบถัดไป`);
+    announce(`worldboss:${worldBoss.cycle}:escaped`, `${worldBoss.name || "บอสโลก"} ลับหายไปแล้ว พบกันรอบถัดไป`);
     closeWorldBoss();
   }
 }
@@ -603,19 +610,11 @@ function worldBossDown(i, t) {
     reward.gold += pay.gold;
     reward.ore += pay.ore;
     reward.exp += pay.exp;
-    for (let n = 0; n < pay.itemCount; n++) {
-      const divine = WORLD_BOSS_WEAPONS[m.class];
-      const pool = divine && !m.ownedEquipment.includes(divine)
-        ? [divine]
-        : bossLootCandidates(MAIN_FLOORS, m.class, m.ownedEquipment)
-          .filter(id => GEAR[id].rarity === "legendary");
-      if (!pool.length) { m.inventory.ore += 15; reward.ore += 15; continue; }
-      const item = pool[Math.floor(Math.random() * pool.length)];
-      m.ownedEquipment.push(item);
-      reward.items.push(item);
-      if (m.instance === i.id) i.events.push({ id: randomUUID(), kind: "loot", actorId: m.id,
-        x: i.lastDrop?.x ?? m.x, y: i.lastDrop?.y ?? m.y - 110, item, rarity: GEAR[item].rarity, at: t });
-    }
+    // The loot is high enhance stones: 100% success from +10 up to +15.
+    m.inventory[HIGH_STONE] = (m.inventory[HIGH_STONE] || 0) + pay.stones;
+    reward.stones = (reward.stones || 0) + pay.stones;
+    if (m.instance === i.id) i.events.push({ id: randomUUID(), kind: "stone", actorId: m.id,
+      x: i.lastDrop?.x ?? m.x, y: i.lastDrop?.y ?? m.y - 110, count: pay.stones, at: t });
     const relic = worldBoss.grand && rollDivineLoot(m, MAIN_FLOORS);
     if (relic) {
       m.ownedEquipment.push(relic); reward.items.push(relic);
@@ -627,7 +626,7 @@ function worldBossDown(i, t) {
     } else {
       advanceQuests(m, wallClock(), "boss");
       m.socket?.emit?.("toast", {
-        message: `บอสโลกพ่ายแพ้! อันดับ ${r.place} · +${pay.gold} ทอง · แร่ ×${pay.ore}`,
+        message: `บอสโลกพ่ายแพ้! อันดับ ${r.place} · +${pay.gold} ทอง · แร่ ×${pay.ore} · 💠 หินตีบวกขั้นสูง ×${pay.stones}`,
       });
     }
     savePlayer(m);
@@ -642,7 +641,7 @@ function worldBossDown(i, t) {
       m.socket?.emit?.("toast", { message: `🌟 ได้รับหินตีบวก 100% ×${GRAND_BOSS.stones} จากมหาบอส 2 ทุ่ม` });
       savePlayer(m);
     }
-  announce(`worldboss:${worldBoss.cycle}:down`, `${worldBoss.name || "เจ้าแม่นางนอน"}ถูกปราบแล้ว!${worldBoss.grand ? " ผู้เข้าร่วมทุกคนได้รับหินตีบวก 100%" : ""} ${ranking.slice(0,3).map(r => `อันดับ ${r.place} ${r.name} (${Math.round(r.damage).toLocaleString()} ดาเมจ)`).join(" · ")} · ส่งของรางวัลเข้ากระเป๋าแล้ว`);
+  announce(`worldboss:${worldBoss.cycle}:down`, `${worldBoss.name || "บอสโลก"}ถูกปราบแล้ว!${worldBoss.grand ? " ผู้เข้าร่วมทุกคนได้รับหินตีบวก 100%" : ""} ${ranking.slice(0,3).map(r => `อันดับ ${r.place} ${r.name} (${Math.round(r.damage).toLocaleString()} ดาเมจ)`).join(" · ")} · ส่งของรางวัลเข้ากระเป๋าแล้ว`);
   log(null, "worldboss:down", { cycle: worldBoss.cycle, heroes: ranking.length });
 }
 // What a hero sees of the world boss, in town or in the arena.
@@ -948,6 +947,52 @@ export function closeShop(p, key) {
   sync(p);
   return result;
 }
+// Auto-play drinks a potion once HP / MP drops below these percentages.
+export const AUTO_DEFAULTS = { hp: 65, mp: 45 };
+export const autoConfig = (p) => ({ ...AUTO_DEFAULTS, ...(p.autoCfg || {}) });
+export function setAutoConfig(p, d = {}) {
+  const next = autoConfig(p);
+  for (const kind of ["hp", "mp"]) {
+    const v = Number(d[kind]);
+    if (Number.isFinite(v)) next[kind] = Math.max(0, Math.min(95, Math.round(v / 5) * 5));
+  }
+  p.autoCfg = next;
+  persist(stored(p));
+  return next;
+}
+// Supplies and runes this hero still has to collect on the current stage.
+function pendingSigns(p, i) {
+  const done = i.collectedSigns?.get(p.id),
+    skipped = p.autoSkip?.stage === i.stageAt ? p.autoSkip.ids : null;
+  return (i.signs || []).filter((s) => !done?.has(s.id) && !skipped?.has(s.id));
+}
+// Walk (and climb) to the nearest uncollected sign and open it. A sign that
+// can't be reached in a while is skipped so auto never stalls the run.
+function autoCollect(p, i, t, platforms) {
+  const signs = pendingSigns(p, i);
+  if (!signs.length) return false;
+  const sign = signs.reduce((a, b) =>
+    Math.abs(b.x - p.x) + Math.abs(b.y - p.y) < Math.abs(a.x - p.x) + Math.abs(a.y - p.y) ? b : a);
+  if (p.autoSign !== sign.id) { p.autoSign = sign.id; p.autoSignAt = t; p.autoSignStep = null; }
+  if (withinDungeonSign(p, sign)) {
+    p.input = 0;
+    try { useDungeonSign(p, { id: sign.id, instanceId: i.id, floor: i.floor, stage: i.stage }); }
+    catch { /* Already taken or out of reach this tick. */ }
+    return true;
+  }
+  if (t - p.autoSignAt > 12) {
+    if (p.autoSkip?.stage !== i.stageAt) p.autoSkip = { stage: i.stageAt, ids: new Set() };
+    p.autoSkip.ids.add(sign.id);
+    return true;
+  }
+  if (p.grounded || !p.autoSignStep) p.autoSignStep = climbStep(p, sign, platforms);
+  const step = p.autoSignStep;
+  p.input = Math.abs(step.x - p.x) > 10 ? Math.sign(step.x - p.x) : 0;
+  p.running = true;
+  if (p.input) p.direction = p.input;
+  if (step.jump && p.grounded) p.jumpBufferedAt = t;
+  return true;
+}
 // `type` is a potion id. With `auto` (R / G keys, auto-play) it names a kind
 // ("hp" / "mp") and the best-fitting size the hero owns is drunk.
 export function potion(p, type = "hp", t = now(), auto = false) {
@@ -1027,6 +1072,7 @@ export function stored(p) {
     "attrs",
     "statResets",
     "skin",
+    "autoCfg",
   ];
   return {
     id: p.id,
@@ -1058,6 +1104,7 @@ export function beginDungeon(p, floor) {
   if (party && members.some((m) => m.id !== p.id && !party.ready.has(m.id)))
     throw Error("สมาชิกทุกคนต้องกดพร้อมก่อน");
   openInstance(members, floor, 1);
+  for (const m of members) track(m.socket?.request?.headers, "dungeon", m.userId);
   if (party) party.ready.clear();
   return { message: "เข้าสู่ " + FLOORS[floor - 1].name };
 }
@@ -1264,7 +1311,6 @@ export function useDungeonSign(p, data) {
     i.stage !== data.stage ||
     !i.members.includes(p.id) ||
     p.hp <= 0 ||
-    p.auto ||
     now() - i.stageAt < STAGE_INTRO ||
     !withinDungeonSign(p, sign)
   )
@@ -1465,7 +1511,7 @@ export function resetStats(p) {
 function aspdOf(p, t) {
   return combatStats(p).aspd * (t < (p.lightningUntil || 0) ? 1 + LIGHTNING.aspd : 1);
 }
-export function attack(p, skill = 0, t = now(), view = null) {
+export function attack(p, skill = 0, t = now()) {
   if (
     !Number.isInteger(skill) || !ACTIONS[skill] ||
     p.area !== "dungeon" ||
@@ -1516,7 +1562,7 @@ export function attack(p, skill = 0, t = now(), view = null) {
     impactAt: t + windup,
     endsAt: t + windup + recovery,
   };
-  p.pending = { ...p.action, ...(skill === 5 ? { area: ultimateArea(p, view) } : {}) };
+  p.pending = { ...p.action };
   if (skill === 5) i.events.push({ id: randomUUID(), kind:"ultimate", actorId:p.id,
     class:p.class, gender:p.gender, x:p.x, y:p.y, at:t });
 }
@@ -1582,9 +1628,10 @@ function resolveAttack(p, t) {
   for (const e of i.enemies) {
     if (
       e.hp <= 0 ||
-      (skill === 5 ? !inUltimateArea(e, a.area || ultimateArea(p)) :
-        Math.abs(e.x - p.x) > range || Math.abs(e.y - p.y) > 130 ||
-        ((e.x - p.x) * a.direction < -35 && skill !== 3))
+      // The ultimate strikes every monster on the map; others need reach.
+      (skill !== 5 &&
+        (Math.abs(e.x - p.x) > range || Math.abs(e.y - p.y) > 130 ||
+          ((e.x - p.x) * a.direction < -35 && skill !== 3)))
     )
       continue;
     if ((p.class === "archer" || p.class === "priest") && skill < 2 && hits > 0) continue;
@@ -1846,6 +1893,7 @@ function checkClear(i, t, p) {
             });
           }
           m.quest = Math.max(m.quest, i.floor);
+          if (firstClear && i.floor === 1) track(m.socket?.request?.headers, "clear1", m.userId);
           questEvents(
             i,
             m,
@@ -2144,6 +2192,8 @@ function physics(p, dt, t) {
 // Monsters whose bite leaves a status on heroes.
 const VENOM = {
   serpent: { type: "poison", chance: 0.35, duration: 5 },
+  naga: { type: "poison", chance: 0.35, duration: 5 },
+  yaksha: { type: "slow", chance: 0.3, duration: 2.5 },
   mushroom: { type: "poison", chance: 0.3, duration: 5 },
   wolf: { type: "bleed", chance: 0.3, duration: 4 },
   golem: { type: "slow", chance: 0.3, duration: 2.5 },
@@ -2385,9 +2435,10 @@ export function tick(dt, t = now()) {
     if (p.auto && i) {
       // Supplies work while repositioning, during stage intros and between waves.
       // Heal before choosing an attack so low resources never starve the brain.
+      const cfg = autoConfig(p);
       for (const [kind, needed] of [
-        ["hp", p.hp < maxHp(p) * 0.65],
-        ["mp", p.mp < Math.min(maxMp(p), Math.max(50, maxMp(p) * 0.45))],
+        ["hp", p.hp < maxHp(p) * (cfg.hp / 100)],
+        ["mp", p.mp < maxMp(p) * (cfg.mp / 100)],
       ]) {
         if (needed && (potionCount(p.inventory, kind) || i.training)) {
           try { potion(p, kind, t, true); } catch { /* Empty bag / shared potion cooldown. */ }
@@ -2410,6 +2461,14 @@ export function tick(dt, t = now()) {
         // Turn only between swings so a windup keeps its aim.
         if (!p.action || t >= p.action.endsAt) p.direction = plan.direction;
         if (plan.skill !== null) attack(p, plan.skill, t);
+        // Pick up a sign we happen to be standing on mid-fight.
+        const near = pendingSigns(p, i).find((s) => withinDungeonSign(p, s));
+        if (near && !plan.evade) {
+          try { useDungeonSign(p, { id: near.id, instanceId: i.id, floor: i.floor, stage: i.stage }); }
+          catch { /* Not yet. */ }
+        }
+      } else if (autoCollect(p, i, t, dungeonPlatforms(i.floor, i.stage, i.training))) {
+        // Walking to (or opening) a supply chest / rune before moving on.
       } else if (
         i.clear &&
         !i.completed &&
@@ -2705,6 +2764,7 @@ export function snapshot(p) {
       daily: { ...ensureDaily(p, wallClock()), resetAt: questResetAt(wallClock()) },
       bestiary: p.bestiary || {},
       auto: p.auto,
+      autoCfg: autoConfig(p),
       cooldowns: p.cooldowns,
       potionCd: p.potionCd || {},
     },

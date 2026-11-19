@@ -72,3 +72,17 @@ test("a blessed stone always succeeds and costs no gold or ore", () => {
   assert.equal(after.gold, 0);
   assert.throws(() => world.enhance(p, "bless-stone-test-2", "weapon", true), /หินตีบวก/);
 });
+
+test("a high stone guarantees +11 to +15 and refuses gear below +10", () => {
+  const p = create("high-stone-user");
+  db.prepare("UPDATE characters SET state=json_set(state,'$.inventory.stone_high',2,'$.upgrade',9,'$.gold',0) WHERE id=?").run(p.id);
+  assert.throws(() => world.enhance(p, "high-stone-test-1", "weapon", "high"), /\+10/);
+  assert.equal(loadCharacter(p.id).inventory.stone_high, 2, "a refused use keeps the stone");
+  db.prepare("UPDATE characters SET state=json_set(state,'$.upgrade',10) WHERE id=?").run(p.id);
+  const r = world.enhance(p, "high-stone-test-2", "weapon", "high");
+  assert.equal(r.success, true);
+  const after = loadCharacter(p.id);
+  assert.equal(after.upgrade, 11);
+  assert.equal(after.inventory.stone_high, 1);
+  assert.equal(after.gold, 0);
+});

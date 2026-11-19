@@ -31,14 +31,19 @@ function create(id, extra = {}) {
 const arena = () => world.instances.get(world.worldBoss.instanceId);
 const bossOf = (i) => i.enemies.find((e) => e.boss);
 
-test("Nang Non appears every half hour and closes after twenty minutes", () => {
+test("the yaksha and the naga take turns every half hour and close after twenty minutes", () => {
   const start = Date.parse("2026-11-18T20:00:00+07:00")/1000;
   assert.equal(worldBossAt(start-1).open, false);
   // 20:00 Bangkok is the grand boss; the other half hours are Nang Non.
   assert.equal(worldBossAt(start).grand, true);
   assert.equal(worldBossAt(start).name, "มหาเทพีนางนอน");
   assert.equal(worldBossAt(start + 1800).grand, false);
-  assert.equal(worldBossAt(start + 1800).name, "เจ้าแม่นางนอน");
+  const next = worldBossAt(start + 1800), after = worldBossAt(start + 3600);
+  assert.ok(["yaksha", "naga"].includes(next.type));
+  assert.ok(["yaksha", "naga"].includes(after.type));
+  assert.notEqual(next.type, after.type, "bosses alternate each round");
+  assert.equal(worldBossAt(start + 5400).type, next.type);
+  assert.equal(worldBossAt(start).type, "naga", "the grand boss is the naga queen");
   assert.equal(worldBossAt(start - 1800).nextGrand, true);
   assert.equal(worldBossAt(start).open, true);
   assert.equal(worldBossAt(start+1199).open, true);
@@ -70,10 +75,9 @@ test("ranking and rewards follow the share of damage", () => {
   const first = worldReward(1, 0.6),
     fifth = worldReward(5, 0.05);
   assert.ok(first.gold > fifth.gold && first.ore > fifth.ore && first.exp > fifth.exp);
-  assert.equal(first.itemChance, 1);
-  assert.equal(first.itemCount, 3);
-  assert.equal(worldReward(2, .2).itemCount, 2);
-  assert.equal(fifth.itemCount, 1);
+  assert.equal(first.stones, 3);
+  assert.equal(worldReward(2, .2).stones, 2);
+  assert.equal(fifth.stones, 1);
 });
 
 test("heroes join one shared arena; each newcomer toughens the boss", () => {
@@ -133,7 +137,9 @@ test("everyone who hit it is paid by place, even after going home", () => {
   assert.ok(world.worldBoss.damage.get("wb-b") > 0);
   world.returnTown(b);
   const goldA = a.gold,
-    goldB = b.gold;
+    goldB = b.gold,
+    stonesA = a.inventory.stone_high || 0,
+    stonesB = b.inventory.stone_high || 0;
   // a lands the big blows and the finisher.
   world.worldBoss.damage.set("wb-a", 50000);
   boss.hp = 1;
@@ -150,10 +156,11 @@ test("everyone who hit it is paid by place, even after going home", () => {
   assert.equal(i.enemies.length, 0, "the guards scatter with their master");
   const res = i.results[a.id];
   assert.equal(res.world.place, 1);
-  assert.equal(i.rewards[a.id].items.length, 3);
-  assert.equal(i.rewards[b.id].items.length, 2);
-  assert.ok(a.ownedEquipment.includes("divine_nangnon_staff"));
-  assert.ok(b.ownedEquipment.includes("divine_nangnon_staff"));
+  assert.equal(i.rewards[a.id].stones, 3);
+  assert.equal(i.rewards[b.id].stones, 2);
+  assert.equal(a.inventory.stone_high - stonesA, 3, "high stones are the loot");
+  assert.equal(b.inventory.stone_high - stonesB, 2, "paid at home too");
+  assert.equal(loadCharacter(b.id).inventory.stone_high, stonesB + 2, "saved");
   const completed = world.worldBoss;
   completed.cycle = -1;
   world.updateWorldBoss();
@@ -193,6 +200,7 @@ test("global announcements warn at 10, 5 and 1 minutes without repeating", () =>
   }
   const notices = world.announcements.slice(before);
   assert.equal(notices.length, 3);
-  assert.ok(notices.every(a => a.message.includes("เจ้าแม่นางนอน")));
+  const nextName = worldBossAt(start).name;
+  assert.ok(notices.every(a => a.message.includes(nextName)), "warnings name the boss that comes next");
   assert.ok(notices[0].message.includes("10 นาที"));
 });

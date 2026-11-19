@@ -565,6 +565,33 @@ test("boss slam locks its aim, supports jump dodges, and accelerates below half 
   assert.equal(boss.action.radius, 195, "enraged slam covers more ground");
   world.returnTown(p);
 });
+test("auto walks to and opens the supply chest after the stage is clear", () => {
+  const p = create("auto-looter");
+  world.beginDungeon(p, 1);
+  const i = world.instances.get(p.instance);
+  let t = Date.now() / 1000;
+  i.stageAt = t - world.STAGE_INTRO - 1;
+  i.enemies = [];
+  i.clear = true;
+  i.clearedAt = t;
+  p.auto = true;
+  p.x = 400;
+  p.hp = Math.ceil(p.hp / 4);
+  p.inventory = { ...p.inventory, hp: 0, hpm: 0, hpl: 0 };
+  const hp = p.hp;
+  for (let n = 0; n < 600 && !world.snapshot(p).dungeon.signs[0].collected; n++) world.tick(0.05, (t += 0.05));
+  assert.ok(world.snapshot(p).dungeon.signs[0].collected, "chest opened by auto");
+  assert.ok(p.hp > hp, "chest healed the hero");
+  world.returnTown(p);
+});
+test("auto potion thresholds are configurable, clamped and saved", () => {
+  const p = create("auto-config");
+  assert.deepEqual(world.autoConfig(p), world.AUTO_DEFAULTS);
+  assert.deepEqual(world.setAutoConfig(p, { hp: 82, mp: 400 }), { hp: 80, mp: 95 });
+  assert.deepEqual(world.setAutoConfig(p, { mp: -10 }), { hp: 80, mp: 0 });
+  assert.deepEqual(loadCharacter(p.id).autoCfg, { hp: 80, mp: 0 });
+  assert.deepEqual(world.snapshot(p).self.autoCfg, { hp: 80, mp: 0 });
+});
 test("supplies and runes are optional, personal, range-checked, and reward only once", () => {
   const a = create("explorer"),
     b = create("exploring-ally");
@@ -596,9 +623,8 @@ test("supplies and runes are optional, personal, range-checked, and reward only 
   moveTo(a, first);
   assert.throws(() => use(a, first, 1), /เข้าใกล้/);
   a.auto = true;
-  assert.throws(() => use(a, first), /เข้าใกล้/);
-  a.auto = false;
   use(a, first);
+  a.auto = false;
   moveTo(a, second);
   use(a, second);
   assert.equal(a.gold, gold);
@@ -1042,6 +1068,8 @@ test("auto waits out the loading card and lets the last death play before the ne
   const i = world.instances.get(p.instance),
     t0 = i.stageAt;
   p.auto = true;
+  // Chest already opened, so auto moves on as soon as the death has played.
+  i.collectedSigns.set(p.id, new Set(i.signs.map((s) => s.id)));
   // Behind the loading card: no swing, no walking.
   world.tick(0.05, t0 + world.STAGE_INTRO - 0.5);
   assert.equal(p.action, null);
@@ -1247,7 +1275,7 @@ test("replaying a floor needs a finished floor and a valid run count", () => {
   assert.deepEqual(Object.keys(world.stopReplay(p)), ["message"]);
 });
 
-test('all classes and genders have an authoritative fullscreen ultimate with MP and cooldown limits',()=>{
+test('all classes and genders have an authoritative whole-map ultimate with MP and cooldown limits',()=>{
   let count=0;
   for(const cls of ['swordsman','archer','mage','priest']) for(const gender of ['male','female']) {
     const p=create('ult-'+(++count),cls);p.gender=gender;
@@ -1257,7 +1285,7 @@ test('all classes and genders have an authoritative fullscreen ultimate with MP 
     assert.equal(i.enemies.length,3);
     for(const [n,e] of i.enemies.entries()){e.x=[500,1150,2000][n];e.y=600;e.hp=e.maxHp=100000;e.speed=0;}
     const t=Date.now()/1000;
-    world.attack(p,5,t,{x:300,y:0,width:1000,height:1000});
+    world.attack(p,5,t);
     assert.equal(p.mp,150);
     assert.equal(i.events.filter(e=>e.kind==='ultimate').length,1);
     assert.equal(i.events.find(e=>e.kind==='ultimate').gender,gender);
@@ -1265,8 +1293,8 @@ test('all classes and genders have an authoritative fullscreen ultimate with MP 
     world.tick(.01,t+1.26);
     assert.ok(i.enemies[0].hp<100000,cls+' hits behind');
     assert.ok(i.enemies[1].hp<100000,cls+' hits distant target');
-    assert.equal(i.enemies[2].hp,100000,'offscreen target is untouched');
-    const mp=p.mp;world.attack(p,5,t+2,{x:300,y:0,width:1000,height:1000});
+    assert.ok(i.enemies[2].hp<100000,cls+' hits across the whole map');
+    const mp=p.mp;world.attack(p,5,t+2);
     assert.equal(p.mp,mp,'cooldown blocks repeated ultimate');
     p.action=null;p.pending=null;p.cooldowns[5]=0;p.mp=49;
     world.attack(p,5,t+50);

@@ -9,7 +9,7 @@ function host() {
   if (!overlay) {
     overlay = document.createElement('div'); overlay.id = 'ultimate-overlay';
     overlay.setAttribute('aria-hidden','true');
-    overlay.innerHTML = '<div class="ult-dim"></div><div class="ult-cutin"><div class="ult-art"></div><strong class="ult-name"></strong></div><div class="ult-impact"></div><div class="ult-ring"></div>';
+    overlay.innerHTML = '<div class="ult-dim"></div><div class="ult-cutin"><div class="ult-art"></div><strong class="ult-name"></strong></div><div class="ult-flash"></div><div class="ult-impact"></div><div class="ult-ring"></div>';
     document.querySelector('#game-screen').append(overlay);
   }
   return overlay;

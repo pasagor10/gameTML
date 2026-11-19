@@ -48,7 +48,7 @@ export function updateWorldBossHud(state, onJoin, onNews) {
       wb.mine && wb.mine.place > 5
         ? `<li class="me"><b>${wb.mine.place}</b><span>คุณ</span><em>${short(wb.mine.damage)}</em><small>${Math.round(wb.mine.share * 100)}%</small></li>`
         : "";
-    const html = `<header><span>อันดับความเสียหาย</span><small>${wb.done === "killed" ? "พ่ายแพ้แล้ว!" : "⏳ " + clock(wb.left)}</small></header><ol>${rows || '<li class="empty">ยังไม่มีใครโจมตี — ลุยเลย!</li>'}${mine}</ol><footer>ผู้กล้า ${wb.heroes} คน · อยู่ในสนาม ${wb.fighting} · อันดับ 1: ตำนาน 3 ชิ้น / 2–3: 2 ชิ้น / อื่น ๆ: 1 ชิ้น</footer>`;
+    const html = `<header><span>อันดับความเสียหาย</span><small>${wb.done === "killed" ? "พ่ายแพ้แล้ว!" : "⏳ " + clock(wb.left)}</small></header><ol>${rows || '<li class="empty">ยังไม่มีใครโจมตี — ลุยเลย!</li>'}${mine}</ol><footer>ผู้กล้า ${wb.heroes} คน · อยู่ในสนาม ${wb.fighting} · 💠 หินตีบวกขั้นสูง · อันดับ 1: 3 ก้อน / 2–3: 2 ก้อน / อื่น ๆ: 1 ก้อน</footer>`;
     if (html !== lastRank) rank.innerHTML = lastRank = html;
   }
 }
@@ -61,4 +61,4 @@ export const worldBossCountdown = (wb) =>
       ? wb.grand ? "🌟 มหาบอส 2 ทุ่มอยู่!" : "👑 บอสโลกอยู่!"
       : wb.grandIn > 0 && wb.grandIn <= 3600
         ? `🌟 มหาบอส 2 ทุ่ม · อีก ${clock(wb.grandIn)}`
-        : `👑 เจ้าแม่นางนอน · ทุก 30 นาที · มหาบอส 20:00`;
+        : `👑 บอสโลก · ทุก 30 นาที · มหาบอส 20:00`;

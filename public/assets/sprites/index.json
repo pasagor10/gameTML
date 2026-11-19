@@ -1461,9 +1461,45 @@
         "spawn": "spawn"
       },
       "pixel": true
+    },
+    "yaksha": {
+      "dir": "monsters/yaksha",
+      "height": 330,
+      "facing": -1,
+      "flyer": false,
+      "source": "supplied world boss sheet (import_world_bosses.py)",
+      "portrait": "portrait.webp",
+      "actions": {
+        "idle": "idle",
+        "move": "move",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hit",
+        "death": "death",
+        "spawn": "spawn"
+      },
+      "pixel": true
+    },
+    "naga": {
+      "dir": "monsters/naga",
+      "height": 300,
+      "facing": -1,
+      "flyer": false,
+      "source": "supplied world boss sheet (import_world_bosses.py)",
+      "portrait": "portrait.webp",
+      "actions": {
+        "idle": "idle",
+        "move": "move",
+        "attack": "attack",
+        "skill": "skill",
+        "hit": "hit",
+        "death": "death",
+        "spawn": "spawn"
+      },
+      "pixel": false
     }
   },
-  "version": 1795057122309074000,
+  "version": 1795099695178181000,
   "npcs": {
     "elder": {
       "dir": "npcs/elder",

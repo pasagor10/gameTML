@@ -19,7 +19,7 @@
 const ROOT = "/assets/sprites/";
 const clipKey = (set, folder) => `sprite:${set.dir}:${folder}`;
 const GROUPS = ["sets", "monsters", "npcs"];
-const MONSTER_STATES = ["idle", "move", "attack", "hit", "death", "spawn"];
+const MONSTER_STATES = ["idle", "move", "attack", "skill", "hit", "death", "spawn"];
 const NPC_STATES = ["idle", "talk"];
 // On-screen size per group, on top of index.json's height: heroes and
 // townsfolk read smaller against the painted town. NPC sheets are authored a
@@ -420,10 +420,15 @@ export function playSpriteSet(image, set, p, pose, time) {
 
 // Monsters: pose comes from slimePose (idle/move/attack/hit/death/spawn).
 export function playMonsterSet(image, set, e, pose, time) {
-  const state = set.clips[pose.state] ? pose.state : "idle",
+  let want = pose.state;
+  // A boss slam plays the smash clip when the set has one.
+  if (want === "attack" && e.action?.kind === "slam" && set.clips.skill) want = "skill";
+  // A world boss is hit nonstop by a crowd: keep it in its own motion.
+  if (want === "hit" && e.world) want = e.moving ? "move" : "idle";
+  const state = set.clips[want] ? want : "idle",
     clip = set.clips[state];
   let ms;
-  if (state === "attack" && e.action) ms = actionMs(clip, e.action, time);
+  if ((state === "attack" || state === "skill") && e.action) ms = actionMs(clip, e.action, time);
   else if (state === "hit") ms = (time - (e.hitAt || time)) * 1000;
   else if (state === "spawn") ms = (time - (e.spawnAt || time)) * 1000;
   else ms = time * 1000;

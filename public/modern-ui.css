@@ -366,6 +366,11 @@ html body #landing .build-version { cursor: pointer; pointer-events: auto; }
 /* Multi-line developer overlay (perf-overlay.js). */
 html body #perf-readout { white-space: pre; text-align: left; line-height: 1.45; }
 /* Graphics preset picker in Settings. */
+.auto-settings { display: grid; gap: 6px; margin: 4px 0 8px; }
+.auto-settings small { opacity: .8; }
+.auto-settings label { display: grid; grid-template-columns: 32px 1fr 44px; align-items: center; gap: 8px; }
+.auto-settings input { width: 100%; accent-color: #60e6d2; }
+.auto-settings b { text-align: right; font-variant-numeric: tabular-nums; }
 .quality-picker { display: grid; gap: 6px; margin: 4px 0 8px; }
 .quality-picker small { opacity: .8; }
 .quality-picker div { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }

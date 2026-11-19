@@ -96,12 +96,13 @@ test("auto hops out of a landing crystal or boss slam", () => {
   assert.equal(walk.input, -1);
 });
 
-test('auto uses ultimate on a visible boss or crowd, respecting MP and cooldown', () => {
+test('auto uses the whole-map ultimate on a boss or crowd, respecting MP and cooldown', () => {
   const enemies = [mob('boss', 700, { boss: true })];
   assert.equal(autoBrain(hero({ class: 'swordsman' }), { enemies }, 100, ctx()).skill, 5);
   assert.notEqual(autoBrain(hero({ class: 'swordsman', mp: 49 }), { enemies }, 100, ctx()).skill, 5);
   assert.notEqual(autoBrain(hero({ class: 'swordsman', cooldowns: { 5: 90 } }), { enemies }, 100, ctx()).skill, 5);
-  assert.notEqual(autoBrain(hero({ class: 'swordsman' }), { enemies: [mob('far', 1800, { boss: true })] }, 100, ctx()).skill, 5);
+  assert.equal(autoBrain(hero({ class: 'swordsman' }), { enemies: [mob('far', 1800, { boss: true })] }, 100, ctx()).skill, 5);
+  assert.notEqual(autoBrain(hero({ class: 'swordsman' }), { enemies: [mob('a', 1800), mob('b', 1900)] }, 100, ctx()).skill, 5);
 });
 
 test('auto escapes danger instead of casting, even with no enemies left', () => {

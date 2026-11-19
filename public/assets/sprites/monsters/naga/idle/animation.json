@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "3.0",
+  "name": "idle",
+  "artSource": "supplied world boss sheet",
+  "sourceSize": [
+    128,
+    94
+  ],
+  "sourceAnchor": [
+    64.0,
+    91
+  ],
+  "frameCount": 8,
+  "durationsMs": [
+    140,
+    140,
+    140,
+    140,
+    140,
+    140,
+    140,
+    140
+  ],
+  "durationSeconds": 1.12,
+  "fps": 7.143,
+  "loop": true,
+  "bodyHeightPx": 88,
+  "events": [],
+  "sampling": "linear",
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      128,
+      94
+    ],
+    "pages": [
+      {
+        "file": "idle-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 8,
+        "columns": 8
+      }
+    ]
+  }
+}

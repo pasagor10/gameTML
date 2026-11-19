@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>TML Player Dashboard</title>
+<meta name="description" content="สถิติผู้เล่น TML ONLINE แบบรวม: ผู้เข้าชม บัญชี ตัวละคร และจุดที่ผู้เล่นหลุด">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/assets/app/icon-32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/dashboard.css?v=1">
+<script type="module" src="/dashboard.js?v=1"></script>
+</head>
+<body>
+<main class="viz-root">
+  <header class="top">
+    <div>
+      <p class="eyebrow">TML ONLINE · แดชบอร์ดผู้เล่น</p>
+      <h1>ผู้เล่นเข้ามาแล้วไปถึงไหน</h1>
+      <p class="sub" id="updated">กำลังโหลดข้อมูล…</p>
+    </div>
+    <div class="range" role="group" aria-label="ช่วงเวลา">
+      <button data-days="7">7 วัน</button>
+      <button data-days="30" class="active">30 วัน</button>
+      <button data-days="0">ทั้งหมด</button>
+    </div>
+  </header>
+
+  <section class="kpis" id="kpis" aria-label="ตัวเลขสรุป"></section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>เส้นทางผู้เล่น (Funnel)</h2>
+      <p class="hint">นับคนที่เริ่มเข้ามาในช่วงเวลาที่เลือก · แต่ละขั้นนับครั้งแรกครั้งเดียวต่อคน</p>
+    </div>
+    <p class="insight" id="insight"></p>
+    <div id="funnel" class="funnel"></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>รายวัน · 14 วันล่าสุด</h2>
+      <div class="legend" id="daily-legend"></div>
+    </div>
+    <div id="daily" class="chart"></div>
+    <details><summary>ดูเป็นตาราง</summary><div id="daily-table"></div></details>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <div class="card-head"><h2>ตัวละครติดที่ดันเจียนชั้นไหน</h2><p class="hint">ชั้นสูงสุดที่ผ่านแล้ว · ทุกตัวละคร</p></div>
+      <div id="floors" class="chart"></div>
+      <details><summary>ดูเป็นตาราง</summary><div id="floors-table"></div></details>
+    </section>
+    <section class="card">
+      <div class="card-head"><h2>เลเวลตัวละคร</h2><p class="hint">ทุกตัวละคร</p></div>
+      <div id="levels" class="chart"></div>
+      <details><summary>ดูเป็นตาราง</summary><div id="levels-table"></div></details>
+    </section>
+  </div>
+
+  <section class="card">
+    <div class="card-head"><h2>อาชีพที่เลือก</h2><p class="hint">ทุกตัวละคร</p></div>
+    <div id="classes" class="hbars"></div>
+  </section>
+
+  <p class="foot">ข้อมูลรวมแบบไม่ระบุตัวตน · อัปเดตทุก 30 วินาที · ผู้เข้าชมและ funnel เริ่มนับตั้งแต่เปิดแดชบอร์ดนี้ ส่วนบัญชี ตัวละคร เลเวล และชั้นดันเจียนเป็นข้อมูลทั้งหมดในเกม</p>
+</main>
+<div id="tip" class="tip" role="status" hidden></div>
+</body>
+</html>

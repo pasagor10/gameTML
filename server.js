@@ -11,6 +11,7 @@ import { db, loadCharacter, persist } from "./server/database.js";
 import { CLASSES, maxHp, maxMp } from "./shared/config.js";
 import * as world from "./server/world.js";
 import { releaseStamp } from "./server/release-stamp.js";
+import { dashboardStats, ensureVisitor, track } from "./server/analytics.js";
 import { createSnapshotMemo, packSnapshot, SNAPSHOT_PROTOCOL } from "./shared/snapshot-delta.js";
 const app = express(),
   server = http.createServer(app),
@@ -77,6 +78,15 @@ function login(res, user) {
 app.get("/api/health", (req, res) =>
   res.json({ ok: true, version: "0.3.0", online: world.players.size }),
 );
+// Public, aggregate-only player analytics for /dashboard (no login).
+let dashCache = { key: "", at: 0, data: null };
+app.get("/api/dashboard", (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  const days = [7, 30, 0].includes(Number(req.query.days)) ? Number(req.query.days) : 30;
+  if (dashCache.key !== String(days) || Date.now() - dashCache.at > 30000)
+    dashCache = { key: String(days), at: Date.now(), data: dashboardStats({ days, online: world.players.size }) };
+  res.json(dashCache.data);
+});
 app.get("/api/ranking", (req, res) => {
   res.setHeader("Cache-Control", "no-store");
   const user = sessions(req);
@@ -124,7 +134,10 @@ app.post("/api/auth/:action", async (req, res) => {
     let user;
     if (action === "guest") {
       const existing = sessions(req);
-      if (existing) return res.json({ user: existing });
+      if (existing) {
+        track(req.headers, "account", existing.id);
+        return res.json({ user: existing });
+      }
       const id = randomUUID();
       user = { id, name: "guest-" + id, registered: 0 };
       db.prepare("INSERT INTO users VALUES(?,?,?,?)").run(id, user.name, null, Date.now());
@@ -161,6 +174,7 @@ app.post("/api/auth/:action", async (req, res) => {
       }
     }
     login(res, user);
+    track(req.headers, "account", user.id);
     res.json({ user });
   } catch (e) {
     res.status(400).json({
@@ -207,6 +221,7 @@ app.post("/api/characters", (req, res) => {
       name,
       JSON.stringify(state),
     );
+    track(req.headers, "character", user.id);
     res.json({ id, ...state, name });
   } catch (e) {
     res.status(400).json({
@@ -245,11 +260,17 @@ const stamps = releaseStamp({ publicDir: path.resolve("public"), sharedDir: path
 // marketing and account page that never loads Phaser or the live world.
 app.use((req, res, next) => {
   if (!["GET", "HEAD"].includes(req.method)) return next();
-  if (req.path === "/") req.url = "/welcome.html";
-  else if (["/play", "/play/", "/index.html"].includes(req.path)) {
-    if (!sessions(req)) return res.redirect("/?account=login#account");
+  if (req.path === "/") {
+    ensureVisitor(req, res);
+    track(req.headers, "visit");
+    req.url = "/welcome.html";
+  } else if (["/play", "/play/", "/index.html"].includes(req.path)) {
+    ensureVisitor(req, res);
+    const user = sessions(req);
+    if (!user) return res.redirect("/?account=login#account");
+    track(req.headers, "lobby", user.id);
     req.url = "/index.html";
-  }
+  } else if (["/dashboard", "/dashboard/"].includes(req.path)) req.url = "/dashboard.html";
   next();
 });
 app.use(stamps);
@@ -294,6 +315,7 @@ io.on("connection", (socket) => {
     if (world.players.has(socket.id)) throw Error("เลือกตัวละครแล้ว");
     const p = world.makeRuntime(c, socket);
     world.players.set(socket.id, p);
+    track(socket.request.headers, "join", socket.data.user.id);
     return { message: "ยินดีต้อนรับ " + p.name, release: stamps.release(), onlinePlayers: world.onlineRoster(), announcements: world.announcements.slice(-10) };
   });
   execute(
@@ -316,7 +338,7 @@ io.on("connection", (socket) => {
     // dropped the newest one (the press the player just made).
     80,
   );
-  execute("player:attack", (p, d) => world.attack(p, d.skill ?? 0, undefined, d.view), 40);
+  execute("player:attack", (p, d) => world.attack(p, d.skill ?? 0), 40);
   // Round-trip probe for the on-screen FPS/ping readout.
   execute("net:ping", () => ({}), 5);
   execute("player:auto", (p, d) => {
@@ -324,6 +346,7 @@ io.on("connection", (socket) => {
       throw Error("Auto เปิดได้เฉพาะในดันเจียน");
     p.auto = !!d.enabled;
   });
+  execute("player:autoCfg", (p, d) => world.setAutoConfig(p, d), 5);
   execute("slots:spin", (p, d) => spinSlotMachine(p, d.key), 3);
   execute("player:potion", (p, d) => world.potion(p, d.type, undefined, d.auto === true));
   execute("player:heal", (p) => {
@@ -352,7 +375,7 @@ io.on("connection", (socket) => {
   execute("stats:auto", (p) => world.autoStats(p), 3);
   execute("stats:reset", (p) => world.resetStats(p), 2);
   execute("quest:claim", (p, d) => world.claimQuest(p, d.index), 5);
-  execute("equipment:enhance", (p, d) => world.enhance(p, d.key, d.slot, d.blessed === true), 3);
+  execute("equipment:enhance", (p, d) => world.enhance(p, d.key, d.slot, d.stone === "high" ? "high" : d.blessed === true), 3);
   execute("shop:create", (p, d) => world.createShop(p, d), 3);
   execute("shop:buy", (p, d) => world.buyShop(p, d), 5);
   execute("shop:close", (p, d) => world.closeShop(p, d.key), 3);

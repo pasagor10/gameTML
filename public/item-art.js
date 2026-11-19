@@ -80,9 +80,12 @@ export function supplyArt(id) {
     gold: ["supply", 2],
     ore: ["supply", 3],
     stone_100: ["supply", 8],
+    stone_high: ["supply", 8],
     weapon: ["sword", 1],
     armor: ["armor", 1],
   }[id];
+  if (id === "stone_high")
+    return image(art, "หินตีบวกขั้นสูง 100%").replace('class="item-art"', 'class="item-art art-high-stone"');
   return art
     ? image(
         art,

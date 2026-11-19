@@ -14,17 +14,20 @@ export const WORLD_BOSS = {
   summonAt: [0.75, 0.5, 0.25],
   summonCount: 4,
 };
+// The two world bosses take turns, one per half-hour appearance.
 export const WORLD_BOSSES = [
-  { type: "serpent", name: "เจ้าแม่นางนอน", tint: 0xffdf9a },
+  { type: "yaksha", name: "ยักษ์ทองเฝ้าถ้ำ", tint: 0xffffff },
+  { type: "naga", name: "พญานาคเจ้าแม่นางนอน", tint: 0xffffff },
 ];
-export const worldBossOf = () => WORLD_BOSSES[0];
+export const worldBossOf = (cycle = 0) =>
+  WORLD_BOSSES[((cycle % WORLD_BOSSES.length) + WORLD_BOSSES.length) % WORLD_BOSSES.length];
 // Grand boss: the 20:00 Bangkok appearance (13:00 UTC) every day. Bigger,
 // much tankier, and everyone who joined gets a blessed enhance stone.
 export const GRAND_BOSS = {
   hourUtc: 13,
   name: "มหาเทพีนางนอน",
-  type: "serpent",
-  tint: 0xff8a5c,
+  type: "naga",
+  tint: 0xffffff,
   hpMul: 3,
   scale: 1.35, // on top of WORLD_BOSS.scale
   stones: 1,
@@ -73,9 +76,8 @@ export function worldReward(place, share) {
     gold: 1000 + Math.round(10000 * share) + (place === 1 ? 500 : top ? 250 : 0),
     ore: 10 + Math.round(40 * share) + (place === 1 ? 15 : top ? 8 : 0),
     exp: 1500 + Math.round(5000 * share),
-    // Guaranteed legendary items; rank determines how many.
-    itemChance: 1,
-    itemCount: place === 1 ? 3 : top ? 2 : 1,
+    // Guaranteed high enhance stones (+11 and up, 100%); rank sets how many.
+    stones: place === 1 ? 3 : top ? 2 : 1,
   };
 }
 

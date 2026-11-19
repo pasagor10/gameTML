@@ -1194,3 +1194,6 @@ button.path-node { cursor: pointer; }
 /* Pixel item pictures stay square-pixelled at any size. */
 img.item-art[src*="/items/px/"] { object-fit: contain; image-rendering: pixelated; }
 .rpg-modal .wardrobe-card.worn:disabled, .wardrobe-card.worn:disabled { opacity: 1; filter: none; }
+/* High enhance stone: the blessed stone art recoloured cyan. */
+.item-art.art-high-stone { filter: hue-rotate(150deg) saturate(1.4) drop-shadow(0 0 6px #5fe3ff99); }
+.high-stone-button { background: linear-gradient(145deg, #1d6f8c, #2ab3c9) !important; color: #f2fdff !important; }

@@ -8,15 +8,18 @@
 #ultimate-overlay[data-class="swordsman"] .ult-impact{background:linear-gradient(155deg,transparent 42%,#fff7dfb0 48%,#efb35e90 50%,transparent 55%)}
 #ultimate-overlay[data-class="mage"] .ult-impact{background:repeating-linear-gradient(130deg,transparent 0 11%,#d6ebff99 12%,#828bff55 13%,transparent 15% 23%)}
 #ultimate-overlay[data-class="priest"] .ult-impact{background:repeating-conic-gradient(from 0deg at 50% 65%,#fff1c433 0deg 7deg,transparent 9deg 30deg)}
-#ultimate-overlay .ult-ring{left:10%;top:40%;width:80%;height:35%;border:3px solid var(--ult-color);border-radius:50%;opacity:0}
+#ultimate-overlay .ult-ring{left:50%;top:55%;width:60vmax;height:60vmax;margin:-30vmax 0 0 -30vmax;border:6px solid var(--ult-color);border-radius:50% !important;box-shadow:0 0 40px var(--ult-color),inset 0 0 40px var(--ult-color);opacity:0}
+#ultimate-overlay .ult-flash{inset:0;opacity:0;background:radial-gradient(circle at 50% 55%,#fffbe8 0,color-mix(in srgb,var(--ult-color) 70%,transparent) 35%,color-mix(in srgb,var(--ult-color) 35%,transparent) 100%)}
 #ultimate-overlay.casting .ult-dim{animation:ult-dim 1.6s ease forwards}
 #ultimate-overlay.casting .ult-cutin{animation:ult-cutin 1.5s cubic-bezier(.16,1,.3,1) forwards}
 #ultimate-overlay.impact .ult-impact{animation:ult-sweep .8s ease-out forwards}
-#ultimate-overlay.impact .ult-ring{animation:ult-ring .8s ease-out forwards}
+#ultimate-overlay.impact .ult-ring{animation:ult-ring .9s ease-out forwards}
+#ultimate-overlay.impact .ult-flash{animation:ult-flash .7s ease-out forwards}
 @keyframes ult-cutin{0%{opacity:0;transform:translateX(-105%)}15%,65%{opacity:1;transform:none}100%{opacity:0;transform:translateX(105%)}}
 @keyframes ult-dim{0%,100%{opacity:0}12%,75%{opacity:1}}
 @keyframes ult-sweep{0%{opacity:0;transform:translateX(-20%)}25%{opacity:.8}100%{opacity:0;transform:translateX(20%)}}
-@keyframes ult-ring{0%{opacity:.7;transform:scale(.2)}100%{opacity:0;transform:scale(1.6)}}
+@keyframes ult-ring{0%{opacity:.9;transform:scale(.05)}100%{opacity:0;transform:scale(2.6)}}
+@keyframes ult-flash{0%{opacity:0}12%{opacity:.85}100%{opacity:0}}
 html body #game-screen#game-screen .hud-bottom .skillbar .skill.ultimate{border-color:#e8cc876b !important;background:linear-gradient(145deg,#4a3e24e8,#182b32f5) !important}
 html body #game-screen#game-screen .hud-bottom .skillbar .skill.ultimate>b{width:32px;height:32px}
 @media(pointer:coarse){
@@ -27,4 +30,4 @@ html body #game-screen#game-screen .hud-bottom .skillbar .skill.ultimate>b{width
  html body #game-screen#game-screen .hud-bottom .skillbar .skill.ultimate>.skill-cost{display:none !important}
 }
 @media(max-width:700px){#ultimate-overlay .ult-cutin{top:24%;height:clamp(70px,15vw,120px)}#ultimate-overlay .ult-name{right:5%;bottom:0;font-size:10px}}
-@media(prefers-reduced-motion:reduce){#ultimate-overlay.casting .ult-cutin{animation:ult-dim 1.5s forwards;transform:none}#ultimate-overlay.impact :is(.ult-impact,.ult-ring){animation:ult-dim .7s forwards}}
+@media(prefers-reduced-motion:reduce){#ultimate-overlay.casting .ult-cutin{animation:ult-dim 1.5s forwards;transform:none}#ultimate-overlay.impact :is(.ult-impact,.ult-ring,.ult-flash){animation:ult-dim .7s forwards}}
