@@ -1,3 +1,4 @@
+import { effectsMarkup } from "/status-ui.js?v=1";
 let send;
 const escape = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function bindPartyUi(action) {
@@ -9,7 +10,7 @@ export function updatePartyUi(state) {
   const health = document.querySelector('#party-health');
   const members = (state.party?.members || []).filter(m => m.id !== state.self.id);
   health.hidden = !members.length;
-  const markup = members.map(m => `<div><strong>${escape(m.name || 'เพื่อน')}</strong><span>${Math.ceil(m.hp)} / ${m.maxHp}</span><meter min="0" max="${m.maxHp}" value="${Math.max(0,m.hp)}" aria-label="เลือด ${escape(m.name)}"></meter></div>`).join('');
+  const markup = members.map(m => `<div><strong>${escape(m.name || 'เพื่อน')}</strong><span>${Math.ceil(m.hp)} / ${m.maxHp}</span><meter min="0" max="${m.maxHp}" value="${Math.max(0,m.hp)}" aria-label="เลือด ${escape(m.name)}"></meter><section class="self-effects" aria-label="บัฟและดีบัฟ">${effectsMarkup(m, state.time)}</section></div>`).join('');
   if (health.dataset.markup !== markup) {
     health.dataset.markup = markup;
     health.innerHTML = markup;

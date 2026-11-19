@@ -3,6 +3,7 @@ import { costumesOf, ownsCostume, COSTUME_ITEMS, costumeItem, costumeFits, costu
 import { itemArt, supplyArt } from "/item-art.js";
 import {
   GEAR,
+  weaponEffectText,
   SLOTS,
   RARITIES,
   SPECIALIZATIONS,
@@ -329,7 +330,7 @@ function detailCard(p, area, stats, key, counts) {
     <div class="inv-detail-art">${itemArt(key, item)}</div>
     <h3>${item.name}${equipped && level ? ` +${level}` : ""}</h3>
     <div class="inv-pills"><span class="lv">Lv.${item.level}</span>${equipped ? '<span class="worn">◆ สวมใส่อยู่</span>' : ""}<span>${SLOTS[item.slot]}${counts.get(key) > 1 ? ` ×${counts.get(key)}` : ""}</span><span class="rarity">ระดับ${RARITIES[item.rarity]}</span></div>
-    ${item.lore ? `<p class="inv-lore">${item.lore}</p>` : ""}
+    ${item.lore ? `<p class="inv-lore">${item.lore}</p>` : ""}${weaponEffectText(item) ? `<p class="inv-lore">${weaponEffectText(item)}</p>` : ""}
     <h4>ค่าสถานะ</h4>
     <div class="inv-detail-stats">${
       Object.entries(item.stats)
@@ -691,7 +692,7 @@ export function gearShop(p) {
     .filter(([, g]) => g.price && (!g.class || g.class === p.class))
     .map(
       ([id, g]) =>
-        `<article class="shop-gear ${rarity(g)}"><b>${itemArt(id, g)}</b><div><small>${RARITIES[g.rarity]} · ${SLOTS[g.slot]} · Lv.${g.level}</small><h4>${g.name}</h4><p>${statText(g.stats, g.attrs)}</p></div><button data-buy-gear="${id}" ${p.ownedEquipment.includes(id) || p.gold < g.price ? "disabled" : ""}>${p.ownedEquipment.includes(id) ? "เป็นเจ้าของแล้ว" : `${g.price} ◈`}</button></article>`,
+        `<article class="shop-gear ${rarity(g)}"><b>${itemArt(id, g)}</b><div><small>${RARITIES[g.rarity]} · ${SLOTS[g.slot]} · Lv.${g.level}</small><h4>${g.name}</h4><p>${statText(g.stats, g.attrs)}</p>${weaponEffectText(g) ? `<p class="gear-effect">${weaponEffectText(g)}</p>` : ""}</div><button data-buy-gear="${id}" ${p.ownedEquipment.includes(id) || p.gold < g.price ? "disabled" : ""}>${p.ownedEquipment.includes(id) ? "เป็นเจ้าของแล้ว" : `${g.price} ◈`}</button></article>`,
     )
     .join("")}</div>`;
 }

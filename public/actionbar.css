@@ -69,3 +69,11 @@
 #game-screen .fx-chip.debuff { border-style:dashed; }
 #game-screen .fx-chip b { font-size:13px;line-height:1; }
 #game-screen .fx-chip small { position:absolute;right:-3px;bottom:-4px;font-size:9px;line-height:11px;padding:0 2px;border-radius:3px;background:#05080ee6;color:#fff3cf; }
+
+/* Readable effect names and countdowns for touch screens and party cards. */
+#game-screen .fx-chip { display:inline-flex;gap:4px;width:auto;height:24px;padding:0 5px;box-shadow:none; }
+#game-screen .fx-chip .fx-name { font-size:10px;line-height:1.2;color:#f3ebd9; }
+#game-screen .fx-chip small { position:static;font-size:10px;line-height:16px;margin-left:2px; }
+#game-screen .fx-chip.buff { border-bottom:2px solid var(--fx); }
+#game-screen .fx-chip.debuff { background:#291821;border-style:dashed; }
+#party-health .self-effects { max-width:210px; }

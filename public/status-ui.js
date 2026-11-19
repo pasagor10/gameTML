@@ -12,12 +12,12 @@ export function activeEffects(x, t) {
       out.push({ type, ...STATUSES[type], left: s.until - t, stacks: s.stacks || 1 });
   }
   for (const [type, b] of Object.entries(x?.buffs || {}))
-    if (b && t < b.until) out.push({ type, ...BUFFS[type], left: b.until - t, buff: true });
+    if (b && BUFFS[type] && t < b.until) out.push({ type, ...BUFFS[type], left: b.until - t, buff: true });
   return out;
 }
 
 export const effectText = (list) =>
-  list.map((s) => s.icon + (s.stacks > 1 ? s.stacks : "")).join(" ");
+  list.map((s) => `${s.icon}${s.stacks > 1 ? `×${s.stacks}` : ""} ${Math.ceil(s.left)}s`).join("  ");
 
 // Tint of the first status that colours the body (freeze beats burn, etc.).
 export function effectTint(list) {
@@ -43,14 +43,15 @@ export function effectRow(scene, holder, list, x, y) {
   holder.effects.setPosition(x, y).setVisible(!!text);
 }
 
-// HUD strip under the hero card: icon, countdown, and a tooltip.
+// Shared markup for the hero HUD and each party member's status strip.
+export function effectsMarkup(p, t) {
+  return activeEffects(p, t).map(s => {
+    const label = `${s.buff ? "บัฟ" : "ดีบัฟ"}: ${s.name}${s.stacks > 1 ? ` ×${s.stacks}` : ""} · ${Math.ceil(s.left)} วิ`;
+    return `<span class="fx-chip ${s.buff ? "buff" : "debuff"}" style="--fx:${s.color}" title="${label}" aria-label="${label}"><b>${s.icon}</b><span class="fx-name">${s.name}${s.stacks > 1 ? ` ×${s.stacks}` : ""}</span><small>${Math.ceil(s.left)}s</small></span>`;
+  }).join("");
+}
 export function hudEffects(el, p, t) {
-  const list = activeEffects(p, t);
-  const html = list
-    .map(
-      (s) =>
-        `<span class="fx-chip ${s.buff ? "buff" : "debuff"}" style="--fx:${s.color}" title="${s.name}"><b>${s.icon}</b><small>${Math.ceil(s.left)}</small></span>`,
-    )
-    .join("");
+  if (!el) return;
+  const html = effectsMarkup(p, t);
   if (el._html !== html) el.innerHTML = el._html = html;
 }

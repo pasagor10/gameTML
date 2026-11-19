@@ -176,3 +176,121 @@ test("priest heals the whole party and blessing regenerates", () => {
   assert.ok(p.hp > before, "blessing regen ticks");
   world.returnTown(p);
 });
+
+test("weapon lifesteal uses real damage, caps at max HP and needs equipped weapon", async () => {
+  const { maxHp } = await import("../shared/config.js");
+  const p = create("weapon-drain");
+  const { i, e } = arena(p);
+  p.equipment.weapon = "rescue_1_mage";
+  p.hp = 10;
+  world.applyWeaponHit(p, e, 100, 100, 10, i, 0);
+  assert.equal(p.hp, 18);
+  p.hp = maxHp(p) - 1;
+  world.applyWeaponHit(p, e, 1000, 1000, 11, i, 0);
+  assert.equal(p.hp, maxHp(p));
+  p.equipment.weapon = "starter_mage";
+  p.hp = 10;
+  world.applyWeaponHit(p, e, 100, 100, 12, i, 0);
+  assert.equal(p.hp, 10);
+  world.returnTown(p);
+});
+
+test("weapon poison and fire coexist; freeze lasts 3s with cooldown and boss resistance", () => {
+  const p = create("weapon-procs");
+  const { i, e } = arena(p);
+  for (const [tier, type] of [[2, "poison"], [3, "burn"], [4, "freeze"]]) {
+    p.equipment.weapon = `rescue_${tier}_mage`;
+    assert.equal(world.applyWeaponHit(p, e, 100, 100, 10, i, 0), type);
+    assert.equal(e.status[type].by, p.id);
+  }
+  assert.equal(e.status.freeze.until, 13);
+  assert.ok(e.status.poison && e.status.burn);
+  assert.equal(world.applyWeaponHit(p, e, 100, 100, 14, i, 0), null);
+  assert.equal(world.applyWeaponHit(p, e, 100, 100, 18, i, 0), "freeze");
+  const boss = { boss: true, hp: 1000 };
+  world.applyWeaponHit(p, boss, 100, 100, 20, i, 0);
+  assert.equal(boss.status.freeze.until, 20 + 3 * BOSS_CONTROL);
+  assert.equal(world.applyWeaponHit(p, { hp: 0 }, 100, 100, 30, i, 0), null);
+  world.returnTown(p);
+});
+
+test("normal attacks trigger weapon effects through authoritative combat", () => {
+  const p = create("weapon-combat", { class: "swordsman" });
+  const { i, e } = arena(p);
+  p.equipment.weapon = "rescue_4_swordsman";
+  const orig = Math.random;
+  Math.random = () => 0.01;
+  try { cast(p, 0, Date.now() / 1000 + 50); }
+  finally { Math.random = orig; }
+  assert.ok(e.status.freeze);
+  assert.ok(i.events.some(x => x.kind === "damage" && x.status === "freeze"));
+  assert.ok(world.snapshot(p).dungeon.enemies.some(x => x.status?.freeze));
+  world.returnTown(p);
+});
+
+test("all four class buffs reach every living party member, stack and exclude strangers", () => {
+  const caster = create("party-buffer");
+  const ally = create("party-ally");
+  const stranger = create("party-stranger");
+  const dead = create("party-dead");
+  const { i } = arena(caster);
+  for (const p of [ally, stranger, dead]) {
+    p.instance = i.id; p.area = "dungeon"; i.members.push(p.id);
+    p.x = caster.x; p.y = caster.y;
+  }
+  dead.hp = 0;
+  caster.party = ally.party = dead.party = "effect-test-party";
+  world.parties.set(caster.party, { id: caster.party, leader: caster.id,
+    members: [caster.id, ally.id, dead.id], ready: new Set() });
+  const t = Date.now() / 1000 + 50;
+  for (const [n, cls] of ["swordsman", "archer", "mage", "priest"].entries()) {
+    caster.class = cls; caster.mp = 999;
+    cast(caster, 4, t + n * 0.2);
+    const buff = SKILL_KITS[cls][4].buff;
+    assert.ok(caster.buffs[buff]);
+    assert.ok(ally.buffs[buff]);
+    assert.equal(ally.buffs[buff].by, caster.id);
+    assert.ok(!stranger.buffs?.[buff]);
+    assert.ok(!dead.buffs?.[buff]);
+  }
+  assert.equal(Object.keys(ally.buffs).length, 4);
+  assert.ok(world.snapshot(caster).party.members.find(m => m.id === ally.id).buffs.blessing);
+  const before = ally.hp;
+  ally.hp = 10;
+  world.tick(0.02, t + 2);
+  assert.ok(ally.hp > 10 && ally.hp <= before);
+  for (const p of [caster, ally, stranger, dead]) world.returnTown(p);
+  world.parties.delete("effect-test-party");
+});
+
+test("a frozen hero cannot move, jump or resolve a queued attack until thawed", () => {
+  const p = create("frozen-hero");
+  arena(p);
+  const t = Date.now() / 1000 + 50;
+  p.input = 1; p.jump = true; p.lastInput = t; p.vx = 200;
+  applyStatus(p, { type: "freeze", chance: 1, duration: 3 }, 10, t, 0);
+  world.attack(p, 0, t + 0.1);
+  assert.equal(p.pending, null);
+  const x = p.x;
+  world.tick(0.02, t + 0.2);
+  assert.equal(p.x, x);
+  assert.equal(p.input, 0);
+  world.attack(p, 0, t + 3.1);
+  assert.ok(p.pending);
+  world.returnTown(p);
+});
+
+test("status HUD shows buff names, debuff stacks and remaining time", async () => {
+  const { readFileSync } = await import("node:fs");
+  const source = readFileSync(new URL("../public/status-ui.js", import.meta.url), "utf8")
+    .replace('"/shared/skills.js"', JSON.stringify(new URL("../shared/skills.js", import.meta.url).href));
+  const ui = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
+  const p = { buffs: { rage: { until: 22 } }, status: { poison: { until: 15, stacks: 3 }, freeze: { until: 9 } } };
+  const markup = ui.effectsMarkup(p, 10);
+  assert.match(markup, /บัฟ: ปลุกพลังนักรบ/);
+  assert.match(markup, /ดีบัฟ: พิษ ×3/);
+  assert.match(markup, /12s/);
+  assert.match(markup, /5s/);
+  assert.doesNotMatch(markup, /แช่แข็ง/);
+  assert.equal(ui.effectsMarkup(p, 30), "");
+});

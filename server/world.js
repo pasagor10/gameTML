@@ -34,6 +34,7 @@ import {
 } from "../shared/dungeons.js";
 import {
   GEAR,
+  weaponEffect,
   SLOTS,
   FLOOR_LOOT,
   rollDivineLoot,
@@ -1515,7 +1516,7 @@ export function attack(p, skill = 0, t = now()) {
   if (
     !Number.isInteger(skill) || !ACTIONS[skill] ||
     p.area !== "dungeon" ||
-    statusActive(p, "stun", t) ||
+    controlled(p, t) ||
     p.hp <= 0 ||
     t - (p.hitAt || 0) < 0.14 ||
     p.pending ||
@@ -1573,7 +1574,7 @@ function resolveAttack(p, t) {
   const i = instances.get(p.instance),
     c = CLASSES[p.class],
     skill = a.skill;
-  if (!i || i.clear || p.hp <= 0) return;
+  if (!i || i.clear || p.hp <= 0 || controlled(p, t)) return;
   // Archer AGI: a basic shot may loose a second arrow (double strafe).
   const twin = combatStats(p).double,
     double = !skill && twin > 0 && Math.random() < twin;
@@ -1598,13 +1599,11 @@ function resolveAttack(p, t) {
   });
   const kit = skillOf(p.class, skill);
   if (kit.buff) {
-    // Party buff: everyone alive in this instance.
-    for (const id of i.members) {
-      const m = live(id);
-      if (!m || m.hp <= 0) continue;
+    // Buff the caster and living party members sharing this encounter.
+    for (const m of partyTargets(p, i)) {
       m.buffs = {
         ...(m.buffs || {}),
-        [kit.buff]: { until: t + kit.duration, power: 1 + combatStats(p).heal },
+        [kit.buff]: { until: Math.max(m.buffs?.[kit.buff]?.until || 0, t + kit.duration), power: Math.max(buffActive(m, kit.buff, t)?.power || 1, 1 + combatStats(p).heal), by: p.id },
       };
       i.events.push({
         id: randomUUID(),
@@ -1661,7 +1660,9 @@ function resolveAttack(p, t) {
       crit = lines.some((l) => l.crit);
     anyCrit ||= crit;
     if (e.boss) creditWorld(i, p.id, Math.min(amount, e.hp));
+    const dealt = Math.min(amount, e.hp);
     e.hp -= amount;
+    const weaponStatus = applyWeaponHit(p, e, dealt, lines[0].amount, t, i);
     const status = e.hp > 0 && applyStatus(e, kit.status, lines[0].amount, t) ? kit.status.type : null;
     if (status && e.status[status]) e.status[status].by = p.id;
     if (status && STATUSES[status].control) e.action = null;
@@ -1686,7 +1687,7 @@ function resolveAttack(p, t) {
       amount,
       crit,
       lines,
-      status,
+      status: status || weaponStatus,
       double,
       at: t,
     });
@@ -1698,14 +1699,42 @@ function resolveAttack(p, t) {
       i.events.push({ id: randomUUID(), kind: "status", targetId: p.id, status: "lightning", x: p.x, y: p.y - 130, at: t });
     p.lightningUntil = t + LIGHTNING.duration;
   }
-  if (kit.heal) healParty(i, kit.heal * (1 + stats.heal), t);
+  if (kit.heal) healParty(i, kit.heal * (1 + stats.heal), t, p);
   checkClear(i, t, p);
 }
+// Shared bosses can contain strangers; buffs and healing stay within the party.
+function partyTargets(p, i) {
+  const ids = p.party ? parties.get(p.party)?.members || [p.id] : [p.id];
+  return [...new Set([p.id, ...ids])].map(live)
+    .filter(m => m && m.hp > 0 && m.instance === i.id && i.members.includes(m.id));
+}
+export function applyWeaponHit(p, e, dealt, hit, t, i, roll = Math.random()) {
+  const effect = weaponEffect(p);
+  if (!effect || dealt <= 0 || p.hp <= 0) return null;
+  if (effect.lifesteal) {
+    const amount = Math.min(maxHp(p) - p.hp, Math.floor(dealt * effect.lifesteal));
+    if (amount > 0) {
+      p.hp += amount;
+      i.events.push({ id: randomUUID(), kind: "heal", targetId: p.id, actorId: p.id,
+        x: p.x, y: p.y - 110, amount, lifesteal: true, at: t });
+    }
+  }
+  if (!effect.status || e.hp <= 0) return null;
+  // Per-target cooldown also applies across attackers to prevent permanent freeze.
+  const type = effect.status.type;
+  if (t < (e.weaponProcAt?.[type] || 0)) return null;
+  if (!applyStatus(e, effect.status, hit, t, roll)) return null;
+  e.status[type].by = p.id;
+  if (effect.cooldown) {
+    e.weaponProcAt ??= {};
+    e.weaponProcAt[type] = t + effect.cooldown;
+  }
+  if (STATUSES[type].control) e.action = null;
+  return type;
+}
 // Restores a share of max HP to every living hero in the instance.
-function healParty(i, share, t) {
-  for (const id of i.members) {
-    const m = live(id);
-    if (!m || m.hp <= 0) continue;
+function healParty(i, share, t, caster) {
+  for (const m of partyTargets(caster, i)) {
     const amount = Math.min(maxHp(m) - m.hp, Math.round(maxHp(m) * share));
     if (amount <= 0) continue;
     m.hp += amount;
@@ -2140,11 +2169,13 @@ export function disconnect(p) {
 }
 function physics(p, dt, t) {
   const previous = p.y;
+  if (controlled(p, t)) p.vx = 0;
   if (p.grounded) p.lastGroundAt = t;
   if (p.jump) p.jumpBufferedAt = t;
   const actionSlow = p.action && t < p.action.endsAt ? 0.36 : 1;
   const target =
-    p.input * combatStats(p).speed * (p.running ? 1.25 : 0.78) * actionSlow;
+    (controlled(p, t) ? 0 : p.input) * combatStats(p).speed * (p.running ? 1.25 : 0.78) * actionSlow *
+    (statusActive(p, "slow", t) ? STATUSES.slow.speed : 1);
   const acceleration = (p.grounded ? (p.input ? 1900 : 2400) : 900) * dt;
   p.vx =
     (p.vx || 0) +
@@ -2152,7 +2183,7 @@ function physics(p, dt, t) {
       Math.min(Math.abs(target - (p.vx || 0)), acceleration);
   p.x = Math.max(45, Math.min(areaWidth(p.area) - 45, p.x + p.vx * dt));
   if (
-    p.hp > 0 &&
+    p.hp > 0 && !controlled(p, t) &&
     t - (p.jumpBufferedAt || 0) < 0.13 &&
     (p.grounded || t - (p.lastGroundAt || 0) < 0.1)
   ) {
@@ -2431,7 +2462,7 @@ export function tick(dt, t = now()) {
         i.events.push({ id: randomUUID(), kind: "heal", targetId: p.id, x: p.x, y: p.y - 110, amount, at: t });
       }
     }
-    if (statusActive(p, "stun", t)) p.input = 0;
+    if (controlled(p, t)) { p.input = 0; p.pending = null; p.action = null; }
     if (p.auto && i) {
       // Supplies work while repositioning, during stage intros and between waves.
       // Heal before choosing an attack so low resources never starve the brain.
@@ -2480,7 +2511,7 @@ export function tick(dt, t = now()) {
       }
     }
     resolveAttack(p, t);
-    if (statusActive(p, "stun", t)) p.input = 0;
+    if (controlled(p, t)) { p.input = 0; p.pending = null; p.action = null; }
     physics(p, dt, t);
     // VIT and INT regenerate a little HP / MP every tick.
     const fx = statEffects(p);
@@ -2818,7 +2849,7 @@ export function snapshot(p) {
           ready: [...party.ready],
           members: party.members.map((id) => {
             const m = live(id);
-            return { id, name: m?.name, leader: id === party.leader, hp: m?.hp ?? 0, maxHp: m ? maxHp(m) : 1, area: m?.area };
+            return { id, name: m?.name, leader: id === party.leader, hp: m?.hp ?? 0, maxHp: m ? maxHp(m) : 1, area: m?.area, buffs: m?.buffs || null, status: m?.status || null };
           }),
         }
       : null,

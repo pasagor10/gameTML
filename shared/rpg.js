@@ -1,4 +1,4 @@
-import { SKILL_KITS } from "./skills.js";
+import { SKILL_KITS, STATUSES } from "./skills.js";
 import { bestiaryBonuses } from "./quests.js";
 import { costumeSet } from "./costumes.js";
 export const SLOTS = {
@@ -613,6 +613,25 @@ for (const [tier, level, price] of [[1, 1, 90], [2, 5, 650], [3, 10, 2400], [4, 
   ]) GEAR[`rescue_${tier}_${slot}`] = {
     name: `${name} ${tier}`, icon, slot, rarity, level, price, stats,
   };
+}
+
+// One weapon property per rescue tier, available to every class.
+export const WEAPON_EFFECTS = {
+  drain: { lifesteal: 0.08 },
+  venom: { status: { type: "poison", chance: 0.3, duration: 6 } },
+  flame: { status: { type: "burn", chance: 0.3, duration: 5 } },
+  frost: { status: { type: "freeze", chance: 0.2, duration: 3 }, cooldown: 8 },
+};
+for (let tier = 1; tier <= 4; tier++)
+  for (const job of ["swordsman", "archer", "mage", "priest"])
+    GEAR[`rescue_${tier}_${job}`].effect = ["drain", "venom", "flame", "frost"][tier - 1];
+export const weaponEffect = p => WEAPON_EFFECTS[GEAR[p.equipment?.weapon]?.effect] || null;
+export function weaponEffectText(item) {
+  const effect = WEAPON_EFFECTS[item?.effect];
+  if (!effect) return "";
+  if (effect.lifesteal) return `🩸 ดูดเลือด ${Math.round(effect.lifesteal * 100)}% ของดาเมจที่ทำได้จริง`;
+  const s = effect.status, def = STATUSES[s.type];
+  return `${def.icon} ${Math.round(s.chance * 100)}% ${def.name} ${s.duration} วิ${effect.cooldown ? ` · เว้น ${effect.cooldown} วิ/เป้าหมาย · บอสลดเวลาควบคุม` : ""}`;
 }
 
 // Base-stat bonuses on gear (RO style "+3 DEX"): weapons push their class's
