@@ -56,7 +56,7 @@ test("class changes update owner and observer appearance, keep the weapon, and s
       await new Promise(r => setTimeout(r, 50));
     }
     assert.ok(ready, logs);
-    const auth = await post("auth/guest", {}), cookie = auth.headers.get("set-cookie").split(";")[0];
+    const auth = await post("auth/register", { name: "priest-preview-test", password: "PreviewTestPassword42" }), cookie = auth.headers.get("set-cookie").split(";")[0];
     const hero = await (await post("characters", { name: "PriestTransition", class: "priest", gender: "female" }, cookie)).json();
     const other = await (await post("characters", { name: "PriestObserver", class: "priest", gender: "male" }, cookie)).json();
     // Only the isolated test database is seeded; no player save is modified.

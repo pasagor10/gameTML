@@ -1,5 +1,15 @@
 # Deployment: game.pikad.online
 
+## Current VPS
+
+- Host: `157.85.96.64`, SSH as `root`.
+- App: `/opt/tml/app`; systemd service `tml-game.service`, runs as `tml`.
+- Database: `/opt/tml/data/game.sqlite` (keep outside the checkout).
+- Update with a fast-forward Git pull, run checks/tests, and take a verified SQLite online backup before restarting server code. Static file changes do not need a restart.
+- Public entrance: `/`; registered-player lobby: `/play`. Existing guest sessions can register on the entrance page to keep their original user id and characters.
+
+## Previous Mac hosting (legacy)
+
 The hostname is served from this Mac through the existing Cloudflare Tunnel. Restaurant routes remain independent.
 
 - Origin: `127.0.0.1:5180` (not directly exposed to the LAN).

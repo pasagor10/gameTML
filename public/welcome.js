@@ -1,0 +1,74 @@
+const $ = (s) => document.querySelector(s);
+let mode = new URLSearchParams(location.search).get('account') === 'register' ? 'register' : 'login';
+let user = null, busy = false;
+async function api(path, data) {
+  const response = await fetch('/api/' + path, {
+    method: data === undefined ? 'GET' : 'POST', credentials: 'same-origin', cache: 'no-store',
+    headers: data === undefined ? {} : { 'Content-Type': 'application/json' },
+    ...(data === undefined ? {} : { body: JSON.stringify(data) }),
+  });
+  const result = await response.json();
+  if (!response.ok) throw Error(result.error || 'เชื่อมต่อไม่สำเร็จ กรุณาลองอีกครั้ง');
+  return result;
+}
+function setMode(next) {
+  if (busy) return;
+  mode = next;
+  for (const button of document.querySelectorAll('[data-mode]')) {
+    const active = button.dataset.mode === mode;
+    button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active));
+  }
+  $('#confirm-field').hidden = mode !== 'register';
+  $('#account-confirm').required = mode === 'register';
+  $('#account-password').autocomplete = mode === 'register' ? 'new-password' : 'current-password';
+  $('#auth-submit').innerHTML = (mode === 'register' ? 'สมัครสมาชิกและไปเลือกผู้กล้า' : 'เข้าสู่ระบบและไปเลือกผู้กล้า') + ' <span>↗</span>';
+  $('#auth-hint').textContent = mode === 'register' ? 'จำชื่อบัญชีและรหัสผ่านนี้ไว้ เพื่อเล่นต่อบนเครื่องอื่น' : 'ใช้บัญชีเดิมเพื่อกลับไปหาผู้กล้าของคุณ';
+  $('#auth-error').textContent = '';
+}
+function showAccount(account) {
+  user = account;
+  $('#account-loading').hidden = true;
+  const member = !!user?.registered;
+  $('#member').hidden = !member; $('#auth').hidden = member;
+  $('#guest-note').hidden = !user || member;
+  if (member) $('#member-name').textContent = user.name;
+  for (const link of document.querySelectorAll('[data-play]')) link.href = member ? '/play' : '#account';
+  if (user && !member) setMode('register');
+}
+for (const button of document.querySelectorAll('[data-mode]')) button.onclick = () => setMode(button.dataset.mode);
+$('#show-password').onclick = () => {
+  const shown = $('#account-password').type === 'password';
+  $('#account-password').type = shown ? 'text' : 'password';
+  $('#show-password').textContent = shown ? 'ซ่อน' : 'แสดง';
+  $('#show-password').setAttribute('aria-pressed', String(shown));
+  $('#show-password').setAttribute('aria-label', shown ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน');
+};
+$('#auth-form').onsubmit = async (event) => {
+  event.preventDefault();
+  if (busy) return;
+  $('#auth-error').textContent = '';
+  if (mode === 'register' && $('#account-password').value !== $('#account-confirm').value) {
+    $('#auth-error').textContent = 'รหัสผ่านทั้งสองช่องไม่ตรงกัน'; $('#account-confirm').focus(); return;
+  }
+  busy = true; $('#auth-submit').disabled = true;
+  for (const button of document.querySelectorAll('[data-mode]')) button.disabled = true;
+  try {
+    await api('auth/' + mode, { name: $('#account-name').value.trim(), password: $('#account-password').value });
+    location.assign('/play');
+  } catch (error) {
+    $('#auth-error').textContent = error.message;
+  } finally {
+    busy = false; $('#auth-submit').disabled = false;
+    for (const button of document.querySelectorAll('[data-mode]')) button.disabled = false;
+  }
+};
+$('#logout').onclick = async () => {
+  $('#logout').disabled = true;
+  try { await api('auth/logout', {}); showAccount(null); }
+  catch (error) { $('#auth-error').textContent = error.message; }
+  finally { $('#logout').disabled = false; }
+};
+setMode(mode);
+api('me').then(({ user }) => showAccount(user)).catch(() => {
+  showAccount(null); $('#auth-error').textContent = 'ยังเชื่อมต่อเซิร์ฟเวอร์ไม่ได้ กรุณาลองเข้าสู่ระบบอีกครั้ง';
+});

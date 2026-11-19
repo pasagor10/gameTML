@@ -4,7 +4,7 @@
   "short_name": "TML ONLINE",
   "description": "ผจญภัยในโลกแฟนตาซีถ้ำหลวงดอยนางนอน เลือกผู้กล้าและร่วมพิชิตดันเจียน",
   "lang": "th",
-  "start_url": "/?source=homescreen",
+  "start_url": "/play?source=homescreen",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

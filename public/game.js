@@ -227,7 +227,7 @@ async function refreshAccount() {
   account = data.user;
   characters = data.characters;
   $("#account-status").textContent = account
-    ? `เชื่อมต่อแล้ว · ${account.name.startsWith("guest-") ? "นักเดินทาง" : account.name} · บันทึกบนเซิร์ฟเวอร์`
+    ? `เชื่อมต่อแล้ว · ${!account.registered ? "นักเดินทาง" : account.name} · บันทึกบนเซิร์ฟเวอร์`
     : "เล่นได้ทันทีแบบผู้มาเยือน · บันทึกบนเซิร์ฟเวอร์";
   $("#character-count").textContent = `${characters.length} / 3`;
   $("#saved-characters").innerHTML = characters.length
@@ -242,7 +242,7 @@ async function refreshAccount() {
         : "")
     : "";
   $$("[data-new-slot]").forEach((b) => (b.onclick = () => $("#new-hero").click()));
-  const named = account && !account.name.startsWith("guest-");
+  const named = account?.registered;
   $("#account-short").textContent = named ? account.name : "ผู้มาเยือน";
   $("#account-open").classList.toggle("signed-in", !!named);
   $("#new-hero").disabled = characters.length >= 3;
@@ -469,6 +469,7 @@ $("#start").onclick = async () => {
   const b = $("#start");
   b.disabled = true;
   try {
+    if (!account?.registered) { location.href = "/?account=login#account"; return; }
     if (lobbyCharacterId) {
       selectedId = lobbyCharacterId;
       enterGame();
@@ -477,8 +478,8 @@ $("#start").onclick = async () => {
     const name = $("#character-name").value.trim();
     if (name.length < 2) throw Error("กรุณาตั้งชื่อตัวละครอย่างน้อย 2 ตัวอักษร");
     if (!account) {
-      await api("auth/guest", {});
-      await refreshAccount();
+      location.href = "/?account=register#account";
+      return;
     }
     const c = await api("characters", { name, class: job, gender });
     selectedId = c.id;
@@ -531,29 +532,8 @@ $("#modal").addEventListener("click", (e) => {
   if (e.target === $("#modal")) closeModal();
 });
 $("#account-open").onclick = () => {
-  modal(
-    "บัญชีนักเดินทาง",
-    `<p>สมัครบัญชีเพื่อกลับมาเล่นข้ามเครื่องได้ บัญชีผู้มาเยือนใช้ได้เฉพาะเบราว์เซอร์นี้</p><label>ชื่อบัญชี<input id="login-name" autocomplete="username" maxlength="30"></label><label>รหัสผ่าน (อย่างน้อย 8 ตัวอักษร)<input id="login-password" type="password" autocomplete="current-password" maxlength="128"></label><button id="login" class="primary-button">เข้าสู่ระบบ</button><button id="register" class="text-button">สมัครบัญชีใหม่</button><p id="auth-note" class="hint"></p>`,
-  );
-  for (const action of ["login", "register"])
-    $("#" + action).onclick = async () => {
-      try {
-        $("#" + action).disabled = true;
-        await api("auth/" + action, {
-          name: $("#login-name").value.trim(),
-          password: $("#login-password").value,
-        });
-        await refreshAccount();
-        closeModal();
-        toast("เข้าสู่ระบบแล้ว");
-      } catch (e) {
-        $("#auth-note").textContent = e.message;
-        $("#auth-note").classList.add("error");
-      } finally {
-        const b = $("#" + action);
-        if (b) b.disabled = false;
-      }
-    };
+  modal("บัญชีผู้เล่น", `<p>เข้าสู่ระบบด้วยบัญชีเดิมบนเครื่องอื่น เพื่อเล่นตัวละครนี้ต่อได้</p><button id="account-home" class="primary-button">หน้าหลัก / จัดการบัญชี</button>`);
+  $("#account-home").onclick = () => { location.href = "/#account"; };
 };
 const stories = [
   [

@@ -42,7 +42,7 @@ const sessions = (req) => {
   if (!token) return null;
   return db
     .prepare(
-      "SELECT u.id,u.name FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token=? AND s.expires>?",
+      "SELECT u.id,u.name,(u.password IS NOT NULL) AS registered FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token=? AND s.expires>?",
     )
     .get(createHash("sha256").update(token).digest("hex"), Date.now());
 };
@@ -77,6 +77,7 @@ app.get("/api/health", (req, res) =>
   res.json({ ok: true, version: "0.3.0", online: world.players.size }),
 );
 app.get("/api/me", (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
   const user = sessions(req);
   res.json({
     user: user || null,
@@ -90,22 +91,28 @@ app.get("/api/me", (req, res) => {
 });
 app.post("/api/auth/:action", async (req, res) => {
   try {
+    res.setHeader("Cache-Control", "no-store");
     if (limited("auth:" + req.ip, 15))
       return res.status(429).json({ error: "ลองใหม่ใน 1 นาที" });
+    if (req.params.action === "logout") {
+      const token = req.headers.cookie?.split(";").map(s => s.trim()).find(s => s.startsWith("tml_session="))?.slice(12);
+      if (token) {
+        db.prepare("DELETE FROM sessions WHERE token=?").run(createHash("sha256").update(token).digest("hex"));
+        for (const socket of io.sockets.sockets.values()) {
+          const current = socket.request.headers.cookie?.split(";").map(s => s.trim()).find(s => s.startsWith("tml_session="))?.slice(12);
+          if (current === token) socket.disconnect(true);
+        }
+      }
+      res.setHeader("Set-Cookie", `tml_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${process.env.NODE_ENV === "production" ? "; Secure" : ""}`);
+      return res.json({ ok: true });
+    }
     const { name, password } = req.body;
     const action = req.params.action;
     if (!["register", "login", "guest"].includes(action))
       throw Error("ไม่พบคำสั่ง");
     let user;
     if (action === "guest") {
-      const id = randomUUID();
-      db.prepare("INSERT INTO users VALUES(?,?,?,?)").run(
-        id,
-        "guest-" + id,
-        null,
-        Date.now(),
-      );
-      user = { id, name: "นักเดินทาง" };
+      return res.status(403).json({ error: "กรุณาสมัครสมาชิกก่อนเริ่มเล่น" });
     } else {
       if (
         typeof name !== "string" ||
@@ -118,20 +125,24 @@ app.post("/api/auth/:action", async (req, res) => {
         throw Error("ชื่อบัญชี 3–30 ตัวอักษร และรหัสผ่าน 8–128 ตัวอักษร");
       if (action === "register") {
         const hash = await argon2.hash(password, { type: argon2.argon2id });
-        user = { id: randomUUID(), name: name.trim() };
-        db.prepare("INSERT INTO users VALUES(?,?,?,?)").run(
-          user.id,
-          user.name,
-          hash,
-          Date.now(),
-        );
+        if (name.trim().toLowerCase().startsWith("guest-"))
+          throw Error("กรุณาเลือกชื่อบัญชีอื่น");
+        const previous = sessions(req);
+        user = { id: previous && !previous.registered ? previous.id : randomUUID(), name: name.trim(), registered: 1 };
+        if (previous && !previous.registered) {
+          const upgraded = db.prepare("UPDATE users SET name=?,password=? WHERE id=? AND password IS NULL")
+            .run(user.name, hash, user.id);
+          if (!upgraded.changes) throw Error("บัญชีนี้สมัครแล้ว กรุณาเข้าสู่ระบบ");
+        } else {
+          db.prepare("INSERT INTO users VALUES(?,?,?,?)").run(user.id, user.name, hash, Date.now());
+        }
       } else {
         const row = db
           .prepare("SELECT * FROM users WHERE name=?")
           .get(name.trim());
         if (!row?.password || !(await argon2.verify(row.password, password)))
           throw Error("ชื่อบัญชีหรือรหัสผ่านไม่ถูกต้อง");
-        user = { id: row.id, name: row.name };
+        user = { id: row.id, name: row.name, registered: 1 };
       }
     }
     login(res, user);
@@ -145,7 +156,7 @@ app.post("/api/auth/:action", async (req, res) => {
 app.post("/api/characters", (req, res) => {
   try {
     const user = sessions(req);
-    if (!user) return res.status(401).json({ error: "กรุณาเข้าสู่ระบบ" });
+    if (!user?.registered) return res.status(401).json({ error: "กรุณาสมัครสมาชิกหรือเข้าสู่ระบบ" });
     if (limited("char:" + user.id, 10)) throw Error("สร้างตัวละครถี่เกินไป");
     const { name, class: job, gender } = req.body;
     if (
@@ -192,7 +203,7 @@ app.post("/api/characters", (req, res) => {
 });
 app.post("/api/characters/:id/delete", (req, res) => {
   const user = sessions(req);
-  if (!user) return res.status(401).json({ error: "กรุณาเข้าสู่ระบบ" });
+  if (!user?.registered) return res.status(401).json({ error: "กรุณาสมัครสมาชิกหรือเข้าสู่ระบบ" });
   const character = db.prepare("SELECT id FROM characters WHERE id=? AND user_id=?")
     .get(req.params.id, user.id);
   if (!character) return res.status(404).json({ error: "ไม่พบตัวละคร" });
@@ -215,6 +226,17 @@ const revalidate = (res, file) => {
   if (/\.(js|mjs|json|css|html|webmanifest)$/.test(file)) res.setHeader("Cache-Control", "no-cache");
 };
 const stamps = releaseStamp({ publicDir: path.resolve("public"), sharedDir: path.resolve("shared") });
+// Keep the original game document at /play; the public entrance is a light
+// marketing and account page that never loads Phaser or the live world.
+app.use((req, res, next) => {
+  if (!["GET", "HEAD"].includes(req.method)) return next();
+  if (req.path === "/") req.url = "/welcome.html";
+  else if (["/play", "/play/", "/index.html"].includes(req.path)) {
+    if (!sessions(req)?.registered) return res.redirect("/?account=login#account");
+    req.url = "/index.html";
+  }
+  next();
+});
 app.use(stamps);
 app.use("/shared", express.static(path.resolve("shared"), { setHeaders: revalidate }));
 app.use(
@@ -232,7 +254,7 @@ const io = new Server(server, {
 });
 io.use((socket, next) => {
   const user = sessions(socket.request);
-  if (!user) return next(Error("กรุณาเข้าสู่ระบบ"));
+  if (!user?.registered) return next(Error("กรุณาสมัครสมาชิกหรือเข้าสู่ระบบ"));
   socket.data.user = user;
   next();
 });
