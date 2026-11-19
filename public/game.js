@@ -5,7 +5,7 @@ import { observeHudLayout } from "/hud-layout.js";
 import { isWorldPointer } from "/world-input.js";
 import { SLOT_MACHINE } from "/shared/slots.js";
 import { slotPanelHtml, bindSlotPanel } from "/slots-ui.js?v=2";
-import { heroPortraitStyle } from "/hero-appearance.js?v=3";
+import { heroPortraitStyle } from "/hero-appearance.js?v=4";
 import { skillIcon, potionIcon, manaPotionIcon, autoIcon } from "/skill-icons.js?v=5";
 import { dungeonPlatforms, withinDungeonSign } from "/shared/dungeons.js";
 import { supplyArt, itemArtPath, costumeArtPath } from "/item-art.js";
@@ -25,7 +25,7 @@ import {
   rpgPanel,
   bindRpgPanel,
   gearShop,
-} from "/rpg-ui.js?v=16";
+} from "/rpg-ui.js?v=17";
 import {
   GEAR,
   RARITIES,
@@ -41,7 +41,7 @@ import {
 } from "/shared/rpg.js";
 import { createTownNpcs, footGlow, createRim } from "/town-npcs.js?v=10";
 import { updateEnhanceAura, AURA_LEVEL } from "/enhance-aura.js?v=3";
-import { marketHtml, shopManagerHtml, marketState } from "/market-ui.js?v=9";
+import { marketHtml, shopManagerHtml, marketState } from "/market-ui.js?v=10";
 import { sampleMotion } from "/shared/smoothing.js";
 import { mergeSnapshot, SNAPSHOT_PROTOCOL } from "/shared/snapshot-delta.js?v=1";
 import {
@@ -2118,7 +2118,7 @@ class Adventure extends Phaser.Scene {
     this.load.image("cave", "/assets/cave.webp?v=2");
     this.load.image("knight-motion", "/assets/animations/knight-female.png");
     this.load.image("slime-motion", "/assets/animations/slime.png?v=3");
-    this.load.spritesheet("heroes", "/assets/heroes.png", {
+    this.load.spritesheet("heroes", "/assets/heroes.webp", {
       frameWidth: 512,
       frameHeight: 512,
     });

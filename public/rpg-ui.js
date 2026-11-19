@@ -1,4 +1,4 @@
-import { heroPortraitStyle, heroPortraitUrl } from "/hero-appearance.js?v=3";
+import { heroPortraitStyle, heroPortraitUrl } from "/hero-appearance.js?v=4";
 import { costumesOf, ownsCostume, COSTUME_ITEMS, costumeItem, costumeFits, costumeOf } from "/shared/costumes.js";
 import { itemArt, supplyArt } from "/item-art.js";
 import {

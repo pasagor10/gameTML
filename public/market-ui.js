@@ -3,7 +3,7 @@ import { itemArt, supplyArt } from "/item-art.js";
 import { GEAR, SLOTS, RARITIES } from "/shared/rpg.js";
 import { ITEMS, CLASSES } from "/shared/config.js";
 import { COSTUME_ITEMS, costumeFits } from "/shared/costumes.js";
-import { statText } from "/rpg-ui.js?v=16";
+import { statText } from "/rpg-ui.js?v=17";
 
 // Stacks sell by count: supplies, and costumes (shared/costumes.js).
 const STACKS = ["hp", "mp", "ore", ...Object.keys(COSTUME_ITEMS)];

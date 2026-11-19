@@ -31,5 +31,5 @@ export function heroPortraitStyle(p) {
   if (url)
     return `background-image:url('${url}');background-size:contain;background-position:center;background-repeat:no-repeat${isPixel(p) ? ";image-rendering:pixelated" : ""}`;
   // Plain class look: the shared 3x2 portrait sheet.
-  return `background-image:url('/assets/heroes.png');background-size:300% 200%;background-position:${["swordsman", "archer", "mage"].indexOf(p.class) * 50}% ${p.gender === "female" ? 100 : 0}%`;
+  return `background-image:url('/assets/heroes.webp');background-size:300% 200%;background-position:${["swordsman", "archer", "mage"].indexOf(p.class) * 50}% ${p.gender === "female" ? 100 : 0}%`;
 }

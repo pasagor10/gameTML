@@ -12,7 +12,7 @@ test("picking a class previews its character; confirmation and character changes
   const portraitSource = readFileSync(new URL("../public/hero-appearance.js", import.meta.url), "utf8")
     .replace('"/shared/rpg.js"', JSON.stringify(url("../shared/rpg.js")));
   let source = readFileSync(new URL("../public/rpg-ui.js", import.meta.url), "utf8")
-    .replace('"/hero-appearance.js?v=3"', JSON.stringify(asModule(portraitSource)));
+    .replace(/"\/hero-appearance\.js(\?v=[^"]*)?"/, JSON.stringify(asModule(portraitSource)));
   for (const [from, to] of [["/item-art.js", "../public/item-art.js"],
     ["/shared/rpg.js", "../shared/rpg.js"], ["/shared/config.js", "../shared/config.js"],
     ["/shared/motion.js", "../shared/motion.js"], ["/shared/costumes.js", "../shared/costumes.js"], ["/shared/stats.js", "../shared/stats.js"], ["/skill-icons.js?v=5", "../public/skill-icons.js"]])

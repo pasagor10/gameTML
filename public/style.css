@@ -245,7 +245,7 @@ select:focus-visible {
   position: relative;
   width: 100%;
   aspect-ratio: 1;
-  background-image: url("/assets/heroes.png");
+  background-image: url("/assets/heroes.webp");
   background-size: 300% 200%;
   filter: drop-shadow(0 5px 10px #06152577);
   margin: 12px 0 3px;
@@ -457,7 +457,7 @@ select:focus-visible {
 #avatar {
   width: 60px;
   height: 64px;
-  background-image: url("/assets/heroes.png");
+  background-image: url("/assets/heroes.webp");
   background-size: 300% 200%;
   border: 1px solid #bc9d68;
   border-radius: 7px;
