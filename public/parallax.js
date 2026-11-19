@@ -118,11 +118,20 @@ function makeTextures(scene) {
   });
   // Foreground framing strips. Shapes are drawn three times (x-w, x, x+w) so
   // the strip tiles seamlessly when scrolled.
+  // Foreground framing strips, soft-focused once here: a per-frame blur
+  // shader on them cost ~18 offscreen passes a frame, which tablets can't
+  // afford. Drawn three times side by side so the blur wraps seamlessly.
   const strip = (key, w, h, draw) =>
     canvasTexture(scene, key, w, h, (c) => {
       let seed = key.length * 977;
       const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-      draw(c, w, h, rnd);
+      const src = document.createElement("canvas");
+      src.width = w;
+      src.height = h;
+      draw(src.getContext("2d"), w, h, rnd);
+      c.filter = "blur(2px)";
+      for (const dx of [-w, 0, w]) c.drawImage(src, dx, 0);
+      c.filter = "none";
     });
   strip("fg-town-bottom", 1024, 220, (c, w, h, rnd) => {
     const leaf = (x, y, len, ang, col) => {
@@ -417,11 +426,6 @@ export function createParallax(scene) {
     ),
     ...props,
   ];
-
-  if (!lowPower && scene.renderer.type === Phaser.WEBGL) {
-    fgBottom.preFX?.addBlur(0, 2, 2, 1.1);
-    fgTop.preFX?.addBlur(0, 2, 2, 1.1);
-  }
 
   for (let i = 0; i < 4; i++)
     rays.push(
