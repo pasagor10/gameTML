@@ -1,3 +1,4 @@
+import { BOSSES } from "/shared/bosses.js";
 // Quest window: daily quests, the monster book and the main journey, plus the
 // compact daily tracker on the HUD.
 import {
@@ -41,6 +42,8 @@ const esc = (s) =>
   String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 export function portrait(type, seen = true) {
+  if (BOSSES[type])
+    return `<i class="mon-portrait ${seen ? "" : "unseen"}" style="width:100%;height:100%;background:url(/assets/sprites/monsters/${type}/portrait.webp?v=1) center / contain no-repeat"></i>`;
   const [src, w, h, cols = 4, rows = 1] = PORTRAITS[type] || [];
   if (!src) return "";
   const url = src.startsWith("/")

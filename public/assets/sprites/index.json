@@ -1376,9 +1376,94 @@
         "spawn": "spawn"
       },
       "pixel": true
+    },
+    "frost-revenant": {
+      "dir": "monsters/frost-revenant",
+      "height": 195,
+      "facing": 1,
+      "flyer": false,
+      "source": "original generated boss sheet (import_bosses.py)",
+      "portrait": "portrait.webp",
+      "actions": {
+        "idle": "idle",
+        "move": "move",
+        "attack": "attack",
+        "hit": "hit",
+        "death": "death",
+        "spawn": "spawn"
+      },
+      "pixel": true
+    },
+    "ember-colossus": {
+      "dir": "monsters/ember-colossus",
+      "height": 210,
+      "facing": 1,
+      "flyer": false,
+      "source": "original generated boss sheet (import_bosses.py)",
+      "portrait": "portrait.webp",
+      "actions": {
+        "idle": "idle",
+        "move": "move",
+        "attack": "attack",
+        "hit": "hit",
+        "death": "death",
+        "spawn": "spawn"
+      },
+      "pixel": true
+    },
+    "thorn-queen": {
+      "dir": "monsters/thorn-queen",
+      "height": 200,
+      "facing": 1,
+      "flyer": false,
+      "source": "original generated boss sheet (import_bosses.py)",
+      "portrait": "portrait.webp",
+      "actions": {
+        "idle": "idle",
+        "move": "move",
+        "attack": "attack",
+        "hit": "hit",
+        "death": "death",
+        "spawn": "spawn"
+      },
+      "pixel": true
+    },
+    "storm-roc": {
+      "dir": "monsters/storm-roc",
+      "height": 185,
+      "facing": 1,
+      "flyer": false,
+      "source": "original generated boss sheet (import_bosses.py)",
+      "portrait": "portrait.webp",
+      "actions": {
+        "idle": "idle",
+        "move": "move",
+        "attack": "attack",
+        "hit": "hit",
+        "death": "death",
+        "spawn": "spawn"
+      },
+      "pixel": true
+    },
+    "moon-emperor": {
+      "dir": "monsters/moon-emperor",
+      "height": 215,
+      "facing": 1,
+      "flyer": false,
+      "source": "original generated boss sheet (import_bosses.py)",
+      "portrait": "portrait.webp",
+      "actions": {
+        "idle": "idle",
+        "move": "move",
+        "attack": "attack",
+        "hit": "hit",
+        "death": "death",
+        "spawn": "spawn"
+      },
+      "pixel": true
     }
   },
-  "version": 1795055951126925000,
+  "version": 1795057122309074000,
   "npcs": {
     "elder": {
       "dir": "npcs/elder",

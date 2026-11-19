@@ -1,3 +1,4 @@
+import { BOSSES } from "../shared/bosses.js";
 import { dungeonRank } from "../shared/dungeon-results.js";
 import {
   dungeonPlatforms,
@@ -2231,6 +2232,7 @@ export function tick(dt, t = now()) {
         .filter((p) => p && p.hp > 0)
         .sort((a, b) => Math.abs(a.x - e.x) - Math.abs(b.x - e.x))[0];
       e.moving = false;
+      const bossProfile = e.boss ? BOSSES[e.type] : null;
       const mods = traitOf(e),
         frenzied = mods.frenzy && e.hp <= e.maxHp * 0.5;
       if (controlled(e, t)) {
@@ -2293,7 +2295,7 @@ export function tick(dt, t = now()) {
                   e.id,
                   a.direction,
                   t,
-                  { type: "stun", chance: 1, duration: 0.9 },
+                  bossProfile?.status || { type: "stun", chance: 1, duration: 0.9 },
                 );
               }
             }
@@ -2327,7 +2329,7 @@ export function tick(dt, t = now()) {
               e.id,
               a.direction,
               t,
-              VENOM[e.type],
+              bossProfile ? { ...bossProfile.status, chance: 0.35 } : VENOM[e.type],
             );
             if (mods.drain && dealt > 0) {
               const heal = Math.min(e.maxHp - e.hp, Math.round(dealt * mods.drain));
@@ -2376,9 +2378,7 @@ export function tick(dt, t = now()) {
         (slam || Math.abs(p.y - e.y) < 110) &&
         t - e.attackAt >
           (e.boss
-            ? enraged
-              ? 1.05
-              : 1.4
+            ? (bossProfile?.cooldown || 1.4) * (enraged ? 0.75 : 1)
             : Math.max(0.95, 1.4 - Math.min(i.floor, 12) * 0.03) *
               (e.elite ? 0.85 : 1) *
               (mods.cooldown || 1) *
@@ -2390,11 +2390,11 @@ export function tick(dt, t = now()) {
         e.action = {
           kind: slam ? "slam" : "attack",
           x: p.x,
-          radius: enraged ? 195 : 165,
+          radius: (bossProfile?.radius || 165) + (enraged ? 30 : 0),
           direction: e.direction,
           startedAt: t,
-          impactAt: t + (slam ? 0.95 : 0.42),
-          endsAt: t + (slam ? 1.3 : 0.72),
+          impactAt: t + (slam ? bossProfile?.windup || 0.95 : 0.42),
+          endsAt: t + (slam ? (bossProfile?.windup || 0.95) + 0.35 : 0.72),
         };
       }
     }

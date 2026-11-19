@@ -6,6 +6,11 @@ const ease = (t) => 1 - (1 - t) ** 3;
 
 // How each monster moves. bob: px, speed: rad/s, tilt: deg, fly: hovers.
 const GAITS = {
+  "frost-revenant": { bob: 2, speed: 6, tilt: 2, heavy: true },
+  "ember-colossus": { bob: 3, speed: 5, tilt: 2, heavy: true },
+  "thorn-queen": { bob: 2, speed: 5, tilt: 2, sway: true },
+  "storm-roc": { bob: 5, speed: 9, tilt: 3, squash: 0.03 },
+  "moon-emperor": { bob: 2, speed: 5, tilt: 2, heavy: true },
   slime: { bob: 0, speed: 0, tilt: 0, squash: 0.06 },
   bat: { bob: 9, speed: 7, tilt: 6, fly: true, flap: 0.12 },
   boar: { bob: 4, speed: 16, tilt: 4, squash: 0.04 },

@@ -1,3 +1,4 @@
+import { BOSSES } from "/shared/bosses.js";
 // Dungeon gate: one card per floor (art, boss, difficulty,
 // monsters, featured loot, enter button). Floors 11+ form the deep section.
 import {
@@ -10,7 +11,7 @@ import { rosterEntry, TRAITS } from "/shared/dungeons.js";
 import { FLOOR_LOOT, GEAR } from "/shared/rpg.js";
 import { MONSTERS } from "/shared/quests.js";
 import { itemArt, supplyArt } from "/item-art.js";
-import { portrait } from "/quest-ui.js?v=3";
+import { portrait } from "/quest-ui.js?v=4";
 
 const esc = (s) =>
   String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -63,7 +64,7 @@ function card(p, f, index) {
     : `<button class="dg-enter" data-floor="${floor}" >เข้าดันเจียน <span aria-hidden="true">➜</span></button>`;
   return `<article class="dg-card ${locked ? "is-locked" : ""} ${f.deep ? "is-deep" : ""}" data-card="${floor}" style="--floor:${hex(f.color)};--tint:${hex(f.tint)}">
 <div class="dg-thumb" aria-hidden="true"><i class="dg-scene" style="background-position:${(index * 37) % 100}% 55%"></i>${portrait(f.bossType)}<span class="dg-num"><b>${String(floor).padStart(2, "0")}</b></span>${cleared ? '<span class="dg-cleared">พิชิตแล้ว ✓</span>' : ""}</div>
-<div class="dg-info"><h3>${esc(f.name)}</h3><p>บอส: ${esc(f.boss)} · 3 ด่าน · ${requirement}</p><div class="dg-chips"><span class="dg-chip diff-${diff.id}">⚔ ความยาก: ${diff.label}</span><span class="dg-chip ${p.level < level ? "warn" : ""}">แนะนำ Lv.${level}+</span>${traits.map((t) => `<span class="dg-chip trait" title="${esc(TRAITS[t].text)}">${TRAITS[t].icon} ${TRAITS[t].name}</span>`).join("")}</div><div class="dg-mons"><small>มอนสเตอร์:</small>${monsters(floor)}</div></div>
+<div class="dg-info"><h3>${esc(f.name)}</h3><p>บอส: ${esc(f.boss)} · 3 ด่าน · ${requirement}</p>${BOSSES[f.bossType] ? `<p class="dg-boss-skill" title="${esc(BOSSES[f.bossType].detail)}">✦ ${esc(BOSSES[f.bossType].skill)} · กระโดดหลบวงเตือน</p>` : ""}<div class="dg-chips"><span class="dg-chip diff-${diff.id}">⚔ ความยาก: ${diff.label}</span><span class="dg-chip ${p.level < level ? "warn" : ""}">แนะนำ Lv.${level}+</span>${traits.map((t) => `<span class="dg-chip trait" title="${esc(TRAITS[t].text)}">${TRAITS[t].icon} ${TRAITS[t].name}</span>`).join("")}</div><div class="dg-mons"><small>มอนสเตอร์:</small>${monsters(floor)}</div></div>
 <div class="dg-loot-col"><small>ของเด่น:</small><div>${lootIcons(p, floor)}</div></div>
 ${button}</article>`;
 }

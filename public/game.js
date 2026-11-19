@@ -1,3 +1,4 @@
+import { BOSSES } from "/shared/bosses.js";
 import { bindAnnouncements, receiveAnnouncement, announcementHistory } from "/announcements.js";
 import { updatePartyUi, bindPartyUi } from "/party-ui.js?v=2";
 import { showWorldHeroPreview } from "/hero-preview.js";
@@ -50,8 +51,8 @@ import {
   portrait,
   trackerHtml,
   claimable,
-} from "/quest-ui.js?v=3";
-import { dungeonPanelHtml } from "/dungeon-ui.js?v=40-1";
+} from "/quest-ui.js?v=4";
+import { dungeonPanelHtml } from "/dungeon-ui.js?v=40-2";
 import { createNightSky } from "/night-sky.js?v=3";
 import {
   nightInfo,
@@ -93,7 +94,7 @@ import {
   animateMonsterBody,
   createMonsterExtras,
   destroyMonsterExtras,
-} from "/creature-fx.js?v=0.11.0";
+} from "/creature-fx.js?v=0.12.0";
 import {
   queueSpriteSets,
   createSpriteRegistry,
@@ -2118,6 +2119,8 @@ class Adventure extends Phaser.Scene {
     this.load.image("cave", "/assets/cave.webp?v=2");
     this.load.image("knight-motion", "/assets/animations/knight-female.png");
     this.load.image("slime-motion", "/assets/animations/slime.png?v=3");
+    for (const id of Object.keys(BOSSES))
+      this.load.image(`boss-preview:${id}`, `/assets/sprites/monsters/${id}/portrait.webp?v=1`);
     this.load.spritesheet("heroes", "/assets/heroes.webp", {
       frameWidth: 512,
       frameHeight: 512,
@@ -2539,7 +2542,8 @@ class Adventure extends Phaser.Scene {
             (traitOf(e).scale || 1) *
             (e.world ? WORLD_BOSS.scale : e.night ? NIGHT_BOSS.scale : 1);
         const image = this.add
-          .image(e.x, e.y, "monsters", types.indexOf(e.type))
+          .image(e.x, e.y, BOSSES[e.type] ? `boss-preview:${e.type}` : "monsters",
+            BOSSES[e.type] ? undefined : Math.max(0, types.indexOf(e.type)))
           .setDisplaySize(size, size)
           .setOrigin(0.5, 1)
           .setDepth(8);
@@ -3236,7 +3240,7 @@ class Adventure extends Phaser.Scene {
           statusTint ??
             (traitOf(e).frenzy && e.hp <= e.maxHp * 0.5
               ? 0xff7a6a
-              : floorInfo(state.dungeon).tint),
+              : BOSSES[e.type] ? 0xffffff : floorInfo(state.dungeon).tint),
         );
       }
       this.fx.applyKick(m, m.image);
@@ -3282,14 +3286,14 @@ class Adventure extends Phaser.Scene {
           (serverTime - e.action.startedAt) /
             (e.action.impactAt - e.action.startedAt),
         );
-        this.telegraphs.fillStyle(0xff725b, 0.08 + progress * 0.25);
+        this.telegraphs.fillStyle(BOSSES[e.type]?.color || 0xff725b, 0.08 + progress * 0.25);
         this.telegraphs.fillEllipse(
           e.action.kind === "slam" ? e.action.x : e.x + e.action.direction * 42,
           e.y - 3,
           e.action.kind === "slam" ? e.action.radius * 2 : e.boss ? 240 : 160,
           30,
         );
-        this.telegraphs.lineStyle(2, 0xff9474, 0.8);
+        this.telegraphs.lineStyle(2, BOSSES[e.type]?.color || 0xff9474, 0.8);
         this.telegraphs.strokeEllipse(
           e.action.kind === "slam" ? e.action.x : e.x + e.action.direction * 42,
           e.y - 3,
