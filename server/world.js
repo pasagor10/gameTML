@@ -86,6 +86,10 @@ import {
   CLASSES,
   ITEMS,
   POTIONS,
+  STACK_SUPPLIES,
+  MAX_BUY,
+  pickPotion,
+  potionCount,
   FLOORS,
   MAIN_FLOORS,
   powerFloor,
@@ -163,14 +167,16 @@ export function ensureTown(p) {
 }
 const validInt = (n, min, max) =>
   Number.isSafeInteger(n) && n >= min && n <= max;
-export function buyNpc(p, item, key) {
+export function buyNpc(p, item, key, qty = 1) {
   ensureTown(p);
-  if (!ITEMS[item]) throw Error("ไม่มีสินค้านี้");
+  if (!Object.hasOwn(ITEMS, item)) throw Error("ไม่มีสินค้านี้");
+  const gear = ["weapon", "armor"].includes(item);
+  if (!validInt(qty, 1, gear ? 1 : MAX_BUY)) throw Error("จำนวนไม่ถูกต้อง");
   const result = atomic(p.id, "npc:buy", key, () => {
     const c = loadCharacter(p.id),
-      cost = ITEMS[item].price;
+      cost = ITEMS[item].price * qty;
     if (c.gold < cost) throw Error("ทองไม่พอ");
-    if (["weapon", "armor"].includes(item) && c[item])
+    if (gear && c[item])
       throw Error("มีอุปกรณ์นี้แล้ว");
     c.gold -= cost;
     if (["weapon", "armor"].includes(item)) {
@@ -178,9 +184,11 @@ export function buyNpc(p, item, key) {
       const id = item === "weapon" ? "guardian_weapon" : "traveler_armor";
       c.ownedEquipment = [...new Set([...c.ownedEquipment, id])];
       c.equipment[item] = id;
-    } else c.inventory[item] = (c.inventory[item] || 0) + 1;
+    } else c.inventory[item] = (c.inventory[item] || 0) + qty;
     persist(c);
-    return { message: "ซื้อ " + ITEMS[item].name + " สำเร็จ" };
+    return {
+      message: `ซื้อ ${ITEMS[item].name}${qty > 1 ? ` ×${qty}` : ""} สำเร็จ · ${cost.toLocaleString()} ทอง`,
+    };
   });
   sync(p);
   return result;
@@ -217,7 +225,7 @@ export function discardItem(p, id, key) {
       if (index < 0) throw Error("ไม่มีอุปกรณ์นี้");
       c.ownedEquipment.splice(index, 1);
     } else {
-      if (!(["hp", "mp", "ore"].includes(id) || isCostumeItem(id)) || !(c.inventory[id] > 0)) throw Error("ไม่มีไอเทมนี้");
+      if (!(STACK_SUPPLIES.includes(id) || isCostumeItem(id)) || !(c.inventory[id] > 0)) throw Error("ไม่มีไอเทมนี้");
       c.inventory[id] -= 1;
       dropUnownedSkin(c);
     }
@@ -666,7 +674,7 @@ function grantEnergy(p, t, amount) {
 
 // Anything in the bag can go on sale: potions and ore by the stack, and any
 // owned gear that is not equipped (starter gear is bound to its class).
-const SHOP_STOCK = ["hp", "mp", "ore", ...Object.keys(COSTUME_ITEMS)],
+const SHOP_STOCK = [...STACK_SUPPLIES, ...Object.keys(COSTUME_ITEMS)],
   SHOP_LIMIT = 12;
 // Stalls opened on the old, shorter town map move to the current free spots.
 db.transaction(() => {
@@ -882,24 +890,27 @@ export function closeShop(p, key) {
   sync(p);
   return result;
 }
-export function potion(p, type = "hp", t = now()) {
-  if (!POTIONS[type] || p.hp <= 0) throw Error("ยังใช้ยาไม่ได้");
+// `type` is a potion id. With `auto` (R / G keys, auto-play) it names a kind
+// ("hp" / "mp") and the best-fitting size the hero owns is drunk.
+export function potion(p, type = "hp", t = now(), auto = false) {
+  if (!Object.hasOwn(POTIONS, type) || p.hp <= 0) throw Error("ยังใช้ยาไม่ได้");
+  const kind = POTIONS[type].kind;
   p.potionCd ??= {};
-  const left = POTIONS[type].cooldown - (t - (p.potionCd[type] || 0));
+  const left = POTIONS[type].cooldown - (t - (p.potionCd[kind] || 0));
   if (left > 0)
-    throw Error(`ยา ${type.toUpperCase()} ยังไม่พร้อม · อีก ${Math.ceil(left)} วิ`);
-  const training = instances.get(p.instance)?.training;
-  if (!p.inventory[type] && !training) throw Error("ยาหมด");
-  if (
-    (type === "hp" && p.hp >= maxHp(p)) ||
-    (type === "mp" && p.mp >= maxMp(p))
-  )
-    throw Error("พลังเต็มแล้ว");
-  if (!training) p.inventory[type]--;
-  p.potionCd[type] = t;
-  if (type === "hp") p.hp = Math.min(maxHp(p), p.hp + POTIONS.hp.restore);
-  else p.mp = Math.min(maxMp(p), p.mp + POTIONS.mp.restore);
+    throw Error(`ยา ${kind.toUpperCase()} ยังไม่พร้อม · อีก ${Math.ceil(left)} วิ`);
+  const training = instances.get(p.instance)?.training,
+    missing = kind === "hp" ? maxHp(p) - p.hp : maxMp(p) - p.mp;
+  if (missing <= 0) throw Error("พลังเต็มแล้ว");
+  const item = training ? type : auto ? pickPotion(p.inventory, kind, missing) : type;
+  if (!training && !(item && p.inventory[item] > 0)) throw Error("ยาหมด");
+  if (!training) p.inventory[item]--;
+  p.potionCd[kind] = t;
+  const restore = POTIONS[item].restore;
+  if (kind === "hp") p.hp = Math.min(maxHp(p), p.hp + restore);
+  else p.mp = Math.min(maxMp(p), p.mp + restore);
   if (!training) persist(p);
+  return { item };
 }
 export function makeRuntime(c, socket) {
   initializeGear(c);
@@ -1902,7 +1913,7 @@ export function tradeAction(
       !t.accepted ||
       !validInt(gold, 0, 1000000) ||
       !validInt(qty, 0, 999) ||
-      !(["hp", "mp", "ore"].includes(item) || isCostumeItem(item))
+      !(STACK_SUPPLIES.includes(item) || isCostumeItem(item))
     )
       throw Error("ข้อเสนอไม่ถูกต้อง");
     if (p.gold < gold || (p.inventory[item] || 0) < qty) throw Error("ทรัพย์สินไม่พอ");
@@ -2189,14 +2200,14 @@ export function tick(dt, t = now()) {
         // Turn only between swings so a windup keeps its aim.
         if (!p.action || t >= p.action.endsAt) p.direction = plan.direction;
         if (plan.skill !== null) attack(p, plan.skill, t);
-        if (p.hp < maxHp(p) * 0.4 && (p.inventory.hp || i.training)) {
+        if (p.hp < maxHp(p) * 0.4 && (potionCount(p.inventory, "hp") || i.training)) {
           try {
-            potion(p);
+            potion(p, "hp", t, true);
           } catch {}
         }
-        if (p.mp < 20 && (p.inventory.mp || i.training)) {
+        if (p.mp < 20 && (potionCount(p.inventory, "mp") || i.training)) {
           try {
-            potion(p, "mp");
+            potion(p, "mp", t, true);
           } catch {}
         }
       } else if (

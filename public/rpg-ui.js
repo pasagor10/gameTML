@@ -11,7 +11,7 @@ import {
   ENHANCEMENT_BONUSES,
   enhancementLevel,
 } from "/shared/rpg.js";
-import { CLASSES, combatPower, combatStats } from "/shared/config.js";
+import { CLASSES, combatPower, combatStats, POTIONS, ITEMS } from "/shared/config.js";
 import {
   STAT_KEYS,
   STAT_INFO,
@@ -117,8 +117,12 @@ const bagSorts = [
   ["slot", "ประเภทอุปกรณ์"],
 ];
 const SUPPLIES = {
-  hp: { name: "ยา HP", text: "ฟื้นฟู 90 HP ทันที", rarity: "common" },
-  mp: { name: "ยา MP", text: "ฟื้นฟู 80 MP ทันที", rarity: "common" },
+  ...Object.fromEntries(
+    Object.entries(POTIONS).map(([id, { kind, restore }]) => [
+      id,
+      { name: ITEMS[id].name, text: `ฟื้นฟู ${restore} ${kind.toUpperCase()} ทันที · ปุ่มลัดเลือกขนาดที่พอดีให้อัตโนมัติ`, rarity: id.endsWith("_l") ? "rare" : "common" },
+    ]),
+  ),
   ore: {
     name: "แร่จันทรา",
     text: "วัตถุดิบตีบวกอาวุธ ใช้ที่โรงตีของลุงเหล็ก",
@@ -269,7 +273,7 @@ function detailCard(p, area, stats, key, counts) {
         !s.costume &&
         id !== "ore" &&
         p.hp > 0 &&
-        (id === "hp" ? p.hp < stats.hp : p.mp < stats.mp);
+        (POTIONS[id]?.kind === "hp" ? p.hp < stats.hp : p.mp < stats.mp);
     return `<aside class="inv-detail ${rarity(s)}"><div class="inv-detail-art">${supplyArt(id)}</div><h3>${s.name}</h3><div class="inv-pills"><span>${s.costume ? "ชุดแต่งกาย" : "วัตถุดิบ"}</span><span class="rarity">${RARITIES[s.rarity]}</span></div><p class="inv-lore">${s.text}</p><div class="inv-detail-stats"><div><span>จำนวนในกระเป๋า</span><b>×${p.inventory[id]}</b></div></div><div class="inv-detail-actions">${s.costume ? costumeAction(p, s.costume) : id === "ore" ? "" : `<button class="inv-action" data-use="${id}" ${usable ? "" : "disabled"}>${usable ? "ใช้" : "พลังเต็มอยู่แล้ว"}</button>`}${discardButton(id, area === "town")}</div></aside>`;
   }
   const item = GEAR[key],

@@ -80,6 +80,10 @@ import {
   CLASSES,
   ITEMS,
   POTIONS,
+  POTION_SIZES,
+  STACK_SUPPLIES,
+  MAX_BUY,
+  potionCount,
   FLOORS,
   MAIN_FLOORS,
   WORLD,
@@ -1017,6 +1021,8 @@ async function enterGame() {
 const forgeHash = (p) =>
   JSON.stringify([p.equipment, p.upgrade, p.enhancements, p.gold, p.inventory.ore]);
 let posterShown = false;
+let potionQty = 1;
+const potionHash = (p) => JSON.stringify([p.gold, p.inventory]);
 let worldBossWasOpen = false;
 async function joinWorldBoss() {
   if (activePanel) closeModal();
@@ -1092,6 +1098,11 @@ function updateHUD() {
   } else if (activePanel === "weapon") {
     const hash = JSON.stringify([p.ownedEquipment, p.gold]);
     if (hash !== lastRpgPanelHash) showPanel("weapon");
+  } else if (activePanel === "potion") {
+    // Gold and stock arrive with the next snapshot after a purchase; keep the
+    // quantity box alone while it has focus.
+    if (potionHash(p) !== lastRpgPanelHash && document.activeElement?.id !== "buy-qty-input")
+      showPanel("potion");
   } else if (activePanel === "forge") {
     if (forgeHash(p) !== lastRpgPanelHash) showPanel("forge");
   } else if (activePanel === "quest") {
@@ -1142,8 +1153,8 @@ function updateHUD() {
   // HP (R) and MP (G) potions, each with its own cooldown ring.
   for (const type of ["hp", "mp"]) {
     const button = $(`[data-action="${type}"]`),
-      count = p.inventory[type] || 0,
-      { restore, cooldown } = POTIONS[type],
+      count = potionCount(p.inventory, type),
+      { cooldown } = POTIONS[type],
       left = cooldown - (state.time - (p.potionCd?.[type] || 0)),
       full = type === "hp" ? p.hp >= p.maxHp : p.mp >= p.maxMp,
       ring = button.querySelector("i"),
@@ -1154,7 +1165,7 @@ function updateHUD() {
     button.title =
       count <= 0 && !d?.training
         ? "ยาหมด · ซื้อเพิ่มได้ที่ร้านยา"
-        : `ยา ${name} · ฟื้นฟู ${restore} ${name} · คูลดาวน์ ${cooldown} วิ (${type === "hp" ? "R" : "G"})`;
+        : `ยา ${name} ${POTION_SIZES[type].map((id) => `${ITEMS[id].name.split(" ").pop()} ×${p.inventory[id] || 0}`).join(" · ")} · เลือกขนาดที่พอดีให้อัตโนมัติ · คูลดาวน์ ${cooldown} วิ (${type === "hp" ? "R" : "G"})`;
     button.style.setProperty("--cd", Math.max(0, Math.min(1, left / cooldown)).toFixed(3));
     ring.style.display = left > 0 ? "grid" : "none";
     const ringHtml = left > 0 ? `${Math.ceil(left)}<small>วิ</small>` : "";
@@ -1469,7 +1480,7 @@ function action(name) {
   else if (name.startsWith("skill"))
     emit("player:attack", { skill: Number(name.slice(-1)) });
   else if (name === "hp" || name === "mp")
-    emit("player:potion", { type: name }).then((r) => r && sfx("potion"));
+    emit("player:potion", { type: name, auto: true }).then((r) => r && sfx("potion"));
   else if (name === "auto") emit("player:auto", { enabled: !state.self.auto });
 }
 $$("[data-action]").forEach(
@@ -1765,12 +1776,47 @@ function showPanel(panel) {
           if (!r) b.disabled = false;
         }),
     );
-  } else if (panel === "potion" || panel === "weapon") {
-    const items =
-      panel === "potion" ? ["hp", "mp"] : ["weapon", "armor", "ore"];
+  } else if (panel === "potion") {
+    // Potion shop: every size, buy any amount at once (1-999).
+    lastRpgPanelHash = potionHash(p);
+    const qty = (potionQty = Math.max(1, Math.min(MAX_BUY, potionQty || 1)));
+    const rows = Object.keys(POTIONS).map((id) => {
+      const { kind, restore } = POTIONS[id],
+        total = ITEMS[id].price * qty;
+      return row(
+        supplyArt(id) || ITEMS[id].icon,
+        ITEMS[id].name,
+        `ฟื้นฟู ${restore} ${kind.toUpperCase()} · ${ITEMS[id].price} ทอง/ขวด · มี ${p.inventory[id] || 0}`,
+        btn(`data-buy="${id}" ${p.gold < total ? "disabled" : ""}`, `×${qty} · ${total.toLocaleString()} ◈`),
+      );
+    }).join("");
     modal(
-      panel === "potion" ? "มีรา · ร้านปรุงยา" : "อริน · อาวุธและอุปกรณ์",
-      `<p>ยินดีต้อนรับผู้กล้า · ทองของเจ้า ${p.gold}</p>${items.map((id) => row(supplyArt(id) || ITEMS[id].icon, ITEMS[id].name, id === "weapon" ? "เพิ่ม ATK 10 · สวมให้อัตโนมัติ" : id === "armor" ? "เพิ่ม HP 30 · ป้องกันเพิ่ม" : id === "ore" ? "วัตถุดิบตีบวก" : "ใช้ฟื้นฟูระหว่างต่อสู้", btn(`data-buy="${id}"`, ITEMS[id].price + " ◈"))).join("")}`,
+      "มีรา · ร้านปรุงยา",
+      `<p>ยินดีต้อนรับผู้กล้า · ทองของเจ้า ${p.gold.toLocaleString()}</p><div class="buy-qty"><span>ซื้อครั้งละ</span>${[1, 10, 50, 100].map((n) => `<button data-buy-qty="${n}" class="${n === qty ? "active" : ""}">×${n}</button>`).join("")}<input id="buy-qty-input" type="number" inputmode="numeric" min="1" max="${MAX_BUY}" value="${qty}" aria-label="จำนวนที่ซื้อ"></div>${rows}<p class="hint">ปุ่มยา R / G เลือกขวดเล็กสุดที่เติมพอดีให้อัตโนมัติ ถ้าไม่มีขนาดที่พอจะใช้ขวดใหญ่สุดที่มี</p>`,
+      "potion",
+    );
+    const setQty = (n) => {
+      potionQty = n;
+      showPanel("potion");
+    };
+    $$("[data-buy-qty]").forEach((b) => (b.onclick = () => setQty(Number(b.dataset.buyQty))));
+    $("#buy-qty-input").onchange = (e) => {
+      const n = Math.floor(Number(e.target.value));
+      setQty(Number.isFinite(n) ? n : 1);
+    };
+    $$("[data-buy]").forEach(
+      (b) =>
+        (b.onclick = async () => {
+          b.disabled = true;
+          if (!(await transaction("npc:buy", { item: b.dataset.buy, qty })))
+            b.disabled = false;
+        }),
+    );
+  } else if (panel === "weapon") {
+    const items = ["weapon", "armor", "ore"];
+    modal(
+      "อริน · อาวุธและอุปกรณ์",
+      `<p>ยินดีต้อนรับผู้กล้า · ทองของเจ้า ${p.gold}</p>${items.map((id) => row(supplyArt(id) || ITEMS[id].icon, ITEMS[id].name, id === "weapon" ? "เพิ่ม ATK 10 · สวมให้อัตโนมัติ" : id === "armor" ? "เพิ่ม HP 30 · ป้องกันเพิ่ม" : "วัตถุดิบตีบวก", btn(`data-buy="${id}"`, ITEMS[id].price + " ◈"))).join("")}`,
     );
     $$("[data-buy]").forEach(
       (b) =>
@@ -2032,7 +2078,7 @@ function showTrade() {
         })
         .join(
           "",
-        )}<label>ทองที่เสนอ<input id="trade-gold" type="number" min="0" value="${me.gold}"></label><label>ไอเทม<select id="trade-item">${["ore", "hp", "mp", ...Object.keys(COSTUME_ITEMS).filter((i) => p.inventory[i] > 0 || me.item === i)].map((i) => `<option value="${i}" ${me.item === i ? "selected" : ""}>${(ITEMS[i] || COSTUME_ITEMS[i]).name} · มี ${p.inventory[i] || 0}</option>`).join("")}</select></label><label>จำนวน<input id="trade-qty" type="number" min="0" value="${me.qty}"></label><div class="trade-actions"><button id="trade-offer" class="secondary-button">อัปเดตข้อเสนอ</button><button id="trade-confirm" class="primary-button">${t.confirmed.length === 2 ? "ยืนยันรอบสุดท้าย" : "ยืนยันรายการรอบแรก"}</button></div><button id="trade-cancel" class="text-button">ยกเลิกการแลกเปลี่ยน</button>`,
+        )}<label>ทองที่เสนอ<input id="trade-gold" type="number" min="0" value="${me.gold}"></label><label>ไอเทม<select id="trade-item">${[...STACK_SUPPLIES, ...Object.keys(COSTUME_ITEMS).filter((i) => p.inventory[i] > 0 || me.item === i)].map((i) => `<option value="${i}" ${me.item === i ? "selected" : ""}>${(ITEMS[i] || COSTUME_ITEMS[i]).name} · มี ${p.inventory[i] || 0}</option>`).join("")}</select></label><label>จำนวน<input id="trade-qty" type="number" min="0" value="${me.qty}"></label><div class="trade-actions"><button id="trade-offer" class="secondary-button">อัปเดตข้อเสนอ</button><button id="trade-confirm" class="primary-button">${t.confirmed.length === 2 ? "ยืนยันรอบสุดท้าย" : "ยืนยันรายการรอบแรก"}</button></div><button id="trade-cancel" class="text-button">ยกเลิกการแลกเปลี่ยน</button>`,
       "trade",
     );
     $("#trade-offer").onclick = () =>

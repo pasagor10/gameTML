@@ -55,13 +55,39 @@ export const CLASSES = {
 };
 // Potions: how much each restores and its own cooldown (seconds), so HP
 // and MP potions can't be chugged back to back.
+// Three sizes per kind; "hp" / "mp" are the original medium potions. Sizes
+// of one kind share that kind's cooldown (potionCd.hp / potionCd.mp).
 export const POTIONS = {
-  hp: { restore: 90, cooldown: 4 },
-  mp: { restore: 80, cooldown: 4 },
+  hp_s: { kind: "hp", restore: 45, cooldown: 4 },
+  hp: { kind: "hp", restore: 90, cooldown: 4 },
+  hp_l: { kind: "hp", restore: 350, cooldown: 4 },
+  mp_s: { kind: "mp", restore: 40, cooldown: 4 },
+  mp: { kind: "mp", restore: 80, cooldown: 4 },
+  mp_l: { kind: "mp", restore: 300, cooldown: 4 },
 };
+// Smallest first.
+export const POTION_SIZES = {
+  hp: ["hp_s", "hp", "hp_l"],
+  mp: ["mp_s", "mp", "mp_l"],
+};
+// Stackable supplies that can be traded, sold in shops or discarded.
+export const STACK_SUPPLIES = [...Object.keys(POTIONS), "ore"];
+export const potionCount = (inventory, kind) =>
+  POTION_SIZES[kind].reduce((n, id) => n + (inventory?.[id] || 0), 0);
+// Quick-use (R / G and auto-play): the smallest owned potion that refills
+// what is missing, else the biggest one owned. null when none are left.
+export function pickPotion(inventory, kind, missing) {
+  const owned = POTION_SIZES[kind].filter((id) => inventory?.[id] > 0);
+  return owned.find((id) => POTIONS[id].restore >= missing) || owned.at(-1) || null;
+}
+export const MAX_BUY = 999;
 export const ITEMS = {
-  hp: { name: "ยาฟื้นฟู HP", icon: "🧪", price: 15 },
-  mp: { name: "ยาฟื้นฟู MP", icon: "💧", price: 15 },
+  hp_s: { name: "ยา HP เล็ก", icon: "🧪", price: 8 },
+  hp: { name: "ยา HP กลาง", icon: "🧪", price: 15 },
+  hp_l: { name: "ยา HP ใหญ่", icon: "🧪", price: 60 },
+  mp_s: { name: "ยา MP เล็ก", icon: "💧", price: 8 },
+  mp: { name: "ยา MP กลาง", icon: "💧", price: 15 },
+  mp_l: { name: "ยา MP ใหญ่", icon: "💧", price: 60 },
   ore: { name: "แร่จันทรา", icon: "💎", price: 20 },
   weapon: { name: "อาวุธผู้พิทักษ์", icon: "⚔", price: 70 },
   armor: { name: "เกราะนักเดินทาง", icon: "🛡", price: 60 },

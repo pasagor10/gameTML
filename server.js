@@ -325,7 +325,7 @@ io.on("connection", (socket) => {
     p.auto = !!d.enabled;
   });
   execute("slots:spin", (p, d) => spinSlotMachine(p, d.key), 3);
-  execute("player:potion", (p, d) => world.potion(p, d.type));
+  execute("player:potion", (p, d) => world.potion(p, d.type, undefined, d.auto === true));
   execute("player:heal", (p) => {
     world.ensureTown(p);
     p.hp = maxHp(p);
@@ -339,7 +339,7 @@ io.on("connection", (socket) => {
   execute("dungeon:next", (p) => world.nextStage(p));
   execute("dungeon:explore", (p, d) => world.useDungeonSign(p, d), 5);
   execute("dungeon:leave", (p) => world.returnTown(p));
-  execute("npc:buy", (p, d) => world.buyNpc(p, d.item, d.key), 5);
+  execute("npc:buy", (p, d) => world.buyNpc(p, d.item, d.key, d.qty ?? 1), 5);
   execute("equipment:buy", (p, d) => world.buyEquipment(p, d.id, d.key));
   execute("inventory:discard", (p, d) => world.discardItem(p, d.id, d.key), 3);
   execute("equipment:equip", (p, d) => world.equip(p, d.slot, d.id));

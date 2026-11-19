@@ -71,6 +71,10 @@ export function supplyArt(id) {
   const art = {
     hp: ["supply", 0],
     mp: ["supply", 1],
+    hp_s: ["supply", 4],
+    hp_l: ["supply", 5],
+    mp_s: ["supply", 6],
+    mp_l: ["supply", 7],
     gold: ["supply", 2],
     ore: ["supply", 3],
     weapon: ["sword", 1],
@@ -80,8 +84,12 @@ export function supplyArt(id) {
     ? image(
         art,
         {
-          hp: "ยา HP",
-          mp: "ยา MP",
+          hp: "ยา HP กลาง",
+          mp: "ยา MP กลาง",
+          hp_s: "ยา HP เล็ก",
+          hp_l: "ยา HP ใหญ่",
+          mp_s: "ยา MP เล็ก",
+          mp_l: "ยา MP ใหญ่",
           gold: "ทอง",
           ore: "แร่จันทรา",
           weapon: "อาวุธผู้พิทักษ์",

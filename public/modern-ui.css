@@ -436,3 +436,10 @@ html body #modal[data-panel="poster"] #modal-body { padding: 0; }
 .ranking-table small { display: block; color: #9db3bd; }
 .ranking-self { background: #dcb46020; }
 .ranking-summary { color: #efd399; }
+
+/* Potion shop: buy-many quantity picker. */
+.buy-qty { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 4px 0 12px; }
+.buy-qty span { color: #9db3bd; font-size: 13px; margin-right: 2px; }
+.buy-qty button { min-width: 52px; padding: 8px 10px; border: 1px solid #b59454; border-radius: 6px; background: #102237; color: #efd399; }
+.buy-qty button.active { background: #efd399; color: #172238; }
+html body #modal .buy-qty input { flex: 0 0 84px; width: 84px !important; min-width: 0; padding: 8px; border: 1px solid #c1dce240; border-radius: 6px; background: #0d1b26; color: #e8f1f3; font: inherit; }

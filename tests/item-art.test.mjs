@@ -14,3 +14,11 @@ test("every gear item has inventory art (and weapons a held picture) on disk", (
     }
   }
 });
+
+test("every potion size has its own supply picture", async () => {
+  const { POTIONS } = await import("../shared/config.js");
+  const { supplyArt } = await import("../public/item-art.js");
+  const srcs = Object.keys(POTIONS).map((id) => supplyArt(id).match(/src="([^"]+)"/)?.[1]);
+  assert.equal(new Set(srcs).size, srcs.length);
+  for (const src of srcs) assert.ok(src && existsSync(`public${src}`), src);
+});

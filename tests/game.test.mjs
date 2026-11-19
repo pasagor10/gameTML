@@ -1210,3 +1210,32 @@ test("enhancement caps at +15, breaks to +0 on failure from +10, and +11 weapons
   assert.equal(weaponGlowLevel(hero(15)), 15);
   assert.equal(weaponGlowLevel(hero(15, null)), 0);
 });
+
+test("potion sizes: buy many at once and quick-use picks the best fit", async () => {
+  const { pickPotion, potionCount, POTIONS } = await import("../shared/config.js");
+  const p = create("potion-bulk");
+  const c = loadCharacter(p.id);
+  c.gold = 1000;
+  c.inventory = { ore: 0 };
+  persist(c);
+  world.buyNpc(p, "hp_s", "potion-bulk-buy-1", 50);
+  world.buyNpc(p, "hp_l", "potion-bulk-buy-2", 10);
+  assert.equal(p.inventory.hp_s, 50);
+  assert.equal(p.inventory.hp_l, 10);
+  assert.equal(p.gold, 1000 - 50 * 8 - 10 * 60);
+  assert.throws(() => world.buyNpc(p, "hp_l", "potion-bulk-buy-3", 10), /ทองไม่พอ/);
+  assert.throws(() => world.buyNpc(p, "hp", "potion-bulk-buy-4", 1000), /จำนวน/);
+  assert.throws(() => world.buyNpc(p, "weapon", "potion-bulk-buy-5", 2), /จำนวน/);
+  assert.equal(potionCount(p.inventory, "hp"), 60);
+  assert.equal(pickPotion({ hp_s: 1, hp_l: 1 }, "hp", 30), "hp_s");
+  assert.equal(pickPotion({ hp_s: 1, hp: 1, hp_l: 1 }, "hp", 80), "hp");
+  assert.equal(pickPotion({ hp_s: 1, hp_l: 1 }, "hp", 800), "hp_l");
+  assert.equal(pickPotion({ hp_s: 2 }, "hp", 800), "hp_s");
+  assert.equal(pickPotion({}, "mp", 10), null);
+  // Quick use drinks the big one for a big wound, and shares the HP cooldown.
+  p.hp = 10;
+  world.potion(p, "hp", 1000, true);
+  assert.equal(p.inventory.hp_l, 9);
+  assert.throws(() => world.potion(p, "hp_s", 1001), /ยังไม่พร้อม/);
+  assert.equal(POTIONS.hp_l.restore > POTIONS.hp.restore, true);
+});

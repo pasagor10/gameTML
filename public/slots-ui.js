@@ -29,7 +29,7 @@ function art(item) {
 function rewardHtml(r) {
   if (!r) return "<small>รางวัลจะเข้ากระเป๋าทันทีเมื่อเซิร์ฟเวอร์ยืนยัน</small>";
   const name =
-    GEAR[r.item]?.name || { hp: "ยา HP", mp: "ยา MP", ore: "แร่จันทรา" }[r.item];
+    GEAR[r.item]?.name || { hp: "ยา HP กลาง", mp: "ยา MP กลาง", ore: "แร่จันทรา" }[r.item];
   return `<span class="slot-prize-art">${art(r.item)}</span><div><small>${r.converted ? "เปลี่ยนเป็นแร่ · อุปกรณ์ซ้ำหรือยังไม่ถึงเงื่อนไข" : r.rarity === "common" ? "ได้รับเสบียง" : RARITIES[r.rarity]}${r.converted ? "" : " · เข้ากระเป๋าแล้ว"}</small><strong>${name} ×${r.qty}</strong></div>`;
 }
 export function slotPanelHtml(p) {
