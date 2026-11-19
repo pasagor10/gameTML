@@ -18,6 +18,11 @@ const artIndex = {
   moonheart_talisman: 22,
   cavern_charm: 30,
   wind_boots: 17,
+  // World-boss divine weapons: the winged gold design of each class.
+  divine_nangnon_blade: 32,
+  divine_nangnon_bow: 32,
+  divine_nangnon_staff: 32,
+  divine_nangnon_scepter: 32,
 };
 // By floor 1..10 (floor 2 has no charm).
 const FLOOR = [8, 7, 15, 18, 6, 12, 28, 29, 22, 26];
