@@ -9,7 +9,11 @@ export function updatePartyUi(state) {
   const health = document.querySelector('#party-health');
   const members = (state.party?.members || []).filter(m => m.id !== state.self.id);
   health.hidden = !members.length;
-  health.innerHTML = members.map(m => `<div><strong>${escape(m.name || 'เพื่อน')}</strong><span>${Math.ceil(m.hp)} / ${m.maxHp}</span><meter min="0" max="${m.maxHp}" value="${Math.max(0,m.hp)}" aria-label="เลือด ${escape(m.name)}"></meter></div>`).join('');
+  const markup = members.map(m => `<div><strong>${escape(m.name || 'เพื่อน')}</strong><span>${Math.ceil(m.hp)} / ${m.maxHp}</span><meter min="0" max="${m.maxHp}" value="${Math.max(0,m.hp)}" aria-label="เลือด ${escape(m.name)}"></meter></div>`).join('');
+  if (health.dataset.markup !== markup) {
+    health.dataset.markup = markup;
+    health.innerHTML = markup;
+  }
   const host = document.querySelector('#party-invite'), invite = state.partyInvite;
   host.hidden = !invite;
   if (!invite) { host.dataset.id = ''; return; }

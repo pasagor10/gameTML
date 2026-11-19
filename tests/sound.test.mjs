@@ -61,14 +61,14 @@ test('area recordings switch, fade, retry autoplay and respect music mute', asyn
   } finally { Object.assign(globalThis, originals); }
 });
 
-test('music preparation downloads once, tolerates failures and skips muted music', async () => {
+test('music preparation downloads the town track once, tolerates failures and skips muted music', async () => {
   const originals = { window: globalThis.window, localStorage: globalThis.localStorage, fetch: globalThis.fetch };
   const urls = [];
   globalThis.window = { addEventListener() {} };
   globalThis.localStorage = { getItem: () => null, setItem() {} };
   globalThis.fetch = async (url) => {
     urls.push(url);
-    if (url.includes('battle')) throw Error('offline');
+    if (url.includes('town')) throw Error('offline');
     return { ok: true, blob: async () => new Blob(['audio']) };
   };
   try {
@@ -78,8 +78,9 @@ test('music preparation downloads once, tolerates failures and skips muted music
     assert.equal(urls.length, 0);
     audio.setMusic(true);
     await Promise.all([audio.prepareMusic(), audio.prepareMusic()]);
-    assert.equal(urls.length, 3);
+    // Only the town recording is held in memory; others stream on first use.
+    assert.deepEqual(urls, ['/assets/music/town.mp3']);
     await audio.prepareMusic();
-    assert.equal(urls.length, 3);
+    assert.equal(urls.length, 1);
   } finally { Object.assign(globalThis, originals); }
 });

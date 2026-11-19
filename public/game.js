@@ -43,6 +43,7 @@ import { createTownNpcs, footGlow, createRim } from "/town-npcs.js?v=10";
 import { updateEnhanceAura, AURA_LEVEL } from "/enhance-aura.js?v=3";
 import { marketHtml, shopManagerHtml, marketState } from "/market-ui.js?v=9";
 import { sampleMotion } from "/shared/smoothing.js";
+import { mergeSnapshot } from "/shared/snapshot-delta.js";
 import {
   questPanelHtml,
   setQuestTab,
@@ -779,7 +780,11 @@ async function enterGame() {
     $("#connection-state").textContent = "การเชื่อมต่อขาดหาย กำลังเชื่อมต่อใหม่…";
     $("#connection-state").classList.remove("hidden");
   });
-  socket.on("world:snapshot", (packet) => {
+  // Each socket's first packet is complete; later ones carry only changes.
+  let merged = null;
+  const snapshotCaches = {};
+  socket.on("world:snapshot", (delta) => {
+    const packet = (merged = mergeSnapshot(merged, delta, snapshotCaches));
     state = packet;
     snapshotAt = performance.now();
     const nextOffset = packet.time - snapshotAt / 1000;
@@ -787,7 +792,7 @@ async function enterGame() {
       serverOffset === null
         ? nextOffset
         : serverOffset + (nextOffset - serverOffset) * 0.08;
-    updateHUD();
+    scheduleHUD();
     if (scene?.ready) scene.applySnapshot(packet);
   });
   socket.on("chat:message", (packet) => addChat(packet));
@@ -812,15 +817,37 @@ function skyText(sky, time) {
   return sky.night ? `🌙 ถ้ำลึกลับเปิด ${left} น.` : `☀ มืดใน ${left} น.`;
 }
 
+// The HUD is DOM: redrawing it for all 20 snapshots a second kept tablets
+// busy restyling. 10 redraws a second look the same; the latest always lands.
+const HUD_INTERVAL = 100;
+let hudAt = 0,
+  hudTimer = 0;
+function scheduleHUD() {
+  const wait = hudAt + HUD_INTERVAL - performance.now();
+  if (wait <= 0) {
+    hudAt = performance.now();
+    updateHUD();
+  } else
+    hudTimer ||= setTimeout(() => {
+      hudTimer = 0;
+      hudAt = performance.now();
+      if (state) updateHUD();
+    }, wait);
+}
+// Skip DOM writes whose value has not changed (each one restyles the page).
+const setText = (el, value) => {
+  value = String(value);
+  if (el && el.textContent !== value) el.textContent = value;
+};
 function updateHUD() {
   const p = state.self,
     d = state.dungeon;
-  $("#player-name").textContent = p.name;
-  $("#player-level").textContent = "Lv." + p.level;
+  setText($("#player-name"), p.name);
+  setText($("#player-level"), "Lv." + p.level);
   $("#player-class").textContent =
     SPECIALIZATIONS[p.class].find((s) => s.id === p.specialization)?.name ||
     CLASSES[p.class].name;
-  $("#exp-label").textContent = `${p.exp} / ${p.level * 80} EXP`;
+  setText($("#exp-label"), `${p.exp} / ${p.level * 80} EXP`);
   // Unspent status points: a badge on the status menu button.
   const statusMenu = $("#status-menu");
   if (statusMenu) {
@@ -869,9 +896,11 @@ function updateHUD() {
       button.querySelector("b").innerHTML = skillIcon(p.class, i + 1);
       button.dataset.iconClass = p.class;
     }
+    const tip = `${skill.name} · ${skill.detail} · ${ACTIONS[i + 1].mp} MP · ${ACTIONS[i + 1].cooldown}s`;
+    if (button.dataset.tip === tip) return;
     button.querySelector("small").textContent = skill.name;
-    button.dataset.tip = `${skill.name} · ${skill.detail} · ${ACTIONS[i + 1].mp} MP · ${ACTIONS[i + 1].cooldown}s`;
-    button.setAttribute("aria-label", button.dataset.tip);
+    button.dataset.tip = tip;
+    button.setAttribute("aria-label", tip);
     button.querySelector(".skill-cost").textContent = ACTIONS[i + 1].mp + " MP";
   });
   const basicAttack = $('[data-action="attack"]');
@@ -885,11 +914,16 @@ function updateHUD() {
     $("#auto-button b").innerHTML = autoIcon;
     $("#auto-button").dataset.iconReady = "1";
   }
-  $("#avatar").style.cssText = heroStyle(p.class, p.gender, p);
+  const avatarStyle = heroStyle(p.class, p.gender, p),
+    avatar = $("#avatar");
+  if (avatar.dataset.style !== avatarStyle) {
+    avatar.dataset.style = avatarStyle;
+    avatar.style.cssText = avatarStyle;
+  }
   $("#hp-fill").style.width = (p.hp / p.maxHp) * 100 + "%";
   $("#mp-fill").style.width = (p.mp / p.maxMp) * 100 + "%";
-  $("#hp-label").textContent = `HP ${Math.ceil(p.hp)} / ${p.maxHp}`;
-  $("#mp-label").textContent = `MP ${Math.floor(p.mp)} / ${p.maxMp}`;
+  setText($("#hp-label"), `HP ${Math.ceil(p.hp)} / ${p.maxHp}`);
+  setText($("#mp-label"), `MP ${Math.floor(p.mp)} / ${p.maxMp}`);
   $("#exp-fill").style.width = (p.exp / (p.level * 80)) * 100 + "%";
   // HP (R) and MP (G) potions, each with its own cooldown ring.
   for (const type of ["hp", "mp"]) {
@@ -900,7 +934,7 @@ function updateHUD() {
       full = type === "hp" ? p.hp >= p.maxHp : p.mp >= p.maxMp,
       ring = button.querySelector("i"),
       name = type.toUpperCase();
-    $(`#${type}-potions`).textContent = d?.training ? `ยา ${name} ∞` : `ยา ${name} ×${count}`;
+    setText($(`#${type}-potions`), d?.training ? `ยา ${name} ∞` : `ยา ${name} ×${count}`);
     button.dataset.count = d?.training ? "∞" : String(count);
     button.disabled = p.hp <= 0 || full || left > 0 || (!d?.training && count <= 0);
     button.title =
@@ -909,7 +943,11 @@ function updateHUD() {
         : `ยา ${name} · ฟื้นฟู ${restore} ${name} · คูลดาวน์ ${cooldown} วิ (${type === "hp" ? "R" : "G"})`;
     button.style.setProperty("--cd", Math.max(0, Math.min(1, left / cooldown)).toFixed(3));
     ring.style.display = left > 0 ? "grid" : "none";
-    ring.innerHTML = left > 0 ? `${Math.ceil(left)}<small>วิ</small>` : "";
+    const ringHtml = left > 0 ? `${Math.ceil(left)}<small>วิ</small>` : "";
+    if (ring.dataset.html !== ringHtml) {
+      ring.dataset.html = ringHtml;
+      ring.innerHTML = ringHtml;
+    }
   }
   $("#training-open").disabled = state.area !== "town";
   $$(
@@ -926,12 +964,12 @@ function updateHUD() {
       !!p.action && state.time < p.action.endsAt,
     ),
   );
-  $("#location-name").textContent = d?.training
+  setText($("#location-name"), d?.training
     ? "ลานฝึกผู้พิทักษ์"
     : d
       ? floorInfo(d).name
-      : "เมืองหน้าถ้ำหลวง";
-  $("#stage-label").textContent = d?.training
+      : "เมืองหน้าถ้ำหลวง");
+  setText($("#stage-label"), d?.training
     ? "สนามฝึก · ไม่มีรางวัล · สไลม์เกิดใหม่อัตโนมัติ"
     : d?.world
       ? `บอสโลก · ${d.world.name} · ร่วมกันตีกับผู้กล้าทุกคน`
@@ -939,8 +977,8 @@ function updateHUD() {
       ? `ยามราตรี · บอสใหญ่ ${d.night.name} · พลังเทียบชั้น ${d.floor}`
       : d
       ? `ชั้น ${d.floor} / ${FLOORS.length} · ด่าน ${d.stage} / 3 · ${d.stage === 3 ? "BOSS STAGE" : d.stage === 2 ? "ELITE STAGE" : "MONSTER STAGE"}`
-      : "เมืองกลาง · CH.1 · เขตปลอดภัย";
-  $("#map-title").textContent = d?.training
+      : "เมืองกลาง · CH.1 · เขตปลอดภัย");
+  setText($("#map-title"), d?.training
     ? "สนามฝึกผู้พิทักษ์"
     : d?.world
       ? "ลานบอสโลก"
@@ -948,13 +986,13 @@ function updateHUD() {
       ? "ถ้ำลึกลับ"
       : d
       ? "ถ้ำหลวง · ชั้น " + d.floor
-      : "เมืองหน้าถ้ำหลวง";
-  $("#online-count").textContent = "● " + state.online + " ออนไลน์";
+      : "เมืองหน้าถ้ำหลวง");
+  setText($("#online-count"), "● " + state.online + " ออนไลน์");
   const mapW = areaWidth(state.area),
     mapX = (x) => 8 + (x / mapW) * 200,
     mapY = (y) => 52 - ((WORLD.ground - y) / 450) * 43,
     town = state.area === "town";
-  $("#map-zone").textContent = d?.training
+  setText($("#map-zone"), d?.training
     ? "TRAINING · ไม่มีรางวัล"
     : d
       ? d.world
@@ -962,7 +1000,7 @@ function updateHUD() {
         : d.night
         ? "ถ้ำลึกลับ · ยามราตรี"
         : `ชั้น ${d.floor} · ด่าน ${d.stage} / 3`
-      : `${skyText(state.sky, state.time)} · ${worldBossCountdown(state.worldBoss)}`;
+      : `${skyText(state.sky, state.time)} · ${worldBossCountdown(state.worldBoss)}`);
   updatePartyUi(state);
   $("#minimap").classList.toggle("in-dungeon", !town);
   const dotAt = `translate(${mapX(p.x).toFixed(1)} ${mapY(p.y).toFixed(1)})`;
@@ -1019,7 +1057,7 @@ function updateHUD() {
   );
   $("#auto-button").classList.toggle("on", p.auto);
   $("#auto-button").setAttribute("aria-pressed", String(!!p.auto));
-  $("#auto-button small").textContent = p.auto ? "เปิด" : "ปิด";
+  setText($("#auto-button small"), p.auto ? "เปิด" : "ปิด");
   // Two HUD modes: town (no combat buttons) and dungeon. Each new dungeon
   // starts on AUTO; steering the joystick hands control back (see below).
   const area = !d ? "town" : d.training ? "training" : "dungeon";
@@ -1030,11 +1068,11 @@ function updateHUD() {
     if (!p.auto && p.hp > 0) emit("player:auto", { enabled: true });
   }
   if (area === "town") autoInstance = null;
-  $("#dock-label").textContent = p.quest > 0
+  setText($("#dock-label"), p.quest > 0
     ? `เล่นต่อ ชั้น ${Math.min(p.unlocked || 1, FLOORS.length)}`
-    : "ผจญภัย";
-  $("#floor-chip").textContent = d?.world ? "บอสโลก" : d?.night ? "ถ้ำลึกลับ" : d ? `ชั้น ${d.floor} · ${d.stage}/3` : "";
-  $("#quest-description").textContent = d?.training
+    : "ผจญภัย");
+  setText($("#floor-chip"), d?.world ? "บอสโลก" : d?.night ? "ถ้ำลึกลับ" : d ? `ชั้น ${d.floor} · ${d.stage}/3` : "");
+  setText($("#quest-description"), d?.training
     ? "ฝึกเดิน กระโดด ฟัน และ Q/W/E · หลบเมื่อสไลม์ขึ้นวงเตือน"
     : d
       ? d.clear
@@ -1044,7 +1082,7 @@ function updateHUD() {
         ? "พิชิตห้วงลึกครบทุกชั้น! ท้าทายซ้ำเพื่อของตำนาน"
         : p.quest >= MAIN_FLOORS
           ? "ตำนานบทแรกสำเร็จ! ห้วงลึกถ้ำหลวงเปิดแล้ว"
-        : "คุยกับผู้ใหญ่คำ แล้วเข้าสู่ประตูถ้ำหลวง";
+        : "คุยกับผู้ใหญ่คำ แล้วเข้าสู่ประตูถ้ำหลวง");
   const streak =
     d && d.streakUntil > state.time && d.streak > 1
       ? ` · ต่อเนื่อง ×${d.streak}`
@@ -1059,7 +1097,7 @@ function updateHUD() {
     $("#daily-tracker").innerHTML = trackerHtml(p.daily);
     const ready = claimable(p.daily);
     $("#quests").classList.toggle("has-reward", ready > 0);
-    $(".quest-badge").textContent = ready ? String(ready) : "!";
+    setText($(".quest-badge"), ready ? String(ready) : "!");
     $$('#top-menu [data-panel="quest"], #town-dock [data-panel="quest"]').forEach((b) =>
       b.classList.toggle("has-reward", ready > 0),
     );
@@ -1134,14 +1172,14 @@ function updateHUD() {
     "hidden",
     !nearest || activePanel !== null || p.hp <= 0,
   );
-  if (nearest) $("#context-hint span").textContent = nearest.label;
+  if (nearest) setText($("#context-hint span"), nearest.label);
   // Touch: the hint becomes a tappable button only while there is a target.
   $("#mobile-interact").classList.toggle(
     "hidden",
     !nearest || activePanel !== null || p.hp <= 0,
   );
   if (nearest && $("#mobile-interact span").textContent !== nearest.label)
-    $("#mobile-interact span").textContent = nearest.label;
+    setText($("#mobile-interact span"), nearest.label);
 }
 function nearby() {
   if (!state) return null;
@@ -2038,10 +2076,8 @@ class Adventure extends Phaser.Scene {
       "far-village",
     ])
       this.load.image(`town-${key}`, kit(key));
-    for (const [id, item] of Object.entries(GEAR)) {
-      const path = itemArtPath(id, item);
-      if (path) this.load.image(`item-${id}`, path);
-    }
+    // Gear art (400 pictures, ~16 MB decoded) loads when a piece drops:
+    // see loadArt() in effect().
     for (const id of ["gold", "ore"])
       this.load.image(
         `drop-${id}`,
@@ -2077,7 +2113,10 @@ class Adventure extends Phaser.Scene {
     // the screen's pixel ratio; at resolution 1 small Thai names go soft.
     // Render every world label at a higher resolution so it stays crisp.
     const addText = this.add.text.bind(this.add),
-      textRes = Math.min(3, Math.ceil((devicePixelRatio || 1) * 1.5));
+      // Each label is its own texture; at 3x it holds 9x the pixels. Devices
+      // with 4 GB or less (deviceMemory reports 4 or lower) stay at 2x.
+      lowMemory = (navigator.deviceMemory || 8) <= 4,
+      textRes = Math.min(lowMemory ? 2 : 3, Math.ceil((devicePixelRatio || 1) * 1.5));
     this.add.text = (...args) => addText(...args).setResolution(textRes);
     this.knightAtlas = registerMotionAtlas(this, "knight-motion", 8);
     this.sprites = createSpriteRegistry(this);
@@ -2579,6 +2618,18 @@ class Adventure extends Phaser.Scene {
   }
   // Size says how much a drop matters: gold and ore are small pops that fade
   // fast; gear grows and lingers with its rarity.
+  // Load one picture on demand, then call show(key). Gear art is pixel art,
+  // so it samples nearest like the preloaded town and item textures.
+  loadArt(key, url, show) {
+    if (this.textures.exists(key)) return show(key);
+    this.load.image(key, url);
+    this.load.once(`filecomplete-image-${key}`, () => {
+      if (key.startsWith("item-"))
+        this.textures.get(key).setFilter(Phaser.Textures.FilterMode.NEAREST);
+      show(key);
+    });
+    if (!this.load.isLoading()) this.load.start();
+  }
   showDrop(e, key, color = "#ffd578", size = 34) {
     if (!this.textures.exists(key)) return;
     const big = size >= 60;
@@ -2675,12 +2726,16 @@ class Adventure extends Phaser.Scene {
           epic: "#d0a7ff",
           legendary: "#ffc35d",
         }[item.rarity];
-        this.showDrop(
-          e,
-          `item-${e.item}`,
-          color,
-          { common: 64, rare: 76, epic: 88, legendary: 104 }[item.rarity] ?? 64,
-        );
+        const path = itemArtPath(e.item, item);
+        if (path)
+          this.loadArt(`item-${e.item}`, path, (key) =>
+            this.showDrop(
+              e,
+              key,
+              color,
+              { common: 64, rare: 76, epic: 88, legendary: 104 }[item.rarity] ?? 64,
+            ),
+          );
         const text = this.add
           .text(e.x, e.y - 60, `${item.name}\n${RARITIES[item.rarity]}`, {
             align: "center",
@@ -2715,12 +2770,7 @@ class Adventure extends Phaser.Scene {
         const key = `costume-${e.item}`,
           color = { rare: "#79d9f2", epic: "#d0a7ff", legendary: "#ffc35d" }[c.rarity],
           show = () => this.showDrop(e, key, color, 92);
-        if (this.textures.exists(key)) show();
-        else {
-          this.load.image(key, costumeArtPath(e.item));
-          this.load.once(`filecomplete-image-${key}`, show);
-          if (!this.load.isLoading()) this.load.start();
-        }
+        this.loadArt(key, costumeArtPath(e.item), show);
       }
       return;
     }

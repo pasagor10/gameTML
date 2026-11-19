@@ -6,6 +6,15 @@ import { tmpdir } from "node:os";
 import { once } from "node:events";
 import path from "node:path";
 import { io } from "socket.io-client";
+import { mergeSnapshot } from "../shared/snapshot-delta.js";
+// Snapshots arrive as deltas; keep the merged state on the socket. Registered
+// first, so later world:snapshot listeners can read s.merged.
+const trackSnapshots = (s) => {
+  const cache = {};
+  s.on("world:snapshot", (d) => { s.merged = mergeSnapshot(s.merged, d, cache); });
+  return s;
+};
+
 const dir = mkdtempSync(path.join(tmpdir(), "tml-network-")),
   port = 5197,
   base = `http://127.0.0.1:${port}`;
@@ -53,10 +62,10 @@ async function account(name) {
   });
   const c = await ch.json();
   assert.ok(c.id);
-  const s = io(base, {
+  const s = trackSnapshots(io(base, {
     extraHeaders: { Cookie: cookie },
     transports: ["websocket"],
-  });
+  }));
   sockets.push(s);
   await once(s, "connect");
   const r = await command(s, "player:join", { id: c.id });
@@ -69,7 +78,7 @@ const command = (s, e, d = {}) =>
       err ? reject(err) : resolve(res),
     );
   });
-const snap = (s) => new Promise((resolve) => s.once("world:snapshot", resolve));
+const snap = (s) => new Promise((resolve) => s.once("world:snapshot", () => resolve(s.merged)));
 test("real HTTP + Socket.IO: auth, ownership, visibility, chat, concurrent last-stock purchase and durable save", async () => {
   try {
     await launch();

@@ -539,11 +539,13 @@ const TRACKS = {
 const FADE = 1.2;
 const preparedTracks = new Map();
 let preparingMusic;
-// Keep downloaded recordings in memory so area changes need no music download.
+// Keep the town recording in memory so entering the game starts it at once.
+// Dungeon and boss tracks (~5 MB) stream on first use from the HTTP cache, so
+// low-memory tablets don't hold every recording as a blob.
 export function prepareMusic() {
   if (!musicEnabled) return Promise.resolve();
   return preparingMusic ||= (async () => {
-    for (const { src } of Object.values(TRACKS)) {
+    for (const { src } of [TRACKS.town]) {
       try {
         const response = await fetch(src);
         if (response.ok) preparedTracks.set(src, URL.createObjectURL(await response.blob()));

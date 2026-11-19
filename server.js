@@ -10,6 +10,7 @@ import { db, loadCharacter, persist } from "./server/database.js";
 import { CLASSES, maxHp, maxMp } from "./shared/config.js";
 import * as world from "./server/world.js";
 import { releaseStamp } from "./server/release-stamp.js";
+import { createSnapshotMemo, packSnapshot } from "./shared/snapshot-delta.js";
 const app = express(),
   server = http.createServer(app),
   origin = process.env.APP_ORIGIN;
@@ -374,6 +375,8 @@ const backupTimer = setInterval(async () => {
   }
 }, 86400000);
 backupTimer.unref();
+// Per-socket record of what each client was last sent (shared/snapshot-delta.js).
+const snapshotMemos = new WeakMap();
 let announcedId = null;
 let rosterHash = "";
 let step = 0;
@@ -392,8 +395,11 @@ const timer = setInterval(() => {
       io.emit("online:roster", roster);
     }
     if (++step % 1 === 0)
-      for (const p of world.players.values())
-        p.socket.emit("world:snapshot", world.snapshot(p));
+      for (const p of world.players.values()) {
+        let memo = snapshotMemos.get(p);
+        if (!memo) snapshotMemos.set(p, (memo = createSnapshotMemo()));
+        p.socket.emit("world:snapshot", packSnapshot(memo, world.snapshot(p)));
+      }
     if (step % 200 === 0)
       for (const p of world.players.values()) world.savePlayer(p);
   } catch (e) {

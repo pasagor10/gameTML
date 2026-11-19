@@ -7,6 +7,15 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import Database from "better-sqlite3";
 import { io } from "socket.io-client";
+import { mergeSnapshot } from "../shared/snapshot-delta.js";
+// Snapshots arrive as deltas; keep the merged state on the socket. Registered
+// first, so later world:snapshot listeners can read s.merged.
+const trackSnapshots = (s) => {
+  const cache = {};
+  s.on("world:snapshot", (d) => { s.merged = mergeSnapshot(s.merged, d, cache); });
+  return s;
+};
+
 import { heroSkins } from "../shared/rpg.js";
 import { heroLooks } from "../shared/appearance.js";
 
@@ -25,7 +34,8 @@ test("class changes update owner and observer appearance, keep the weapon, and s
   const command = (s, event, data = {}) => s.timeout(3000).emitWithAck(event, data);
   const snapshot = (s, predicate) => new Promise((resolve, reject) => {
     const timer = setTimeout(() => { s.off("world:snapshot", handler); reject(Error("snapshot timeout")); }, 4000);
-    const handler = state => {
+    const handler = () => {
+      const state = s.merged;
       if (!predicate(state)) return;
       clearTimeout(timer); s.off("world:snapshot", handler); resolve(state);
     };
@@ -36,7 +46,7 @@ test("class changes update owner and observer appearance, keep the weapon, and s
     body: JSON.stringify(body),
   });
   const connect = async cookie => {
-    const s = io(base, { extraHeaders: { Cookie: cookie }, transports: ["websocket"], reconnection: false });
+    const s = trackSnapshots(io(base, { extraHeaders: { Cookie: cookie }, transports: ["websocket"], reconnection: false }));
     sockets.push(s); await once(s, "connect"); return s;
   };
   try {
