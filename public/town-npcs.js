@@ -50,7 +50,8 @@ export function createRim(scene, parent, depth, px = 1.6) {
             img.y + RIM_OFFSETS[k][1] * px,
           )
           .setAlpha(img.alpha * 0.55)
-          .setVisible(img.visible);
+          // The Low graphics preset draws characters without the outline.
+          .setVisible(img.visible && scene.quality?.rim !== false);
       }
       return this;
     },

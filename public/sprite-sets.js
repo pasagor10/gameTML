@@ -132,14 +132,40 @@ export function createSpriteRegistry(scene) {
     requested = new Map(), // id → { group, name, set }
     queuedClips = new Set(),
     finished = new Set(),
+    // Reference tracking for release: id → { group, name, textures, json,
+    // lastUsed }, and texture/json key → ids holding it (sets can share).
+    held = new Map(),
+    owners = new Map(),
     index = () => scene.spriteSetIndex || scene.cache.json.get("sprite-index");
-  const tryBuild = () => {
-    for (const [id, r] of requested) {
-      if (finished.has(id)) continue;
-      const built = buildSet(scene, r.group, r.name, r.set);
-      if (built) maps[r.group].set(r.name, built);
-      finished.add(id);
+  const own = (id, group, name, textures, json) => {
+    held.set(id, { group, name, textures, json, lastUsed: scene.time.now });
+    for (const key of [...textures, ...json]) {
+      if (!owners.has(key)) owners.set(key, new Set());
+      owners.get(key).add(id);
     }
+  };
+  const keysOf = (set) => {
+    const textures = [],
+      json = [];
+    for (const folder of Object.values(set.actions || {})) {
+      const key = clipKey(set, folder);
+      json.push(key);
+      for (const page of scene.cache.json.get(key)?.fallback?.pages || [])
+        textures.push(`${key}:${page.file}`);
+    }
+    return { textures, json };
+  };
+  const settle = (id, r) => {
+    const built = buildSet(scene, r.group, r.name, r.set);
+    if (built) {
+      maps[r.group].set(r.name, built);
+      const { textures, json } = keysOf(r.set);
+      own(id, r.group, r.name, textures, json);
+    }
+    finished.add(id);
+  };
+  const tryBuild = () => {
+    for (const [id, r] of requested) if (!finished.has(id)) settle(id, r);
   };
   // Queue every action's animation.json for a set (or one layer look).
   const request = (group, name, set) => {
@@ -175,11 +201,33 @@ export function createSpriteRegistry(scene) {
   // loader run ends: a hero or gear look asked for during a long batch would
   // otherwise wait for every other file in it.
   const buildReady = () => {
-    for (const [id, r] of requested) {
-      if (finished.has(id) || !r.set || !ready(r)) continue;
-      const built = buildSet(scene, r.group, r.name, r.set);
-      if (built) maps[r.group].set(r.name, built);
-      finished.add(id);
+    for (const [id, r] of requested)
+      if (!finished.has(id) && r.set && ready(r)) settle(id, r);
+  };
+  // Drop one set: its map entry, request record, and every texture and
+  // manifest no other kept set shares. A later want()/layer() loads it again
+  // (from the HTTP cache).
+  const release = (id) => {
+    const h = held.get(id);
+    if (!h) return;
+    held.delete(id);
+    requested.delete(id);
+    finished.delete(id);
+    if (h.group !== "images") maps[h.group].delete(h.name);
+    for (const key of h.textures) {
+      const ids = owners.get(key);
+      ids?.delete(id);
+      if (ids?.size) continue;
+      owners.delete(key);
+      if (scene.textures.exists(key)) scene.textures.remove(key);
+    }
+    for (const key of h.json) {
+      const ids = owners.get(key);
+      ids?.delete(id);
+      if (ids?.size) continue;
+      owners.delete(key);
+      queuedClips.delete(key);
+      scene.cache.json.remove(key);
     }
   };
   scene.load.on("filecomplete", buildReady);
@@ -187,6 +235,21 @@ export function createSpriteRegistry(scene) {
   // here, so callers stop waiting and keep their fallback.
   scene.load.on("complete", tryBuild);
   return {
+    // Release sets (heroes, gear looks, monsters, weapon pictures) whose
+    // textures no display object has shown for idleMs. used: texture keys
+    // on screen now. Townsfolk stay. Returns the released ids.
+    sweep(used, idleMs) {
+      const now = scene.time.now,
+        freed = [];
+      for (const [id, h] of held) {
+        if (h.group === "npcs") continue;
+        if (h.textures.some((k) => used.has(k))) h.lastUsed = now;
+        // A set built moments ago may not be on screen yet: never under 5 s.
+        else if (now - h.lastUsed >= Math.max(idleMs, 5000)) freed.push(id);
+      }
+      freed.forEach(release);
+      return freed;
+    },
     // True when index.json lists art for this name, built or not yet.
     listed(group, name) {
       return !!index()?.[group]?.[name];
@@ -220,7 +283,10 @@ export function createSpriteRegistry(scene) {
     // Texture key for a plain image (a weapon's item picture), or null while it loads.
     image(url) {
       const key = `gear:${url}`;
-      if (scene.textures.exists(key)) return key;
+      if (scene.textures.exists(key)) {
+        if (!held.has(key)) own(key, "images", key, [key], []);
+        return key;
+      }
       if (!requested.has(key)) {
         requested.set(key, { group: "images" });
         finished.add(key);

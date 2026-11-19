@@ -244,6 +244,12 @@ export function createSelectionPreview({ onPick } = {}) {
       observer.disconnect();
       refit.disconnect();
       document.removeEventListener("visibilitychange", visibility);
+      // Phaser tears a game down on its next frame, so a sleeping loop would
+      // keep everything alive: wake it. Phaser 3 never releases the WebGL
+      // context itself; losing it frees its GPU memory now instead of at GC.
+      const gl = game.renderer?.gl;
+      game.events.once("destroy", () => gl?.getExtension("WEBGL_lose_context")?.loseContext());
+      game.loop.wake();
       game.destroy(true);
     },
   };

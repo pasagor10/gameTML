@@ -12,13 +12,16 @@ export function makeLandscapeTextures(scene) {
     g.addColorStop(0, top); g.addColorStop(1, bottom);
     return g;
   };
-  texture('expedition-sky', 2048, 1800, (c, w, h) => {
+  // A smooth gradient: drawn at a quarter size and shown 4x (SKY_TILE in
+  // parallax.js), 0.9 MB instead of 14 MB of texture.
+  texture('expedition-sky', 512, 450, (c, w, h) => {
+    const k = w / 2048;
     const g = c.createLinearGradient(0, 0, 0, h);
     g.addColorStop(0, '#142c47'); g.addColorStop(.63, '#597e91');
     g.addColorStop(.84, '#b3c6c4'); g.addColorStop(1, '#e2d3b4');
     c.fillStyle = g; c.fillRect(0, 0, w, h);
     // Warm horizon glow stays subtle enough for the existing night cycle.
-    const glow = c.createRadialGradient(1330, 1370, 0, 1330, 1370, 570);
+    const glow = c.createRadialGradient(1330 * k, 1370 * k, 0, 1330 * k, 1370 * k, 570 * k);
     glow.addColorStop(0, '#fff0c44a'); glow.addColorStop(1, '#fff0c400');
     c.fillStyle = glow; c.fillRect(0, 0, w, h);
   });

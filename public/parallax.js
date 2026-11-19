@@ -16,8 +16,9 @@ import {
   TOWN_ANIMS,
   TOWN_GROUND,
 } from "/shared/town-layout.js";
-import { makeLandscapeTextures } from "/landscape-art.js?v=1";
+import { makeLandscapeTextures } from "/landscape-art.js?v=2";
 import { skyColor } from "/night-sky.js?v=3";
+import { tileStrip } from "/tile-strip.js";
 
 const WORLD_W = 2400,
   BACK_Y = -180,
@@ -336,8 +337,10 @@ export function createParallax(scene) {
       .setDisplaySize(WORLD_W, BACK_H)
       .setDepth(-24),
     seam = scene.add
-      .tileSprite(0, 0, WORLD_W, 34, "fx-seam")
+      .image(0, 0, "fx-seam")
       .setOrigin(0)
+      .setCrop(0, 0, 8, 34)
+      .setScale(WORLD_W / 8, 1)
       .setDepth(-23),
     grade = scene.add
       .rectangle(0, 0, 10, 10, 0xffffff, 0)
@@ -345,24 +348,20 @@ export function createParallax(scene) {
       .setDepth(-22)
       .setBlendMode(Phaser.BlendModes.MULTIPLY),
     rays = [],
-    fog = scene.add
-      .tileSprite(0, 600, 10, 128, "fx-fog")
+    fog = tileStrip(scene, 0, 600, 10, 128, "fx-fog")
       .setOrigin(0.5, 0.62)
       .setScrollFactor(0, 1)
       .setDepth(16),
-    fogBack = scene.add
-      .tileSprite(0, 520, 10, 128, "fx-fog")
+    fogBack = tileStrip(scene, 0, 520, 10, 128, "fx-fog")
       .setOrigin(0.5, 0.62)
       .setScrollFactor(0, 1)
       .setDepth(-21)
       .setFlipX(true),
-    fgBottom = scene.add
-      .tileSprite(0, 0, 10, 220, "fg-town-bottom")
+    fgBottom = tileStrip(scene, 0, 0, 10, 220, "fg-town-bottom")
       .setOrigin(0.5, 1)
       .setScrollFactor(0, 0)
       .setDepth(44),
-    fgTop = scene.add
-      .tileSprite(0, 0, 10, 200, "fg-town-top")
+    fgTop = tileStrip(scene, 0, 0, 10, 200, "fg-town-top")
       .setOrigin(0.5, 0)
       .setScrollFactor(0, 0)
       .setDepth(44),
@@ -375,7 +374,7 @@ export function createParallax(scene) {
   // scroll slower the further away they are (tools/town-kit/far_layers.py).
   // top: world y of the strip's top at the camera's resting height.
   const FAR = [
-    { key: "expedition-sky", top: -1248, fx: .025, fy: .15, depth: -40 },
+    { key: "expedition-sky", top: -1248, fx: .025, fy: .15, depth: -40, tile: 4 },
     { key: "expedition-clouds", top: -220, fx: .08, fy: .28, depth: -39, drift: .003 },
     { key: "expedition-peaks", top: -60, fx: .18, fy: .46, depth: -38 },
     { key: "expedition-ridges", top: 150, fx: .36, fy: .65, depth: -37 },
@@ -385,12 +384,14 @@ export function createParallax(scene) {
   ];
   const far = FAR.map((l) => {
     const src = scene.textures.get(l.key).getSourceImage();
-    const layer = scene.add.tileSprite(0, 0, 10, src.height, l.key)
-      .setOrigin(.5, 0).setScrollFactor(0, l.fy).setDepth(l.depth);
+    const tile = l.tile || 1,
+      layer = tileStrip(scene, 0, 0, 10, src.height * tile, l.key)
+        .setTileScale(tile)
+        .setOrigin(.5, 0).setScrollFactor(0, l.fy).setDepth(l.depth);
     if (l.key === "town-far-village") layer.setTint(0xb4cfca);
     return { ...l, layer };
   });
-  const cavernDepth = scene.add.tileSprite(0, -116, WORLD_W, 850, "expedition-cavern")
+  const cavernDepth = tileStrip(scene, 0, -116, WORLD_W, 850, "expedition-cavern")
     .setOrigin(0).setScrollFactor(.76, 1).setDepth(-29).setVisible(false);
   // Kit pieces on the street tile, then props: behind the heroes, or in
   // front of them for a little foreground depth.
@@ -413,8 +414,7 @@ export function createParallax(scene) {
   });
   const kit = [
     ...far.map((l) => l.layer),
-    scene.add
-      .tileSprite(-200, TOWN_STREET_Y, TOWN_WIDTH + 400, 600, "town-street")
+    tileStrip(scene, -200, TOWN_STREET_Y, TOWN_WIDTH + 400, 600, "town-street")
       .setOrigin(0)
       .setDepth(-31),
     ...TOWN_LAYOUT.map((p) =>
@@ -447,6 +447,7 @@ export function createParallax(scene) {
       .particles(0, 0, texture, { ...config, emitting: !reduced })
       .setScrollFactor(scroll, 1)
       .setDepth(depth);
+    e.baseMax = config.maxAliveParticles || 0;
     emitters.push(e);
     return e;
   };
@@ -612,9 +613,12 @@ export function createParallax(scene) {
   let kind = "town",
     split = SPLIT.town,
     rayTweens = [],
-    // Lite graphics: no fog, light shafts, vignette, colour grade, drifting
-    // haze or floating particles. Slow tablets spend their frame on these.
+    // Graphics preset (graphics-quality.js). Without "ambient" there is no
+    // fog, light shafts, vignette, colour grade or drifting haze; "particles"
+    // is the share of ambient particles kept. Slow tablets spend their frame
+    // on these.
     lite = false,
+    particleShare = 1,
     lastArea = "town",
     lastTint;
 
@@ -686,7 +690,9 @@ export function createParallax(scene) {
     grade.setAlpha(theme.gradeAlpha);
     town.forEach((e) => e.setVisible(kind === "town" && !lite).stop());
     cave.forEach((e) => e.setVisible(kind === "cave" && !lite).stop());
-    if (lite) emitters.forEach((e) => e.killAll());
+    for (const e of emitters)
+      if (e.baseMax) e.maxAliveParticles = Math.max(1, Math.round(e.baseMax * particleShare));
+    if (lite || !particleShare) emitters.forEach((e) => e.killAll().setVisible(false));
     else if (!reduced) (kind === "town" ? town : cave).forEach((e) => e.start());
     placeRays(theme);
     resize();
@@ -765,10 +771,11 @@ export function createParallax(scene) {
     fgTop.setTint(c);
     props.forEach((img, i) => TOWN_PROPS[i].front && img.setTint(c));
   }
-  function setLite(on) {
-    if (lite === !!on) return;
-    lite = !!on;
+  function setQuality({ ambient, particles }) {
+    if (lite === !ambient && particleShare === particles) return;
+    lite = !ambient;
+    particleShare = particles;
     setArea(lastArea, lastTint);
   }
-  return { setArea, resize, update, setDark, setLite };
+  return { setArea, resize, update, setDark, setQuality };
 }

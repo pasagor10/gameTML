@@ -161,8 +161,16 @@ export function createCombatFx(scene) {
   makeTextures(scene);
   const reduced = scene.reducedMotion,
     lowPower = scene.scale.width < 700,
+    // Combat bursts are feedback, so even the Low preset keeps a third.
     scaleCount = (n) =>
-      Math.max(1, Math.round(n * (reduced ? 0.4 : lowPower ? 0.6 : 1))),
+      Math.max(
+        1,
+        Math.round(
+          n *
+            (reduced ? 0.4 : lowPower ? 0.6 : 1) *
+            Math.max(0.35, scene.quality?.particles ?? 1),
+        ),
+      ),
     cam = scene.cameras.main;
 
   // Angle/speed ranges are read through callbacks so each burst can aim
@@ -951,6 +959,37 @@ export function createCombatFx(scene) {
     bleed: ["#ffe6ea", "#ff6b82", "#b0102e", "#33000c"],
   };
   const stacks = new Map();
+  // Damage numbers reuse Text objects: each one owns a canvas and a GPU
+  // texture, and a single crit used to create and drop up to five.
+  const TEXT_DEFAULTS = {
+      color: "#ffffff",
+      stroke: "#000000",
+      strokeThickness: 0,
+      padding: { x: 0, y: 0 },
+      shadow: { offsetX: 0, offsetY: 0, color: "#000", blur: 0, stroke: false, fill: false },
+    },
+    textPool = [];
+  function pooledText(x, y, text, style) {
+    const full = { ...TEXT_DEFAULTS, ...style };
+    const t = textPool.pop();
+    if (!t) return scene.add.text(x, y, text, full);
+    t.setStyle(full);
+    return t
+      .setText(text)
+      .setPosition(x, y)
+      .setScale(1)
+      .setAlpha(1)
+      .setAngle(0)
+      .setActive(true)
+      .setVisible(true);
+  }
+  // Destroy for sprites; texts go back to the pool (up to 40 kept).
+  function recycle(o) {
+    if (o.type !== "Text" || textPool.length >= 40 || !o.scene) return o.destroy();
+    scene.tweens.killTweensOf(o);
+    o.setVisible(false).setActive(false);
+    textPool.push(o);
+  }
   function paint(label, style) {
     const [a, b, c, stroke] = NUMBER_STYLES[style] || NUMBER_STYLES.hit;
     const g = label.context.createLinearGradient(0, 0, 0, label.height);
@@ -960,8 +999,7 @@ export function createCombatFx(scene) {
     label.setFill(g).setStroke(stroke, label.style.strokeThickness);
   }
   function digits(x, y, text, style, size, crit) {
-    const label = scene.add
-      .text(x, y, text, {
+    const label = pooledText(x, y, text, {
         fontFamily: "Chonburi, Noto Sans Thai",
         fontSize: size + "px",
         color: "#ffffff",
@@ -1018,8 +1056,7 @@ export function createCombatFx(scene) {
         if (line.crit) {
           // Burst behind, a white flash copy on top, a star badge, and a kick.
           const burst = sprite("cfx-glow", lx, ly, 0xff3d6e, 41).setDisplaySize(main.width * 1.6, 90);
-          const flash = scene.add
-            .text(lx, ly, text, {
+          const flash = pooledText(lx, ly, text, {
               fontFamily: "Chonburi, Noto Sans Thai",
               fontSize: size + "px",
               color: "#ffffff",
@@ -1027,7 +1064,7 @@ export function createCombatFx(scene) {
             })
             .setOrigin(0.5)
             .setDepth(43);
-          scene.tweens.add({ targets: flash, alpha: 0, duration: 160, onComplete: () => flash.destroy() });
+          scene.tweens.add({ targets: flash, alpha: 0, duration: 160, onComplete: () => recycle(flash) });
           scene.tweens.add({
             targets: burst,
             alpha: 0,
@@ -1037,8 +1074,7 @@ export function createCombatFx(scene) {
             onComplete: () => burst.destroy(),
           });
           const badge = sprite("cfx-glow", lx - main.width / 2 - 14, ly, 0xff4f8a, 43).setDisplaySize(44, 44);
-          const star = scene.add
-            .text(badge.x, ly, "✸", {
+          const star = pooledText(badge.x, ly, "✸", {
               fontFamily: "Noto Sans Thai",
               fontSize: "32px",
               color: "#ffe0ec",
@@ -1054,8 +1090,7 @@ export function createCombatFx(scene) {
           }
         }
         if (opts.status && n === 0) {
-          const icon = scene.add
-            .text(lx - main.width / 2 - 6, ly, opts.icon || "", {
+          const icon = pooledText(lx - main.width / 2 - 6, ly, opts.icon || "", {
               fontFamily: "Noto Sans Thai",
               fontSize: "18px",
             })
@@ -1094,14 +1129,13 @@ export function createCombatFx(scene) {
           delay: 170 + hold,
           duration: 480,
           ease: "Quad.in",
-          onComplete: () => parts.forEach((p) => p.destroy()),
+          onComplete: () => parts.forEach(recycle),
         });
       });
     });
     // One shout over a stack with crits in it.
     if (!hurt && !tick && lines.some((l) => l.crit)) {
-      const tag = scene.add
-        .text(x + jitter, top - 6, "CRITICAL!", {
+      const tag = pooledText(x + jitter, top - 6, "CRITICAL!", {
           fontFamily: "Chonburi, Noto Sans Thai",
           fontSize: "20px",
           color: "#ffffff",
@@ -1127,7 +1161,7 @@ export function createCombatFx(scene) {
             alpha: 0,
             delay: 520,
             duration: 380,
-            onComplete: () => tag.destroy(),
+            onComplete: () => recycle(tag),
           }),
       });
     }

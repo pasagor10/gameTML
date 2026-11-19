@@ -71,7 +71,7 @@ import {
   animateSlime,
   monsterDeath,
 } from "/combat-visuals.js?v=0.3.1";
-import { createSelectionPreview } from "/selection-scene.js?v=0.14.4";
+import { createSelectionPreview } from "/selection-scene.js?v=0.15.0";
 import {
   CLASSES,
   ITEMS,
@@ -82,7 +82,9 @@ import {
   areaWidth,
   combatStats,
 } from "/shared/config.js";
-import { createParallax } from "/parallax.js?v=0.10.0";
+import { createParallax } from "/parallax.js?v=0.11.0";
+import { PRESETS, CHOICES, autoLevel, createAutoTuner } from "/graphics-quality.js";
+import { createPerfOverlay, logEvent, readLog, textureStats } from "/perf-overlay.js";
 import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.7";
 import { createCombatFx } from "/combat-fx.js?v=0.12.2";
 import { activeEffects, effectTint, effectRow, hudEffects } from "/status-ui.js?v=1";
@@ -415,6 +417,11 @@ function lobbyLineup() {
     index: Math.max(0, jobs.indexOf(job)),
   };
 }
+// The lobby's hero stage is a second WebGL game with its own textures; it
+// exists only while the lobby shows (enterGame destroys it, the way back
+// mounts it again), so a small tablet never holds both scenes at once.
+function mountSelection() {
+  if (selectionPreview) return;
 try {
   selectionPreview = createSelectionPreview({
     onPick(i) {
@@ -433,6 +440,8 @@ try {
 } catch {
   /* The full-body static art remains available if WebGL is unavailable. */
 }
+}
+mountSelection();
 renderCards();
 // Name field: live length and a random fantasy name.
 {
@@ -732,76 +741,154 @@ const BUILD_LABEL = [
 ].join(" · ");
 if ($("#build-version")) $("#build-version").textContent = BUILD_LABEL;
 console.info("TML build", BUILD_LABEL);
-// FPS / ping readout for checking a device: switched in Settings, or by
-// tapping the build number in the lobby (remembered on this device).
+// Graphics presets (graphics-quality.js). tml-quality: "auto" (default),
+// "low", "medium" or "high". Auto starts from what the device reports
+// (4 GB tablets start Low) and steps down while the frame rate stays low.
+let qualityChoice = "auto";
+try {
+  qualityChoice = localStorage.getItem("tml-quality") || "auto";
+  // The earlier on/off lite switch.
+  if (localStorage.getItem("tml-lite") === "1" && !localStorage.getItem("tml-quality")) qualityChoice = "low";
+} catch {}
+if (!CHOICES.includes(qualityChoice)) qualityChoice = "auto";
+const tuner = createAutoTuner(
+  autoLevel({
+    deviceMemory: navigator.deviceMemory,
+    cores: navigator.hardwareConcurrency,
+    coarse: matchMedia("(pointer: coarse)").matches,
+  }),
+);
+const qualityLevel = () => (qualityChoice === "auto" ? tuner.level : qualityChoice);
+const preset = () => PRESETS[qualityLevel()];
+const qualityLabel = () =>
+  qualityChoice === "auto" ? `อัตโนมัติ (${preset().name})` : preset().name;
+// Frame cap, changed on a running game loop.
+function setFpsCap(game, fps) {
+  const loop = game.loop;
+  if ((loop.fpsLimit || 0) === fps) return;
+  loop.fpsLimit = fps;
+  loop.hasFpsLimit = fps > 0;
+  loop._limitRate = fps > 0 ? 1000 / fps : 0;
+  if (loop.running) {
+    loop.sleep();
+    loop.wake();
+  }
+}
+// Render below CSS resolution: the canvas host shrinks and the canvas is
+// stretched back over the screen. Phaser maps pointers through the canvas's
+// on-screen box, so input lines up; Adventure.resize() keeps the framing.
+function setRenderScale(r) {
+  const host = $("#game-canvas");
+  if (!host || host.dataset.scale === String(r)) return;
+  host.dataset.scale = String(r);
+  host.style.width = host.style.height = r === 1 ? "" : `${r * 100}%`;
+  host.style.setProperty("--render-up", String(1 / r));
+  host.classList.toggle("scaled", r !== 1);
+  phaser?.scale.refresh();
+}
+function applyQuality() {
+  const p = preset();
+  if (phaser) {
+    setFpsCap(phaser, p.fps);
+    setRenderScale(p.renderScale);
+  }
+  scene?.applyQuality?.(p);
+}
+function setQuality(choice) {
+  qualityChoice = choice;
+  try {
+    localStorage.setItem("tml-quality", choice);
+  } catch {}
+  applyQuality();
+  logEvent("quality", { choice, level: qualityLevel() });
+}
+setInterval(() => {
+  // Loading frames are slow on every device: judge only after 10 s in game.
+  if (qualityChoice !== "auto" || !state || !phaser?.loop.running || document.hidden || Date.now() - enteredAt < 10000) return;
+  const next = tuner.tick(phaser.loop.actualFps, preset().fps);
+  if (!next) return;
+  applyQuality();
+  logEvent("quality", { choice: "auto", level: next, fps: Math.round(phaser.loop.actualFps) });
+  toast(`ภาพกระตุก · ปรับกราฟิกเป็น "${PRESETS[next].name}" อัตโนมัติ (เปลี่ยนได้ในตั้งค่า)`);
+}, 1000);
+
+// Developer overlay (perf-overlay.js): Settings, or tap the lobby build number.
+// The previous visit ending without a pagehide usually means the tab was
+// killed (out of memory on small tablets): its last sample is kept to show.
+const previousVisit = (() => {
+  const log = readLog(),
+    last = log[log.length - 1];
+  return last && last.kind !== "pagehide" ? last : null;
+})();
+logEvent("start", { build: BUILD_LABEL, memory: navigator.deviceMemory, dpr: devicePixelRatio, level: qualityLevel() });
+addEventListener("pagehide", () => logEvent("pagehide"));
+const perfOverlay = createPerfOverlay({
+  el: $("#perf-readout"),
+  game: () => phaser,
+  scene: () => scene,
+  quality: qualityLabel,
+  socket: () => socket,
+  build:
+    BUILD_LABEL +
+    (previousVisit
+      ? `\nครั้งก่อนปิดไม่ปกติ: tex ${previousVisit.texMb ?? "?"} MB · heap ${previousVisit.heapMb ?? "?"} MB · ${previousVisit.kind}`
+      : ""),
+});
 let perfOn = false;
 try {
   perfOn = localStorage.getItem("tml-perf") === "1";
 } catch {}
+perfOverlay.set(perfOn);
 function togglePerf() {
   perfOn = !perfOn;
   try {
     localStorage.setItem("tml-perf", perfOn ? "1" : "0");
   } catch {}
-  showPerf();
-  toast(perfOn ? "เปิดตัววัด FPS / ping แล้ว" : "ปิดตัววัด FPS / ping แล้ว");
+  perfOverlay.set(perfOn);
+  toast(perfOn ? "เปิดตัววัดประสิทธิภาพแล้ว" : "ปิดตัววัดประสิทธิภาพแล้ว");
 }
-function showPerf() {
-  const readout = $("#perf-readout");
-  if (readout) readout.hidden = !perfOn;
-}
-showPerf();
 $("#build-version")?.addEventListener("click", togglePerf);
-{
-  let ping = null;
-  setInterval(() => {
-    const readout = $("#perf-readout");
-    if (!perfOn || !readout) return;
-    if (socket?.connected) {
-      const sent = performance.now();
-      socket.timeout(3000).emit("net:ping", {}, (err) => {
-        ping = err ? null : Math.round(performance.now() - sent);
-      });
+// WebGL context loss: Android drops the GPU context under memory pressure.
+// Phaser restores textures and pipelines on webglcontextrestored; until then
+// the player sees why the world froze. Both are logged for diagnosis.
+function watchContext(canvas) {
+  let lostAt = 0;
+  canvas.addEventListener("webglcontextlost", () => {
+    lostAt = Date.now();
+    logEvent("contextlost", perfOverlay.sample());
+    const note = $("#connection-state");
+    note.textContent = "หน่วยความจำกราฟิกเต็ม · กำลังกู้คืนภาพ…";
+    note.classList.remove("hidden");
+  });
+  canvas.addEventListener("webglcontextrestored", () => {
+    logEvent("contextrestored", { after: Date.now() - lostAt });
+    $("#connection-state").classList.add("hidden");
+    // Fewer textures make another loss less likely.
+    if (qualityChoice === "auto" && qualityLevel() !== "low") setQuality("low");
+    sweepTextures(true);
+  });
+}
+// Texture budget (MB, RGBA estimate) per preset. Sprite sets no display
+// object has used for a minute are released; over budget, anything unused
+// right now goes (sprite-sets.js sweep()).
+const TEXTURE_BUDGET = { low: 96, medium: 192, high: 320 };
+function sweepTextures(force = false) {
+  const g = phaser,
+    s = scene;
+  if (!g || !s?.sprites?.sweep) return;
+  const used = new Set();
+  const walk = (list) => {
+    for (const o of list) {
+      if (o.texture?.key) used.add(o.texture.key);
+      if (o.list) walk(o.list);
     }
-    const fps = phaser?.loop?.actualFps;
-    readout.textContent = [
-      fps ? `FPS ${Math.round(fps)}` : "FPS –",
-      ping == null ? "ping –" : `ping ${ping}ms`,
-      BUILD_LABEL,
-    ].join(" · ");
-  }, 1000);
+  };
+  walk(s.children.list);
+  const over = textureStats(g).mb > TEXTURE_BUDGET[qualityLevel()];
+  const freed = s.sprites.sweep(used, force || over ? 0 : 60000);
+  if (freed.length) logEvent("sweep", { freed: freed.length, over, mb: Math.round(textureStats(g).mb) });
 }
-// Lite graphics for slow devices (parallax.js, weapon and boss glows).
-// tml-lite: "1" on, "0" off; unset means automatic: on for devices that
-// report 4 GB of memory or less, and switched on mid-game when the frame
-// rate stays low.
-let liteChoice = null;
-try {
-  liteChoice = localStorage.getItem("tml-lite");
-} catch {}
-let liteOn = liteChoice ? liteChoice === "1" : (navigator.deviceMemory || 8) <= 4;
-function setLite(on) {
-  liteOn = on;
-  liteChoice = on ? "1" : "0";
-  try {
-    localStorage.setItem("tml-lite", liteChoice);
-  } catch {}
-  if (scene) {
-    scene.lite = on;
-    scene.parallax?.setLite(on);
-  }
-}
-{
-  let slow = 0;
-  setInterval(() => {
-    const fps = phaser?.loop?.actualFps;
-    if (liteOn || liteChoice || !state || !fps || document.hidden) return (slow = 0);
-    slow = fps < 25 ? slow + 1 : 0;
-    if (slow < 5) return;
-    setLite(true);
-    toast("ภาพกระตุก · เปิดโหมดภาพเบาให้อัตโนมัติ (ปิดได้ในตั้งค่า)");
-  }, 1000);
-}
+setInterval(sweepTextures, 15000);
 function reloadForRelease(release) {
   if (!release || !PAGE_RELEASE || release === PAGE_RELEASE) return false;
   try {
@@ -818,19 +905,26 @@ function reloadForRelease(release) {
   return true;
 }
 let enteringGame = false;
+let enteredAt = 0;
+// Debug handle for the console and the performance report.
+window.__tml = { game: () => phaser, scene: () => scene, preset };
 let adventureLoaded;
 let resolveAdventureLoaded;
 async function enterGame() {
   if (enteringGame) return;
   enteringGame = true;
+  enteredAt = Date.now();
   $("#prologue").classList.add("hidden");
   $("#landing").classList.add("hidden");
   $("#game-screen").classList.remove("hidden");
+  selectionPreview?.destroy();
+  selectionPreview = null;
   enterHud();
   $("#connection-state").classList.remove("hidden");
   closeModal();
   if (!phaser) {
     adventureLoaded = new Promise((resolve) => { resolveAdventureLoaded = resolve; });
+    setRenderScale(preset().renderScale);
     phaser = new Phaser.Game({
       type: Phaser.AUTO,
       parent: "game-canvas",
@@ -845,6 +939,8 @@ async function enterGame() {
       render: { antialias: true, pixelArt: false },
       audio: { noAudio: true },
     });
+    setFpsCap(phaser, preset().fps);
+    watchContext(phaser.canvas);
   }
   phaser.loop.wake();
   $("#connection-state").textContent = "กำลังโหลดภาพและตัวละครก่อนเข้าเกม…";
@@ -1836,7 +1932,7 @@ function showPanel(panel) {
   } else if (panel === "settings") {
     modal(
       "บันทึกการเดินทาง",
-      `<p>เกมบันทึกตัวละคร เงิน อุปกรณ์ และดันเจียนบนเซิร์ฟเวอร์อัตโนมัติ<br>บัญชีผู้มาเยือนผูกกับคุกกี้ในเบราว์เซอร์นี้</p><button id="open-announcements" class="primary-button">📣 ประกาศจากระบบ · บอสโลก 20:00 น.</button><button id="toggle-sound" class="primary-button">${muted ? "เปิดเสียงทั้งหมด" : "ปิดเสียงทั้งหมด"}</button><button id="toggle-music" class="primary-button">${musicOn() ? "ปิดเพลงประกอบ" : "เปิดเพลงประกอบ"}</button><button id="toggle-lite" class="primary-button">${liteOn ? "ปิดโหมดภาพเบา (ภาพสวยเต็มที่)" : "เปิดโหมดภาพเบา (ลื่นขึ้นบนเครื่องช้า)"}</button><button id="toggle-perf" class="primary-button">${perfOn ? "ซ่อนตัววัด FPS / ping" : "แสดงตัววัด FPS / ping"}</button><button id="back-selection" class="text-button">กลับหน้าเลือกตัวละคร</button><p class="hint">Demo v0.3 · นักดาบหญิงและสไลม์มีเฟรมแอนิเมชันชุดแรก · ตัวอื่นยังใช้ภาพ idle · เป้าหมาย 20–30 คนต่อห้องยังไม่ได้ยืนยันด้วย load test</p>`,
+      `<p>เกมบันทึกตัวละคร เงิน อุปกรณ์ และดันเจียนบนเซิร์ฟเวอร์อัตโนมัติ<br>บัญชีผู้มาเยือนผูกกับคุกกี้ในเบราว์เซอร์นี้</p><button id="open-announcements" class="primary-button">📣 ประกาศจากระบบ · บอสโลก 20:00 น.</button><button id="toggle-sound" class="primary-button">${muted ? "เปิดเสียงทั้งหมด" : "ปิดเสียงทั้งหมด"}</button><button id="toggle-music" class="primary-button">${musicOn() ? "ปิดเพลงประกอบ" : "เปิดเพลงประกอบ"}</button><div class="quality-picker"><small>คุณภาพกราฟิก · ตอนนี้ ${qualityLabel()}</small><div>${CHOICES.map((c) => `<button data-quality="${c}" class="${c === qualityChoice ? "active" : ""}">${c === "auto" ? "อัตโนมัติ" : PRESETS[c].name}</button>`).join("")}</div></div><button id="toggle-perf" class="primary-button">${perfOn ? "ซ่อนตัววัดประสิทธิภาพ" : "แสดงตัววัดประสิทธิภาพ"}</button><button id="back-selection" class="text-button">กลับหน้าเลือกตัวละคร</button><p class="hint">Demo v0.3 · นักดาบหญิงและสไลม์มีเฟรมแอนิเมชันชุดแรก · ตัวอื่นยังใช้ภาพ idle · เป้าหมาย 20–30 คนต่อห้องยังไม่ได้ยืนยันด้วย load test</p>`,
     );
     $("#open-announcements").onclick = () => showPanel("announcements");
     $("#toggle-sound").onclick = () => {
@@ -1850,12 +1946,13 @@ function showPanel(panel) {
       sfx("click");
       closeModal();
     };
-    $("#toggle-lite").onclick = () => {
-      setLite(!liteOn);
-      toast(liteOn ? "เปิดโหมดภาพเบาแล้ว" : "ปิดโหมดภาพเบาแล้ว");
-      sfx("click");
-      closeModal();
-    };
+    for (const b of $$("[data-quality]"))
+      b.onclick = () => {
+        setQuality(b.dataset.quality);
+        toast(`คุณภาพกราฟิก: ${qualityLabel()}`);
+        sfx("click");
+        closeModal();
+      };
     $("#toggle-perf").onclick = () => {
       togglePerf();
       sfx("click");
@@ -1867,6 +1964,8 @@ function showPanel(panel) {
       phaser?.loop.sleep();
       $("#game-screen").classList.add("hidden");
       $("#landing").classList.remove("hidden");
+      mountSelection();
+      renderCards();
       music("town");
       closeModal();
       refreshAccount();
@@ -2182,7 +2281,8 @@ class Adventure extends Phaser.Scene {
     this.lastArea = null;
   }
   preload() {
-    this.load.maxParallelDownloads = 6;
+    // Fewer concurrent decodes on Low keeps memory spikes down while loading.
+    this.load.maxParallelDownloads = preset().renderScale < 1 ? 3 : 6;
     this.load.on("progress", (value) => {
       $("#connection-state").textContent = `กำลังโหลดทรัพยากร ${Math.round(value * 100)}%`;
     });
@@ -2199,14 +2299,9 @@ class Adventure extends Phaser.Scene {
           frameHeight,
         });
       } else this.load.image(`town-${key}`, kit(key));
-    for (const key of [
-      "street",
-      "far-sky",
-      "far-mountains",
-      "far-hills",
-      "far-treeline",
-      "far-village",
-    ])
+    // far-sky/-mountains/-hills/-treeline are no longer drawn (the far
+    // layers are parallax.js's generated strips): ~21 MB of GPU memory.
+    for (const key of ["street", "far-village"])
       this.load.image(`town-${key}`, kit(key));
     // Gear art (400 pictures, ~16 MB decoded) loads when a piece drops:
     // see loadArt() in effect().
@@ -2246,12 +2341,13 @@ class Adventure extends Phaser.Scene {
     // World text is drawn into a texture, then scaled by the camera zoom and
     // the screen's pixel ratio; at resolution 1 small Thai names go soft.
     // Render every world label at a higher resolution so it stays crisp.
-    const addText = this.add.text.bind(this.add),
-      // Each label is its own texture; at 3x it holds 9x the pixels. Devices
-      // with 4 GB or less (deviceMemory reports 4 or lower) stay at 2x.
-      lowMemory = (navigator.deviceMemory || 8) <= 4,
-      textRes = Math.min(lowMemory ? 2 : 3, Math.ceil((devicePixelRatio || 1) * 1.5));
-    this.add.text = (...args) => addText(...args).setResolution(textRes);
+    // Each label is its own texture; at 3x it holds 9x the pixels, so the
+    // graphics preset caps it (Low 1.5x, Medium 2x, High 3x).
+    const addText = this.add.text.bind(this.add);
+    this.add.text = (...args) =>
+      addText(...args).setResolution(
+        Math.min(preset().textRes, Math.ceil((devicePixelRatio || 1) * 1.5)),
+      );
     this.knightAtlas = registerMotionAtlas(this, "knight-motion", 8);
     this.sprites = createSpriteRegistry(this);
     // Warm the chosen hero and enemies before joining the live world.
@@ -2300,11 +2396,12 @@ class Adventure extends Phaser.Scene {
       .setDepth(18);
     this.reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
     this.cameras.main.setBackgroundColor("#234b68");
-    this.lite = liteOn;
+    this.quality = preset();
+    this.lite = !this.quality.glow;
     this.parallax = createParallax(this);
     this.fx = createCombatFx(this);
     this.parallax.setArea("town");
-    this.parallax.setLite(liteOn);
+    this.parallax.setQuality(this.quality);
     this.worldDetails = createWorldDetails(this);
     this.showWalkability =
       $("#walkability-toggle").getAttribute("aria-pressed") === "true";
@@ -2381,8 +2478,10 @@ class Adventure extends Phaser.Scene {
     if (state) this.applySnapshot(state);
   }
   resize() {
-    const w = this.scale.width,
-      h = this.scale.height,
+    // Frame by CSS size; a reduced render scale only shrinks the pixels.
+    const r = this.renderScale(),
+      w = this.scale.width / r,
+      h = this.scale.height / r,
       portrait = h > w && w < 700,
       town = (state?.area ?? "town") === "town";
     this.portrait = portrait;
@@ -2400,7 +2499,7 @@ class Adventure extends Phaser.Scene {
         TOWN_VIEW.bottom - viewH / 2,
         portrait ? WORLD.ground - 0.14 * viewH : h < 520 ? WORLD.ground - 0.24 * viewH : 340,
       );
-      this.cameras.main.setZoom(zoom);
+      this.cameras.main.setZoom(zoom * r);
       this.cameras.main.setBounds(0, TOWN_VIEW.top, areaWidth("town"), TOWN_VIEW.bottom - TOWN_VIEW.top);
     } else {
       // Portrait phones: frame by width so heroes stay readable, and put the
@@ -2422,10 +2521,20 @@ class Adventure extends Phaser.Scene {
         : h < 520
           ? Math.min(bottom - viewH / 2, WORLD.ground - 0.26 * viewH)
           : 340;
-      this.cameras.main.setZoom(zoom);
+      this.cameras.main.setZoom(zoom * r);
       this.cameras.main.setBounds(0, -100, areaWidth(state?.area), bottom + 100);
     }
     this.parallax?.resize();
+  }
+  renderScale() {
+    return Number($("#game-canvas")?.dataset.scale) || 1;
+  }
+  applyQuality(p) {
+    this.quality = p;
+    this.lite = !p.glow;
+    this.parallax?.setQuality(p);
+    this.load.maxParallelDownloads = p.renderScale < 1 ? 3 : 6;
+    this.resize();
   }
   hotspot(x, bottom, w, h, open) {
     const zone = this.add
@@ -3316,8 +3425,20 @@ class Adventure extends Phaser.Scene {
           );
       }
     }
+    // Low/Medium presets: monsters well outside the camera only keep their
+    // position, label and bar in step; animation work resumes 300 px before
+    // they come into view.
+    const cam = this.cameras.main,
+      cullX = this.quality?.cull ? cam.worldView.width / 2 + 300 : Infinity;
     for (const m of this.monsters.values()) {
       const e = m.target;
+      if (Math.abs(m.image.x - cam.midPoint.x) > cullX) {
+        const point = sampleMotion(m.history, serverTime - 0.08);
+        m.image.setPosition(point.x, point.y);
+        m.label.setPosition(point.x, point.y - m.size - 14);
+        m.bar.setPosition(point.x, point.y);
+        continue;
+      }
       const mpose = animateSlime(
           m.image,
           e,
