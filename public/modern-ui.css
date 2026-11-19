@@ -1,0 +1,332 @@
+/* Contemporary expedition UI. Last in the cascade; existing layout and input
+   rules continue to own positioning in town, combat and portrait mode. */
+:root {
+  --ui-surface: #101e29ed;
+  --ui-line: #b7d7e026;
+  --ui-text: #edf5f6;
+  --ui-muted: #99afb9;
+  --ui-accent: #8ad7c5;
+  --px-font: 'Noto Sans Thai', 'Trebuchet MS', sans-serif;
+}
+html body :is(#landing, #prologue, #game-screen, #modal) {
+  --gold: #a8d5ce;
+  --gold-hi: #e1f6f0;
+  --hud-gold: #9bcac5;
+  --hud-gold-hi: #d5eee8;
+  --hud-gold-lo: #426b72;
+  --hud-navy: #101e29;
+  --hud-navy-2: #1a303b;
+  --hud-text: #edf5f6;
+  --hud-frame: 0 8px 28px #0004, inset 0 1px 0 #ffffff0a;
+  --panel-shadow: 0 16px 60px #0005;
+  --px-shadow: 0 4px 18px #0004;
+  --corner-tl: none; --corner-tr: none; --corner-bl: none; --corner-br: none; --crest: none;
+  color: var(--ui-text);
+}
+html body :is(#landing, #prologue, #game-screen, #modal) :where(*:not(svg, svg *)) {
+  font-family: 'Noto Sans Thai', 'Trebuchet MS', sans-serif !important;
+  text-shadow: none;
+}
+html body :is(#landing, #prologue, #game-screen, #modal) :is(button, input, kbd) { border-radius: 10px !important; }
+html body :is(#landing, #prologue, #game-screen, #modal) button { transition: background .18s, border-color .18s, box-shadow .18s, filter .18s; }
+html body :is(#landing, #prologue, #game-screen, #modal) button:focus-visible { outline: 2px solid #b9f5e7; outline-offset: 3px; }
+html body :is(#landing, #game-screen, #modal) button:disabled { cursor: default; }
+html body #game-screen :is(.profile-panel, #quests, #minimap, #chat, #chat-toggle, #top-menu button, #mobile-interact, #context-hint, #floor-chip, #dungeon-pause) {
+  border: 1px solid var(--ui-line) !important;
+  border-radius: 14px !important;
+  background: var(--ui-surface) !important;
+  box-shadow: 0 6px 24px #0004, inset 0 1px 0 #ffffff08 !important;
+  backdrop-filter: blur(16px);
+  color: var(--ui-text) !important;
+  clip-path: none !important;
+}
+html body #game-screen .profile-panel { padding: 9px 12px 10px 9px !important; gap: 10px !important; }
+html body #game-screen #avatar { border: 1px solid #b9d8dc40 !important; border-radius: 10px !important; box-shadow: none !important; background-color: #253d48 !important; }
+html body #game-screen #player-name { text-shadow: none !important; font-size: 12px !important; letter-spacing: .2px; }
+html body #game-screen #player-level { border-radius: 5px !important; background: #8ad7c51a !important; color: #b5eadc !important; box-shadow: none !important; padding: 2px 5px !important; }
+html body #game-screen .stat-bar { border-radius: 5px !important; background: #050d15a8 !important; box-shadow: none !important; }
+html body #game-screen .stat-bar :is(i,b) { border-radius: inherit !important; box-shadow: none !important; }
+html body #game-screen .stat-bar.hp i { background: linear-gradient(90deg,#db5771,#f08b96) !important; }
+html body #game-screen .stat-bar.mp i { background: linear-gradient(90deg,#428ac9,#81c6e3) !important; }
+html body #game-screen .stat-bar.exp i { background: #8ad7c5 !important; }
+html body #game-screen .stat-bar span { text-shadow: 0 1px 3px #000a !important; font-size: 9px !important; }
+html body #game-screen #quests { border-left: 2px solid #8ad7c5 !important; padding: 8px 12px !important; }
+html body #game-screen #quests:not(.open) p { color: #e0ebe9 !important; font-weight: 500 !important; font-size: 12px !important; }
+html body #game-screen #town-dock {
+  background: #0c1822eb !important;
+  border-top: 1px solid #b7d7e026 !important;
+  box-shadow: 0 -8px 32px #0003 !important;
+  backdrop-filter: blur(20px);
+}
+html body #game-screen #town-dock > button { color: #9cb1bb !important; }
+html body #game-screen #town-dock > button > span { color: inherit !important; text-shadow: none !important; font-weight: 500 !important; }
+html body #game-screen #town-dock .dock-icon { image-rendering: auto !important; filter: none !important; }
+html body #game-screen #town-dock .dock-hero { background-image: url('/assets/ui/modern/hero.svg') !important; }
+html body #game-screen #town-dock .dock-bag { background-image: url('/assets/ui/modern/bag.svg') !important; }
+html body #game-screen #town-dock .dock-quest { background-image: url('/assets/ui/modern/quest.svg') !important; }
+html body #game-screen #town-dock .dock-party { background-image: url('/assets/ui/modern/party.svg') !important; }
+html body #game-screen #town-dock #dock-adventure {
+  background: linear-gradient(145deg,#b8e7d6,#78bfb1) !important; color: #102e32 !important;
+  border: 1px solid #c0ecdd !important; border-radius: 16px !important;
+  box-shadow: 0 6px 20px #0004 !important; margin-top: -9px;
+}
+html body #game-screen #town-dock #dock-adventure .dock-go { background-image: url('/assets/ui/modern/go.svg') !important; filter: brightness(.35) !important; }
+html body #game-screen #town-dock #dock-adventure > span { color: #163b3d !important; }
+html body #game-screen .skillbar .skill {
+  border: 1px solid #c1dce24a !important; border-radius: 14px !important;
+  background: linear-gradient(145deg,#253d4bea,#101e2bf2) !important;
+  box-shadow: 0 5px 18px #0005, inset 0 1px 0 #ffffff12 !important; clip-path: none !important;
+}
+html body #game-screen .skillbar .skill.basic { border-radius: 50% !important; border-color: #a8d5ce99 !important; background: radial-gradient(at 35% 25%,#3c655c,#142e34 85%) !important; }
+html body #game-screen .skillbar .skill :is(b,svg,image) { image-rendering: auto !important; filter: none !important; }
+html body #game-screen .skillbar .skill b { background: none !important; border: 0 !important; box-shadow: none !important; }
+html body #game-screen .skillbar .skill > span { background: #08131dbf !important; color: #cad9df !important; border: 1px solid #9ab8c125 !important; border-radius: 4px !important; box-shadow: none !important; text-shadow: none !important; }
+html body #game-screen .skillbar .skill.active { border-color: #9cebc9 !important; box-shadow: 0 0 18px #7fe5b32a !important; }
+html body #game-screen #joystick { background: #14293655 !important; border: 1px solid #d1efef44 !important; box-shadow: none !important; }
+html body #game-screen #joystick i { background: #c1e5de66 !important; border: 1px solid #ddf9f688 !important; box-shadow: 0 2px 12px #0003 !important; }
+/* One shared visual language for equipment, quests, party, market and settings. */
+html body #modal { background: #030b13bc !important; backdrop-filter: blur(12px); }
+html body #modal[data-panel] .modal-box {
+  background: linear-gradient(135deg,#192d38fa,#0c1924fc) !important;
+  border: 1px solid #c1dce230 !important; border-radius: 20px !important;
+  box-shadow: 0 28px 100px #0009 !important; overflow: hidden;
+}
+html body #modal[data-panel] .modal-box::before,
+html body #modal[data-panel] .modal-box::after,
+html body #modal[data-panel] .modal-box > header::before,
+html body #modal[data-panel] .modal-box > header::after,
+html body #modal[data-panel] .modal-box > header > div::before,
+html body #modal[data-panel] .modal-box > header > div::after { content: none !important; }
+html body #modal[data-panel] .modal-box > header { background: #ffffff03 !important; border: 0 !important; border-bottom: 1px solid var(--ui-line) !important; padding: 20px 24px !important; box-shadow: none !important; }
+html body #modal[data-panel] .modal-box > header > div { align-items: flex-start; }
+html body #modal[data-panel] header h2 { color: #edf5f6 !important; background: none !important; -webkit-text-fill-color: #edf5f6; filter: none !important; font-size: 22px !important; }
+html body #modal[data-panel] header small { color: #91aab6 !important; letter-spacing: 2px; font-size: 9px; }
+html body #modal #modal-close { background: #ffffff08 !important; color: #c9dde0 !important; border: 1px solid var(--ui-line) !important; box-shadow: none !important; width: 36px; height: 36px; }
+html body #modal :is(.inv-hero,.inv-bag,.inv-detail,.cls-hero,.cls-path,.cls-skills,.stat-row,.party-card,.quest-card,.market-card,.wardrobe-card) {
+  border: 1px solid var(--ui-line) !important; border-radius: 14px !important;
+  background: #0a172270 !important; box-shadow: none !important;
+}
+html body #modal :is(.inv-stage,.cls-figure) { background: radial-gradient(ellipse at 50% 70%,#79c8b51c,transparent 65%) !important; border: 0 !important; }
+html body #modal :is(.inv-nameplate,.inv-power,.rpg-summary,.inv-tabs,.rpg-tabs) { background: transparent !important; border-color: var(--ui-line) !important; box-shadow: none !important; color: #d9ebe9 !important; }
+html body #modal :is(.rpg-tabs,.inv-tabs) button { border: 1px solid transparent !important; background: transparent !important; color: #8ea6b3 !important; box-shadow: none !important; }
+html body #modal :is(.rpg-tabs,.inv-tabs) button.active { background: #8ad7c514 !important; border-color: #8ad7c53d !important; color: #c9f3e6 !important; }
+html body #modal .inv-cell, html body #modal .inv-slot {
+  --rarity: #8ba4b4;
+  background: radial-gradient(ellipse at 50% 100%,color-mix(in srgb,var(--rarity) 13%,transparent),transparent 80%),#132431 !important;
+  border: 1px solid #8ca8b32b !important; border-bottom: 2px solid var(--rarity) !important;
+  border-radius: 10px !important; box-shadow: none !important;
+}
+html body #modal :is(.rare,.rarity-rare) { --rarity: #70baf0; }
+html body #modal :is(.epic,.rarity-epic) { --rarity: #be9dec; }
+html body #modal :is(.legendary,.rarity-legendary) { --rarity: #e8bd74; }
+html body #modal :is(.inv-cell,.inv-slot).selected { border-color: #a8e9d6 !important; box-shadow: 0 0 0 2px #8ad7c52a !important; }
+html body #modal .inv-cell.blank { opacity: .35; border-bottom: 1px solid #8ca8b32b !important; }
+html body #modal .inv-detail-art { border: 0 !important; background: radial-gradient(ellipse,#8ad7c51a,transparent 70%) !important; box-shadow: none !important; border-radius: 16px !important; }
+html body #modal :is(.inv-detail h3,.inv-power strong,.cls-path h3,.cls-skills h3) { color: #e4f0ed !important; text-shadow: none !important; }
+html body #modal :is(.inv-action,.primary-button,.pause-main), html body #landing .primary-button {
+  background: linear-gradient(120deg,#b8e7d6,#80c5b6) !important; color: #102e32 !important;
+  border: 1px solid #bcebdc !important; box-shadow: 0 4px 16px #0003 !important; text-shadow: none !important;
+}
+html body #modal :is(.inv-lore,.wardrobe-note,.cls-role small) { color: #9fb3bf !important; }
+html body #modal .path-node { background: #132633 !important; border: 1px solid #8eaeb439 !important; border-radius: 12px !important; box-shadow: none !important; }
+html body #modal .path-node:is(.current,.picked) { border-color: #8ad7c58c !important; background: #24473f !important; }
+html body #modal .sk-icon { border: 1px solid var(--ui-line) !important; background: #1a303f !important; border-radius: 12px !important; box-shadow: none !important; }
+html body #modal .sk-icon svg { image-rendering: auto !important; }
+html body #landing :is(.lobby-panel,.lobby-entry,.class-card,.saved-character) { border-color: var(--ui-line) !important; border-radius: 16px !important; box-shadow: 0 10px 35px #0003 !important; }
+html body #landing :is(.lobby-panel,.lobby-entry) { background: #101e29bd !important; backdrop-filter: blur(16px); }
+html body #landing :is(h1,h2,.brand) { text-shadow: none !important; }
+html body #landing :is(input,.gender-toggle button,.new-hero) { border-color: #accad035 !important; background: #102430bb !important; color: #d9ebe9 !important; box-shadow: none !important; }
+html body #game-screen :is(.pause-card,#floor-result,#death) { background: var(--ui-surface) !important; border: 1px solid var(--ui-line) !important; border-radius: 20px !important; box-shadow: 0 18px 60px #0007 !important; }
+@media (max-width:600px) {
+  html body #modal[data-panel] .modal-box { border-radius: 16px !important; max-height: calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
+  html body #modal[data-panel] .modal-box > header { padding: 14px 16px !important; }
+  html body #modal[data-panel] header h2 { font-size: 19px !important; }
+  html body #modal .inv2 { gap: 10px !important; }
+}
+@media (prefers-reduced-motion:reduce) {
+  html body :is(#landing,#modal,#game-screen) * { transition: none !important; }
+}
+/* Remove the old hanging title plaque and keep narrow stat columns inside. */
+html body #modal[data-panel] .modal-box > header { justify-content: space-between !important; }
+html body #modal[data-panel] .modal-box > header > div {
+  position: static !important; transform: none !important; margin: 0 !important;
+  padding: 0 !important; background: none !important; border: 0 !important;
+  box-shadow: none !important; text-align: left !important;
+}
+html body #modal .inv-bag > header h3 { background: none !important; color: #b6ced6 !important; font-size: 12px !important; letter-spacing: 2px !important; }
+html body #modal .inv-stats { grid-template-columns: repeat(2,minmax(0,1fr)); }
+html body #modal .inv-stats > div { min-width: 0; grid-template-columns: auto minmax(0,1fr) auto; padding: 6px; border: 0 !important; border-radius: 6px !important; background: #ffffff04 !important; }
+html body #modal .inv-stats span { min-width: 0; overflow-wrap: anywhere; color: #9db3bd !important; font-size: 10px !important; }
+html body #modal .inv-stats b { font-size: 13px !important; }
+html body #modal .inv-crest { transform: none; border: 1px solid var(--ui-line); border-radius: 10px !important; background: #8ad7c512; }
+html body #modal .inv-nameplate { border: 0 !important; }
+html body #modal :is(select,.inv-pills span) { border: 1px solid var(--ui-line) !important; border-radius: 6px !important; background: #152c39 !important; color: #b9ced6 !important; }
+html body #modal #modal-body { scrollbar-width: thin; scrollbar-color: #607c8766 transparent; }
+/* Full control reskin: replace baked-in pixel frames as well as CSS frames. */
+html body #game-screen #top-menu button[data-panel] {
+  --menu-art: url('/assets/ui/modern/hero.svg');
+  background: var(--menu-art) center / 29px no-repeat, #142731ed !important;
+  border: 1px solid #c1dce230 !important; box-shadow: 0 5px 16px #0004 !important;
+  image-rendering: auto !important;
+}
+html body #game-screen #top-menu button[data-panel="class"] { --menu-art: url('/assets/ui/modern/hero.svg'); }
+html body #game-screen #top-menu button[data-panel="inventory"] { --menu-art: url('/assets/ui/modern/bag.svg'); }
+html body #game-screen #top-menu button[data-panel="status"] { --menu-art: url('/assets/ui/modern/status.svg'); }
+html body #game-screen #top-menu button[data-panel="quest"] { --menu-art: url('/assets/ui/modern/quest.svg'); }
+html body #game-screen #top-menu button[data-panel="market"] { --menu-art: url('/assets/ui/modern/market.svg'); }
+html body #game-screen #top-menu button[data-panel="players"] { --menu-art: url('/assets/ui/modern/players.svg'); }
+html body #game-screen #top-menu button[data-panel="party"] { --menu-art: url('/assets/ui/modern/party.svg'); }
+html body #game-screen #top-menu button[data-panel="settings"] { --menu-art: url('/assets/ui/modern/settings.svg'); }
+html body #game-screen #top-menu button[data-panel] > b { visibility: hidden !important; }
+html body #game-screen #top-menu.open button[data-panel] > span { text-shadow: 0 2px 8px #000c !important; }
+html body #game-screen #chat-toggle {
+  background: url('/assets/ui/modern/chat.svg') center / 28px no-repeat, #142731ed !important;
+  border: 1px solid #c1dce230 !important; border-radius: 14px !important; image-rendering: auto !important;
+}
+html body #game-screen #chat-toggle i { border-radius: 50% !important; background: #8ad7c5 !important; box-shadow: 0 0 0 3px #142731 !important; }
+html body #game-screen #training-open {
+  min-height: 42px !important; padding: 8px 12px !important;
+  background: #142731f2 !important; color: #dae8ea !important; border: 1px solid #c1dce230 !important;
+  border-radius: 12px !important; box-shadow: 0 5px 20px #0004 !important;
+  font-weight: 500 !important; font-size: 11px !important; gap: 8px !important;
+}
+html body #game-screen #training-open .map-btn-icon {
+  background: url('/assets/ui/modern/swordsman-0.svg') center / contain no-repeat !important;
+  border: 0 !important; box-shadow: none !important; width: 22px !important; height: 22px !important;
+}
+html body #game-screen #training-open .map-btn-icon svg { visibility: hidden; }
+html body #game-screen #quests .quest-badge {
+  background: url('/assets/ui/modern/quest.svg') center / 22px no-repeat, #284941 !important;
+  border: 1px solid #91d8bd44 !important; border-radius: 9px !important;
+  box-shadow: none !important; clip-path: none !important; color: transparent !important;
+  width: 28px !important; height: 28px !important; image-rendering: auto !important;
+}
+html body #game-screen #quests:not(.open) { padding-left: 38px !important; }
+html body #game-screen #quests .quest-badge { left: 5px !important; top: 50% !important; transform: translateY(-50%) !important; }
+html body #game-screen #quests.open .quest-badge { top: 20px !important; }
+html body #game-screen#game-screen .hud-bottom .skillbar .skill.auto {
+  min-width: 112px !important; height: 40px !important;
+  background: #152b35ed !important; border: 1px solid #b7d7e03b !important;
+  border-radius: 20px !important; box-shadow: 0 5px 18px #0004 !important;
+  padding: 0 12px !important; gap: 7px !important; clip-path: none !important;
+}
+html body #game-screen#game-screen .hud-bottom .skillbar .skill.auto.on {
+  background: #214b40f2 !important; border-color: #8ad7c599 !important; box-shadow: 0 5px 18px #0004 !important;
+}
+html body #game-screen#game-screen .hud-bottom .skillbar .skill.auto > b { display: none !important; }
+html body #game-screen#game-screen .hud-bottom .skillbar .skill.auto > span {
+  font: 700 11px/1 'Noto Sans Thai',sans-serif !important; background: none !important;
+  letter-spacing: .08em !important; border: 0 !important; text-shadow: none !important;
+}
+html body #game-screen#game-screen .hud-bottom .skillbar .skill.auto > small {
+  color: #a2b9c0 !important; font-weight: 500 !important; font-size: 11px !important;
+}
+html body #game-screen#game-screen .hud-bottom .skillbar .skill.auto.on > small { color: #b9f0d6 !important; }
+html body #game-screen #joystick { border: 1px solid #bfe0df35 !important; background: #0b1c2940 !important; box-shadow: inset 0 0 25px #c5eeea08 !important; }
+html body #game-screen #joystick::before, html body #game-screen #joystick::after { content: none !important; }
+html body #game-screen #joystick i { width: 44% !important; height: 44% !important; border: 1px solid #cae9e25c !important; background: radial-gradient(at 35% 25%,#adcec46e,#63948c40) !important; box-shadow: 0 4px 14px #0003 !important; }
+html body #game-screen #mobile-interact { padding: 8px 12px !important; gap: 8px !important; }
+html body #game-screen #mobile-interact > b { background: url('/assets/ui/modern/interact.svg') center / contain no-repeat !important; color: transparent !important; border: 0 !important; box-shadow: none !important; }
+html body #game-screen .skillbar #mobile-jump > b { background: url('/assets/ui/modern/jump.svg') center / contain no-repeat !important; color: transparent !important; }
+html body #game-screen :is(#floor-chip,#dungeon-pause) { box-shadow: none !important; }
+html body #game-screen :is(#boss-bar,.boss-track,#world-rank) { border-radius: 10px !important; border-color: #b7d7e02b !important; box-shadow: none !important; }
+html body #game-screen #context-hint kbd { background: #294c49 !important; color: #d4eee5 !important; border: 1px solid #b7d7e03b !important; box-shadow: none !important; }
+/* All secondary panels inherit the expedition surfaces, including content
+   created dynamically after the player opens a menu. */
+html body #modal :is(.quest-card,.quest-row,.daily-card,.dungeon-card,.dungeon-floor,.party-member,.market-item,.shop-gear,.status-card,.stat-card,.account-card,.slot-panel,.trade-panel) {
+  background: #112530 !important; border: 1px solid #b7d7e026 !important;
+  border-radius: 12px !important; box-shadow: none !important; color: #d5e5e8 !important;
+}
+html body #modal :is(button:not(.inv-cell,.inv-slot,.path-node,.wardrobe-card),input,select) { min-height: 36px; }
+html body #modal :is(.inv-pills,.inv-reqs,.inv-versus,.inv-detail-stats) { border-color: #b7d7e026 !important; }
+html body #modal .inv-grid { scrollbar-width: thin; scrollbar-color: #67878c66 transparent; }
+/* Phone bag: full-width items with legible art and filters on one row;
+   selected-item details follow the grid instead of squeezing it to 180px. */
+@media (max-width:600px) and (min-height:501px) {
+  html body #modal[data-panel="inventory"] .modal-box { width: calc(100vw - 16px) !important; height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important; }
+  html body #modal[data-panel="inventory"] #modal-body { display: block !important; overflow-y: auto !important; padding: 8px 10px 16px !important; }
+  html body #modal[data-panel="inventory"] .rpg-tabs { display: flex !important; overflow-x: auto; flex-wrap: nowrap !important; gap: 3px; padding-bottom: 6px; }
+  html body #modal[data-panel="inventory"] .rpg-tabs button { flex: 0 0 auto; padding: 8px !important; font-size: 11px !important; white-space: nowrap; }
+  html body #modal[data-panel="inventory"] .rpg-tabs kbd { display: none; }
+  html body #modal[data-panel="inventory"] .inv2 { display: flex !important; flex-direction: column !important; min-height: auto !important; gap: 12px !important; }
+  html body #modal[data-panel="inventory"] .inv-hero { display: none !important; }
+  html body #modal[data-panel="inventory"] .inv-bag { overflow: visible !important; padding: 12px !important; flex: none !important; }
+  html body #modal[data-panel="inventory"] .inv-bag > header { gap: 8px; margin-bottom: 10px; }
+  html body #modal[data-panel="inventory"] .inv-bag > header h3 { font-size: 11px !important; letter-spacing: 1px !important; }
+  html body #modal[data-panel="inventory"] .inv-bag > header strong { font-size: 15px !important; white-space: nowrap; }
+  html body #modal[data-panel="inventory"] .inv-tabs { flex-wrap: nowrap !important; overflow-x: auto !important; gap: 5px; margin-bottom: 12px; padding-bottom: 4px; }
+  html body #modal[data-panel="inventory"] .inv-tabs button { flex: 0 0 auto; padding: 7px 9px !important; font-size: 11px !important; }
+  html body #modal[data-panel="inventory"] .inv-grid { flex: none !important; min-height: 140px !important; max-height: 42dvh !important; grid-template-columns: repeat(5,minmax(0,1fr)) !important; gap: 6px !important; overflow-y: auto !important; }
+  html body #modal[data-panel="inventory"] .inv-cell { aspect-ratio: 1; min-height: 0; padding: 5px !important; }
+  html body #modal[data-panel="inventory"] .inv-cell .inv-lv { font-size: 9px !important; }
+  html body #modal[data-panel="inventory"] .inv-detail { min-height: auto !important; overflow: visible !important; padding: 16px !important; gap: 9px !important; flex: none !important; }
+  html body #modal[data-panel="inventory"] .inv-detail-art { height: 88px !important; flex: none !important; }
+  html body #modal[data-panel="inventory"] .inv-detail h3 { font-size: 17px !important; }
+  html body #modal[data-panel="inventory"] .inv-detail h4 { font-size: 12px !important; }
+  html body #modal[data-panel="inventory"] .inv-detail-stats > div { font-size: 12px !important; }
+  html body #modal[data-panel="inventory"] .inv-lore { display: block !important; font-size: 12px !important; }
+  html body #modal[data-panel="inventory"] :is(.inv-action,.inv-discard) { min-height: 44px !important; font-size: 13px !important; }
+}
+html body #game-screen #top-menu #menu-more,
+html body #game-screen #top-menu.open #menu-more {
+  background: #142731ed !important; border: 1px solid #b7d7e03b !important;
+  box-shadow: 0 5px 18px #0004 !important; filter: none !important;
+}
+html body #game-screen #top-menu #menu-more > b { background: linear-gradient(#c2e1df 0 0) 0 0 / 100% 2px no-repeat,linear-gradient(#c2e1df 0 0) 0 50% / 100% 2px no-repeat,linear-gradient(#c2e1df 0 0) 0 100% / 100% 2px no-repeat !important; }
+html body #game-screen #minimap #training-open {
+  background: #142731f2 !important; border: 1px solid #b7d7e03b !important;
+  box-shadow: 0 5px 18px #0004 !important; border-radius: 12px !important; color: #dae8ea !important;
+  height: 42px !important; text-shadow: none !important;
+}
+html body #game-screen #minimap #training-open::before,
+html body #game-screen #minimap #training-open::after { display: none !important; }
+html body #game-screen #minimap #training-open .map-btn-icon {
+  background: url('/assets/ui/modern/swordsman-0.svg') center / contain no-repeat !important;
+  border: 0 !important; box-shadow: none !important; clip-path: none !important;
+}
+html body #game-screen .profile-panel .profile-info .stat-bar { border-radius: 4px !important; border: 0 !important; box-shadow: none !important; overflow: hidden !important; }
+html body #modal :is(.dg-card,.daily-row,.mon-card,.book-summary,.market-listing,.market-summary,.trade-box,.stat-derived,.stat-preview,.stat-totals,.item-row,.player-row) {
+  background: #122631 !important; border: 1px solid #b7d7e026 !important; border-radius: 12px !important;
+  box-shadow: none !important; color: #d5e5e8 !important;
+}
+html body #modal :is(.daily-tabs,.market-tabs,.dg-tabs) button { background: #172e3b !important; color: #adcad1 !important; border: 1px solid #b7d7e026 !important; box-shadow: none !important; }
+html body #modal :is(.daily-tabs,.market-tabs,.dg-tabs) button.active { background: #274a45 !important; color: #c8eee0 !important; border-color: #8ad7c560 !important; }
+html body #modal[data-panel] .modal-box > header {
+  position: relative !important; inset: auto !important; left: auto !important; top: auto !important;
+  width: 100% !important; height: auto !important; min-height: 64px !important;
+  transform: none !important; translate: none !important; margin: 0 !important;
+}
+html body #modal[data-panel] #modal-close { right: 12px !important; top: 12px !important; }
+@media (max-width:600px) and (min-height:501px) {
+  html body #modal[data-panel="inventory"] .inv2 { align-items: stretch !important; }
+  html body #modal[data-panel="inventory"] :is(.inv-bag,.inv-detail) { width: 100% !important; min-width: 0 !important; max-width: 100% !important; box-sizing: border-box; }
+  html body #modal[data-panel="inventory"] .inv-bag > header { min-width: 0; flex-wrap: wrap; }
+  html body #modal[data-panel="inventory"] .inv-tabs { max-width: 100%; }
+}
+html body #modal .inv-detail-actions { position: static !important; margin-top: 12px !important; background: transparent !important; }
+html body #modal .inv-bag > footer label { border: 0 !important; border-radius: 8px !important; background: #ffffff05 !important; }
+@media (max-width:600px) and (min-height:501px) {
+  html body #modal[data-panel="inventory"] .inv-grid { max-height: 32dvh !important; }
+  html body #modal[data-panel="inventory"] .inv-cell.blank:nth-child(n+11) { display: none !important; }
+  html body #modal[data-panel="inventory"] .inv-tabs { scrollbar-width: none; }
+}
+/* Combat layout uses an intentionally stronger selector in hud-v3. Match
+   that scope for its skin too, leaving all thumb anchors untouched. */
+html body #game-screen#game-screen .hud-bottom .skillbar .skill:not(.auto) {
+  border: 1px solid #c1dce24a !important; border-radius: 14px !important;
+  background: linear-gradient(145deg,#253d4bea,#101e2bf2) !important;
+  box-shadow: 0 5px 18px #0005,inset 0 1px 0 #ffffff12 !important; clip-path: none !important;
+}
+html body #game-screen#game-screen .hud-bottom .skillbar .skill.basic {
+  border-radius: 50% !important; border: 1px solid #aedbc87d !important;
+  background: radial-gradient(at 35% 25%,#416c60,#163139 85%) !important;
+  box-shadow: 0 6px 24px #0006,inset 0 1px 0 #d7f6e721 !important;
+}
+html body #game-screen#game-screen .hud-bottom .skillbar .skill:not(.auto) > b {
+  background: transparent !important; border: 0 !important; box-shadow: none !important;
+  filter: none !important; border-radius: 10px !important;
+}
+html body #game-screen#game-screen .hud-bottom .skillbar .skill:not(.auto)::before { display: none !important; }
+html body #toast { border: 1px solid #b7d7e03b !important; border-radius: 12px !important; background: #152a36ed !important; color: #e0efec !important; box-shadow: 0 8px 30px #0005 !important; }
+html body #area-loading { background: radial-gradient(at 50% 35%,#264c4d,#091724 75%) !important; }
+html body #area-loading :is(.loading-title,.loading-kicker) { color: #d5eee5 !important; }

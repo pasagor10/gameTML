@@ -16,6 +16,7 @@ import {
   TOWN_ANIMS,
   TOWN_GROUND,
 } from "/shared/town-layout.js";
+import { makeLandscapeTextures } from "/landscape-art.js?v=1";
 import { skyColor } from "/night-sky.js?v=3";
 
 const WORLD_W = 2400,
@@ -309,6 +310,7 @@ const THEMES = {
 
 export function createParallax(scene) {
   makeTextures(scene);
+  makeLandscapeTextures(scene);
   const reduced = scene.reducedMotion,
     lowPower = scene.scale.width < 700,
     cam = () => scene.cameras.main;
@@ -364,24 +366,23 @@ export function createParallax(scene) {
   // scroll slower the further away they are (tools/town-kit/far_layers.py).
   // top: world y of the strip's top at the camera's resting height.
   const FAR = [
-    { key: "sky", top: -1248, fx: 0.05, fy: 0.15, depth: -38, drift: 0.006 },
-    // Each strip carries its bottom colour on down, hidden by the next one.
-    { key: "mountains", top: 0, fx: 0.22, fy: 0.5, depth: -37 },
-    { key: "hills", top: 150, fx: 0.42, fy: 0.7, depth: -36 },
-    { key: "treeline", top: 255, fx: 0.62, fy: 0.85, depth: -35 },
-    { key: "village", top: 345, fx: 0.8, fy: 0.92, depth: -34 },
+    { key: "expedition-sky", top: -1248, fx: .025, fy: .15, depth: -40 },
+    { key: "expedition-clouds", top: -220, fx: .08, fy: .28, depth: -39, drift: .003 },
+    { key: "expedition-peaks", top: -60, fx: .18, fy: .46, depth: -38 },
+    { key: "expedition-ridges", top: 150, fx: .36, fy: .65, depth: -37 },
+    { key: "expedition-mist", top: 290, fx: .45, fy: .72, depth: -36, drift: -.002 },
+    { key: "expedition-forest", top: 285, fx: .58, fy: .82, depth: -35 },
+    { key: "town-far-village", top: 345, fx: .8, fy: .92, depth: -34 },
   ];
   const far = FAR.map((l) => {
-    const src = scene.textures.get(`town-far-${l.key}`).getSourceImage(),
-      h = l.h || src.height,
-      layer = scene.add
-        .tileSprite(0, 0, 10, h, `town-far-${l.key}`)
-        .setOrigin(0.5, 0)
-        .setScrollFactor(0, l.fy)
-        .setDepth(l.depth);
-    if (l.h) layer.setTileScale(h / src.height, h / src.height);
+    const src = scene.textures.get(l.key).getSourceImage();
+    const layer = scene.add.tileSprite(0, 0, 10, src.height, l.key)
+      .setOrigin(.5, 0).setScrollFactor(0, l.fy).setDepth(l.depth);
+    if (l.key === "town-far-village") layer.setTint(0xb4cfca);
     return { ...l, layer };
   });
+  const cavernDepth = scene.add.tileSprite(0, -116, WORLD_W, 850, "expedition-cavern")
+    .setOrigin(0).setScrollFactor(.76, 1).setDepth(-29).setVisible(false);
   // Kit pieces on the street tile, then props: behind the heroes, or in
   // front of them for a little foreground depth.
   const animated = [];
@@ -646,6 +647,7 @@ export function createParallax(scene) {
       isTown = kind === "town";
     kit.forEach((o) => o.setVisible(isTown));
     scenery.setVisible(!isTown);
+    cavernDepth.setVisible(!isTown);
     floor.setVisible(!isTown);
     // Cave path is painted at pixel y=733. Its top must meet world ground=600,
     // rather than leaving feet ~64px below the stone walkway.
@@ -723,6 +725,7 @@ export function createParallax(scene) {
     if (kind === "town" && !reduced)
       for (const a of animated)
         a.img.setFrame(Math.floor((time + a.phase) / 160) % 4);
+    cavernDepth.tilePositionX = sx * .12;
     fgBottom.tilePositionX = sx * 1.45;
     fgTop.tilePositionX = sx * 1.3 + 300;
     for (const l of far)

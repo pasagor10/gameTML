@@ -80,7 +80,7 @@ import {
   areaWidth,
   combatStats,
 } from "/shared/config.js";
-import { createParallax } from "/parallax.js?v=0.8.2";
+import { createParallax } from "/parallax.js?v=0.9.0";
 import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.6";
 import { createCombatFx } from "/combat-fx.js?v=0.12.2";
 import { activeEffects, effectTint, effectRow, hudEffects } from "/status-ui.js?v=1";
