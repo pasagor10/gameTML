@@ -108,8 +108,8 @@ import {
   playMonsterSet,
   playMonsterDeath,
   playLayers,
-} from "/sprite-sets.js?v=0.22.0";
-import { gearDress } from "/hero-gear.js?v=5";
+} from "/sprite-sets.js?v=0.22.1";
+import { gearDress } from "/hero-gear.js?v=6";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 observeHudLayout($("#game-screen"));

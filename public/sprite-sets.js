@@ -579,7 +579,9 @@ export function playLayers(scene, holder, image, set, dress, registry) {
         .setPosition(image.x + lx * Math.cos(r) - ly * Math.sin(r), image.y + lx * Math.sin(r) + ly * Math.cos(r))
         .setScale(
           w.upright
-            ? (w.length ? w.length / tex.height : 1) * Math.abs(image.scaleY)
+            ? (w.length
+                ? w.length / tex.height
+                : Math.min(1, (w.maxWidth || Infinity) / tex.width)) * Math.abs(image.scaleY)
             : (w.length * Math.abs(image.scaleY)) / (tex.width * 0.8 * Math.SQRT2),
         )
         .setFlip(flip, false)

@@ -18,10 +18,12 @@ const palette = await fetch("/assets/items/palette.json?v=2")
 // by the handle on its belly; tilt: how much of the hand's swing the weapon
 // follows (a bow stays near upright). length: its height in painted-body
 // pixels when a painted (non-pixel) body holds it.
+// maxWidth: pixel bodies shrink a wider picture (e.g. a winged head) to this
+// many pixels across so it does not cover the hero's face.
 const HOLD = {
   sword: { grip: 0.88, length: 84 },
-  staff: { grip: 0.62, tilt: 0.6, length: 104 },
-  mace: { grip: 0.78, tilt: 0.8, length: 90 },
+  staff: { grip: 0.62, tilt: 0.6, length: 104, maxWidth: 20 },
+  mace: { grip: 0.78, tilt: 0.8, length: 90, maxWidth: 20 },
   bow: { grip: 0.5, gripX: 0.8, tilt: 0.35, length: 84 },
 };
 const toTint = (hex) => (hex ? parseInt(hex.slice(1), 16) : null);

@@ -3,8 +3,8 @@ import {
   createSpriteRegistry,
   playSpriteSet,
   playLayers,
-} from "/sprite-sets.js?v=0.22.0";
-import { gearDress } from "/hero-gear.js?v=5";
+} from "/sprite-sets.js?v=0.22.1";
+import { gearDress } from "/hero-gear.js?v=6";
 
 // The hero-select stage: the same sprite sets, costume layers and held
 // weapons that the world draws, lined up as a carousel. The chosen hero
