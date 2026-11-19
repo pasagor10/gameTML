@@ -275,9 +275,13 @@ io.on("connection", (socket) => {
       p.jump = !!d.jump;
       if (d.direction || d.jump) p.auto = false;
     },
-    35,
+    // A shaky connection delivers queued inputs in bursts; a tight cap
+    // dropped the newest one (the press the player just made).
+    80,
   );
-  execute("player:attack", (p, d) => world.attack(p, d.skill ?? 0));
+  execute("player:attack", (p, d) => world.attack(p, d.skill ?? 0), 40);
+  // Round-trip probe for the on-screen FPS/ping readout.
+  execute("net:ping", () => ({}), 5);
   execute("player:auto", (p, d) => {
     if (p.area !== "dungeon" || p.hp <= 0)
       throw Error("Auto เปิดได้เฉพาะในดันเจียน");

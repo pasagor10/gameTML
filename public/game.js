@@ -732,6 +732,42 @@ const BUILD_LABEL = [
 ].join(" · ");
 if ($("#build-version")) $("#build-version").textContent = BUILD_LABEL;
 console.info("TML build", BUILD_LABEL);
+// FPS / ping readout for checking a device: tap the build number in the
+// lobby to switch it on or off (remembered on this device).
+{
+  const readout = $("#perf-readout"),
+    label = $("#build-version");
+  let on = false;
+  try {
+    on = localStorage.getItem("tml-perf") === "1";
+  } catch {}
+  const show = () => readout && (readout.hidden = !on);
+  show();
+  label?.addEventListener("click", () => {
+    on = !on;
+    try {
+      localStorage.setItem("tml-perf", on ? "1" : "0");
+    } catch {}
+    show();
+    toast(on ? "เปิดตัววัด FPS / ping แล้ว" : "ปิดตัววัด FPS / ping แล้ว");
+  });
+  let ping = null;
+  setInterval(() => {
+    if (!on || !readout) return;
+    if (socket?.connected) {
+      const sent = performance.now();
+      socket.timeout(3000).emit("net:ping", {}, (err) => {
+        ping = err ? null : Math.round(performance.now() - sent);
+      });
+    }
+    const fps = phaser?.loop?.actualFps;
+    readout.textContent = [
+      fps ? `FPS ${Math.round(fps)}` : "FPS –",
+      ping == null ? "ping –" : `ping ${ping}ms`,
+      BUILD_LABEL,
+    ].join(" · ");
+  }, 1000);
+}
 function reloadForRelease(release) {
   if (!release || !PAGE_RELEASE || release === PAGE_RELEASE) return false;
   try {
@@ -1947,10 +1983,14 @@ addEventListener("keydown", (e) => {
   };
   if (actions[e.code]) action(actions[e.code]);
   if (e.code === "Space") jumpQueued = true;
+  sendInput();
   if (e.code === "KeyF") interact();
   if (e.code === "KeyV") toggleWalkability();
 });
-addEventListener("keyup", (e) => keys.delete(e.code));
+addEventListener("keyup", (e) => {
+  keys.delete(e.code);
+  sendInput();
+});
 addEventListener("blur", () => {
   keys.clear();
   touchDirection = 0;
@@ -1974,9 +2014,10 @@ for (const root of [$("#mobile-controls"), $(".skillbar")])
     knob.style.transform = "";
     base.classList.remove("active");
     base.style.left = base.style.top = "";
+    sendInput();
   };
   const steer = (e) => {
-    const radius = base.offsetWidth / 2,
+    const radius = stick.radius,
       dx = e.clientX - stick.x,
       dy = e.clientY - stick.y,
       len = Math.hypot(dx, dy) || 1,
@@ -1990,6 +2031,7 @@ for (const root of [$("#mobile-controls"), $(".skillbar")])
       stick.flicked = true;
       jumpQueued = true;
     } else if (ny > -0.3) stick.flicked = false;
+    sendInput();
   };
   zone.addEventListener("pointerdown", (e) => {
     e.stopPropagation();
@@ -2007,7 +2049,8 @@ for (const root of [$("#mobile-controls"), $(".skillbar")])
     base.style.left = x - half + "px";
     base.style.top = y - half + "px";
     base.classList.add("active");
-    stick = { id: e.pointerId, x: r.left + x, y: r.top + y, flicked: false };
+    // Radius read once per touch: reading layout on every move is costly.
+    stick = { id: e.pointerId, x: r.left + x, y: r.top + y, flicked: false, radius: half };
     steer(e);
   });
   zone.addEventListener("pointermove", (e) => {
@@ -2054,29 +2097,35 @@ $("#mobile-jump").onpointerdown = (e) => {
   e.preventDefault();
   if (activePanel || !state) return;
   jumpQueued = true;
+  sendInput();
 };
 $("#mobile-interact").onclick = interact;
-setInterval(() => {
+// Movement input. A change (stick tilt, key, jump) goes out at once instead
+// of waiting for the next tick; the 80 ms tick keeps sending as a heartbeat.
+let lastInput = "";
+const typing = () =>
+  ["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName);
+function sendInput(heartbeat = false) {
   if (!state || !socket?.connected) return;
-  const focused = ["INPUT", "TEXTAREA", "SELECT"].includes(
-    document.activeElement?.tagName,
-  );
   const direction =
-    activePanel || focused
-      ? 0
-      : touchDirection ||
-        (keys.has("KeyD") || keys.has("ArrowRight") ? 1 : 0) -
-          (keys.has("KeyA") || keys.has("ArrowLeft") ? 1 : 0);
-  socket.emit("player:input", {
-    direction,
-    seq: ++seq,
-    jump: jumpQueued && !activePanel,
-    running: touchDirection
+      activePanel || typing()
+        ? 0
+        : touchDirection ||
+          (keys.has("KeyD") || keys.has("ArrowRight") ? 1 : 0) -
+            (keys.has("KeyA") || keys.has("ArrowLeft") ? 1 : 0),
+    jump = jumpQueued && !activePanel,
+    running = touchDirection
       ? touchRun
       : keys.has("ShiftLeft") || keys.has("ShiftRight"),
-  });
+    now = `${direction}|${running}`;
+  if (!heartbeat && !jump && now === lastInput) return;
+  lastInput = now;
+  socket.emit("player:input", { direction, seq: ++seq, jump, running });
   jumpQueued = false;
-  if ((keys.has("KeyJ") || touchAttack) && !activePanel && !focused)
+}
+setInterval(() => {
+  sendInput(true);
+  if (state && socket?.connected && (keys.has("KeyJ") || touchAttack) && !activePanel && !typing())
     socket.emit("player:attack", { skill: 0 });
 }, 80);
 class Adventure extends Phaser.Scene {

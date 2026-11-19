@@ -330,3 +330,22 @@ html body #game-screen#game-screen .hud-bottom .skillbar .skill:not(.auto)::befo
 html body #toast { border: 1px solid #b7d7e03b !important; border-radius: 12px !important; background: #152a36ed !important; color: #e0efec !important; box-shadow: 0 8px 30px #0005 !important; }
 html body #area-loading { background: radial-gradient(at 50% 35%,#264c4d,#091724 75%) !important; }
 html body #area-loading :is(.loading-title,.loading-kicker) { color: #d5eee5 !important; }
+
+/* Touch devices (tablets, phones): no backdrop blur over the live canvases.
+   The GPU re-blurs every blurred region on every frame, a large cost on weak
+   tablets; the panels keep their tinted backgrounds. */
+@media (pointer: coarse) {
+  html body :is(#game-screen, #landing, #modal) :is(*, *::before, *::after),
+  html body #modal {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
+/* FPS / ping readout, switched on by tapping the build number in the lobby. */
+html body #perf-readout {
+  position: fixed; left: 50%; top: max(6px, env(safe-area-inset-top)); translate: -50% 0; z-index: 60;
+  padding: 2px 8px; border-radius: 6px; background: #000a; color: #d9f2e6;
+  font: 600 11px/1.5 ui-monospace, Menlo, monospace; pointer-events: none;
+}
+html body #perf-readout[hidden] { display: none; }
+html body #landing .build-version { cursor: pointer; pointer-events: auto; }
