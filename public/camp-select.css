@@ -126,3 +126,7 @@ body #landing.game-lobby.camp-select[data-lobby-mode] #new-hero,body #landing.ga
 body #landing.game-lobby.camp-select[data-lobby-mode] #new-hero::before,body #landing.game-lobby.camp-select[data-lobby-mode] #new-hero::after,body #landing.game-lobby.camp-select[data-lobby-mode] #account-open::before,body #landing.game-lobby.camp-select[data-lobby-mode] #account-open::after { display: none !important; }
 body #landing.game-lobby.camp-select[data-lobby-mode] #new-hero b { display: inline; margin-right: 3px; color: #f0c870; font-size: inherit; background: none; border: 0; padding: 0; }
 .camp-character.active::after { top: -3%; }
+/* Level numbers: the global pixel face turns 2/5 into 8/S at these sizes, so
+   levels use a plain bold face with even-width digits. */
+body #landing.game-lobby.camp-select[data-lobby-mode] :is(.camp-level, #saved-characters .saved-hero > b) { font-family: 'Noto Sans Thai', system-ui, sans-serif !important; font-weight: 700 !important; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+body #landing.game-lobby.camp-select[data-lobby-mode] #saved-characters .saved-hero > b { font-size: clamp(11px,1.4dvh,13px) !important; color: #f0c870 !important; }

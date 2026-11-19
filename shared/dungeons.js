@@ -1,3 +1,4 @@
+import { DEEP_DUNGEONS } from "./deep-dungeons.js";
 // Shared geometry keeps server collisions, enemy spawns and the minimap aligned.
 const ledges = [
   [
@@ -64,7 +65,7 @@ const ledges = [
     [2050, 465, 220],
   ],
 ];
-// Rosters list the sprite type of each monster slot; floors 11-15 add a
+// Rosters list the sprite type of each monster slot; floors 11-40 add a
 // named variant with a trait per slot so every deep floor fights differently.
 export const DUNGEON_ROSTERS = [
   ["bat", "slime", "bat"],
@@ -82,6 +83,7 @@ export const DUNGEON_ROSTERS = [
   ["golem", "goblin", "wolf"],
   ["wolf", "bat", "mushroom"],
   ["golem", "serpent", "boar"],
+  ...DEEP_DUNGEONS.map((floor) => floor.roster),
 ];
 // Trait multipliers: hp, move speed, attack cooldown, damage dealt, damage
 // taken; regen is max-HP share healed per second while not hit; drain is the
@@ -121,6 +123,13 @@ export const FLOOR_VARIANTS = {
     { name: "หมูป่าคลั่งจันทรา", trait: "frenzy" },
   ],
 };
+const monsterNames = { slime: "สไลม์", bat: "ค้างคาว", boar: "หมูป่า", mushroom: "เห็ด",
+  goblin: "ก็อบลิน", wolf: "หมาป่า", golem: "โกเลม", serpent: "อสรพิษ" };
+DEEP_DUNGEONS.forEach((floor, index) => {
+  FLOOR_VARIANTS[index + 16] = floor.roster.map((type, slot) => ({
+    name: `${monsterNames[type]}${floor.prefix}`, trait: floor.traits[slot],
+  }));
+});
 // The monster in roster slot `index` of a floor: sprite type plus variant.
 export function rosterEntry(floor, index) {
   const roster = DUNGEON_ROSTERS[floor - 1] || DUNGEON_ROSTERS[0],

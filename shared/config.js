@@ -1,3 +1,4 @@
+import { DEEP_DUNGEONS } from "./deep-dungeons.js";
 import { SLOT_MACHINE } from "./slots.js";
 import { rpgBonuses } from "./rpg.js";
 import { statEffects } from "./stats.js";
@@ -65,7 +66,7 @@ export const ITEMS = {
   weapon: { name: "อาวุธผู้พิทักษ์", icon: "⚔", price: 70 },
   armor: { name: "เกราะนักเดินทาง", icon: "🛡", price: 60 },
 };
-// Floors 1-10 are the main story; 11-15 are the deep cave ("ห้วงลึก"),
+// Floors 1-10 are the main story; 11-40 are the deep cave ("ห้วงลึก"),
 // opened by beating floor 10, with their own monster variants (shared/dungeons.js).
 export const MAIN_FLOORS = 10;
 export const FLOORS = [
@@ -84,6 +85,7 @@ export const FLOORS = [
   { name: "เหมืองเพลิงร้าง", boss: "พญาค้างคาวลาวา", color: 0xd8462c, tint: 0xff9c78, prefix: "ลาวา", bossType: "batking", icon: "🌋", deep: true },
   { name: "หุบเงาวิญญาณ", boss: "นาคาเงาวิญญาณ", color: 0x4c6f8f, tint: 0xa8c4ff, prefix: "วิญญาณ", bossType: "serpent", icon: "👻", deep: true },
   { name: "บัลลังก์จันทราดับ", boss: "จักรพรรดิหินจันทรา", color: 0x3b2c63, tint: 0xc9a8ff, prefix: "จันทราดับ", bossType: "golem", icon: "🌑", deep: true },
+  ...DEEP_DUNGEONS.map(({ roster, traits, ...floor }) => ({ ...floor, deep: true })),
 ];
 // Difficulty bands shown on the dungeon cards.
 export function floorDifficulty(floor) {
@@ -93,8 +95,14 @@ export function floorDifficulty(floor) {
   if (floor >= 3) return { id: "normal", label: "ปานกลาง" };
   return { id: "easy", label: "ปกติ" };
 }
+// Monster strength by floor. Heroes stop growing at Lv.40 (reached around
+// floor 15), so past it monsters grow at 40% of the old pace: floor 40 fights
+// like floor 25. Rewards keep using the real floor.
+export const SCALE_FLOOR = 15;
+export const powerFloor = (floor) =>
+  floor <= SCALE_FLOOR ? floor : SCALE_FLOOR + (floor - SCALE_FLOOR) * 0.4;
 export const recommendedLevel = (floor) =>
-  floor > MAIN_FLOORS ? 30 + (floor - MAIN_FLOORS) * 2 : Math.max(1, floor * 3 - 2);
+  floor > MAIN_FLOORS ? Math.min(40, 30 + (floor - MAIN_FLOORS) * 2) : Math.max(1, floor * 3 - 2);
 export const WORLD = {
   width: 2400,
   ground: 600,

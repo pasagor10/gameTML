@@ -7,8 +7,8 @@ const dir = mkdtempSync(path.join(tmpdir(), "tml-deep-"));
 process.env.DB_PATH = path.join(dir, "test.sqlite");
 const { db, loadCharacter } = await import("../server/database.js");
 const world = await import("../server/world.js");
-const { FLOORS, MAIN_FLOORS, floorDifficulty } = await import("../shared/config.js");
-const { FLOOR_VARIANTS, TRAITS, rosterEntry, DUNGEON_ROSTERS } = await import(
+const { FLOORS, MAIN_FLOORS, floorDifficulty, recommendedLevel } = await import("../shared/config.js");
+const { FLOOR_VARIANTS, TRAITS, rosterEntry, DUNGEON_ROSTERS, dungeonPlatforms, dungeonEnemyCount } = await import(
   "../shared/dungeons.js"
 );
 
@@ -34,8 +34,8 @@ function create(id, extra = {}) {
   return p;
 }
 
-test("five deep floors follow floor 10, each with its own monster lineup", () => {
-  assert.equal(FLOORS.length, MAIN_FLOORS + 5);
+test("thirty deep floors follow floor 10, each with its own monster lineup", () => {
+  assert.equal(FLOORS.length, 40);
   assert.equal(DUNGEON_ROSTERS.length, FLOORS.length);
   const lineups = new Set();
   for (let floor = MAIN_FLOORS + 1; floor <= FLOORS.length; floor++) {
@@ -46,7 +46,7 @@ test("five deep floors follow floor 10, each with its own monster lineup", () =>
     for (const v of FLOOR_VARIANTS[floor]) assert.ok(TRAITS[v.trait], v.trait);
     lineups.add(JSON.stringify([0, 1, 2].map((n) => rosterEntry(floor, n))));
   }
-  assert.equal(lineups.size, 5, "no two deep floors share a lineup");
+  assert.equal(lineups.size, 30, "no two deep floors share a lineup");
   const allNames = Object.values(FLOOR_VARIANTS).flat().map((v) => v.name);
   assert.equal(new Set(allNames).size, allNames.length, "every variant is unique");
 });
@@ -133,4 +133,89 @@ test("deep boss pays more ore and can drop floor-10 gear", () => {
   );
   assert.equal(p.unlocked, 14);
   world.returnTown(p);
+});
+
+
+test("all 25 added floors spawn three complete stages with reachable geometry and bosses", () => {
+  const names = new Set(FLOORS.map(f => f.name));
+  assert.equal(names.size, 40);
+  for (let floor = 16; floor <= 40; floor++) {
+    const p = create(`expanded-${floor}`, { unlocked: floor, level: 40 });
+    assert.throws(() => world.beginDungeon(p, floor + 1));
+    world.beginDungeon(p, floor);
+    const i = world.instances.get(p.instance);
+    for (let stage = 1; stage <= 3; stage++) {
+      assert.equal(i.stage, stage);
+      assert.equal(i.enemies.length, dungeonEnemyCount(floor, stage));
+      assert.ok(i.enemies.every(e => Number.isFinite(e.maxHp) && e.maxHp > 0));
+      assert.ok(dungeonPlatforms(floor, stage).every(p => p.x >= 0 && p.x + p.w <= 2400 && p.y < 600));
+      for (const e of i.enemies.filter(e => !e.boss)) {
+        assert.ok(FLOOR_VARIANTS[floor].some(v => v.name === e.variant));
+        assert.ok(TRAITS[e.trait]);
+      }
+      if (stage < 3) {
+        i.clear = true;
+        world.nextStage(p);
+      } else {
+        assert.equal(i.enemies.filter(e => e.boss).length, 1);
+        assert.equal(i.enemies[0].type, FLOORS[floor - 1].bossType);
+      }
+    }
+    assert.ok(recommendedLevel(floor) <= 40, "recommendations respect the hero level cap");
+    world.returnTown(p);
+  }
+});
+
+test("new floor clears persist rewards and unlocks; floor 40 ends the dungeon", () => {
+  for (const floor of [15, 16, 39, 40]) {
+    const p = create(`expanded-clear-${floor}`, { unlocked: floor, quest: floor - 1, level: 40 });
+    world.beginDungeon(p, floor);
+    const i = world.instances.get(p.instance);
+    for (let stage = 1; stage < 3; stage++) {
+      i.clear = true;
+      world.nextStage(p);
+    }
+    i.nextHazardAt = Infinity;
+    const boss = i.enemies.find(e => e.boss);
+    i.enemies = [boss];
+    Object.assign(boss, { hp: 1, x: p.x + 30, y: p.y });
+    p.direction = 1;
+    const t = Date.now() / 1000 + 5000 + floor;
+    world.attack(p, 0, t);
+    world.tick(0.05, t + 0.17);
+    assert.ok(i.completed, `floor ${floor} clears`);
+    assert.equal(p.unlocked, Math.min(40, floor + 1));
+    assert.equal(p.quest, floor);
+    assert.ok(i.rewards[p.id].gold > 0);
+    assert.ok(i.rewards[p.id].items.length || i.rewards[p.id].ore >= 2 + floor - MAIN_FLOORS);
+    assert.equal(loadCharacter(p.id).unlocked, Math.min(40, floor + 1));
+    assert.equal(i.results[p.id].hasNext, floor < 40);
+    world.nextStage(p);
+    if (floor === 40) {
+      assert.equal(p.area, "town");
+      assert.throws(() => world.beginDungeon(p, 41), /ชั้นไม่ถูกต้อง/);
+    } else {
+      assert.equal(i.floor, floor + 1);
+      assert.equal(i.stage, 1);
+      world.returnTown(p);
+    }
+  }
+});
+
+test("floors past 15 grow gently, since heroes stop levelling at 40", async () => {
+  const { powerFloor } = await import("../shared/config.js");
+  assert.equal(powerFloor(10), 10);
+  assert.equal(powerFloor(15), 15);
+  assert.equal(powerFloor(40), 25);
+  const bossHp = (floor) => {
+    const p = create(`scale-${floor}`, { unlocked: floor, level: 40 });
+    world.beginDungeon(p, floor);
+    const i = world.instances.get(p.instance);
+    for (let stage = 1; stage < 3; stage++) { i.clear = true; world.nextStage(p); }
+    const hp = i.enemies.find((e) => e.boss).maxHp;
+    world.returnTown(p);
+    return hp;
+  };
+  const ratio = bossHp(40) / bossHp(15);
+  assert.ok(ratio > 1.5 && ratio < 3, `floor 40 boss is ${ratio.toFixed(2)}x floor 15`);
 });

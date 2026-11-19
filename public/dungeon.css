@@ -571,3 +571,10 @@
     height: 150px;
   }
 }
+
+/* Floor numbers: the global pixel face turns 3/5 into 8 at badge size. */
+body #modal .dg-num b {
+  font-family: "Noto Sans Thai", system-ui, sans-serif !important;
+  font-weight: 800 !important;
+  font-variant-numeric: tabular-nums;
+}

@@ -83,6 +83,7 @@ import {
   POTIONS,
   FLOORS,
   MAIN_FLOORS,
+  powerFloor,
   WORLD,
   areaWidth,
   maxHp,
@@ -489,9 +490,10 @@ function worldSummons(i, t) {
   ) {
     i.summoned++;
     for (let n = 0; n < WORLD_BOSS.summonCount; n++) {
-      const entry = rosterEntry(i.floor, n + i.summoned),
+      const pf = powerFloor(i.floor),
+        entry = rosterEntry(i.floor, n + i.summoned),
         mods = traitOf({ trait: entry.variant?.trait || null }),
-        max = Math.round((55 + i.floor * 24 + 3 * 14) * 2 * (mods.hp || 1)),
+        max = Math.round((55 + pf * 24 + 3 * 14) * 2 * (mods.hp || 1)),
         x = Math.max(200, Math.min(2200, boss.x + (n % 2 ? 1 : -1) * (120 + n * 70)));
       i.enemies.push({
         id: randomUUID(),
@@ -508,7 +510,7 @@ function worldSummons(i, t) {
         boss: false,
         elite: true,
         aggro: true,
-        speed: Math.round((85 + i.floor * 5 + 15) * (mods.speed || 1)),
+        speed: Math.round((85 + pf * 5 + 15) * (mods.speed || 1)),
         spawnAt: t + n * 0.08,
         attackCount: 0,
         direction: -1,
@@ -1112,6 +1114,7 @@ function spawnStage(i) {
   i.defeated = 0;
   i.lastDrop = null;
   const count = i.world ? 1 : dungeonEnemyCount(i.floor, i.stage);
+  const pf = powerFloor(i.floor);
   for (let n = 0; n < count; n++) {
     // Stage 3: the boss first, then its guards; other stages fill the arena.
     const boss = i.stage === 3 && n === 0,
@@ -1124,11 +1127,11 @@ function spawnStage(i) {
         ? WORLD_BOSS.hp
         : boss
         ? Math.round(
-            (300 + i.floor * 220 + i.floor * i.floor * 55) *
+            (300 + pf * 220 + pf * pf * 55) *
               1.2 *
               (i.night ? NIGHT_BOSS.hp : 1),
           )
-        : (55 + i.floor * 24 + i.stage * 14) * MONSTER_HP,
+        : (55 + pf * 24 + i.stage * 14) * MONSTER_HP,
       max = Math.round(base * (elite ? 2.2 : 1) * (mods.hp || 1)),
       spot = dungeonSpawn(i.floor, i.stage, slot, boss, count);
     i.enemies.push({
@@ -1152,7 +1155,7 @@ function spawnStage(i) {
       aggro: boss,
       speed: boss
         ? 75
-        : Math.round((85 + i.floor * 5 + (elite ? 15 : 0)) * (mods.speed || 1)),
+        : Math.round((85 + pf * 5 + (elite ? 15 : 0)) * (mods.speed || 1)),
       spawnAt: now() + n * 0.06,
       attackCount: 0,
       direction: -1,
@@ -1472,7 +1475,7 @@ function resolveAttack(p, t) {
             1,
             // ±8% spread so a stack never reads as one number repeated.
             Math.floor(
-              damage(stats.atk, i.floor * 5, kit.power) *
+              damage(stats.atk, powerFloor(i.floor) * 5, kit.power) *
                 (crit ? stats.critDamage : 1) *
                 mult *
                 (0.92 + Math.random() * 0.16),
@@ -2119,7 +2122,7 @@ function updateCrystalHazards(i, t) {
         dealDungeonDamage(
           i,
           p,
-          15 + i.floor * 3,
+          Math.round(15 + powerFloor(i.floor) * 3),
           h.id,
           Math.sign(p.x - h.x) || 1,
           t,
@@ -2314,9 +2317,9 @@ export function tick(dt, t = now()) {
               i.training
                 ? 18
                 : e.boss
-                  ? Math.round((28 + i.floor * 6) * (e.power || 1))
+                  ? Math.round((28 + powerFloor(i.floor) * 6) * (e.power || 1))
                   : Math.round(
-                      (15 + i.floor * 4) *
+                      (15 + powerFloor(i.floor) * 4) *
                         (e.elite ? 1.5 : 1) *
                         (mods.damage || 1) *
                         (frenzied ? 1.3 : 1),
