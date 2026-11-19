@@ -2674,7 +2674,12 @@ class Adventure extends Phaser.Scene {
           ? Math.min(bottom - viewH / 2, WORLD.ground - 0.26 * viewH)
           : 340;
       this.cameras.main.setZoom(zoom * r);
-      this.cameras.main.setBounds(0, -100, areaWidth(state?.area), bottom + 100);
+      // Tall phones see more world than -100..bottom+100: bounds shorter
+      // than the view make Phaser centre it, which lifted the ground to
+      // mid-screen and left the bottom empty. Reach up far enough to frame
+      // the ground at camY (plus headroom for climbs).
+      const top = Math.min(-100, this.camY - viewH / 2 - 400);
+      this.cameras.main.setBounds(0, top, areaWidth(state?.area), bottom + 100 - top);
     }
     this.parallax?.resize();
   }
