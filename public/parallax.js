@@ -634,7 +634,8 @@ export function createParallax(scene) {
     rayTweens.forEach((t) => t.stop());
     rayTweens = [];
     rays.forEach((r, i) => {
-      const x = lite ? undefined : theme.rays.xs[i];
+      // No light shafts on phones: on a small screen they read as haze.
+      const x = lite || lowPower ? undefined : theme.rays.xs[i];
       r.setVisible(x !== undefined);
       if (x === undefined) return;
       r.setPosition(x, -170)
@@ -731,8 +732,8 @@ export function createParallax(scene) {
     fgBottom.setPosition(w / 2, bottom + 6).setSize(vw + 40, room);
     fgBottom.tilePositionY = 220 - room;
     fgTop.setPosition(w / 2, top - 4).setSize(vw + 40, 200);
-    fgTop.setScale(1, lowPower ? 0.35 : 0.85);
-    fgTop.setAlpha(lowPower ? 0.35 : 1);
+    // Phones: no blurred foliage across the top of the screen.
+    fgTop.setScale(1, 0.85).setVisible(!lowPower);
     // Keep each far strip where its `top` says while the camera rests at camY;
     // a scroll factor below 1 then moves it less as the camera climbs.
     const restY = (scene.camY ?? 340) - h / 2;

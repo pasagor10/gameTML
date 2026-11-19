@@ -82,7 +82,7 @@ import {
   areaWidth,
   combatStats,
 } from "/shared/config.js";
-import { createParallax } from "/parallax.js?v=0.11.0";
+import { createParallax } from "/parallax.js?v=0.12.0";
 import { PRESETS, CHOICES, autoLevel, createAutoTuner } from "/graphics-quality.js";
 import { createPerfOverlay, logEvent, readLog, textureStats } from "/perf-overlay.js";
 import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.7";
