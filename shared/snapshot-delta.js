@@ -8,6 +8,9 @@
 // when its JSON changes (undefined → null so a cleared value still arrives).
 // Every FULL_EVERY packs the memo resets and a complete snapshot goes out.
 
+// Clients send this in the socket query (?snapshot=2) to receive deltas.
+export const SNAPSHOT_PROTOCOL = 2;
+
 export const HOT_PLAYER = [
   "id", "x", "y", "direction", "moving", "vx", "running", "grounded", "vy",
   "action", "hitAt", "hitDirection", "diedAt", "reviveAt", "hp", "attackAt",

@@ -9,8 +9,8 @@ import { mkdirSync, readdirSync, unlinkSync } from "node:fs";
 import { db, loadCharacter, persist } from "./server/database.js";
 import { CLASSES, maxHp, maxMp } from "./shared/config.js";
 import * as world from "./server/world.js";
-import { releaseStamp } from "./server/release-stamp.js";
-import { createSnapshotMemo, packSnapshot } from "./shared/snapshot-delta.js";
+import { releaseStamp, RELEASE } from "./server/release-stamp.js";
+import { createSnapshotMemo, packSnapshot, SNAPSHOT_PROTOCOL } from "./shared/snapshot-delta.js";
 const app = express(),
   server = http.createServer(app),
   origin = process.env.APP_ORIGIN;
@@ -256,7 +256,7 @@ io.on("connection", (socket) => {
     if (world.players.has(socket.id)) throw Error("เลือกตัวละครแล้ว");
     const p = world.makeRuntime(c, socket);
     world.players.set(socket.id, p);
-    return { message: "ยินดีต้อนรับ " + p.name, onlinePlayers: world.onlineRoster(), announcements: world.announcements.slice(-10) };
+    return { message: "ยินดีต้อนรับ " + p.name, release: RELEASE, onlinePlayers: world.onlineRoster(), announcements: world.announcements.slice(-10) };
   });
   execute(
     "player:input",
@@ -396,6 +396,11 @@ const timer = setInterval(() => {
     }
     if (++step % 1 === 0)
       for (const p of world.players.values()) {
+        // Tabs opened before deltas existed can't merge them: send in full.
+        if (!(Number(p.socket.handshake?.query?.snapshot) >= SNAPSHOT_PROTOCOL)) {
+          p.socket.emit("world:snapshot", world.snapshot(p));
+          continue;
+        }
         let memo = snapshotMemos.get(p);
         if (!memo) snapshotMemos.set(p, (memo = createSnapshotMemo()));
         p.socket.emit("world:snapshot", packSnapshot(memo, world.snapshot(p)));

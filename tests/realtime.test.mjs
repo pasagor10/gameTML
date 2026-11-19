@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { once } from "node:events";
 import path from "node:path";
 import { io } from "socket.io-client";
-import { mergeSnapshot } from "../shared/snapshot-delta.js";
+import { mergeSnapshot, SNAPSHOT_PROTOCOL } from "../shared/snapshot-delta.js";
 // Snapshots arrive as deltas; keep the merged state on the socket. Registered
 // first, so later world:snapshot listeners can read s.merged.
 const trackSnapshots = (s) => {
@@ -64,12 +64,14 @@ async function account(name) {
   assert.ok(c.id);
   const s = trackSnapshots(io(base, {
     extraHeaders: { Cookie: cookie },
+    query: { snapshot: SNAPSHOT_PROTOCOL },
     transports: ["websocket"],
   }));
   sockets.push(s);
   await once(s, "connect");
   const r = await command(s, "player:join", { id: c.id });
   assert.equal(r.ok, true);
+  assert.ok(r.release, "join reports the server release for stale-tab reloads");
   return { s, c, cookie };
 }
 const command = (s, e, d = {}) =>

@@ -1,5 +1,5 @@
 import { bindAnnouncements, receiveAnnouncement, announcementHistory } from "/announcements.js";
-import { updatePartyUi, bindPartyUi } from "/party-ui.js";
+import { updatePartyUi, bindPartyUi } from "/party-ui.js?v=2";
 import { showWorldHeroPreview } from "/hero-preview.js";
 import { observeHudLayout } from "/hud-layout.js";
 import { isWorldPointer } from "/world-input.js";
@@ -18,7 +18,7 @@ import {
   setMusic,
   musicOn,
   prepareMusic,
-} from "/sound.js?v=20261118-audio2";
+} from "/sound.js?v=20261119-perf";
 import { TOWN_ANIMS, TOWN_LAYOUT, TOWN_PROPS, TOWN_VIEW } from "/shared/town-layout.js";
 import { createWorldDetails } from "/world-details.js?v=4";
 import {
@@ -43,7 +43,7 @@ import { createTownNpcs, footGlow, createRim } from "/town-npcs.js?v=10";
 import { updateEnhanceAura, AURA_LEVEL } from "/enhance-aura.js?v=3";
 import { marketHtml, shopManagerHtml, marketState } from "/market-ui.js?v=9";
 import { sampleMotion } from "/shared/smoothing.js";
-import { mergeSnapshot } from "/shared/snapshot-delta.js";
+import { mergeSnapshot, SNAPSHOT_PROTOCOL } from "/shared/snapshot-delta.js?v=1";
 import {
   questPanelHtml,
   setQuestTab,
@@ -82,7 +82,7 @@ import {
   combatStats,
 } from "/shared/config.js";
 import { createParallax } from "/parallax.js?v=0.9.0";
-import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.6";
+import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.7";
 import { createCombatFx } from "/combat-fx.js?v=0.12.2";
 import { activeEffects, effectTint, effectRow, hudEffects } from "/status-ui.js?v=1";
 import { STATUSES, BUFFS } from "/shared/skills.js";
@@ -719,6 +719,25 @@ function setMapLayer(selector, markup) {
   layer.dataset.markup = markup;
   layer.innerHTML = markup;
 }
+// The server's release changes on every deploy. A tab left open across one
+// (common on tablets and the installed app) still runs the old code and
+// shows old data, so reload it once onto the new files.
+const PAGE_RELEASE = new URL(import.meta.url).searchParams.get("r");
+function reloadForRelease(release) {
+  if (!release || !PAGE_RELEASE || release === PAGE_RELEASE) return false;
+  try {
+    // Once per release: a stale CDN copy must not cause a reload loop.
+    if (sessionStorage.getItem("tml-reloaded-for") === release) return false;
+    sessionStorage.setItem("tml-reloaded-for", release);
+  } catch {
+    return false;
+  }
+  $("#connection-state").textContent = "มีเวอร์ชันใหม่ กำลังโหลดเกมใหม่…";
+  $("#connection-state").classList.remove("hidden");
+  socket?.disconnect();
+  setTimeout(() => location.reload(), 600);
+  return true;
+}
 let enteringGame = false;
 let adventureLoaded;
 let resolveAdventureLoaded;
@@ -754,7 +773,13 @@ async function enterGame() {
   enteringGame = false;
   socket?.disconnect();
   onlinePlayers = null;
-  socket = io({ transports: ["websocket", "polling"], reconnection: true });
+  // snapshot: this client merges delta snapshots. Tabs opened before the
+  // delta release don't send it and keep getting full snapshots.
+  socket = io({
+    transports: ["websocket", "polling"],
+    reconnection: true,
+    query: { snapshot: SNAPSHOT_PROTOCOL },
+  });
   socket.on("announcement", receiveAnnouncement);
   socket.on("online:roster", (players) => {
     onlinePlayers = players;
@@ -767,6 +792,7 @@ async function enterGame() {
         $("#connection-state").textContent = result.error;
         return;
       }
+      if (reloadForRelease(result.release)) return;
       onlinePlayers = result.onlinePlayers || onlinePlayers;
       for (const notice of result.announcements || []) receiveAnnouncement(notice, false);
       $("#connection-state").classList.add("hidden");
@@ -2050,7 +2076,7 @@ class Adventure extends Phaser.Scene {
     this.lastArea = null;
   }
   preload() {
-    this.load.maxParallelDownloads = 4;
+    this.load.maxParallelDownloads = 6;
     this.load.on("progress", (value) => {
       $("#connection-state").textContent = `กำลังโหลดทรัพยากร ${Math.round(value * 100)}%`;
     });
@@ -2124,8 +2150,10 @@ class Adventure extends Phaser.Scene {
     const index = this.spriteSetIndex || {},
       hero = characters.find((c) => c.id === selectedId),
       skin = hero && heroSkins(hero).find((name) => index.sets?.[name]);
-    for (const group of ["monsters", "npcs"])
-      for (const name of Object.keys(index[group] || {})) this.sprites.want(group, name);
+    // Townsfolk are needed on arrival. Monster animations (6 actions for
+    // every enemy and boss, hundreds of files) aren't seen in town: they
+    // load in the background once the player is in (see warmMonsters below).
+    for (const name of Object.keys(index.npcs || {})) this.sprites.want("npcs", name);
     if (skin) {
       this.sprites.want("sets", skin);
       const set = { ...index.sets[skin], name: skin },
@@ -2147,6 +2175,12 @@ class Adventure extends Phaser.Scene {
     // Requests above can append atlas pages to the same loader run.
     if (this.load.isLoading()) this.load.once("complete", () => resolveAdventureLoaded?.());
     else resolveAdventureLoaded?.();
+    const warmMonsters = () =>
+      setTimeout(() => {
+        for (const name of Object.keys(index.monsters || {})) this.sprites.want("monsters", name);
+      }, 0);
+    if (this.load.isLoading()) this.load.once("complete", warmMonsters);
+    else warmMonsters();
     this.spriteSets = this.sprites.heroes;
     this.monsterSets = this.sprites.monsters;
     this.slimeAtlas = registerMotionAtlas(this, "slime-motion", 6);

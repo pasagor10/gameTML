@@ -1,7 +1,7 @@
 // Game audio: local CC0 music and recorded CC0 combat sounds, layered with
 // synthesised WebAudio for punch. Sources and licenses: /assets/music/CREDITS.md
 //
-//   import { sfx, music, setSound, soundOn, unlockAudio } from "/sound.js?v=20261118-audio2";
+//   import { sfx, music, setSound, soundOn, unlockAudio } from "/sound.js?v=20261119-perf";
 //   sfx("swing")            // one-shot effects, see SFX below
 //   music("town"|"dungeon"|"boss"|null)
 //
