@@ -118,7 +118,7 @@ export function createMonsterExtras(scene, m, e, spawning) {
   m.seed = Math.random() * 1000;
   m.spawnAt = spawning && !reduced ? scene.time.now : -1e9;
   if (e.boss) {
-    if (scene.renderer.type === Phaser.WEBGL)
+    if (scene.renderer.type === Phaser.WEBGL && !scene.lite)
       m.glow = m.image.preFX?.addGlow(0xff5fd2, 3, 0, false, 0.1, 12);
     m.aura = scene.add
       .particles(0, 0, "cfx-glow", {

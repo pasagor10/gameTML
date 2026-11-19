@@ -82,7 +82,7 @@ import {
   areaWidth,
   combatStats,
 } from "/shared/config.js";
-import { createParallax } from "/parallax.js?v=0.9.1";
+import { createParallax } from "/parallax.js?v=0.10.0";
 import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.7";
 import { createCombatFx } from "/combat-fx.js?v=0.12.2";
 import { activeEffects, effectTint, effectRow, hudEffects } from "/status-ui.js?v=1";
@@ -769,6 +769,37 @@ $("#build-version")?.addEventListener("click", togglePerf);
       ping == null ? "ping –" : `ping ${ping}ms`,
       BUILD_LABEL,
     ].join(" · ");
+  }, 1000);
+}
+// Lite graphics for slow devices (parallax.js, weapon and boss glows).
+// tml-lite: "1" on, "0" off; unset means automatic: on for devices that
+// report 4 GB of memory or less, and switched on mid-game when the frame
+// rate stays low.
+let liteChoice = null;
+try {
+  liteChoice = localStorage.getItem("tml-lite");
+} catch {}
+let liteOn = liteChoice ? liteChoice === "1" : (navigator.deviceMemory || 8) <= 4;
+function setLite(on) {
+  liteOn = on;
+  liteChoice = on ? "1" : "0";
+  try {
+    localStorage.setItem("tml-lite", liteChoice);
+  } catch {}
+  if (scene) {
+    scene.lite = on;
+    scene.parallax?.setLite(on);
+  }
+}
+{
+  let slow = 0;
+  setInterval(() => {
+    const fps = phaser?.loop?.actualFps;
+    if (liteOn || liteChoice || !state || !fps || document.hidden) return (slow = 0);
+    slow = fps < 25 ? slow + 1 : 0;
+    if (slow < 5) return;
+    setLite(true);
+    toast("ภาพกระตุก · เปิดโหมดภาพเบาให้อัตโนมัติ (ปิดได้ในตั้งค่า)");
   }, 1000);
 }
 function reloadForRelease(release) {
@@ -1805,7 +1836,7 @@ function showPanel(panel) {
   } else if (panel === "settings") {
     modal(
       "บันทึกการเดินทาง",
-      `<p>เกมบันทึกตัวละคร เงิน อุปกรณ์ และดันเจียนบนเซิร์ฟเวอร์อัตโนมัติ<br>บัญชีผู้มาเยือนผูกกับคุกกี้ในเบราว์เซอร์นี้</p><button id="open-announcements" class="primary-button">📣 ประกาศจากระบบ · บอสโลก 20:00 น.</button><button id="toggle-sound" class="primary-button">${muted ? "เปิดเสียงทั้งหมด" : "ปิดเสียงทั้งหมด"}</button><button id="toggle-music" class="primary-button">${musicOn() ? "ปิดเพลงประกอบ" : "เปิดเพลงประกอบ"}</button><button id="toggle-perf" class="primary-button">${perfOn ? "ซ่อนตัววัด FPS / ping" : "แสดงตัววัด FPS / ping"}</button><button id="back-selection" class="text-button">กลับหน้าเลือกตัวละคร</button><p class="hint">Demo v0.3 · นักดาบหญิงและสไลม์มีเฟรมแอนิเมชันชุดแรก · ตัวอื่นยังใช้ภาพ idle · เป้าหมาย 20–30 คนต่อห้องยังไม่ได้ยืนยันด้วย load test</p>`,
+      `<p>เกมบันทึกตัวละคร เงิน อุปกรณ์ และดันเจียนบนเซิร์ฟเวอร์อัตโนมัติ<br>บัญชีผู้มาเยือนผูกกับคุกกี้ในเบราว์เซอร์นี้</p><button id="open-announcements" class="primary-button">📣 ประกาศจากระบบ · บอสโลก 20:00 น.</button><button id="toggle-sound" class="primary-button">${muted ? "เปิดเสียงทั้งหมด" : "ปิดเสียงทั้งหมด"}</button><button id="toggle-music" class="primary-button">${musicOn() ? "ปิดเพลงประกอบ" : "เปิดเพลงประกอบ"}</button><button id="toggle-lite" class="primary-button">${liteOn ? "ปิดโหมดภาพเบา (ภาพสวยเต็มที่)" : "เปิดโหมดภาพเบา (ลื่นขึ้นบนเครื่องช้า)"}</button><button id="toggle-perf" class="primary-button">${perfOn ? "ซ่อนตัววัด FPS / ping" : "แสดงตัววัด FPS / ping"}</button><button id="back-selection" class="text-button">กลับหน้าเลือกตัวละคร</button><p class="hint">Demo v0.3 · นักดาบหญิงและสไลม์มีเฟรมแอนิเมชันชุดแรก · ตัวอื่นยังใช้ภาพ idle · เป้าหมาย 20–30 คนต่อห้องยังไม่ได้ยืนยันด้วย load test</p>`,
     );
     $("#open-announcements").onclick = () => showPanel("announcements");
     $("#toggle-sound").onclick = () => {
@@ -1816,6 +1847,12 @@ function showPanel(panel) {
     };
     $("#toggle-music").onclick = () => {
       setMusic(!musicOn());
+      sfx("click");
+      closeModal();
+    };
+    $("#toggle-lite").onclick = () => {
+      setLite(!liteOn);
+      toast(liteOn ? "เปิดโหมดภาพเบาแล้ว" : "ปิดโหมดภาพเบาแล้ว");
       sfx("click");
       closeModal();
     };
@@ -2263,9 +2300,11 @@ class Adventure extends Phaser.Scene {
       .setDepth(18);
     this.reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
     this.cameras.main.setBackgroundColor("#234b68");
+    this.lite = liteOn;
     this.parallax = createParallax(this);
     this.fx = createCombatFx(this);
     this.parallax.setArea("town");
+    this.parallax.setLite(liteOn);
     this.worldDetails = createWorldDetails(this);
     this.showWalkability =
       $("#walkability-toggle").getAttribute("aria-pressed") === "true";

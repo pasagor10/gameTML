@@ -558,7 +558,16 @@ export function playLayers(scene, holder, image, set, dress, registry) {
 // The held weapon shimmers in its own item picture's accent colour: a soft
 // pulsing outline glow (WebGL only; canvas renderers skip it).
 function glowWeapon(scene, im, colour, body) {
-  if (colour == null || !im.preFX) return;
+  if (!im.preFX) return;
+  // Lite graphics (or no colour): the glow shader's offscreen passes go.
+  if (colour == null || scene.lite) {
+    if (im._glow) {
+      im.preFX.clear();
+      im._glow = null;
+      im._glowColour = null;
+    }
+    return;
+  }
   if (!im._glow || im._glowColour !== colour) {
     im.preFX.clear();
     im.preFX.padding = 8;

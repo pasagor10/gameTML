@@ -611,13 +611,18 @@ export function createParallax(scene) {
 
   let kind = "town",
     split = SPLIT.town,
-    rayTweens = [];
+    rayTweens = [],
+    // Lite graphics: no fog, light shafts, vignette, colour grade, drifting
+    // haze or floating particles. Slow tablets spend their frame on these.
+    lite = false,
+    lastArea = "town",
+    lastTint;
 
   function placeRays(theme) {
     rayTweens.forEach((t) => t.stop());
     rayTweens = [];
     rays.forEach((r, i) => {
-      const x = theme.rays.xs[i];
+      const x = lite ? undefined : theme.rays.xs[i];
       r.setVisible(x !== undefined);
       if (x === undefined) return;
       r.setPosition(x, -170)
@@ -641,6 +646,8 @@ export function createParallax(scene) {
   }
 
   function setArea(area, tint) {
+    lastArea = area;
+    lastTint = tint;
     kind = area === "town" ? "town" : "cave";
     const theme = THEMES[kind],
       tex = scene.textures.get("cave").getSourceImage(),
@@ -650,6 +657,8 @@ export function createParallax(scene) {
     const cut = Math.round(th * split),
       isTown = kind === "town";
     kit.forEach((o) => o.setVisible(isTown));
+    for (const l of far) if (l.drift && lite) l.layer.setVisible(false);
+    for (const o of [fog, fogBack, vignette, grade]) o.setVisible(!lite);
     scenery.setVisible(!isTown);
     cavernDepth.setVisible(!isTown);
     floor.setVisible(!isTown);
@@ -675,9 +684,10 @@ export function createParallax(scene) {
       kind === "town" ? Phaser.BlendModes.SCREEN : Phaser.BlendModes.MULTIPLY,
     );
     grade.setAlpha(theme.gradeAlpha);
-    town.forEach((e) => e.setVisible(kind === "town").stop());
-    cave.forEach((e) => e.setVisible(kind === "cave").stop());
-    if (!reduced) (kind === "town" ? town : cave).forEach((e) => e.start());
+    town.forEach((e) => e.setVisible(kind === "town" && !lite).stop());
+    cave.forEach((e) => e.setVisible(kind === "cave" && !lite).stop());
+    if (lite) emitters.forEach((e) => e.killAll());
+    else if (!reduced) (kind === "town" ? town : cave).forEach((e) => e.start());
     placeRays(theme);
     resize();
   }
@@ -755,5 +765,10 @@ export function createParallax(scene) {
     fgTop.setTint(c);
     props.forEach((img, i) => TOWN_PROPS[i].front && img.setTint(c));
   }
-  return { setArea, resize, update, setDark };
+  function setLite(on) {
+    if (lite === !!on) return;
+    lite = !!on;
+    setArea(lastArea, lastTint);
+  }
+  return { setArea, resize, update, setDark, setLite };
 }
