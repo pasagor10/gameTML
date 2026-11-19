@@ -3591,14 +3591,22 @@ class Adventure extends Phaser.Scene {
             (e.hp <= e.maxHp * 0.5 ? " · คลั่ง!" : ""),
         );
       m.label.setScale(Math.max(1, 0.85 / (this.cameras.main.zoom / this.renderScale())));
-      m.label.setPosition(m.image.x, m.image.y - m.size - 14);
+      // Headroom from the sprite as drawn: m.size can overshoot (the world
+      // boss's art is drawn far smaller than its 3.2x size), which put its
+      // name and bar off the top of the screen.
+      const head = Math.round(Math.min(m.size, Math.abs(m.image.displayHeight) + 16));
+      if (head !== m.head) {
+        m.head = head;
+        m.barHp = null;
+      }
+      m.label.setPosition(m.image.x, m.image.y - head - 14);
       // Stunned monsters get bobbing stars; the row lists every status.
       effectRow(
         this,
         m,
         effects,
         m.image.x,
-        m.image.y - m.size - 26 + (effects.some((s) => s.type === "stun") ? Math.sin(time * 0.012) * 3 : 0),
+        m.image.y - head - 26 + (effects.some((s) => s.type === "stun") ? Math.sin(time * 0.012) * 3 : 0),
       );
       m.bar.setPosition(m.image.x, m.image.y);
       m.lagHp ??= e.hp;
@@ -3610,7 +3618,7 @@ class Adventure extends Phaser.Scene {
         m.barHp = e.hp;
         m.barLag = m.lagHp;
         const w = e.boss ? 120 : e.elite ? 90 : 70,
-          top = -m.size + 4,
+          top = -(m.head ?? m.size) + 4,
           pct = (v) => Math.max(0, v / e.maxHp);
         m.bar.clear();
         m.bar.fillStyle(0x05101f, 0.92);
