@@ -952,8 +952,8 @@ export function createCombatFx(scene) {
   // floats off together. Orange for hits, red-pink for crits (with a burst
   // badge), violet when a hero is hurt, status colours for damage over time.
   const NUMBER_STYLES = {
-    hit: ["#fffbe0", "#ffc23d", "#ff7a00", "#3d1500"],
-    crit: ["#fff0f6", "#ff5a8c", "#d1103a", "#3d0014"],
+    hit: ["#ff9abd", "#ff3f91", "#ce1263", "#fff6fc"],
+    crit: ["#fff1fa", "#ff4395", "#ec136d", "#fff6fc"],
     hurt: ["#f6eaff", "#c08bff", "#7a3cf0", "#1f0748"],
     burn: ["#fff1d6", "#ffab4a", "#ff5a1f", "#3d1200"],
     poison: ["#f4ffe0", "#a8f05a", "#3fae2a", "#0f2e08"],
@@ -1001,11 +1001,12 @@ export function createCombatFx(scene) {
   }
   function digits(x, y, text, style, size, crit) {
     const label = pooledText(x, y, text, {
-        fontFamily: "Tahoma, Noto Sans Thai, sans-serif",
+        fontFamily: "Arial Black, Tahoma, sans-serif",
+        fontStyle: "bold",
         fontSize: size + "px",
         color: "#ffffff",
         stroke: "#000000",
-        strokeThickness: crit ? 3 : 2,
+        strokeThickness: crit ? 5 : 4,
         padding: { x: 4, y: 4 },
       })
       .setOrigin(0.5)
@@ -1024,8 +1025,10 @@ export function createCombatFx(scene) {
       lines = opts.lines?.length ? opts.lines : [{ amount: Math.abs(amount), crit }];
     // Start above a stack that is still on screen for this target.
     const prev = stacks.get(targetId),
-      base = prev && now < prev.until ? prev.top - 10 : y;
-    const step = tick ? 0 : 40,
+      step = tick ? 0 : 48,
+      ceiling = scene.cameras.main.worldView.y + 80,
+      base = Math.max(ceiling + (lines.length - 1) * step,
+        prev && now < prev.until ? prev.top - 10 : y),
       top = base - (lines.length - 1) * step - 48;
     // Another target's stack still showing right here? Step aside so two
     // stacks never interleave into one unreadable column.
@@ -1046,19 +1049,25 @@ export function createCombatFx(scene) {
             : line.crit
               ? "crit"
               : "hit",
-        size = tick ? 24 : line.crit ? 54 : hurt ? 34 : 40,
+        size = tick ? 24 : line.crit ? 58 : hurt ? 34 : 48,
         lx = x + jitter + (tick ? 38 : 0) + (line.crit ? 6 : 0),
         ly = base - n * step;
       if (line.crit) crits++;
       scene.time.delayedCall(n * 80, () => {
         const text = String(Math.abs(line.amount)),
           main = digits(lx, ly, text, style, size, line.crit),
-          parts = [main];
+          outline = !hurt && !tick ? pooledText(lx, ly, text, {
+            fontFamily: "Arial Black, Tahoma, sans-serif", fontStyle: "bold",
+            fontSize: size + "px", color: "#201122", stroke: "#201122",
+            strokeThickness: line.crit ? 9 : 8, padding: { x: 6, y: 6 },
+          }).setOrigin(.5).setDepth(41) : null,
+          parts = outline ? [outline, main] : [main];
         if (line.crit) {
           // Burst behind, a white flash copy on top, a star badge, and a kick.
           const burst = sprite("cfx-glow", lx, ly, 0xff3d6e, 41).setDisplaySize(main.width * 1.6, 90);
           const flash = pooledText(lx, ly, text, {
-              fontFamily: "Tahoma, Noto Sans Thai, sans-serif",
+              fontFamily: "Arial Black, Tahoma, sans-serif",
+              fontStyle: "bold",
               fontSize: size + "px",
               color: "#ffffff",
               padding: { x: 4, y: 4 },
@@ -1099,9 +1108,9 @@ export function createCombatFx(scene) {
             .setDepth(42);
           parts.push(icon);
         }
-        const from = tick ? 0.6 : line.crit ? 2.6 : 2;
+        const from = tick ? 0.6 : line.crit ? 1.45 : 1.25;
         for (const p of parts) p.setScale(from).setAlpha(0);
-        main.setAngle(line.crit ? (Math.random() - 0.5) * 10 : 0);
+        main.setAngle(0);
         scene.tweens.add({
           targets: parts,
           scale: 1,

@@ -99,7 +99,7 @@ export function animateHeroBody(a, p, pose, serverTime, now) {
 }
 
 export function createMonsterExtras(scene, m, e, spawning) {
-  const gait = GAITS[e.type] || GAITS.goblin;
+  const gait = e.world ? GAITS.golem : GAITS[e.type] || GAITS.goblin;
   m.gait = gait;
   m.shadow = scene.add
     .ellipse(e.x, e.y - 2, m.size * 0.62, m.size * 0.13, 0x0b1a2a, 0.38)

@@ -100,17 +100,17 @@ import { createParallax } from "/parallax.js?v=0.12.1";
 import { PRESETS, CHOICES, autoLevel, createAutoTuner } from "/graphics-quality.js";
 import { createPerfOverlay, logEvent, readLog, textureStats } from "/perf-overlay.js";
 import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.7";
-import { createCombatFx } from "/combat-fx.js?v=0.14.0";
+import { createCombatFx } from "/combat-fx.js?v=0.15.0";
 import { activeEffects, effectTint, effectRow, hudEffects } from "/status-ui.js?v=1";
 import { STATUSES, BUFFS } from "/shared/skills.js";
-import { WORLD_BOSS, GRAND_BOSS, worldInfo } from "/shared/world-boss.js";
+import { worldInfo } from "/shared/world-boss.js";
 import { updateWorldBossHud, worldBossCountdown, clock as wbClock } from "/world-boss-ui.js?v=2";
 import {
   animateHeroBody,
   animateMonsterBody,
   createMonsterExtras,
   destroyMonsterExtras,
-} from "/creature-fx.js?v=0.12.0";
+} from "/creature-fx.js?v=0.12.1";
 import {
   queueSpriteSets,
   createSpriteRegistry,
@@ -2451,6 +2451,7 @@ class Adventure extends Phaser.Scene {
       "/assets/town-kit/player-market-stall.webp?v=3",
     );
     this.load.image("slot-machine", "/assets/town-kit/slot-machine-v2.png?v=2");
+    this.load.image("world-titan", "/assets/bosses/world-titan.webp?v=1");
     this.load.image("cave", "/assets/cave.webp?v=2");
     this.load.image("knight-motion", "/assets/animations/knight-female.png");
     this.load.image("slime-motion", "/assets/animations/slime.png?v=3");
@@ -2873,13 +2874,14 @@ class Adventure extends Phaser.Scene {
         this.sprites.want("monsters", e.type);
         const mset = this.monsterSets.get(e.type),
           size =
+            e.world ? (e.grand ? 600 : 460) :
             (mset ? mset.height + 12 : e.boss ? 210 : 95) *
             (e.elite ? 1.25 : 1) *
             (traitOf(e).scale || 1) *
-            (e.world ? WORLD_BOSS.scale * (e.grand ? GRAND_BOSS.scale : 1) : e.night ? NIGHT_BOSS.scale : 1);
+            (e.night ? NIGHT_BOSS.scale : 1);
         const image = this.add
-          .image(e.x, e.y, BOSSES[e.type] ? `boss-preview:${e.type}` : "monsters",
-            BOSSES[e.type] ? undefined : Math.max(0, types.indexOf(e.type)))
+          .image(e.x, e.y, e.world ? "world-titan" : BOSSES[e.type] ? `boss-preview:${e.type}` : "monsters",
+            e.world || BOSSES[e.type] ? undefined : Math.max(0, types.indexOf(e.type)))
           .setDisplaySize(size, size)
           .setOrigin(0.5, 1)
           .setDepth(8);
@@ -2927,7 +2929,7 @@ class Adventure extends Phaser.Scene {
         }
         if (areaChanged) m.image.destroy();
         else if (
-          !playMonsterDeath(this, m.image, this.monsterSets.get(m.target.type))
+          (m.target.world || !playMonsterDeath(this, m.image, this.monsterSets.get(m.target.type)))
         )
           monsterDeath(this, m, this.slimeAtlas);
         m.label.destroy();
@@ -3691,7 +3693,10 @@ class Adventure extends Phaser.Scene {
       m.image.setVisible(
         !!mset || !this.sprites.listed("monsters", e.type) || time - m.bornAt > ART_WAIT_MS,
       );
-      if (mset) {
+      if (e.world) {
+        m.image.setTexture("world-titan").setOrigin(.5, 1).setVisible(true)
+          .setFlipX((e.direction || 1) > 0);
+      } else if (mset) {
         // A set that finished loading after spawn: adopt its size.
         if (!m.setSized) {
           m.setSized = true;
@@ -3699,7 +3704,7 @@ class Adventure extends Phaser.Scene {
             (mset.height + 12) *
             (e.elite ? 1.25 : 1) *
             (traitOf(e).scale || 1) *
-            (e.world ? WORLD_BOSS.scale * (e.grand ? GRAND_BOSS.scale : 1) : e.night ? NIGHT_BOSS.scale : 1);
+            (e.night ? NIGHT_BOSS.scale : 1);
         }
         playMonsterSet(m.image, mset, e, mpose, serverTime);
       }
