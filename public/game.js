@@ -7,7 +7,7 @@ import { MECHANICS, WATER_Y, SPIKE_BAND } from "/shared/boss-mechanics.js";
 import { bindAnnouncements, receiveAnnouncement, announcementHistory } from "/announcements.js";
 import { updatePartyUi, bindPartyUi } from "/party-ui.js?v=2";
 import { showWorldHeroPreview } from "/hero-preview.js";
-import { observeHudLayout } from "/hud-layout.js";
+import { observeHudLayout } from "/hud-layout.js?v=2";
 import { isWorldPointer } from "/world-input.js";
 import { SLOT_MACHINE } from "/shared/slots.js";
 import { slotPanelHtml, bindSlotPanel } from "/slots-ui.js?v=2";
@@ -96,7 +96,7 @@ import {
   areaWidth,
   combatStats,
 } from "/shared/config.js";
-import { createParallax } from "/parallax.js?v=0.12.0";
+import { createParallax } from "/parallax.js?v=0.12.1";
 import { PRESETS, CHOICES, autoLevel, createAutoTuner } from "/graphics-quality.js";
 import { createPerfOverlay, logEvent, readLog, textureStats } from "/perf-overlay.js";
 import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.7";

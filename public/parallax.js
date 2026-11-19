@@ -79,6 +79,15 @@ function makeTextures(scene) {
     c.fillStyle = vg;
     c.fillRect(0, 0, w, h);
   });
+  // Fade the natural-size rock continuation into the depths on tall screens.
+  canvasTexture(scene, "cave-depth-fade", 8, 256, (c, w, h) => {
+    const g = c.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, "rgba(8,20,38,0)");
+    g.addColorStop(0.65, "rgba(8,20,38,0.8)");
+    g.addColorStop(1, "#081426");
+    c.fillStyle = g;
+    c.fillRect(0, 0, w, h);
+  });
   canvasTexture(scene, "fx-seam", 8, 64, (c, w, h) => {
     const g = c.createLinearGradient(0, 0, 0, h);
     g.addColorStop(0, "rgba(8,20,30,0.55)");
@@ -331,8 +340,18 @@ export function createParallax(scene) {
     caveTexture.add("lower-depth", 0, 0, Math.floor(caveSource.height * .84),
       caveSource.width, caveSource.height - Math.floor(caveSource.height * .84));
   caveTexture.firstFrame = "__BASE";
-  const deepFloor = scene.add.image(0, 780, "cave", "lower-depth")
-    .setOrigin(0).setDisplaySize(WORLD_W, 1400).setDepth(-25).setVisible(false);
+  // The painting ends at world y=884. Mirror its bottom edge at the same
+  // vertical scale so portrait viewports never stretch a thin crop into stripes.
+  const depthY = -116 + BACK_H,
+    depthH = (caveSource.height - Math.floor(caveSource.height * .84)) * BACK_H / caveSource.height;
+  const depthBase = scene.add.rectangle(0, depthY, WORLD_W, 2400, 0x081426)
+    .setOrigin(0).setDepth(-27).setVisible(false);
+  const deepFloor = scene.add.image(0, depthY, "cave", "lower-depth")
+    .setOrigin(0).setFlipY(true).setDisplaySize(WORLD_W, depthH)
+    .setDepth(-26).setVisible(false);
+  const depthFade = scene.add.image(0, depthY, "cave-depth-fade")
+    .setOrigin(0).setDisplaySize(WORLD_W, depthH)
+    .setDepth(-25).setVisible(false);
   const scenery = scene.add
       .image(0, BACK_Y, "cave")
       .setOrigin(0)
@@ -673,7 +692,9 @@ export function createParallax(scene) {
     for (const l of far) if (l.drift && lite) l.layer.setVisible(false);
     for (const o of [fog, fogBack, vignette, grade]) o.setVisible(!lite);
     scenery.setVisible(!isTown);
-    deepFloor.setVisible(!isTown);
+    for (const layer of [depthBase, deepFloor, depthFade]) layer.setVisible(!isTown);
+    deepFloor.clearTint();
+    if (tint) deepFloor.setTint(tint);
     cavernDepth.setVisible(!isTown);
     floor.setVisible(!isTown);
     // Cave path is painted at pixel y=733. Its top must meet world ground=600,

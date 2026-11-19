@@ -148,3 +148,24 @@
 .world-boss.grand .wb-crown { background: radial-gradient(circle at 40% 30%, #fff1a8, #c98a16 70%); }
 .world-boss.grand .wb-body small { color: #ffd98a; }
 .world-boss.grand .wb-body em { color: #fff0c2; }
+
+/* Small/touch screens get one readable banner below the profile and quest. */
+@media (max-width: 700px), (pointer: coarse) {
+  html body #game-screen #world-boss {
+    top: var(--world-boss-top, 158px); left: var(--edge-l, 10px); right: auto;
+    transform: none; width: min(420px, calc(100% - var(--edge-l, 10px) - var(--edge-r, 10px)));
+    box-sizing: border-box; padding: 6px 8px; gap: 8px; border-radius: 10px;
+    animation: none;
+  }
+  html body #game-screen #world-boss .wb-crown,
+  html body #game-screen #world-boss .wb-body em { display: none; }
+  html body #game-screen #world-boss .wb-body { min-width: 0; gap: 3px; }
+  html body #game-screen #world-boss .wb-body small,
+  html body #game-screen #world-boss .wb-body b {
+    display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    line-height: 1.4; letter-spacing: 0;
+  }
+  html body #game-screen #world-boss .wb-body small { font-size: 10px; }
+  html body #game-screen #world-boss .wb-body b { font-size: 12px; }
+  html body #game-screen #world-boss button { flex: 0 0 auto; min-height: 36px; padding: 6px 10px; font-size: 11px; }
+}

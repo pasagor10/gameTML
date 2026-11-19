@@ -11,6 +11,7 @@ export function measureHudLayout(screen, profile, joystick) {
 export function observeHudLayout(screen) {
   const profile = screen.querySelector('.profile-panel');
   const joystick = screen.querySelector('#joystick-zone');
+  const quests = screen.querySelector('#quests');
   // Entry animations translate the profile; measure its final layout position.
   const layoutRect = (el) => {
     let top = 0, left = 0;
@@ -26,9 +27,11 @@ export function observeHudLayout(screen) {
     screen.style.setProperty('--quest-top', `${layout.questTop}px`);
     screen.style.setProperty('--quest-height', `${layout.questHeight}px`);
     screen.style.setProperty('--chat-left', `${layout.chatLeft}px`);
+    const questHeight = quests?.getClientRects().length ? quests.offsetHeight : 0;
+    screen.style.setProperty('--world-boss-top', `${layout.questTop + questHeight + 8}px`);
   };
   const observer = new ResizeObserver(update);
-  for (const el of [screen, profile, joystick]) observer.observe(el);
+  for (const el of [screen, profile, joystick, quests].filter(Boolean)) observer.observe(el);
   window.addEventListener('resize', update);
   update();
   return observer;
