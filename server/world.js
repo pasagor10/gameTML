@@ -26,7 +26,7 @@ import {
   enhancementLevel,
   enhancementChance,
   enhancementCost,
-  enhanceSetLevel,
+  weaponGlowLevel,
   MAX_ENHANCE,
   ENHANCE_BREAK_LEVEL,
 } from "../shared/rpg.js";
@@ -2446,7 +2446,7 @@ export function snapshot(p) {
     level: m.level,
     equipment: m.equipment,
     upgrade: m.upgrade,
-    setGlow: enhanceSetLevel(m),
+    glow: weaponGlowLevel(m),
     attackAt: m.attackAt,
     buffs: m.buffs || null,
     status: m.status || null,

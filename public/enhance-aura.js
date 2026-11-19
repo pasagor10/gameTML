@@ -89,13 +89,15 @@ export function updateEnhanceAura(scene, holder, show, x, y, time) {
   holder.enhanceAura.set(show, x, y, time);
 }
 
-// Full enhanced set (every slot +12, or +15): comets of light spiral around
-// the hero's body, passing behind and in front of the sprite (depth 10),
-// while bubbles drift up. +15 adds a third comet, a soft body halo and
-// richer colours.
+// Weapon +11 to +15: comets of light spiral around the hero's body, passing
+// behind and in front of the sprite (depth 10), while bubbles drift up.
+// Each level has its own colour; higher levels add comets and a body halo.
 const SET_STYLE = {
-  12: { comets: 2, tint: [0x8ff3ff, 0xfff0b0], halo: 0, bubbles: 140 },
-  15: { comets: 3, tint: [0xffe27a, 0xff9de2, 0x9ff7ff], halo: 0xffd76a, bubbles: 70 },
+  11: { comets: 2, deep: 0x18c060, tint: [0x7dffb0, 0xd8ffe8], halo: 0, bubbles: 160 },
+  12: { comets: 2, deep: 0x1688e0, tint: [0x8ff3ff, 0xe0fbff], halo: 0, bubbles: 140 },
+  13: { comets: 3, deep: 0x8a3cf0, tint: [0xc59bff, 0xf0e0ff], halo: 0, bubbles: 120 },
+  14: { comets: 3, deep: 0xe02828, tint: [0xff6a5a, 0xffc59a], halo: 0xff5a40, bubbles: 95 },
+  15: { comets: 3, deep: 0xf0a000, tint: [0xffe27a, 0xff9de2, 0x9ff7ff], halo: 0xffd76a, bubbles: 70 },
 };
 
 function createSetGlow(scene, tier, reduced) {
@@ -105,18 +107,21 @@ function createSetGlow(scene, tier, reduced) {
       : null,
     comets = Array.from({ length: style.comets }, (_, i) => {
       const tint = style.tint[i % style.tint.length],
+        // A normal-blend coloured body keeps the level colour readable on
+        // pale backgrounds, where additive light alone turns white.
+        body = scene.add.image(0, 0, "cfx-glow").setTint(style.deep),
         head = scene.add.image(0, 0, "cfx-glow").setTint(tint).setBlendMode(ADD),
         trail = reduced
           ? null
           : scene.add.particles(0, 0, "cfx-glow", {
               lifespan: 380,
-              scale: { start: 0.16, end: 0 },
+              scale: { start: 0.26, end: 0 },
               alpha: { start: 0.8, end: 0 },
               tint: [tint, 0xffffff],
               frequency: 22,
               blendMode: ADD,
             });
-      return { head, trail, phase: (i / style.comets) * Math.PI * 2 };
+      return { body, head, trail, phase: (i / style.comets) * Math.PI * 2 };
     }),
     bubbles = reduced
       ? null
@@ -127,14 +132,13 @@ function createSetGlow(scene, tier, reduced) {
             lifespan: { min: 1400, max: 2200 },
             speedY: { min: -60, max: -28 },
             speedX: { min: -10, max: 10 },
-            scale: { start: 0.06, end: 0.16 },
+            scale: { start: 0.09, end: 0.22 },
             alpha: { start: 0.85, end: 0 },
-            tint: [...style.tint, 0xffffff],
+            tint: [style.deep, ...style.tint],
             frequency: style.bubbles,
-            blendMode: ADD,
           })
           .setDepth(11);
-  const parts = [halo, bubbles, ...comets.flatMap((c) => [c.head, c.trail])].filter(Boolean);
+  const parts = [halo, bubbles, ...comets.flatMap((c) => [c.body, c.head, c.trail])].filter(Boolean);
   return {
     tier,
     parts,
@@ -158,13 +162,18 @@ function createSetGlow(scene, tier, reduced) {
         const a = t * 3.2 + c.phase,
           // Spiral: round the body while climbing from feet to head and back.
           climb = 0.5 + Math.sin(t * 1.3 + c.phase) * 0.5,
-          cx = x + Math.cos(a) * 34,
+          cx = x + Math.cos(a) * 40,
           cy = feet - 6 - climb * (body - 8) + Math.sin(a) * 9,
           front = Math.sin(a) > 0;
+        c.body
+          .setPosition(cx, cy)
+          .setDepth(front ? 11 : 9)
+          .setScale(front ? 0.6 : 0.45)
+          .setAlpha(front ? 0.85 : 0.5);
         c.head
           .setPosition(cx, cy)
           .setDepth(front ? 11 : 9)
-          .setScale(front ? 0.32 : 0.24)
+          .setScale(front ? 0.3 : 0.22)
           .setAlpha(front ? 1 : 0.6);
         c.trail?.setPosition(cx, cy).setDepth(front ? 11 : 9);
       }
@@ -176,7 +185,7 @@ function createSetGlow(scene, tier, reduced) {
   };
 }
 
-// tier: 0 (none), 12 or 15 — from the server's per-hero `setGlow`.
+// tier: 0 (none) or the weapon level 11–15, from the server's per-hero `glow`.
 export function updateSetGlow(scene, holder, tier, x, feet, height, time) {
   if (holder.setGlow && holder.setGlow.tier !== tier && tier) {
     holder.setGlow.destroy();

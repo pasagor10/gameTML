@@ -708,17 +708,13 @@ const HIGH_CHANCES = [0.12, 0.1, 0.08, 0.06, 0.05]; // +10→11 … +14→15
 export const enhancementChance = (level) =>
   level < 3 ? 1 : level < 6 ? 0.7 : level < 9 ? 0.4 : level < 10 ? 0.15
     : HIGH_CHANCES[level - 10] ?? 0;
-// Full-set glow: every slot equipped and at least +12 (or +15).
-export const SET_GLOW_LEVELS = [12, 15];
-export function enhanceSetLevel(p) {
-  const equipment = p?.equipment || {};
-  let lowest = Infinity;
-  for (const slot of Object.keys(ENHANCEMENT_BONUSES)) {
-    if (!equipment[slot]) return 0;
-    lowest = Math.min(lowest, enhancementLevel(p, slot));
-  }
-  return [...SET_GLOW_LEVELS].reverse().find((l) => lowest >= l) || 0;
-}
+// Weapon glow: an equipped weapon at +11 or higher lights up the hero,
+// one colour per level (other slots do not count).
+export const WEAPON_GLOW_LEVEL = 11;
+export const weaponGlowLevel = (p) =>
+  p?.equipment?.weapon && (p.upgrade || 0) >= WEAPON_GLOW_LEVEL
+    ? Math.min(p.upgrade, MAX_ENHANCE)
+    : 0;
 export const enhancementCost = (level) => ({
   gold: (level + 1) * 30,
   ore: 1 + Math.floor(level / 3),

@@ -1167,8 +1167,8 @@ test('costume listings remove only requested copies and preserve costume identit
   assert.equal(loadCharacter(a.id).inventory.costume_mbeach, 3, 'other outfit is untouched');
 });
 
-test("enhancement caps at +15, breaks to +0 on failure from +10, and full sets glow", async () => {
-  const { enhanceSetLevel, enhancementChance, MAX_ENHANCE } = await import("../shared/rpg.js");
+test("enhancement caps at +15, breaks to +0 on failure from +10, and +11 weapons glow", async () => {
+  const { weaponGlowLevel, enhancementChance, MAX_ENHANCE } = await import("../shared/rpg.js");
   assert.equal(MAX_ENHANCE, 15);
   assert.ok(enhancementChance(14) > 0 && enhancementChance(15) === 0);
   const p = create("enhance-break");
@@ -1200,12 +1200,13 @@ test("enhancement caps at +15, breaks to +0 on failure from +10, and full sets g
   } finally {
     Math.random = random;
   }
-  const full = (lv) => ({
-    equipment: { weapon: "w", armor: "a", charm: "c", boots: "b" },
-    upgrade: lv, enhancements: { armor: lv, charm: lv, boots: lv },
+  const hero = (lv, weapon = "w") => ({
+    equipment: { weapon, armor: null, charm: null, boots: null },
+    upgrade: lv, enhancements: { armor: 15, charm: 15, boots: 15 },
   });
-  assert.equal(enhanceSetLevel(full(11)), 0);
-  assert.equal(enhanceSetLevel(full(12)), 12);
-  assert.equal(enhanceSetLevel(full(15)), 15);
-  assert.equal(enhanceSetLevel({ ...full(15), equipment: { weapon: "w", armor: "a", charm: "c", boots: null } }), 0);
+  assert.equal(weaponGlowLevel(hero(10)), 0);
+  assert.equal(weaponGlowLevel(hero(11)), 11);
+  assert.equal(weaponGlowLevel(hero(13)), 13);
+  assert.equal(weaponGlowLevel(hero(15)), 15);
+  assert.equal(weaponGlowLevel(hero(15, null)), 0);
 });
