@@ -1,10 +1,11 @@
 // Phones play in portrait only.
 //
-// Browsers only allow locking orientation in fullscreen, and only after a
-// user gesture (Android Chrome/Samsung; iPhone Safari has neither). So on a
-// touch phone the first tap goes fullscreen and locks portrait where it is
-// supported; everywhere else the landscape "rotate" card (orientation.css)
-// covers the game until the phone is turned upright.
+// The game never takes over the screen by itself. Turned sideways, the
+// landscape "rotate" card (orientation.css) covers the game until the phone
+// is upright; where the browser can lock orientation (Android Chrome/Samsung,
+// only in fullscreen and after a tap), the card's button offers to go
+// fullscreen and lock portrait. iPhone Safari can do neither, so the button
+// hides there.
 
 const phone = matchMedia("(pointer: coarse)").matches;
 
@@ -15,22 +16,14 @@ async function lockPortrait() {
       await root.requestFullscreen({ navigationUI: "hide" });
     await screen.orientation?.lock?.("portrait");
   } catch {
-    // Not supported (iOS) or refused: the rotate card handles it.
+    // Not supported or refused: the rotate card stays.
   }
 }
 
 if (phone) {
   const canLock =
     document.fullscreenEnabled && typeof screen.orientation?.lock === "function";
-  if (canLock)
-    addEventListener(
-      "pointerup",
-      () => lockPortrait(),
-      { once: true, capture: true },
-    );
-  document
-    .querySelector("#rotate-device button")
-    ?.addEventListener("click", lockPortrait);
-  if (!canLock)
-    document.querySelector("#rotate-device button")?.setAttribute("hidden", "");
+  const button = document.querySelector("#rotate-device button");
+  if (canLock) button?.addEventListener("click", lockPortrait);
+  else button?.setAttribute("hidden", "");
 }

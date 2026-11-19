@@ -1,4 +1,3 @@
-import { renderCampSelection } from "/camp-select.js?v=1";
 import { bindAnnouncements, receiveAnnouncement, announcementHistory } from "/announcements.js";
 import { updatePartyUi, bindPartyUi } from "/party-ui.js";
 import { showWorldHeroPreview } from "/hero-preview.js";
@@ -70,7 +69,7 @@ import {
   animateSlime,
   monsterDeath,
 } from "/combat-visuals.js?v=0.3.1";
-import { createSelectionPreview } from "/selection-scene.js?v=0.12.3";
+import { createSelectionPreview } from "/selection-scene.js?v=0.13.0";
 import {
   CLASSES,
   ITEMS,
@@ -193,7 +192,9 @@ function soundCue(name, rarity = "common") {
 }
 function syncSoundButton() {
   muted = !soundOn();
-  $("#sound").textContent = muted ? "♫ เปิดเสียง" : "♫ ปิดเสียง";
+  $("#sound").classList.toggle("muted", muted);
+  $("#sound").setAttribute("aria-label", muted ? "เปิดเสียง" : "ปิดเสียง");
+  $("#sound").title = muted ? "เปิดเสียง" : "ปิดเสียง";
 }
 syncSoundButton();
 music("town");
@@ -229,10 +230,17 @@ async function refreshAccount() {
     ? characters
         .map(
           (c) =>
-            `<button data-resume="${c.id}" class="saved-hero"><span class="roster-pose" aria-hidden="true"><span class="saved-portrait hero-art" style="${lobbyHeroStyle(c.class, c.gender, c)}"></span></span><span><strong>${escape(c.name)}</strong><small>${CLASSES[c.class].name}</small></span><b>Lv.${c.level}</b></button>`,
+            `<button data-resume="${c.id}" class="hl-slot" type="button"><span class="hl-slot-icon" aria-hidden="true">${skillIcon(c.class, 1)}</span><span class="hl-slot-text"><strong>${escape(c.name)}</strong><small>${CLASSES[c.class]?.name || ""}</small></span><b>Lv.${c.level}</b></button>`,
         )
-        .join("")
-    : '<p class="empty-roster">ยังไม่มีผู้กล้าในบัญชีนี้<br><span>เลือกคลาสแล้วสร้างตำนานแรกของคุณ</span></p>';
+        .join("") +
+      (characters.length < 3
+        ? `<button class="hl-slot hl-slot-new" type="button" data-new-slot><span class="hl-slot-icon" aria-hidden="true">＋</span><span class="hl-slot-text"><strong>สร้างผู้กล้าใหม่</strong><small>ว่าง ${3 - characters.length} ช่อง</small></span></button>`
+        : "")
+    : "";
+  $$("[data-new-slot]").forEach((b) => (b.onclick = () => $("#new-hero").click()));
+  const named = account && !account.name.startsWith("guest-");
+  $("#account-short").textContent = named ? account.name : "ผู้มาเยือน";
+  $("#account-open").classList.toggle("signed-in", !!named);
   $("#new-hero").disabled = characters.length >= 3;
   $("#new-hero").title =
     characters.length >= 3
@@ -298,15 +306,6 @@ function renderCards() {
     detail = heroDescriptions[job];
   $("#landing").dataset.heroClass = job;
   $("#landing").dataset.lobbyMode = lobbyMode;
-  renderCampSelection({ job, saved, characters, gender, classes: CLASSES, onSelect: (key, character) => {
-    if (character) {
-      document.querySelector(`[data-resume="${character.id}"]`)?.click();
-    } else {
-      if (lobbyCharacterId) resetLobbyCreation();
-      job = key;
-      renderCards();
-    }
-  }});
   $("#roster-subtitle").textContent =
     lobbyMode === "create" ? "CREATE A NEW HERO" : "YOUR CHARACTERS";
   $("#roster-title").textContent =
@@ -323,7 +322,8 @@ function renderCards() {
       lobbyMode === "create" ? "เปลี่ยนคลาส" : "เปลี่ยนตัวละคร",
     ),
   );
-  $("#lobby-level").textContent = String(saved?.level || 1).padStart(2, "0");
+  $("#lobby-level").textContent = String(saved?.level || 1);
+  $("#selected-role").textContent = `${c.icon} ${c.name} · ${detail.role}`;
   $("#identity-label").innerHTML = saved
     ? "ผู้กล้าที่เลือก <small>พร้อมเดินทางต่อ</small>"
     : "ชื่อผู้กล้าใหม่ <small>2–20 ตัวอักษร</small>";
@@ -336,7 +336,7 @@ function renderCards() {
       String(b.dataset.resume === lobbyCharacterId),
     );
   });
-  $(".hero-showcase").style.setProperty(
+  $(".hl-stage").style.setProperty(
     "--hero-accent",
     "#" + c.color.toString(16).padStart(6, "0"),
   );
@@ -368,19 +368,15 @@ function renderCards() {
   // A class this browser's cached rules don't know yet stays hidden.
   $("#class-cards").innerHTML = JOBS.filter((name) => CLASSES[name]).map(
     (name, i) =>
-      `<button class="hero-card ${name === job ? "active" : ""}" data-class="${name}" aria-pressed="${name === job}" aria-label="เลือก${CLASSES[name].name}"><span class="hero-art" style="${lobbyHeroStyle(name, gender)}" aria-hidden="true"></span><span class="class-card-copy"><small>${eng[i]}</small><strong>${CLASSES[name].name}</strong><em>${heroDescriptions[name].role}</em></span><span class="class-order">0${i + 1}</span><span class="selected-mark" aria-hidden="true">◆</span></button>`,
+      `<button class="hl-class ${name === job ? "active" : ""}" type="button" data-class="${name}" aria-pressed="${name === job}" aria-label="เลือก${CLASSES[name].name}"><span class="hl-class-icon" aria-hidden="true">${skillIcon(name, 1)}</span><strong>${CLASSES[name].name}</strong><small>${eng[i]}</small></button>`,
   ).join("");
   $$("[data-gender]").forEach((b) => {
     b.setAttribute("aria-pressed", String(b.dataset.gender === gender));
     b.classList.toggle("active", b.dataset.gender === gender);
   });
-  selectionPreview?.setHero(
-    job,
-    gender,
-    saved ? heroSkins(saved) : [`${job}-${gender}`],
-    saved?.id || `create-${job}-${gender}`,
-    saved || { class: job, equipment: { weapon: `starter_${job}` } },
-  );
+  // The stage lines up every saved hero, or every class to create.
+  const lineup = lobbyLineup();
+  selectionPreview?.setLineup(lineup.entries, lineup.index);
   $$("[data-class]").forEach(
     (b) =>
       (b.onclick = () => {
@@ -400,11 +396,59 @@ $$("[data-gender]").forEach(
       renderCards();
     }),
 );
-renderCards();
+function lobbyLineup() {
+  if (lobbyMode === "roster" && characters.length)
+    return {
+      entries: characters.map((c) => ({ id: c.id, job: c.class, skins: heroSkins(c), hero: c })),
+      index: Math.max(0, characters.findIndex((c) => c.id === lobbyCharacterId)),
+    };
+  const jobs = JOBS.filter((name) => CLASSES[name]);
+  return {
+    entries: jobs.map((name) => ({
+      id: `create-${name}-${gender}`,
+      job: name,
+      skins: [`${name}-${gender}`],
+      hero: { class: name, gender, equipment: { weapon: `starter_${name}` } },
+    })),
+    index: Math.max(0, jobs.indexOf(job)),
+  };
+}
 try {
-  if (!$("#landing").classList.contains("camp-select")) selectionPreview = createSelectionPreview();
+  selectionPreview = createSelectionPreview({
+    onPick(i) {
+      if (lobbyMode === "roster" && characters.length) {
+        $(`[data-resume="${characters[i]?.id}"]`)?.click();
+        return;
+      }
+      const name = JOBS.filter((n) => CLASSES[n])[i];
+      if (!name || name === job) return;
+      if (lobbyCharacterId) resetLobbyCreation();
+      job = name;
+      renderCards();
+      tone(550, 0.08);
+    },
+  });
 } catch {
   /* The full-body static art remains available if WebGL is unavailable. */
+}
+renderCards();
+// Name field: live length and a random fantasy name.
+{
+  const name = $("#character-name"),
+    count = () => ($("#name-count").textContent = `${[...name.value].length}/20`),
+    first = ["อรุณ", "ดารา", "พายุ", "เพลิง", "จันทรา", "ไพร", "เงา", "ฟ้า", "คีรี", "นาคา", "วายุ", "อัคนี", "ธารา", "ภูผา", "รัตติ", "ประกาย", "มณี", "สายฟ้า", "หิมะ", "ตะวัน"],
+    last = ["ไกร", "เดช", "กานต์", "ภพ", "ธร", "ชัย", "นภา", "พร", "ฤทธิ์", "ศักดิ์", "ลดา", "สิริ", "รัตน์", "เวท", "ศร", "ดาบ"];
+  name.addEventListener("input", count);
+  $("#random-name").onclick = () => {
+    const pick = (list) => list[Math.floor(Math.random() * list.length)];
+    let next;
+    do next = pick(first) + pick(last);
+    while (next === name.value);
+    name.value = next;
+    count();
+    tone(660, 0.06);
+  };
+  count();
 }
 $$("[data-preview]").forEach(
   (b) => (b.onclick = () => selectionPreview?.preview(b.dataset.preview)),

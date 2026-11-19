@@ -1,0 +1,307 @@
+/* Hero select / create: a lit stage of real in-game heroes (selection-scene.js)
+   over the village at dusk, with one glass panel underneath on phones and
+   at the side on wide screens. Every rule is scoped to #landing.hero-lobby,
+   so the retired lobby stylesheets (lobby, select, sanctuary, pixel-lobby)
+   no longer shape this screen. */
+
+html body #landing.hero-lobby {
+  --hl-navy: #0d1424;
+  --hl-panel: #121b30e8;
+  --hl-panel-2: #1a2540;
+  --hl-line: #e7c27a3d;
+  --hl-gold: #f2cd7c;
+  --hl-gold-hi: #ffe7a8;
+  --hl-text: #f4ecd8;
+  --hl-muted: #a9a6b8;
+  --hl-green: #6fdc8c;
+  --hl-accent: var(--hero-accent, #f2cd7c);
+  --hl-radius: 14px;
+  position: fixed !important;
+  inset: 0;
+  display: grid !important;
+  grid-template: auto minmax(0, 1fr) auto / 100%;
+  width: 100% !important;
+  height: 100dvh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  background: #191431 !important;
+  color: var(--hl-text);
+  isolation: isolate;
+}
+html body #landing.hero-lobby.hidden { display: none !important; }
+html body #landing.hero-lobby :where(*) { box-sizing: border-box; }
+html body #landing.hero-lobby :is(button, input) { border-radius: 10px !important; font: inherit; }
+html body #landing.hero-lobby button { cursor: pointer; }
+html body #landing.hero-lobby button:focus-visible { outline: 2px solid var(--hl-gold-hi); outline-offset: 2px; }
+html body #landing.hero-lobby :is(h1, h2, .hl-start, .hl-level) { font-family: 'Chonburi', 'Noto Sans Thai', serif !important; font-weight: 400; }
+
+/* ---------- Backdrop: the village at dusk, dimmed toward the panel. ---------- */
+html body #landing.hero-lobby .hl-backdrop { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+html body #landing.hero-lobby .hl-backdrop i { position: absolute; display: block; background-repeat: no-repeat; }
+html body #landing.hero-lobby .hl-sky { inset: 0 0 30%; background: url('/assets/selection-camp/sky.webp') center top / cover; }
+html body #landing.hero-lobby .hl-mountains { left: -20%; right: -20%; top: 20%; height: 22%; background: url('/assets/selection-camp/mountains.webp') center / 100% 100%; opacity: .9; }
+html body #landing.hero-lobby .hl-village { left: 50%; translate: -50% 0; top: 17%; width: max(150%, 720px); height: 26%; background: url('/assets/selection-camp/village.webp') center / 100% 100%; filter: brightness(.75) saturate(.9); }
+html body #landing.hero-lobby .hl-ground { left: 50%; translate: -50% 0; top: 36%; width: max(170%, 900px); height: 70%; background: url('/assets/selection-camp/ground.webp') center top / 100% 100%; filter: brightness(.7); }
+html body #landing.hero-lobby .hl-vignette {
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 42% at 50% 52%, transparent 40%, #0a0b1a99 100%),
+    linear-gradient(#0c0a1c66, transparent 18%, transparent 52%, #0b0f1de6 78%, #0b0f1d);
+}
+
+/* ---------- Top bar ---------- */
+html body #landing.hero-lobby .hl-top {
+  position: relative; z-index: 5;
+  display: flex; align-items: center; gap: 10px;
+  padding: calc(env(safe-area-inset-top) + 10px) 14px 6px;
+}
+html body #landing.hero-lobby .hl-logo { width: 74px; height: auto; filter: drop-shadow(0 2px 4px #0008); }
+html body #landing.hero-lobby .hl-heading { min-width: 0; flex: 1; }
+html body #landing.hero-lobby .hl-heading small { display: block; color: var(--hl-gold); font: 700 9px/1.2 'Noto Sans Thai', sans-serif !important; letter-spacing: .18em; opacity: .85; }
+html body #landing.hero-lobby .hl-heading h1 { margin: 0; font-size: 17px; line-height: 1.25; color: #fff4d6; text-shadow: 0 2px 0 #0009; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html body #landing.hero-lobby .hl-actions { display: flex; align-items: center; gap: 6px; }
+html body #landing.hero-lobby .hl-icon,
+html body #landing.hero-lobby .hl-account,
+html body #landing.hero-lobby #install-app {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 36px; min-width: 36px; padding: 0 10px; margin: 0;
+  border: 1px solid var(--hl-line) !important; background: #0e1426b8 !important; color: var(--hl-text);
+  box-shadow: none; backdrop-filter: blur(8px); font-size: 13px; line-height: 1;
+}
+html body #landing.hero-lobby .hl-icon { padding: 0; font-size: 17px; }
+html body #landing.hero-lobby #creation-back { font-size: 24px; padding-bottom: 3px; }
+html body #landing.hero-lobby #creation-back[hidden],
+html body #landing.hero-lobby #install-app[hidden] { display: none !important; }
+html body #landing.hero-lobby #install-app img { width: 18px; height: 18px; }
+html body #landing.hero-lobby #install-app span { display: none; }
+html body #landing.hero-lobby #sound.muted { color: var(--hl-muted); text-decoration: line-through; }
+html body #landing.hero-lobby .hl-account { max-width: 130px; font: 600 12px/1 'Noto Sans Thai', sans-serif !important; }
+html body #landing.hero-lobby .hl-account i { flex: none; width: 8px; height: 8px; border-radius: 50% !important; background: #9a97a8; box-shadow: 0 0 0 2px #9a97a833; }
+html body #landing.hero-lobby .hl-account.signed-in i { background: var(--hl-green); box-shadow: 0 0 0 2px #6fdc8c33, 0 0 8px #6fdc8c; }
+html body #landing.hero-lobby .hl-account span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- Stage ---------- */
+html body #landing.hero-lobby .hl-stage { position: relative; min-height: 0; z-index: 1; }
+html body #landing.hero-lobby #hero-preview { position: absolute; inset: 0; overflow: hidden; pointer-events: auto !important; }
+html body #landing.hero-lobby #hero-preview canvas { pointer-events: auto !important; touch-action: manipulation; }
+html body #landing.hero-lobby #hero-preview canvas { image-rendering: pixelated; }
+html body #landing.hero-lobby .hero-fallback { position: absolute; left: 50%; bottom: 8%; translate: -50% 0; width: 46%; height: 70%; background-size: contain !important; background-position: center bottom !important; opacity: .95; }
+html body #landing.hero-lobby .preview-ready .hero-fallback,
+html body #landing.hero-lobby .hl-stage.preview-ready .hero-fallback { display: none; }
+html body #landing.hero-lobby .hl-cycle {
+  position: absolute; top: 46%; z-index: 3; width: 38px; height: 54px; padding: 0 0 3px; margin: 0;
+  border: 1px solid var(--hl-line) !important; background: #0e1426a8 !important; color: var(--hl-gold-hi);
+  font-size: 28px; line-height: 1; box-shadow: none; backdrop-filter: blur(6px);
+}
+html body #landing.hero-lobby .hl-cycle.prev { left: 10px; }
+html body #landing.hero-lobby .hl-cycle.next { right: 10px; }
+html body #landing.hero-lobby .hl-cycle:hover { border-color: var(--hl-gold) !important; }
+html body #landing.hero-lobby .hl-gender {
+  margin-left: auto; align-self: center;
+  display: none; padding: 2px; gap: 2px; border: 1px solid var(--hl-line); border-radius: 12px !important; background: #0e1426c4; backdrop-filter: blur(8px);
+}
+html body #landing.hero-lobby[data-lobby-mode="create"] .hl-gender,
+html body #landing.hero-lobby[data-lobby-mode="loading"] .hl-gender { display: flex; }
+html body #landing.hero-lobby .hl-gender button {
+  min-width: 50px; height: 26px; padding: 0 10px; margin: 0; border: 0 !important; background: transparent !important;
+  color: var(--hl-muted); font: 600 12px/1 'Noto Sans Thai', sans-serif !important; box-shadow: none;
+}
+html body #landing.hero-lobby .hl-gender button.active { background: linear-gradient(#f6d58a, #d9a64c) !important; color: #2a1a08; }
+html body #landing.hero-lobby .hl-poses {
+  position: absolute; right: 10px; top: 8px; z-index: 3; display: flex; flex-direction: column; gap: 5px;
+}
+html body #landing.hero-lobby .hl-poses button {
+  width: 40px; height: 30px; padding: 0; margin: 0; border: 1px solid var(--hl-line) !important; background: #0e1426b0 !important;
+  color: var(--hl-text); font: 600 11px/1 'Noto Sans Thai', sans-serif !important; box-shadow: none; backdrop-filter: blur(6px);
+}
+html body #landing.hero-lobby .hl-poses button:hover,
+html body #landing.hero-lobby .hl-poses button:active { border-color: var(--hl-gold) !important; color: var(--hl-gold-hi); }
+html body #landing.hero-lobby .hl-caption {
+  position: absolute; left: 14px; right: 60px; top: 4px; z-index: 3; text-align: left; pointer-events: none;
+}
+html body #landing.hero-lobby .hl-caption small { display: block; color: var(--hl-gold); font: 700 9px/1.4 'Noto Sans Thai', sans-serif !important; letter-spacing: .22em; }
+html body #landing.hero-lobby .hl-caption h2 { margin: 0; font-size: 26px; line-height: 1.2; color: #fff6dc; text-shadow: 0 2px 0 #000a, 0 0 18px #0008; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html body #landing.hero-lobby .hl-caption p { margin: 3px 0 0; display: flex; justify-content: flex-start; align-items: center; gap: 8px; font: 600 12px/1.3 'Noto Sans Thai', sans-serif !important; color: #e9e2cf; }
+html body #landing.hero-lobby .hl-level { padding: 2px 8px 1px; border: 1px solid var(--hl-gold); border-radius: 8px; background: #0e1426cc; color: var(--hl-gold-hi); font-size: 12px; }
+html body #landing.hero-lobby .hl-level span { font: 700 12px/1 'Noto Sans Thai', sans-serif !important; font-variant-numeric: tabular-nums; }
+html body #landing.hero-lobby .hl-caption em { display: none; }
+
+/* ---------- Panel ---------- */
+html body #landing.hero-lobby .hl-sheet {
+  position: relative; z-index: 4;
+  display: flex; flex-direction: column; gap: 10px;
+  max-height: 60dvh; overflow-y: auto; overscroll-behavior: contain;
+  margin: 0 10px calc(env(safe-area-inset-bottom) + 10px);
+  padding: 12px;
+  border: 1px solid var(--hl-line); border-radius: 18px !important;
+  background: linear-gradient(#18223cf2, #0f1629f5);
+  box-shadow: 0 -10px 40px #0007, inset 0 1px 0 #ffffff12;
+  backdrop-filter: blur(14px);
+  scrollbar-width: none;
+}
+html body #landing.hero-lobby .hl-sheet::-webkit-scrollbar { display: none; }
+html body #landing.hero-lobby .hl-slots-head { display: flex; align-items: center; gap: 8px; min-height: 26px; margin-bottom: -4px; }
+html body #landing.hero-lobby .hl-slots-head small { margin-left: auto; }
+html body #landing.hero-lobby .hl-slots-head span { color: var(--hl-gold); font: 700 12px/1 'Noto Sans Thai', sans-serif !important; }
+html body #landing.hero-lobby .hl-slots-head small { color: var(--hl-muted); font: 600 11px/1 'Noto Sans Thai', sans-serif !important; font-variant-numeric: tabular-nums; }
+html body #landing.hero-lobby[data-lobby-mode="create"] #character-count,
+html body #landing.hero-lobby[data-lobby-mode="loading"] #character-count { display: none; }
+
+/* Saved hero slots (roster). */
+html body #landing.hero-lobby #saved-characters { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 0; padding: 0; }
+html body #landing.hero-lobby[data-lobby-mode="create"] #saved-characters,
+html body #landing.hero-lobby[data-lobby-mode="loading"] #saved-characters { display: none !important; }
+html body #landing.hero-lobby .hl-slot {
+  position: relative; display: grid; grid-template: auto auto / 34px minmax(0, 1fr); align-items: center; column-gap: 7px;
+  min-height: 58px; width: 100%; margin: 0; padding: 7px 8px; text-align: left;
+  border: 1px solid #ffffff1a !important; background: #ffffff0a !important; color: var(--hl-text); box-shadow: none;
+}
+html body #landing.hero-lobby .hl-slot:hover { border-color: var(--hl-line) !important; background: #ffffff12 !important; }
+html body #landing.hero-lobby .hl-slot.active { border-color: var(--hl-gold) !important; background: linear-gradient(#f2cd7c2e, #f2cd7c10) !important; box-shadow: 0 0 0 1px #f2cd7c55, 0 0 14px #f2cd7c33; }
+html body #landing.hero-lobby .hl-slot-icon { grid-row: 1 / 3; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px !important; background: #0a1020; border: 1px solid #ffffff1a; color: var(--hl-gold); font-size: 20px; overflow: hidden; }
+html body #landing.hero-lobby .hl-slot-icon svg { width: 30px; height: 30px; }
+html body #landing.hero-lobby .hl-slot-text { min-width: 0; }
+html body #landing.hero-lobby .hl-slot-text strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 12.5px/1.25 'Noto Sans Thai', sans-serif !important; text-shadow: none; }
+html body #landing.hero-lobby .hl-slot-text small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--hl-muted); font: 500 10.5px/1.3 'Noto Sans Thai', sans-serif !important; }
+html body #landing.hero-lobby .hl-slot > b { grid-column: 2; justify-self: start; margin-top: 2px; padding: 1px 6px; border-radius: 6px; background: #0a1020; color: var(--hl-gold-hi); font: 700 10.5px/1.3 'Noto Sans Thai', sans-serif !important; font-variant-numeric: tabular-nums; text-shadow: none; }
+html body #landing.hero-lobby .hl-slot-new { border-style: dashed !important; color: var(--hl-muted); }
+html body #landing.hero-lobby .hl-slot-new .hl-slot-icon { background: transparent; border-style: dashed; }
+html body #landing.hero-lobby .hl-slot-new strong { color: var(--hl-gold); }
+
+/* Class tabs (create). */
+html body #landing.hero-lobby #class-cards { display: none !important; }
+html body #landing.hero-lobby[data-lobby-mode="create"] #class-cards,
+html body #landing.hero-lobby[data-lobby-mode="loading"] #class-cards { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 0; padding: 0; }
+html body #landing.hero-lobby .hl-class {
+  display: flex; flex-direction: column; align-items: center; gap: 3px; min-height: 0; margin: 0; padding: 7px 2px 6px;
+  border: 1px solid #ffffff1a !important; background: #ffffff0a !important; color: var(--hl-text); box-shadow: none;
+}
+html body #landing.hero-lobby .hl-class:hover { border-color: var(--hl-line) !important; }
+html body #landing.hero-lobby .hl-class.active { border-color: var(--hl-gold) !important; background: linear-gradient(#f2cd7c33, #f2cd7c0d) !important; box-shadow: 0 0 0 1px #f2cd7c55, 0 0 14px #f2cd7c33; }
+html body #landing.hero-lobby .hl-class-icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px !important; background: #0a1020; border: 1px solid #ffffff1a; overflow: hidden; }
+html body #landing.hero-lobby .hl-class-icon svg { width: 32px; height: 32px; }
+html body #landing.hero-lobby .hl-class strong { font: 700 12px/1.2 'Noto Sans Thai', sans-serif !important; text-shadow: none; }
+html body #landing.hero-lobby .hl-class small { color: var(--hl-muted); font: 600 7.5px/1.2 'Noto Sans Thai', sans-serif !important; letter-spacing: .06em; white-space: nowrap; }
+html body #landing.hero-lobby .hl-class.active small { color: var(--hl-gold); }
+
+/* Stats and skills. */
+html body #landing.hero-lobby #hero-stats { position: static !important; inset: auto !important; width: auto !important; height: auto !important; max-height: none !important; overflow: visible !important; transform: none !important; display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px 10px; margin: 0 !important; padding: 0 !important; border: 0 !important; background: none !important; box-shadow: none !important; backdrop-filter: none !important; }
+html body #landing.hero-lobby #hero-stats .class-identity { display: none; }
+html body #landing.hero-lobby #hero-stats .stats-heading { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline; margin: 2px 0 -2px; }
+html body #landing.hero-lobby #hero-stats .stats-heading span { color: var(--hl-gold); font: 700 11px/1 'Noto Sans Thai', sans-serif !important; }
+html body #landing.hero-lobby #hero-stats .stats-heading small { color: #ffffff40; font: 700 8px/1 'Noto Sans Thai', sans-serif !important; letter-spacing: .16em; }
+html body #landing.hero-lobby #hero-stats .attribute { min-width: 0; margin: 0; padding: 0; border: 0; background: none; }
+html body #landing.hero-lobby #hero-stats .attribute > div:first-child { display: flex; justify-content: space-between; align-items: baseline; gap: 4px; }
+html body #landing.hero-lobby #hero-stats .attribute span small { display: none; }
+html body #landing.hero-lobby #hero-stats .attribute span { color: var(--hl-muted); font: 500 10.5px/1.4 'Noto Sans Thai', sans-serif !important; white-space: nowrap; overflow: hidden; }
+html body #landing.hero-lobby #hero-stats .attribute span b { color: var(--hl-text); font: 800 10.5px/1 'Noto Sans Thai', sans-serif !important; text-shadow: none; margin-right: 2px; }
+html body #landing.hero-lobby #hero-stats .attribute strong { color: #fff; font: 700 12px/1.4 'Noto Sans Thai', sans-serif !important; font-variant-numeric: tabular-nums; text-shadow: none; }
+html body #landing.hero-lobby #hero-stats .attribute-track { height: 5px; margin-top: 2px; border-radius: 3px !important; background: #ffffff14; overflow: hidden; border: 0; }
+html body #landing.hero-lobby #hero-stats .attribute-track i { display: block; height: 100%; border-radius: 3px !important; background: linear-gradient(90deg, #d9a64c, #ffe39a); transition: width .35s ease; }
+html body #landing.hero-lobby #hero-stats [data-stat="HP"] .attribute-track i { background: linear-gradient(90deg, #c4413d, #ff7d6a); }
+html body #landing.hero-lobby #hero-stats [data-stat="MP"] .attribute-track i { background: linear-gradient(90deg, #3466c9, #6fb6ff); }
+html body #landing.hero-lobby #hero-stats .lobby-skills { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 0; }
+html body #landing.hero-lobby #hero-stats [data-lobby-skill] {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; min-height: 0; margin: 0; padding: 6px 2px 5px;
+  border: 1px solid #ffffff1a !important; background: #ffffff0a !important; color: var(--hl-text); box-shadow: none;
+}
+html body #landing.hero-lobby #hero-stats [data-lobby-skill]:hover { border-color: var(--hl-line) !important; }
+html body #landing.hero-lobby #hero-stats [data-lobby-skill].skill-previewing { border-color: var(--hl-gold) !important; box-shadow: 0 0 12px #f2cd7c55; }
+html body #landing.hero-lobby #hero-stats [data-lobby-skill] > span { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px !important; background: #0a1020; overflow: hidden; }
+html body #landing.hero-lobby #hero-stats [data-lobby-skill] > span svg { width: 32px; height: 32px; }
+html body #landing.hero-lobby #hero-stats [data-lobby-skill] > div { min-width: 0; width: 100%; text-align: center; }
+html body #landing.hero-lobby #hero-stats [data-lobby-skill] strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 10.5px/1.3 'Noto Sans Thai', sans-serif !important; text-shadow: none; }
+html body #landing.hero-lobby #hero-stats [data-lobby-skill] small { display: block; color: var(--hl-muted); font: 500 9px/1.3 'Noto Sans Thai', sans-serif !important; white-space: nowrap; }
+html body #landing.hero-lobby #hero-stats [data-lobby-skill] > b { position: absolute; top: 3px; right: 4px; color: #ffffff55; font: 700 8px/1 'Noto Sans Thai', sans-serif !important; text-shadow: none; }
+
+/* Name and the main button. */
+html body #landing.hero-lobby .hl-entry { display: flex; flex-direction: column; gap: 8px; }
+html body #landing.hero-lobby .hl-name { display: none; margin: 0; }
+html body #landing.hero-lobby[data-lobby-mode="create"] .hl-name,
+html body #landing.hero-lobby[data-lobby-mode="loading"] .hl-name { display: block; }
+html body #landing.hero-lobby #identity-label { display: block; margin-bottom: 4px; color: var(--hl-gold); font: 700 11px/1.2 'Noto Sans Thai', sans-serif !important; }
+html body #landing.hero-lobby #identity-label small { color: var(--hl-muted); font-weight: 500; }
+html body #landing.hero-lobby .hl-name-row { position: relative; display: flex; gap: 6px; }
+html body #landing.hero-lobby #character-name {
+  flex: 1; min-width: 0; height: 42px; margin: 0; padding: 0 48px 0 12px;
+  border: 1px solid #ffffff26 !important; background: #070c19 !important; color: #fff; box-shadow: inset 0 2px 6px #0006;
+  font: 600 15px/1 'Noto Sans Thai', sans-serif !important;
+}
+html body #landing.hero-lobby #character-name:focus { outline: none; border-color: var(--hl-gold) !important; box-shadow: 0 0 0 3px #f2cd7c2e, inset 0 2px 6px #0006; }
+html body #landing.hero-lobby #character-name::placeholder { color: #8d8a9c; font-weight: 500; }
+html body #landing.hero-lobby #name-count { position: absolute; right: 74px; top: 50%; translate: 0 -50%; color: #8d8a9c; font: 600 10px/1 'Noto Sans Thai', sans-serif !important; font-variant-numeric: tabular-nums; pointer-events: none; }
+html body #landing.hero-lobby #random-name {
+  flex: none; width: 62px; height: 42px; margin: 0; padding: 0;
+  border: 1px solid var(--hl-line) !important; background: #1d2846 !important; color: var(--hl-gold-hi); box-shadow: none;
+  font: 700 13px/1 'Noto Sans Thai', sans-serif !important;
+}
+html body #landing.hero-lobby #random-name::before { content: '⚄ '; }
+html body #landing.hero-lobby .hl-start {
+  position: relative; flex: none !important; width: 100% !important; height: 52px !important; min-height: 0 !important; margin: 0; padding: 0 !important;
+  border: 1px solid #ffeab0 !important; border-radius: 14px !important;
+  background: linear-gradient(#ffe08f, #e7ad48 55%, #c98a2c) !important;
+  color: #2b1806; font-size: 19px; letter-spacing: .02em; text-shadow: 0 1px 0 #fff6;
+  box-shadow: 0 6px 18px #e7ad4840, inset 0 -3px 0 #0002, inset 0 1px 0 #fff8; overflow: hidden;
+  animation: none; clip-path: none !important; filter: none;
+}
+html body #landing.hero-lobby .hl-start::before,
+html body #landing.hero-lobby .hl-start::after { content: none; }
+html body #landing.hero-lobby .hl-start:not(:disabled):hover { filter: brightness(1.07); }
+html body #landing.hero-lobby .hl-start:not(:disabled):active { translate: 0 1px; }
+html body #landing.hero-lobby .hl-start:disabled { filter: grayscale(.7) brightness(.7); cursor: default; }
+html body #landing.hero-lobby #start-label { color: inherit; font-size: 20px !important; line-height: 1 !important; font-family: 'Chonburi', 'Noto Sans Thai', serif !important; background: none; padding: 0; }
+html body #landing.hero-lobby[data-lobby-mode="roster"] .hl-start { background: linear-gradient(#8ff0a6, #43b866 55%, #2c8d4a) !important; border-color: #c4ffd2 !important; color: #082611; box-shadow: 0 6px 18px #43b86640, inset 0 -3px 0 #0002, inset 0 1px 0 #fff8; }
+html body #landing.hero-lobby .hl-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 2px 10px; }
+html body #landing.hero-lobby .hl-foot > span { color: var(--hl-muted); font: 500 10px/1.4 'Noto Sans Thai', sans-serif !important; }
+html body #landing.hero-lobby #entry-title { display: none; }
+html body #landing.hero-lobby #new-hero { display: none !important; }
+html body #landing.hero-lobby .hl-delete {
+  height: 26px; margin: 0 0 0 auto; padding: 0 10px; border: 1px solid #ff8a7a40 !important; background: transparent !important;
+  color: #ff9d8f; box-shadow: none; font: 600 10.5px/1 'Noto Sans Thai', sans-serif !important;
+}
+html body #landing.hero-lobby .hl-delete:hover { background: #ff8a7a1a !important; }
+html body #landing.hero-lobby .hl-delete[hidden] { display: none !important; }
+
+/* Short phones: tighter stage caption and panel. */
+@media (max-height: 700px) {
+  html body #landing.hero-lobby .hl-sheet { gap: 8px; padding: 10px; }
+  html body #landing.hero-lobby #hero-stats [data-lobby-skill] small { display: none; }
+  html body #landing.hero-lobby .hl-caption h2 { font-size: 22px; }
+}
+
+/* ---------- Wide screens: the stage fills the screen, the panel docks right. ---------- */
+@media (min-width: 900px) and (min-aspect-ratio: 1/1) {
+  html body #landing.hero-lobby { grid-template: auto minmax(0, 1fr) / minmax(0, 1fr) 400px; }
+  html body #landing.hero-lobby .hl-top { grid-column: 1 / -1; padding: 16px 24px 8px; }
+  html body #landing.hero-lobby .hl-logo { width: 96px; }
+  html body #landing.hero-lobby .hl-heading h1 { font-size: 24px; }
+  html body #landing.hero-lobby .hl-stage { grid-column: 1; grid-row: 2; }
+  html body #landing.hero-lobby .hl-sheet { grid-column: 2; grid-row: 2; align-self: center; max-height: calc(100dvh - 110px); margin: 0 24px 24px 0; padding: 18px; gap: 14px; }
+  html body #landing.hero-lobby .hl-caption { top: 12px; left: 28px; right: auto; max-width: 46%; }
+  html body #landing.hero-lobby .hl-caption h2 { font-size: 34px; }
+  html body #landing.hero-lobby .hl-caption em { display: block; margin-top: 6px; color: #cfc8b5; font: italic 500 13px/1.4 'Noto Sans Thai', sans-serif !important; }
+  html body #landing.hero-lobby .hl-cycle.prev { left: 24px; }
+  html body #landing.hero-lobby .hl-cycle.next { right: 24px; }
+  html body #landing.hero-lobby .hl-poses { flex-direction: row; top: auto; right: 24px; bottom: 24px; }
+  html body #landing.hero-lobby .hl-poses button { width: 52px; height: 32px; }
+  html body #landing.hero-lobby #install-app span { display: inline; }
+  html body #landing.hero-lobby #saved-characters { grid-template-columns: 1fr; }
+  html body #landing.hero-lobby .hl-slot { grid-template: auto / 40px minmax(0, 1fr) auto; min-height: 56px; }
+  html body #landing.hero-lobby .hl-slot-icon { grid-row: 1; width: 40px; height: 40px; }
+  html body #landing.hero-lobby .hl-slot > b { grid-column: 3; grid-row: 1; margin: 0; font-size: 12px !important; }
+  html body #landing.hero-lobby .hl-slot-text strong { font-size: 14px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html body #landing.hero-lobby * { transition: none !important; }
+}
+
+/* Phones: the account button shrinks to its status dot plus a person glyph,
+   so the screen title keeps its room. */
+@media (max-width: 480px) {
+  html body #landing.hero-lobby .hl-logo { width: 62px; }
+  html body #landing.hero-lobby .hl-account { width: 36px; padding: 0; position: relative; }
+  html body #landing.hero-lobby .hl-account span { display: none; }
+  html body #landing.hero-lobby .hl-account::before { content: '♙'; font-size: 17px; color: var(--hl-gold-hi); }
+  html body #landing.hero-lobby .hl-account i { position: absolute; right: 5px; top: 5px; width: 7px; height: 7px; }
+}

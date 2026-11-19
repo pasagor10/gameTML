@@ -6,132 +6,176 @@ import {
 } from "/sprite-sets.js?v=0.21.1";
 import { gearDress } from "/hero-gear.js?v=5";
 
-// The chosen hero fades in on the pedestal. Account and creation actions remain in game.js.
+// The hero-select stage: the same sprite sets, costume layers and held
+// weapons that the world draws, lined up as a carousel. The chosen hero
+// stands in front on a rune circle; the others wait on either side facing
+// it, smaller and in shadow. Tapping a waiting hero picks it.
 //
-// The canvas renders at twice its layout size (camera zoom 2) so the hero
-// stays crisp on large and high-DPI screens. While idle the hero shows its
-// set's "showcase" frame: the full-resolution idle cell, sharpened (built by
-// tools/sprite-rig/build_showcase.py), swapped in at the sprite's own size and
-// anchor. Motion previews (run, attack, skill) play the normal sprite set.
-export function createSelectionPreview() {
+// Sizes follow each set's in-game height (index.json "height"), so heroes
+// keep their real proportions, at whole multiples of the 48px pixel body
+// (front 6x, beside 4x, far 3x) so every art pixel stays square.
+export function createSelectionPreview({ onPick } = {}) {
   const host = document.querySelector("#hero-preview");
   const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
-  let selected = {
-    job: "swordsman",
-    gender: "female",
-    skins: ["swordsman-female"],
-    identity: "create-swordsman-female",
-  };
-  let ready = false;
   const RES = 2,
     W = 600,
-    H = 650,
-    FEET = 560,
-    HERO_HEIGHT = 380,
-    PIXEL_SCALE = 4;
-  const holder = {};
+    H = 520,
+    FEET = 438,
+    // Display height per set height unit, by distance from the front.
+    SIZE = [3, 2, 1.5],
+    SPREAD = [0, 178, 290],
+    LIFT = [0, 26, 44];
+  let lineup = [],
+    selected = 0,
+    ready = false,
+    scene = null;
+
   class SelectionScene extends Phaser.Scene {
     preload() {
       queueSpriteSets(this);
     }
     create() {
+      scene = this;
       this.cameras.main.setZoom(RES).centerOn(W / 2, H / 2);
       this.sprites = createSpriteRegistry(this);
-      this.shadow = this.add.ellipse(W / 2, FEET + 4, 210, 26, 0x05120f, 0.4);
-      this.hero = this.add.image(W / 2, FEET, "__DEFAULT").setOrigin(0.5, 1).setAlpha(0);
-      this.motes = Array.from({ length: 14 }, (_, i) => ({
-        dot: this.add.circle(
-          130 + ((i * 73) % 350),
-          160 + ((i * 47) % 350),
-          i % 3 ? 1 : 1.8,
-          0xffe8a4,
-          0.5,
-        ),
+      this.slots = new Map();
+      // Rune circle under the chosen hero.
+      this.glow = this.add.ellipse(W / 2, FEET, 300, 58, 0xffc75a, 0.16).setDepth(1);
+      this.ring = this.add.graphics().setDepth(2);
+      this.motes = Array.from({ length: 22 }, (_, i) => ({
+        dot: this.add
+          .circle(0, 0, i % 4 ? 1.2 : 2, i % 3 ? 0xffe2a0 : 0xbfe8ff, 0.5)
+          .setDepth(30),
         phase: i * 2.4,
-        x: 130 + ((i * 73) % 350),
-        y: 160 + ((i * 47) % 350),
+        x: W / 2 - 170 + ((i * 83) % 340),
+        y: FEET - 40 - ((i * 47) % 300),
       }));
       ready = true;
       host.parentElement.classList.add("preview-ready");
-      this.select();
+      this.sync();
     }
-    select() {
-      for (const skin of selected.skins) this.sprites.want("sets", skin);
+    // Match the stage to the lineup: new heroes fade in, removed ones go.
+    sync() {
+      const ids = new Set(lineup.map((e) => e.id));
+      for (const [id, slot] of this.slots)
+        if (!ids.has(id)) {
+          slot.holder.layers?.destroy();
+          slot.image.destroy();
+          slot.shadow.destroy();
+          this.slots.delete(id);
+        }
+      lineup.forEach((entry, i) => {
+        for (const skin of entry.skins) this.sprites.want("sets", skin);
+        let slot = this.slots.get(entry.id);
+        if (!slot) {
+          const image = this.add
+            .image(W / 2, FEET, "__DEFAULT")
+            .setOrigin(0.5, 1)
+            .setAlpha(0)
+            // Hit only the drawn pixels: the art frames carry wide clear
+            // margins that would cover the heroes beside the front one.
+            .setInteractive({ useHandCursor: true, pixelPerfect: true, alphaTolerance: 8 });
+          image.on("pointerup", () => onPick?.(slot.index));
+          slot = {
+            image,
+            shadow: this.add.ellipse(W / 2, FEET + 3, 120, 18, 0x05080f, 0.45).setDepth(3),
+            holder: {},
+            x: W / 2 + (i - selected) * 200,
+            size: SIZE[2],
+            lift: LIFT[2],
+            fade: 0,
+          };
+          this.slots.set(entry.id, slot);
+        }
+        slot.entry = entry;
+        slot.index = i;
+      });
       this.previewMode = "idle";
       this.previewAt = this.time.now;
-      this.selectionAt = this.time.now;
-      this.standStarted = null;
-      this.hero.setAlpha(0);
     }
-    // Texture key of the set's sharp idle frame, loading it on first use.
-    showcase(set) {
-      const spec = this.spriteSetIndex?.sets?.[set.name];
-      if (!spec?.showcase) return null;
-      const key = `showcase:${spec.dir}`;
-      if (this.textures.exists(key)) return key;
-      if (!this.wanted?.has(key)) {
-        (this.wanted ??= new Set()).add(key);
-        const v = this.spriteSetIndex.version;
-        this.load.image(key, `/assets/sprites/${spec.dir}/${spec.showcase}${v ? `?v=${v}` : ""}`);
-        if (!this.load.isLoading()) this.load.start();
-      }
-      return null;
-    }
-    update(time) {
-      const set = selected.skins
-        .map((k) => this.sprites.heroes.get(k))
-        .find(Boolean);
-      if (!set) {
-        holder.layers?.destroy();
-        return;
-      }
-      this.standStarted ??= time;
-      const t = reducedMotion.matches
-        ? 1
-        : Phaser.Math.Clamp((time - this.standStarted - 80) / 430, 0, 1);
-      const rise = 1 - (1 - t) ** 3;
-      let mode = this.previewMode;
-      if (time - this.previewAt > 1800) mode = this.previewMode = "idle";
-      {
-        const startedAt = this.previewAt / 1000;
+    update(time, delta) {
+      const n = lineup.length,
+        k = Math.min(1, (delta / 1000) * (reducedMotion.matches ? 60 : 9)),
+        t = reducedMotion.matches ? 0 : time / 1000;
+      if (time - (this.previewAt || 0) > 1800) this.previewMode = "idle";
+      for (const slot of this.slots.values()) {
+        let o = slot.index - selected;
+        if (n > 2) {
+          if (o > n / 2) o -= n;
+          if (o < -Math.floor((n - 1) / 2)) o += n;
+        }
+        const d = Math.min(2, Math.abs(o)),
+          front = d === 0;
+        slot.x += (W / 2 + Math.sign(o) * SPREAD[d] - slot.x) * k;
+        slot.size += (SIZE[d] - slot.size) * k;
+        slot.lift += (LIFT[d] - slot.lift) * k;
+        slot.fade += ((front ? 1 : d === 1 ? 0.9 : 0.6) - slot.fade) * k;
+        const set = slot.entry.skins.map((s) => this.sprites.heroes.get(s)).find(Boolean);
+        const { image, shadow } = slot;
+        if (!set) {
+          image.setVisible(false);
+          shadow.setVisible(false);
+          slot.holder.layers?.destroy();
+          continue;
+        }
+        const mode = front ? this.previewMode : "idle",
+          startedAt = (this.previewAt || 0) / 1000;
+        image.setVisible(true);
         playSpriteSet(
-          this.hero,
-          // Pixel sets at a whole 4x so every art pixel stays square.
-          { ...set, height: set.pixel ? set.clips.idle.bodyPx * PIXEL_SCALE : HERO_HEIGHT },
+          image,
+          { ...set, height: set.height * slot.size },
           {
             direction: 1,
-            action: ["attack", "skill"].includes(mode)
-              ? {
-                  startedAt,
-                  impactAt: startedAt + 0.55,
-                  endsAt: startedAt + 1.8,
-                }
+            action: front && ["attack", "skill"].includes(mode)
+              ? { startedAt, impactAt: startedAt + 0.55, endsAt: startedAt + 1.8 }
               : null,
           },
           { state: mode, frame: 0 },
-          reducedMotion.matches ? 0 : time / 1000,
+          t + slot.index * 0.37,
         );
-        this.hero.setFlipX(set.facing < 0);
+        // Waiting heroes turn toward the one in front.
+        const faceLeft = o > 0;
+        image
+          .setFlipX(faceLeft ? set.facing > 0 : set.facing < 0)
+          .setPosition(slot.x, FEET - slot.lift)
+          .setAlpha(slot.fade)
+          .setDepth(front ? 20 : 10 - d);
+        if (front) image.clearTint();
+        else image.setTint(d === 1 ? 0xb3aed0 : 0x7d7998);
+        shadow
+          .setVisible(true)
+          .setPosition(slot.x, FEET - slot.lift + 2)
+          .setSize(36 * slot.size, 7 * slot.size)
+          .setAlpha(0.5 * slot.fade)
+          .setDepth(image.depth - 0.5);
+        if (set.layers)
+          playLayers(this, slot.holder, image, set, gearDress(slot.entry.hero || { class: slot.entry.job }, set), this.sprites);
+        else slot.holder.layers?.destroy();
       }
-      // Idle: the sharp showcase frame at the sprite's size, with a slow breath.
-      const sharp = this.hero._clip?.state === "idle" && !set.layers && this.showcase(set);
-      if (sharp) {
-        const w = this.hero.displayWidth,
-          h = this.hero.displayHeight,
-          breath = reducedMotion.matches ? 0 : Math.sin(time * 0.0021) * 0.008;
-        this.hero.setTexture(sharp).setDisplaySize(w * (1 - breath * 0.5), h * (1 + breath));
+      // The rune circle: two counter-turning dashed rings over a soft glow.
+      const spin = reducedMotion.matches ? 0 : time * 0.0004;
+      this.ring.clear();
+      for (const [rx, ry, a, dir, dash] of [
+        [150, 30, 0.75, 1, 24],
+        [118, 23, 0.45, -1.4, 14],
+      ]) {
+        this.ring.lineStyle(4, 0xffd57a, a);
+        for (let j = 0; j < dash; j++) {
+          const a0 = spin * dir + (j / dash) * Math.PI * 2,
+            a1 = a0 + (Math.PI * 2) / dash / 2;
+          this.ring.lineBetween(
+            W / 2 + Math.cos(a0) * rx, FEET + Math.sin(a0) * ry,
+            W / 2 + Math.cos(a1) * rx, FEET + Math.sin(a1) * ry,
+          );
+        }
       }
-      this.hero
-        .setAlpha(rise)
-        .setPosition(W / 2, FEET + (1 - rise) * 24)
-        .setAngle(0);
-      if (set.layers) playLayers(this, holder, this.hero, set, gearDress(selected.hero || { class: selected.job }, set), this.sprites);
-      else holder.layers?.destroy();
+      const pulse = reducedMotion.matches ? 0.5 : 0.5 + Math.sin(time * 0.002) * 0.5;
+      this.glow.setAlpha(0.2 + pulse * 0.1);
       if (reducedMotion.matches) return;
       for (const m of this.motes) {
-        m.dot.x = m.x + Math.sin(time * 0.0004 + m.phase) * 12;
-        m.dot.y = m.y - Math.sin(time * 0.00025 + m.phase) * 22;
-        m.dot.alpha = 0.2 + Math.sin(time * 0.001 + m.phase) * 0.18;
+        m.dot.x = m.x + Math.sin(time * 0.0004 + m.phase) * 14;
+        m.dot.y = m.y - ((time * 0.012 + m.phase * 40) % 300) + 150;
+        m.dot.alpha = Math.max(0, 0.15 + Math.sin(time * 0.001 + m.phase) * 0.35);
       }
     }
   }
@@ -141,10 +185,12 @@ export function createSelectionPreview() {
     transparent: true,
     width: W * RES,
     height: H * RES,
-    scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+    // Cover the stage: on a narrow phone the outer heroes are cut by the
+    // screen edge rather than the whole lineup shrinking.
+    scale: { mode: Phaser.Scale.ENVELOP, autoCenter: Phaser.Scale.CENTER_BOTH },
     scene: SelectionScene,
     audio: { noAudio: true },
-    render: { antialias: true },
+    render: { antialias: false, pixelArt: true },
     fps: { target: 30, forceSetTimeOut: true },
     banner: false,
   });
@@ -156,6 +202,9 @@ export function createSelectionPreview() {
     if (hidden) game.loop.sleep();
     else game.loop.wake();
   };
+  // Refit whenever the stage box changes (rotation, panel growing, resize).
+  const refit = new ResizeObserver(() => game.scale.refresh());
+  refit.observe(host);
   const observer = new MutationObserver(visibility);
   for (const id of ["landing", "prologue"])
     observer.observe(document.getElementById(id), {
@@ -164,26 +213,33 @@ export function createSelectionPreview() {
     });
   document.addEventListener("visibilitychange", visibility);
   return {
-    setHero(
-      job,
-      gender,
-      skins = [`${job}-${gender}`],
-      identity = `${job}-${gender}`,
-      hero = null,
-    ) {
-      const next = { job, gender, skins, identity, hero };
-      if (JSON.stringify(next) === JSON.stringify(selected)) return;
-      selected = next;
-      if (ready) game.scene.getScenes()[0].select();
+    // entries: [{ id, job, skins, hero }]; index: the one in front.
+    setLineup(entries, index) {
+      const changed =
+        JSON.stringify(entries.map((e) => [e.id, e.skins])) !==
+        JSON.stringify(lineup.map((e) => [e.id, e.skins]));
+      lineup = entries;
+      if (index !== selected) {
+        selected = index;
+        if (scene) {
+          scene.previewMode = "idle";
+          scene.previewAt = scene.time.now;
+        }
+      }
+      if (ready && changed) scene.sync();
+      else if (ready) for (const [i, e] of lineup.entries()) {
+        const slot = scene.slots.get(e.id);
+        if (slot) Object.assign(slot, { entry: e, index: i });
+      }
     },
     preview(mode) {
       if (!ready || !["idle", "run", "attack", "skill"].includes(mode)) return;
-      const scene = game.scene.getScenes()[0];
       scene.previewMode = mode;
       scene.previewAt = scene.time.now;
     },
     destroy() {
       observer.disconnect();
+      refit.disconnect();
       document.removeEventListener("visibilitychange", visibility);
       game.destroy(true);
     },

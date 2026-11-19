@@ -43,7 +43,7 @@
     <link rel="stylesheet" href="/mobile-compact.css?v=2" />
     <link rel="stylesheet" href="/pixel-ui.css?v=2" />
     <link rel="stylesheet" href="/hud-pixel.css?v=6" />
-    <link rel="stylesheet" href="/camp-select.css?v=5" />
+    <link rel="stylesheet" href="/hero-lobby.css?v=1" />
     <link rel="stylesheet" href="/hud-v2.css?v=3" />
     <link rel="stylesheet" href="/hud-v3.css?v=2" />
     <script src="/install.js?v=3" defer></script>
@@ -55,143 +55,50 @@
       <p>เกมนี้เล่นบนมือถือแบบแนวตั้ง หมุนโทรศัพท์ตั้งขึ้นเพื่อเล่นต่อ</p>
       <button type="button">เต็มจอ · แนวตั้ง</button>
     </div>
-    <section id="landing" class="game-lobby" data-lobby-mode="loading">
-      <div class="landing-shade"></div>
-      <div class="lobby-atmosphere" aria-hidden="true"></div>
-      <header class="landing-header">
-        <a href="/" class="brand"
-          ><span>✦</span>
-          <div>
-            ตำนาน <b>3</b> อัศวิน<small>LEGENDS OF DOI NANG NON</small>
-          </div></a
-        >
-        <div class="lobby-chapter"><i></i> ดอยนางนอน <span>CH. 01</span></div>
-        <div class="install-actions"><button id="install-app" type="button" aria-label="ติดตั้ง TML ONLINE"><img src="/assets/app/icon-192.png" alt=""><span>ติดตั้งแอป</span></button><button id="sound" class="glass-button">♫ เปิดเสียง</button></div>
+    <section id="landing" class="hero-lobby" data-lobby-mode="loading">
+      <div class="hl-backdrop" aria-hidden="true"><i class="hl-sky"></i><i class="hl-mountains"></i><i class="hl-village"></i><i class="hl-ground"></i><i class="hl-vignette"></i></div>
+      <header class="hl-top">
+        <button id="creation-back" class="hl-icon" type="button" hidden aria-label="กลับไปเลือกตัวละคร">‹</button>
+        <img class="hl-logo" src="/assets/selection-camp/logo.webp" alt="TML Online" />
+        <div class="hl-heading"><small id="roster-subtitle">YOUR CHARACTERS</small><h1 id="roster-title">ผู้กล้าของคุณ</h1></div>
+        <div class="hl-actions">
+          <button id="install-app" type="button" aria-label="ติดตั้ง TML ONLINE"><img src="/assets/app/icon-192.png" alt=""><span>ติดตั้งแอป</span></button>
+          <button id="sound" class="hl-icon" type="button" aria-label="เสียง">♫</button>
+          <button id="account-open" class="hl-account" type="button"><i></i><span id="account-short">ผู้มาเยือน</span></button>
+        </div>
       </header>
-      <main class="lobby-layout">
-        <aside class="lobby-roster lobby-panel">
-          <div class="lobby-panel-title">
-            <span>Ⅰ</span>
-            <div>
-              <small id="roster-subtitle">YOUR CHARACTERS</small>
-              <h1 id="roster-title">ผู้กล้าของคุณ</h1>
-            </div>
-            <b>03</b>
-          </div>
-          <div id="class-cards" role="group" aria-label="เลือกอาชีพ"></div>
-          <div class="roster-divider">
-            <span>ผู้กล้าของคุณ</span><small id="character-count">0 / 3</small>
-          </div>
-          <div id="saved-characters"></div>
-          <button id="delete-hero" class="text-button" hidden>ลบตัวละครที่เลือก</button>
-          <button id="creation-back" class="creation-back" hidden>
-            ◀ กลับไปเลือกตัวละคร
-          </button>
-          <button id="new-hero" class="new-hero"><b>＋</b> สร้างผู้กล้าใหม่</button>
-          <button id="account-open" class="text-button">
-            ♙ บัญชีผู้เล่น / เข้าสู่ระบบ
-          </button>
-        </aside>
-        <section class="hero-showcase" aria-label="แสดงตัวละคร">
-          <div class="showcase-location">
-            <small>วิหารผู้พิทักษ์</small><span>DOI NANG NON SANCTUARY</span>
-          </div>
-          <div class="lobby-gender gender-toggle">
-            <button data-gender="male">♂ ชาย</button
-            ><button data-gender="female" class="active">♀ หญิง</button>
-          </div>
-          <div id="hero-preview" aria-hidden="true"></div>
-          <div class="hero-fallback hero-art" aria-hidden="true"></div>
-          <button
-            class="hero-cycle previous"
-            data-cycle="-1"
-            aria-label="คลาสก่อนหน้า"
-          >
-            ‹
-          </button>
-          <button class="hero-cycle next" data-cycle="1" aria-label="คลาสถัดไป">
-            ›
-          </button>
-          <div class="hero-caption">
-            <small id="selected-epithet">THE DAWNBLADE</small>
-            <h2 id="selected-class">นักดาบ</h2>
-            <p id="selected-lore"></p>
-          </div>
-          <div class="preview-actions">
-            <button data-preview="idle" title="ท่ายืน" aria-label="ทดลองท่ายืน">
-              ◇</button
-            ><button data-preview="run" title="ทดลองวิ่ง" aria-label="ทดลองวิ่ง">
-              ➟</button
-            ><button
-              data-preview="attack"
-              title="ทดลองโจมตี"
-              aria-label="ทดลองโจมตี"
-            >
-              ⚔</button
-            ><button
-              data-preview="skill"
-              title="ทดลองสกิล"
-              aria-label="ทดลองสกิล"
-            >
-              ✦</button
-            ><span>ทดลองท่าทาง</span>
-          </div>
-        </section>
-        <aside class="lobby-details lobby-panel">
-          <div class="lobby-panel-title">
-            <span>Ⅱ</span>
-            <div>
-              <small>HERO ATTRIBUTES</small>
-              <h2>ข้อมูลผู้กล้า</h2>
-            </div>
-            <div class="lobby-level">LV.<b id="lobby-level">01</b></div>
-          </div>
-          <aside
-            id="hero-stats"
-            aria-label="ค่าสถานะอาชีพ"
-            aria-live="polite"
-          ></aside>
-          <div class="lobby-adventure">
-            <span>✧</span>
-            <div>
-              <small>การเดินทางรออยู่</small><strong>เสียงเรียกจากขุนเขา</strong>
-              <p>ออกเดินทางจากเมืองหน้าถ้ำหลวง<br />พิชิตผู้พิทักษ์ทั้ง 10 ชั้น</p>
-            </div>
-          </div>
-        </aside>
-      </main>
-      <div class="lobby-entry">
-        <div class="entry-status">
-          <span class="status-dot"></span>
-          <div>
-            <strong id="entry-title">พร้อมออกเดินทาง</strong>
-            <p class="save-hint" id="account-status">
-              ผู้มาเยือน · บันทึกความคืบหน้าอัตโนมัติ
-            </p>
-          </div>
+      <section class="hl-stage" aria-label="แสดงตัวละคร">
+        <div id="hero-preview"></div>
+        <div class="hero-fallback hero-art" aria-hidden="true"></div>
+        <button class="hl-cycle prev" type="button" data-cycle="-1" aria-label="คลาสก่อนหน้า">‹</button>
+        <button class="hl-cycle next" type="button" data-cycle="1" aria-label="คลาสถัดไป">›</button>
+        <div class="hl-poses" role="group" aria-label="ทดลองท่าทาง">
+          <button type="button" data-preview="idle" aria-label="ท่ายืน" title="ท่ายืน">ยืน</button><button type="button" data-preview="run" aria-label="ทดลองวิ่ง" title="ทดลองวิ่ง">วิ่ง</button><button type="button" data-preview="attack" aria-label="ทดลองโจมตี" title="ทดลองโจมตี">ตี</button><button type="button" data-preview="skill" aria-label="ทดลองสกิล" title="ทดลองสกิล">สกิล</button>
         </div>
-        <div class="identity-row">
-          <label
-            ><span id="identity-label"
-              >ชื่อผู้กล้าใหม่ <small>2–20 ตัวอักษร</small></span
-            ><input
-              id="character-name"
-              maxlength="20"
-              placeholder="ตั้งชื่อผู้กล้าของคุณ"
-              autocomplete="off" /></label
-          ><button id="start" class="primary-button">
-            <span id="start-label">สร้างผู้กล้า</span><b>➜</b>
-          </button>
+        <div class="hl-caption" aria-live="polite">
+          <small id="selected-epithet">THE DAWNBLADE</small>
+          <h2 id="selected-class">นักดาบ</h2>
+          <p><span id="selected-role"></span><b class="hl-level">Lv.<span id="lobby-level">1</span></b></p>
+          <em id="selected-lore"></em>
         </div>
-      </div>
-      <footer class="landing-footer">
-        <span
-          ><kbd>←</kbd><kbd>→</kbd>
-          <span id="lobby-switch-label">เลือกตัวละคร</span>
-          <span class="footer-separator">/</span>
-          <kbd>ENTER</kbd> เริ่มผจญภัย</span
-        ><span>โลกแห่งตำนาน · เชียงราย <b>✦</b> ONLINE ADVENTURE</span>
-      </footer>
+      </section>
+      <section class="hl-sheet">
+        <div class="hl-slots-head"><span id="lobby-switch-label">เลือกตัวละคร</span><small id="character-count">0 / 3</small><span class="hl-gender" role="group" aria-label="เพศตัวละคร"><button type="button" data-gender="male">ชาย</button><button type="button" data-gender="female" class="active">หญิง</button></span></div>
+        <div id="saved-characters" class="hl-slots"></div>
+        <div id="class-cards" class="hl-classes" role="group" aria-label="เลือกอาชีพ"></div>
+        <aside id="hero-stats" class="hl-info" aria-label="ค่าสถานะอาชีพ" aria-live="polite"></aside>
+        <div class="hl-entry">
+          <label class="hl-name"><span id="identity-label">ชื่อผู้กล้าใหม่</span>
+            <span class="hl-name-row"><input id="character-name" maxlength="20" placeholder="ตั้งชื่อผู้กล้า (2–20 ตัวอักษร)" autocomplete="off" /><small id="name-count">0/20</small><button id="random-name" type="button" aria-label="สุ่มชื่อ" title="สุ่มชื่อ">สุ่ม</button></span></label>
+          <button id="start" class="hl-start" type="button"><span id="start-label">สร้างผู้กล้า</span></button>
+        </div>
+        <footer class="hl-foot">
+          <span id="entry-title">พร้อมออกเดินทาง</span>
+          <span id="account-status">ผู้มาเยือน · บันทึกความคืบหน้าอัตโนมัติ</span>
+          <button id="new-hero" type="button" hidden>สร้างผู้กล้าใหม่</button>
+          <button id="delete-hero" class="hl-delete" type="button" hidden>ลบตัวละคร</button>
+        </footer>
+      </section>
     </section>
     <section id="prologue" class="hidden">
       <div class="prologue-inner">
@@ -508,7 +415,7 @@
     </div>
     <script src="/vendor/phaser.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <script type="module" src="/game.js?v=0.45.0"></script>
-    <script type="module" src="/orientation.js?v=2"></script>
+    <script type="module" src="/game.js?v=0.46.0"></script>
+    <script type="module" src="/orientation.js?v=3"></script>
   </body>
 </html>
