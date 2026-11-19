@@ -4,9 +4,10 @@
 export const WORLD_BOSS = {
   every: 1800, // at :00 and :30 each hour
   window: 1200, // how long it stays before it escapes
-  hp: 1000000,
-  hpPerHero: 200000, // added when a new hero joins this appearance
-  damage: 1.8, // on top of a floor-10 boss hit
+  // Tanky rather than brutal: lots of HP to chew through, soft hits.
+  hp: 2000000,
+  hpPerHero: 400000, // added when a new hero joins this appearance
+  damage: 0.9, // on top of a floor-10 boss hit
   scale: 3.2,
   floor: 10,
   // Summons guards as its health passes these marks.

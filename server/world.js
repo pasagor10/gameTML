@@ -1,4 +1,18 @@
 import { BOSSES } from "../shared/bosses.js";
+import {
+  bossMechanics,
+  WORLD_MECHANICS,
+  NIGHT_MECHANICS,
+  mechanicDamage,
+  mechanicGap,
+  rockCount,
+  inSpikeBand,
+  underwater,
+  FLOOD_WARN,
+  FLOOD_LAST,
+  ROCK_RADIUS,
+  BOLT_RADIUS,
+} from "../shared/boss-mechanics.js";
 import { dungeonRank } from "../shared/dungeon-results.js";
 import {
   dungeonPlatforms,
@@ -1135,6 +1149,9 @@ function spawnStage(i) {
   i.enemies = [];
   i.hazards = [];
   i.nextHazardAt = now() + 4;
+  i.mech = null;
+  i.mechAt = 0;
+  i.mechCount = 0;
   i.streak = 0;
   i.streakUntil = 0;
   i.defeated = 0;
@@ -2162,8 +2179,94 @@ function dealDungeonDamage(i, p, base, actorId, direction, t, status = null) {
   }
   return amount;
 }
+// ---- Boss mechanics (shared/boss-mechanics.js): falling rocks, flood,
+// spike stripes and lightning, one at a time, in the floor's own order.
+const bossFight = (i) =>
+  !i.training && !i.clear && i.enemies.some((e) => e.boss && e.hp > 0);
+const mechanicsOf = (i) =>
+  i.world ? WORLD_MECHANICS : i.night ? NIGHT_MECHANICS : bossMechanics(i.floor);
+// A hit worth `frac` of the hero's max HP, whatever their DEF (barrier still helps).
+function hazardHit(i, p, frac, actorId, direction, t) {
+  const def = combatStats(p).def;
+  return dealDungeonDamage(i, p, Math.round((maxHp(p) * frac * (100 + def)) / 100), actorId, direction, t);
+}
+const arenaX = (x) => Math.max(80, Math.min(WORLD.width - 80, x));
+function startMechanic(kind, i, heroes, floor, t) {
+  const id = randomUUID();
+  if (kind === "rocks") {
+    const n = rockCount(floor, !!i.world),
+      strikes = [];
+    for (let k = 0; k < n; k++) {
+      const h = heroes[k % heroes.length],
+        x = k < heroes.length ? h.x : h.x + (Math.random() - 0.5) * 1000;
+      strikes.push({ x: arenaX(x), radius: ROCK_RADIUS, impactAt: t + 1.6 + k * 0.22, done: false });
+    }
+    return { id, kind, startedAt: t, endsAt: t + 2.4 + n * 0.22, strikes };
+  }
+  if (kind === "lightning") {
+    // Each mark follows its hero, then locks in place 0.7 s before the bolt.
+    const strikes = [];
+    for (const delay of [1.6, 3]) for (const h of heroes.slice(0, 12))
+      strikes.push({ x: h.x, follow: h.id, radius: BOLT_RADIUS, impactAt: t + delay, done: false });
+    return { id, kind, startedAt: t, endsAt: t + 3.6, strikes };
+  }
+  if (kind === "spikes")
+    return { id, kind, startedAt: t, impactAt: t + 1.7, endsAt: t + 2.5, phase: Math.random() * 180, done: false };
+  return { id, kind: "flood", startedAt: t, riseAt: t + FLOOD_WARN, endsAt: t + FLOOD_WARN + FLOOD_LAST, tickAt: 0 };
+}
+function resolveMechanic(i, m, heroes, floor, t) {
+  const frac = mechanicDamage(m.kind, floor, !!i.world);
+  if (m.kind === "rocks" || m.kind === "lightning") {
+    for (const s of m.strikes) {
+      if (s.done) continue;
+      if (s.follow && t < s.impactAt - 0.7) {
+        const h = live(s.follow);
+        if (h?.hp > 0) s.x = arenaX(h.x);
+      }
+      if (t < s.impactAt) continue;
+      s.done = true;
+      for (const p of heroes)
+        if (p.hp > 0 && Math.abs(p.x - s.x) < s.radius)
+          hazardHit(i, p, frac, m.id, Math.sign(p.x - s.x) || 1, t);
+      if (m.kind === "rocks")
+        i.events.push({ id: randomUUID(), kind: "eruption", x: s.x, y: WORLD.ground, radius: s.radius, at: t });
+    }
+  } else if (m.kind === "spikes") {
+    if (m.done || t < m.impactAt) return;
+    m.done = true;
+    for (const p of heroes)
+      if (p.hp > 0 && Math.abs(p.y - WORLD.ground) < 65 && inSpikeBand(m, p.x))
+        hazardHit(i, p, frac, m.id, 1, t);
+  } else if (t >= m.riseAt && t >= m.tickAt) {
+    // Flood: anyone in the water loses a big bite every half second.
+    m.tickAt = t + 0.5;
+    for (const p of heroes) if (p.hp > 0 && underwater(p.y)) hazardHit(i, p, frac, m.id, 1, t);
+  }
+}
+function updateBossMechanics(i, t) {
+  if (!bossFight(i)) {
+    i.mech = null;
+    i.mechAt = 0;
+    return;
+  }
+  const heroes = i.members.map(live).filter((p) => p?.hp > 0);
+  if (!heroes.length) return;
+  const boss = i.enemies.find((e) => e.boss && e.hp > 0),
+    floor = i.world ? WORLD_BOSS.floor : i.floor;
+  if (!i.mechAt) i.mechAt = t + 5;
+  if (i.mech && t >= i.mech.endsAt) i.mech = null;
+  if (!i.mech && t >= i.mechAt) {
+    const list = mechanicsOf(i),
+      kind = list[(i.mechCount || 0) % list.length];
+    i.mechCount = (i.mechCount || 0) + 1;
+    i.mech = startMechanic(kind, i, heroes, floor, t);
+    i.mechAt = i.mech.endsAt + mechanicGap(floor, boss.hp <= boss.maxHp * 0.5);
+  }
+  if (i.mech) resolveMechanic(i, i.mech, heroes, floor, t);
+}
 function updateCrystalHazards(i, t) {
-  if (i.training || i.clear) {
+  // Boss fights use the boss mechanics instead of crystal eruptions.
+  if (i.training || i.clear || bossFight(i)) {
     i.hazards = [];
     return;
   }
@@ -2290,6 +2393,7 @@ export function tick(dt, t = now()) {
       if (t >= i.respawnAt) spawnTraining(i);
     }
     updateCrystalHazards(i, t);
+    updateBossMechanics(i, t);
     if (!i.clear) {
       for (const e of i.enemies) {
         if (!e.status || e.hp <= 0) continue;
@@ -2573,6 +2677,7 @@ export function snapshot(p) {
           instanceId: i.id,
           enemies: i.enemies,
           hazards: i.hazards || [],
+          mech: i.mech || null,
           signs:
             i.signs?.map((sign) => ({
               ...sign,

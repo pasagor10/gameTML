@@ -1,6 +1,7 @@
 import { communityPanel } from "/community-ui.js?v=1";
 import { screenShakeEnabled, setScreenShakeEnabled, shakeCamera } from "/screen-shake.js?v=1";
 import { BOSSES } from "/shared/bosses.js";
+import { MECHANICS, WATER_Y, SPIKE_BAND } from "/shared/boss-mechanics.js";
 import { bindAnnouncements, receiveAnnouncement, announcementHistory } from "/announcements.js";
 import { updatePartyUi, bindPartyUi } from "/party-ui.js?v=2";
 import { showWorldHeroPreview } from "/hero-preview.js";
@@ -56,7 +57,7 @@ import {
   trackerHtml,
   claimable,
 } from "/quest-ui.js?v=4";
-import { dungeonPanelHtml } from "/dungeon-ui.js?v=40-2";
+import { dungeonPanelHtml } from "/dungeon-ui.js?v=41";
 import { createNightSky } from "/night-sky.js?v=3";
 import {
   nightInfo,
@@ -2489,6 +2490,8 @@ class Adventure extends Phaser.Scene {
     this.monsterSets = this.sprites.monsters;
     this.slimeAtlas = registerMotionAtlas(this, "slime-motion", 6);
     this.telegraphs = this.add.graphics().setDepth(6);
+    // Falling rocks, bolts and flood water draw over the heroes.
+    this.mechTop = this.add.graphics().setDepth(12);
     this.dangerHint = this.add
       .text(0, 0, "", {
         fontFamily: "Noto Sans Thai",
@@ -2690,18 +2693,6 @@ class Adventure extends Phaser.Scene {
         cave ? floorInfo(state?.dungeon).color : 0x83b952,
       );
       this.decor.fillRoundedRect(p.x - 3, p.y, p.w + 6, 9, 4);
-      for (let x = p.x + 6; x < p.x + p.w; x += 13) {
-        this.decor.fillStyle(cave ? 0xb6d8f1 : 0xb3d96d, 0.9);
-        this.decor.fillTriangle(x, p.y + 3, x + 4, p.y - 5, x + 8, p.y + 3);
-      }
-      this.decor.lineStyle(3, cave ? 0x7399c6 : 0x668f4a, 0.8);
-      for (let x = p.x + 25; x < p.x + p.w - 10; x += 85) {
-        this.decor.beginPath();
-        this.decor.moveTo(x, p.y + 27);
-        this.decor.lineTo(x - 5, p.y + 40);
-        this.decor.lineTo(x + 1, p.y + 47);
-        this.decor.strokePath();
-      }
     }
   }
   actor(p, stamp, reset = false) {
@@ -3322,6 +3313,7 @@ class Adventure extends Phaser.Scene {
       cast.hidden = !castText;
     };
     if (!d || d.clear) return showCast();
+    const mechText = d.mech ? this.drawBossMechanic(d.mech, time) : "";
     const exposed = d.enemies.find((e) => e.boss && time < e.exposedUntil);
     if (exposed) {
       g.lineStyle(3, 0x8ef6e5, 0.95);
@@ -3364,10 +3356,112 @@ class Adventure extends Phaser.Scene {
       }
       if (charging && Math.abs(h.x - state.self.x) < h.radius + 180) hint = h;
     }
-    if (hint)
+    if (mechText) castText = mechText;
+    else if (hint)
       castText = `${hint.crystal ? "คริสตัลปะทุ" : "บอสทุบพื้น"} · ${Math.max(0, hint.impactAt - time).toFixed(1)} วิ · กระโดดหรือเดินหลบวง`;
     else if (exposed) castText = "บอสเสียหลัก · ตีสวน +50%";
     showCast();
+  }
+  // Boss mechanic warnings and effects; returns the line for the cast bar.
+  drawBossMechanic(m, time) {
+    const g = this.telegraphs,
+      top = this.mechTop,
+      G = WORLD.ground,
+      view = this.cameras.main.worldView,
+      left = view.x - 40,
+      right = view.x + view.width + 40,
+      ceil = view.y - 60,
+      info = MECHANICS[m.kind],
+      secs = (n) => Math.max(0, n).toFixed(1);
+    if (m.kind === "rocks" || m.kind === "lightning") {
+      const rock = m.kind === "rocks",
+        color = rock ? 0xff9a5a : 0xfff07a;
+      let next = Infinity;
+      for (const s of m.strikes) {
+        const until = s.impactAt - time;
+        if (until > 0) {
+          next = Math.min(next, until);
+          const p = Phaser.Math.Clamp((time - m.startedAt) / (s.impactAt - m.startedAt), 0, 1),
+            locked = !rock && until < 0.7;
+          g.fillStyle(color, 0.05 + p * 0.08);
+          g.fillRect(s.x - s.radius * 0.45, ceil, s.radius * 0.9, G - ceil);
+          g.fillStyle(color, 0.14 + p * 0.26);
+          g.fillEllipse(s.x, G - 3, s.radius * 2, 22);
+          g.lineStyle(locked ? 3 : 2, color, 0.95);
+          g.strokeEllipse(s.x, G - 3, s.radius * 2, 22);
+          g.strokeEllipse(s.x, G - 3, s.radius * 2 * (1.6 - 0.6 * p), 22 * (1.6 - 0.6 * p));
+          if (rock && until < 0.8) {
+            const f = 1 - until / 0.8,
+              y = ceil + (G - 24 - ceil) * f * f;
+            top.fillStyle(0x6b5a4a, 1);
+            top.fillCircle(s.x, y, 24);
+            top.fillStyle(0x8e7a63, 1);
+            top.fillCircle(s.x - 7, y - 7, 11);
+            top.lineStyle(3, 0x2c241d, 1);
+            top.strokeCircle(s.x, y, 24);
+          }
+        } else if (until > -0.35) {
+          const a = 1 + until / 0.35;
+          if (rock) {
+            top.fillStyle(0x6b5a4a, a);
+            for (const dx of [-26, -9, 8, 24]) top.fillCircle(s.x + dx, G - 8 - Math.abs(dx) * 0.2, 9);
+          } else {
+            const pts = [];
+            for (let y = ceil, k = 0; y < G; y += 70, k++)
+              pts.push(new Phaser.Math.Vector2(s.x + (k % 2 ? 18 : -18) * Math.sin(s.x + k), y));
+            pts.push(new Phaser.Math.Vector2(s.x, G - 4));
+            top.lineStyle(9, 0xfff07a, a * 0.5);
+            top.strokePoints(pts);
+            top.lineStyle(3, 0xffffff, a);
+            top.strokePoints(pts);
+            top.fillStyle(0xfff6b0, a * 0.6);
+            top.fillEllipse(s.x, G - 4, s.radius * 2.2, 26);
+          }
+        }
+      }
+      return next < Infinity ? `${info.icon} ${info.name} · ${secs(next)} วิ · ${info.hint}` : "";
+    }
+    if (m.kind === "spikes") {
+      const charging = time < m.impactAt,
+        p = Phaser.Math.Clamp((time - m.startedAt) / (m.impactAt - m.startedAt), 0, 1);
+      for (let k = Math.floor((left - m.phase) / SPIKE_BAND); m.phase + k * SPIKE_BAND < right; k++) {
+        if (((k % 2) + 2) % 2) continue;
+        const x0 = m.phase + k * SPIKE_BAND;
+        if (charging) {
+          g.fillStyle(0xff6b5a, 0.12 + p * 0.25);
+          g.fillRect(x0, G - 8, SPIKE_BAND, 12);
+          g.lineStyle(2, 0xff8a6b, 0.9);
+          g.strokeRect(x0, G - 8, SPIKE_BAND, 12);
+        }
+        for (let x = x0 + 10; x < x0 + SPIKE_BAND - 8; x += 22) {
+          const h = charging ? 6 + p * 10 : 50 + Math.sin(x * 0.7) * 16;
+          (charging ? g : top).fillStyle(charging ? 0xffb08f : 0xd9c7ff, charging ? 0.55 : 0.95);
+          (charging ? g : top).fillTriangle(x - 8, G, x, G - h, x + 8, G);
+        }
+      }
+      return charging ? `${info.icon} ${info.name} · ${secs(m.impactAt - time)} วิ · ${info.hint}` : "";
+    }
+    // Flood: a dashed line shows where the water will reach, then it rises.
+    const width = right - left;
+    if (time < m.riseAt) {
+      const p = Phaser.Math.Clamp((time - m.startedAt) / (m.riseAt - m.startedAt), 0, 1);
+      g.lineStyle(2, 0x6fc8ff, 0.5 + 0.4 * Math.abs(Math.sin(time * 6)));
+      for (let x = left; x < right; x += 36) g.lineBetween(x, WATER_Y, x + 20, WATER_Y);
+      g.fillStyle(0x2f7fd0, 0.18 + p * 0.2);
+      g.fillRect(left, G - 4 - p * 10, width, 14 + p * 10);
+      return `${info.icon} น้ำกำลังท่วม! ${secs(m.riseAt - time)} วิ · ${info.hint}`;
+    }
+    const rise = Phaser.Math.Clamp((time - m.riseAt) / 0.6, 0, 1),
+      fall = Phaser.Math.Clamp((m.endsAt - time) / 0.6, 0, 1),
+      level = G + 10 - (G + 10 - WATER_Y) * Math.min(rise, fall);
+    top.fillStyle(0x1f6fc4, 0.5);
+    top.fillRect(left, level, width, G + 400 - level);
+    top.lineStyle(3, 0xa8e4ff, 0.85);
+    const wave = [];
+    for (let x = left; x <= right; x += 24)
+      wave.push(new Phaser.Math.Vector2(x, level + Math.sin(x * 0.03 + time * 4) * 4));
+    top.strokePoints(wave);
+    return `${info.icon} ${info.name} · ยืนบนชั้นอีก ${secs(m.endsAt - time)} วิ`;
   }
   dust(x, y, count = 7) {
     if (this.reducedMotion || this.children.length > 180) return;
@@ -3391,6 +3485,7 @@ class Adventure extends Phaser.Scene {
       performance.now() / 1000 +
       (serverOffset ?? state.time - performance.now() / 1000);
     this.telegraphs.clear();
+    this.mechTop.clear();
     this.drawDungeonHazards(serverTime);
     this.townNpcs.update(
       time,

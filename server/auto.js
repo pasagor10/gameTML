@@ -4,6 +4,7 @@
 import { ACTIONS } from "../shared/motion.js";
 import { skillOf } from "../shared/skills.js";
 import { climbStep } from "../shared/dungeons.js";
+import { strikesAt, flooding, underwater, WATER_Y } from "../shared/boss-mechanics.js";
 
 const GROUND = 600,
   REACH_Y = 120, // attacks connect within 130 px vertically; keep a margin
@@ -37,6 +38,14 @@ export function hitsFor(p, enemies, skill, range, dir) {
 // Anything about to land where we stand? Crystal eruptions and boss slams
 // only hurt on the ground, so hop if it lands soon, otherwise walk clear.
 function threat(p, i, t) {
+  // Boss mechanics: rocks and bolts hit at any height, spikes on the floor.
+  const hits = strikesAt(i.mech, p.x, p.y, t);
+  if (hits.length) {
+    const s = hits.reduce((a, b) => (a.impactAt <= b.impactAt ? a : b));
+    return i.mech.kind === "spikes"
+      ? { zone: s, eta: s.impactAt - t, goal: s.x }
+      : { zone: s, eta: s.impactAt - t, away: true };
+  }
   const grounded = Math.abs(p.y - GROUND) < 65;
   if (!grounded) return null;
   const zones = [
@@ -60,9 +69,29 @@ export function autoBrain(p, i, t, { range, mpMax, platforms, aspd = 1 }) {
   }
 
   // 1. Dodge first: nothing else matters if a slam is about to land on us.
-  const danger = threat(p, i, t);
-  if (danger) {
-    if (danger.eta < 0.45) plan.jump = true;
+  //    A flood beats everything: get up onto a ledge and stay there.
+  let danger = null;
+  if (flooding(i.mech, t)) {
+    danger = { flood: true };
+    if (!p.grounded || underwater(p.y)) {
+      const safe = platforms.filter((q) => q.y < WATER_Y - 5),
+        near = (q) => Math.abs(Math.max(q.x, Math.min(q.x + q.w, p.x)) - p.x);
+      if (safe.length) {
+        const ledge = safe.reduce((a, b) => (near(b) < near(a) ? b : a)),
+          climb = climbStep(p, { x: ledge.x + ledge.w / 2, y: ledge.y }, platforms);
+        plan.input = Math.sign(climb.x - p.x);
+        plan.jump = p.grounded && climb.jump;
+      }
+    }
+    const strike = threat(p, i, t);
+    if (strike?.away && !underwater(p.y)) plan.input = Math.sign(p.x - strike.zone.x) || 1;
+  } else danger = threat(p, i, t);
+  if (danger && !danger.flood) {
+    if (danger.goal !== undefined) plan.input = Math.sign(danger.goal - p.x) || 1;
+    else if (danger.away) {
+      const out = Math.sign(p.x - danger.zone.x) || -p.direction || 1;
+      plan.input = p.x < 140 ? 1 : p.x > 2260 ? -1 : out;
+    } else if (danger.eta < 0.45) plan.jump = true;
     else plan.input = Math.sign(p.x - danger.zone.x) || -p.direction || 1;
   }
 
