@@ -2156,13 +2156,17 @@ class Adventure extends Phaser.Scene {
         viewH = h / zoom;
       // Ground at ~2/3 on portrait phones, ~3/4 on short landscape screens
       // (phones sideways); tall desktop windows keep the original framing.
+      // Portrait: ground at ~64% like the town, so monsters walk above the
+      // skill arc; the camera may look past the painting's bottom there
+      // (the controls and the foreground strip cover it).
+      const bottom = portrait ? 1000 : 850;
       this.camY = portrait
-        ? Math.min(850 - viewH / 2, WORLD.ground - 0.17 * viewH)
+        ? Math.min(bottom - viewH / 2, WORLD.ground - 0.14 * viewH)
         : h < 520
-          ? Math.min(850 - viewH / 2, WORLD.ground - 0.26 * viewH)
+          ? Math.min(bottom - viewH / 2, WORLD.ground - 0.26 * viewH)
           : 340;
       this.cameras.main.setZoom(zoom);
-      this.cameras.main.setBounds(0, -100, areaWidth(state?.area), 950);
+      this.cameras.main.setBounds(0, -100, areaWidth(state?.area), bottom + 100);
     }
     this.parallax?.resize();
   }
