@@ -450,7 +450,7 @@ html body #modal .buy-qty input { flex: 0 0 84px; width: 84px !important; min-wi
 #game-screen #floor-result .replay-pick { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; }
 #game-screen #floor-result .replay-pick[hidden] { display: none; }
 #game-screen #floor-result .replay-pick span { color: #c9bfa4; font-size: 12px; margin-right: 2px; }
-#game-screen #floor-result .replay-pick button { min-width: 44px; padding: 7px 9px; border: 1px solid #b59454; border-radius: 6px; background: #102237; color: #efd399; font: 700 12px/1 inherit; cursor: pointer; }
+#game-screen #floor-result .replay-pick button { min-width: 44px; padding: 7px 9px; border: 1px solid #b59454; border-radius: 6px; background: #102237; color: #efd399; font-family: inherit; font-weight: 700; font-size: 12px; line-height: 1; cursor: pointer; }
 #game-screen #floor-result .replay-pick button.active { background: #efd399; color: #172238; }
 #game-screen #floor-result .replay-pick input { width: 58px !important; flex: 0 0 58px; padding: 7px; border: 1px solid #c1dce240; border-radius: 6px; background: #0d1b26; color: #e8f1f3; font: inherit; text-align: center; }
 #game-screen #floor-result #result-replay { width: 100%; }
@@ -473,3 +473,43 @@ html body #game-screen#game-screen .hud-bottom .skillbar .skill.auto > :is(b, sp
 html body #game-screen#game-screen .hud-bottom .skillbar .skill.auto > b { width: 20px !important; height: 20px !important; min-width: 0 !important; flex: 0 0 20px !important; }
 html body #game-screen#game-screen .hud-bottom .skillbar .skill.auto > b svg { display: block; width: 20px !important; height: 20px !important; }
 #game-screen #floor-result .result-replay [hidden] { display: none !important; }
+
+/* Patch news: two banners (Lv.60 update, 20:00 grand boss). */
+html body #modal[data-panel="news"] .modal-box { width: min(520px, 100%); }
+.news { display: grid; gap: 14px; }
+.news-banner { position: relative; overflow: hidden; padding: 16px 18px 18px; border-radius: 12px; color: #fff3dc; }
+.news-banner h3 { margin: 6px 0 8px; font-size: 20px; line-height: 1.25; text-shadow: 0 2px 0 #0008; }
+.news-banner h3 small { display: block; font-size: 14px; font-weight: 600; color: #ffd98a; }
+.news-banner p, .news-banner li { margin: 0 0 6px; font-size: 13.5px; line-height: 1.5; }
+.news-banner ul { margin: 0; padding-left: 18px; }
+.nb-tag { display: inline-block; padding: 3px 9px; border-radius: 999px; font-weight: 800; font-size: 11px; line-height: 1.2; letter-spacing: .08em; }
+.news-banner.patch {
+  border: 1px solid #7fd3ff;
+  background: radial-gradient(90% 120% at 100% 0%, #2f7fd0aa, transparent 60%), linear-gradient(160deg, #10284a, #0a1528);
+  box-shadow: 0 0 24px #4fb4ff33, inset 0 0 0 1px #0006;
+}
+.news-banner.patch .nb-tag { background: #7fd3ff; color: #0a1d33; }
+.news-banner.patch .nb-big { position: absolute; top: 8px; right: 14px; font-weight: 800; font-size: 22px; line-height: 1; color: #bfe6ff; text-shadow: 0 0 18px #4fb4ff; }
+.news-banner.patch .nb-big b { font-size: 52px; color: #fff; }
+.news-banner.patch h3 { padding-right: 120px; }
+.news-banner.grand {
+  border: 1px solid #ffd36a;
+  padding-right: 120px;
+  background: radial-gradient(90% 130% at 100% 0%, #ff8a3c99, transparent 60%), linear-gradient(160deg, #3a1a08, #170a04);
+  box-shadow: 0 0 28px #ffb84d44, inset 0 0 0 1px #0006;
+}
+.news-banner.grand img { position: absolute; top: 14px; right: 12px; width: 96px; height: 96px; filter: drop-shadow(0 0 12px #ffcf5a); animation: nb-float 2.6s ease-in-out infinite; }
+.news-banner.grand .nb-tag { background: #ffd36a; color: #3a1a08; }
+.news-banner .nb-reward { padding: 8px 10px; border-radius: 8px; background: #ffd36a22; border: 1px solid #ffd36a77; font-weight: 700; color: #fff3c4; }
+.news-banner .nb-reward b { color: #ffd36a; }
+.news-banner .nb-note { color: #e8cfa4; font-size: 12.5px; }
+.news-banner .nb-when { margin-top: 4px; font-weight: 800; font-size: 20px; line-height: 1.3; color: #ffd36a; font-variant-numeric: tabular-nums; }
+.news-banner #news-join { margin-top: 10px; width: 100%; }
+.news #news-close { width: 100%; }
+@keyframes nb-float { 50% { transform: translateY(-6px); } }
+@media (max-width: 480px) {
+  .news-banner.patch h3 { padding-right: 0; margin-top: 44px; }
+  .news-banner.grand { padding-right: 18px; }
+  .news-banner.grand img { position: static; float: right; width: 72px; height: 72px; margin: 0 0 6px 8px; }
+}
+@media (prefers-reduced-motion: reduce) { .news-banner.grand img { animation: none; } }

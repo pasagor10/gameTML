@@ -77,6 +77,7 @@ export function supplyArt(id) {
     mp_l: ["supply", 7],
     gold: ["supply", 2],
     ore: ["supply", 3],
+    stone_100: ["supply", 8],
     weapon: ["sword", 1],
     armor: ["armor", 1],
   }[id];

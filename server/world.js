@@ -2,8 +2,12 @@ import { BOSSES } from "../shared/bosses.js";
 import {
   bossMechanics,
   WORLD_MECHANICS,
+  GRAND_MECHANICS,
   NIGHT_MECHANICS,
   mechanicDamage,
+  BOSS_SLAM_PCT,
+  BOSS_HIT_PCT,
+  WORLD_HIT_SCALE,
   mechanicGap,
   rockCount,
   inSpikeBand,
@@ -57,9 +61,11 @@ import {
 } from "../shared/stats.js";
 import {
   WORLD_BOSS,
+  GRAND_BOSS,
   worldBossAt,
   worldRanking,
   worldReward,
+  nextGrandIn,
 } from "../shared/world-boss.js";
 import {
   SKILL_KITS,
@@ -104,6 +110,7 @@ import {
   MAX_BUY,
   pickPotion,
   potionCount,
+  BLESS_STONE,
   FLOORS,
   MAIN_FLOORS,
   powerFloor,
@@ -319,7 +326,7 @@ export function wearCostume(p, id) {
   savePlayer(p);
   return { message: id ? `สวม${costumeOf(p, id).name}แล้ว` : "กลับเป็นชุดอาชีพแล้ว" };
 }
-export function enhance(p, key, slot = "weapon") {
+export function enhance(p, key, slot = "weapon", blessed = false) {
   ensureTown(p);
   if (!Object.hasOwn(SLOTS, slot)) throw Error("ช่องอุปกรณ์ไม่ถูกต้อง");
   const result = atomic(p.id, "enhance", key, () => {
@@ -328,11 +335,17 @@ export function enhance(p, key, slot = "weapon") {
       cost = enhancementCost(level);
     if (!c.equipment[slot]) throw Error("สวมอุปกรณ์ในช่องนี้ก่อน");
     if (level >= MAX_ENHANCE) throw Error(`อุปกรณ์ถึง +${MAX_ENHANCE} แล้ว`);
-    if (c.gold < cost.gold || (c.inventory.ore || 0) < cost.ore)
-      throw Error(`ต้องมีทอง ${cost.gold} และแร่จันทรา ${cost.ore} ชิ้น`);
-    c.gold -= cost.gold;
-    c.inventory.ore -= cost.ore;
-    const success = Math.random() < enhancementChance(level),
+    if (blessed) {
+      // Blessed stone: always succeeds, costs only the stone.
+      if (!(c.inventory[BLESS_STONE] > 0)) throw Error("ไม่มีหินตีบวก 100%");
+      c.inventory[BLESS_STONE]--;
+    } else {
+      if (c.gold < cost.gold || (c.inventory.ore || 0) < cost.ore)
+        throw Error(`ต้องมีทอง ${cost.gold} และแร่จันทรา ${cost.ore} ชิ้น`);
+      c.gold -= cost.gold;
+      c.inventory.ore -= cost.ore;
+    }
+    const success = blessed || Math.random() < enhancementChance(level),
       broke = !success && level >= ENHANCE_BREAK_LEVEL,
       next = success ? level + 1 : broke ? 0 : level;
     if (slot === "weapon") c.upgrade = next;
@@ -340,7 +353,7 @@ export function enhance(p, key, slot = "weapon") {
     persist(c);
     return {
       message: success
-        ? `${SLOTS[slot]} ตีบวกสำเร็จ +${next}`
+        ? `${blessed ? "🌟 หินตีบวก 100% · " : ""}${SLOTS[slot]} ตีบวกสำเร็จ +${next}`
         : broke
           ? `ตีบวกล้มเหลว! ${SLOTS[slot]} +${level} แตกกลับเป็น +0`
           : "ตีบวกไม่สำเร็จ ระดับเดิมคงอยู่",
@@ -433,7 +446,7 @@ function openWorldBoss(sched) {
       id,
       floor: WORLD_BOSS.floor,
       stage: 3,
-      world: { name: sched.name, type: sched.type, tint: sched.tint, cycle: sched.cycle },
+      world: { name: sched.name, type: sched.type, tint: sched.tint, cycle: sched.cycle, grand: !!sched.grand },
       members: [],
       enemies: [],
       clear: false,
@@ -448,6 +461,8 @@ function openWorldBoss(sched) {
   spawnStage(i);
   worldBoss = {
     cycle: sched.cycle,
+    name: sched.name,
+    grand: !!sched.grand,
     instanceId: id,
     endsAt: sched.endsAt,
     done: null,
@@ -455,7 +470,9 @@ function openWorldBoss(sched) {
     names: new Map(),
     joined: new Set(),
   };
-  announce(`worldboss:${sched.cycle}:open`, "เจ้าแม่นางนอนปรากฏแล้ว! ร่วมปราบบอสโลก รับของตำนานตามอันดับดาเมจ · เปิดสนามรอบละ 20 นาที · รับอาวุธเทพเฉพาะบอสโลก");
+  announce(`worldboss:${sched.cycle}:open`, sched.grand
+    ? `🌟 มหาบอส 2 ทุ่ม · ${sched.name} ปรากฏแล้ว! ทุกคนที่เข้าร่วมและปราบได้ รับหินตีบวก 100% · พร้อมของตำนานตามอันดับดาเมจ`
+    : "เจ้าแม่นางนอนปรากฏแล้ว! ร่วมปราบบอสโลก รับของตำนานตามอันดับดาเมจ · เปิดสนามรอบละ 20 นาที · รับอาวุธเทพเฉพาะบอสโลก");
   log(null, "worldboss:open", { cycle: sched.cycle, boss: sched.name });
   return i;
 }
@@ -465,14 +482,16 @@ export function updateWorldBoss(clock = worldBossClock()) {
   const until = sched.nextAt - clock;
   if (!sched.open && until > 0 && until <= 600) {
     const minutes = until <= 60 ? 1 : until <= 300 ? 5 : 10;
-    announce(`worldboss:${sched.cycle + 1}:warning:${minutes}`, `อีกไม่เกิน ${minutes} นาที เจ้าแม่นางนอนจะปรากฏในรอบถัดไป เตรียมรับอุปกรณ์ตำนานตามดาเมจ!`);
+    announce(`worldboss:${sched.cycle + 1}:warning:${minutes}`, sched.nextGrand
+      ? `อีกไม่เกิน ${minutes} นาที มหาบอส 2 ทุ่ม ${GRAND_BOSS.name} จะปรากฏ! เข้าร่วมรับหินตีบวก 100% ทุกคน`
+      : `อีกไม่เกิน ${minutes} นาที เจ้าแม่นางนอนจะปรากฏในรอบถัดไป เตรียมรับอุปกรณ์ตำนานตามดาเมจ!`);
   }
   if (sched.open && !completedWorldCycles.has(sched.cycle) && worldBoss?.cycle !== sched.cycle) {
     if (worldBoss) closeWorldBoss();
     openWorldBoss(sched);
   } else if (worldBoss && !worldBoss.done && clock >= worldBoss.endsAt) {
     worldBoss.done = "escaped";
-    announce(`worldboss:${worldBoss.cycle}:escaped`, "เจ้าแม่นางนอนลับหายไปแล้ว พบกันรอบถัดไป ทุก 30 นาที");
+    announce(`worldboss:${worldBoss.cycle}:escaped`, `${worldBoss.name || "เจ้าแม่นางนอน"} ลับหายไปแล้ว พบกันรอบถัดไป`);
     closeWorldBoss();
   }
 }
@@ -499,8 +518,9 @@ export function joinWorldBoss(p) {
   if (!worldBoss.joined.has(p.id)) {
     worldBoss.joined.add(p.id);
     if (worldBoss.joined.size > 1) {
-      boss.maxHp += WORLD_BOSS.hpPerHero;
-      boss.hp += WORLD_BOSS.hpPerHero;
+      const extra = WORLD_BOSS.hpPerHero * (worldBoss.grand ? GRAND_BOSS.hpMul : 1);
+      boss.maxHp += extra;
+      boss.hp += extra;
     }
   }
   worldBoss.names.set(p.id, p.name);
@@ -603,7 +623,17 @@ function worldBossDown(i, t) {
     }
     savePlayer(m);
   }
-  announce(`worldboss:${worldBoss.cycle}:down`, `เจ้าแม่นางนอนถูกปราบแล้ว! ${ranking.slice(0,3).map(r => `อันดับ ${r.place} ${r.name} (${Math.round(r.damage).toLocaleString()} ดาเมจ)`).join(" · ")} · ส่งของรางวัลเข้ากระเป๋าแล้ว`);
+  // Grand boss: a blessed stone for every hero who joined, damage or not.
+  if (worldBoss.grand)
+    for (const id of worldBoss.joined) {
+      const saved = !live(id) && loadCharacter(id),
+        m = live(id) || (saved && makeRuntime(saved, { emit() {} }));
+      if (!m) continue;
+      m.inventory[BLESS_STONE] = (m.inventory[BLESS_STONE] || 0) + GRAND_BOSS.stones;
+      m.socket?.emit?.("toast", { message: `🌟 ได้รับหินตีบวก 100% ×${GRAND_BOSS.stones} จากมหาบอส 2 ทุ่ม` });
+      savePlayer(m);
+    }
+  announce(`worldboss:${worldBoss.cycle}:down`, `${worldBoss.name || "เจ้าแม่นางนอน"}ถูกปราบแล้ว!${worldBoss.grand ? " ผู้เข้าร่วมทุกคนได้รับหินตีบวก 100%" : ""} ${ranking.slice(0,3).map(r => `อันดับ ${r.place} ${r.name} (${Math.round(r.damage).toLocaleString()} ดาเมจ)`).join(" · ")} · ส่งของรางวัลเข้ากระเป๋าแล้ว`);
   log(null, "worldboss:down", { cycle: worldBoss.cycle, heroes: ranking.length });
 }
 // What a hero sees of the world boss, in town or in the arena.
@@ -620,6 +650,9 @@ function worldBossView(p) {
     name: sched.name,
     type: sched.type,
     cycle: sched.cycle,
+    grand: !!sched.grand,
+    nextGrand: !!sched.nextGrand,
+    grandIn: Math.round(nextGrandIn(clock)),
     open: !!(wb && !wb.done && sched.open),
     done: wb?.done || null,
     left: Math.max(0, Math.round(sched.endsAt - clock)),
@@ -1167,7 +1200,7 @@ function spawnStage(i) {
       trait = entry?.variant?.trait || null,
       mods = traitOf({ trait }),
       base = boss && i.world
-        ? WORLD_BOSS.hp
+        ? WORLD_BOSS.hp * (i.world.grand ? GRAND_BOSS.hpMul : 1)
         : boss
         ? Math.round(
             (300 + pf * 220 + pf * pf * 55) *
@@ -1190,6 +1223,7 @@ function spawnStage(i) {
         : entry.type,
       night: boss && !!i.night,
       world: boss && !!i.world,
+      grand: boss && !!i.world?.grand,
       power: boss ? (i.world ? WORLD_BOSS.damage : i.night ? NIGHT_BOSS.damage : 1) : 1,
       variant: entry?.variant?.name || null,
       trait,
@@ -2184,11 +2218,12 @@ function dealDungeonDamage(i, p, base, actorId, direction, t, status = null) {
 const bossFight = (i) =>
   !i.training && !i.clear && i.enemies.some((e) => e.boss && e.hp > 0);
 const mechanicsOf = (i) =>
-  i.world ? WORLD_MECHANICS : i.night ? NIGHT_MECHANICS : bossMechanics(i.floor);
+  i.world ? (i.world.grand ? GRAND_MECHANICS : WORLD_MECHANICS) : i.night ? NIGHT_MECHANICS : bossMechanics(i.floor);
+// Raw damage that lands as `frac` of the hero's max HP after their DEF.
+const pctBase = (p, frac) => Math.round((maxHp(p) * frac * (100 + combatStats(p).def)) / 100);
 // A hit worth `frac` of the hero's max HP, whatever their DEF (barrier still helps).
 function hazardHit(i, p, frac, actorId, direction, t) {
-  const def = combatStats(p).def;
-  return dealDungeonDamage(i, p, Math.round((maxHp(p) * frac * (100 + def)) / 100), actorId, direction, t);
+  return dealDungeonDamage(i, p, pctBase(p, frac), actorId, direction, t);
 }
 const arenaX = (x) => Math.max(80, Math.min(WORLD.width - 80, x));
 function startMechanic(kind, i, heroes, floor, t) {
@@ -2471,7 +2506,10 @@ export function tick(dt, t = now()) {
                 dealDungeonDamage(
                   i,
                   target,
-                  Math.round((30 + i.floor * 6) * (e.power || 1)),
+                  Math.max(
+                    Math.round((30 + i.floor * 6) * (e.power || 1)),
+                    e.boss ? pctBase(target, BOSS_SLAM_PCT * (i.world ? WORLD_HIT_SCALE : 1)) : 0,
+                  ),
                   e.id,
                   a.direction,
                   t,
@@ -2499,7 +2537,10 @@ export function tick(dt, t = now()) {
               i.training
                 ? 18
                 : e.boss
-                  ? Math.round((28 + powerFloor(i.floor) * 6) * (e.power || 1))
+                  ? Math.max(
+                      Math.round((28 + powerFloor(i.floor) * 6) * (e.power || 1)),
+                      pctBase(p, BOSS_HIT_PCT * (i.world ? WORLD_HIT_SCALE : 1)),
+                    )
                   : Math.round(
                       (15 + powerFloor(i.floor) * 4) *
                         (e.elite ? 1.5 : 1) *

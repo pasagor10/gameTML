@@ -41,14 +41,22 @@ export function bossMechanics(floor = 1) {
 // The world boss is tanky rather than brutal: only the dodgeable ones, softer.
 export const WORLD_MECHANICS = ["rocks", "lightning", "spikes"];
 export const NIGHT_MECHANICS = ["rocks", "lightning"];
+// The 20:00 grand boss throws everything, flood included.
+export const GRAND_MECHANICS = ["rocks", "flood", "spikes", "lightning"];
 
 // Share of max HP one hit takes. The flood hits every half second while a
 // hero is in the water, so standing in it is lethal in about 1.5 s.
+// World bosses hit at this share of a floor boss (tanky, not brutal).
+export const WORLD_HIT_SCALE = 0.6;
 export const mechanicDamage = (kind, floor, world = false) => {
-  const base = { rocks: 0.2, spikes: 0.22, lightning: 0.18, flood: 0.35 }[kind] || 0.2;
-  const scaled = kind === "flood" ? base : base + Math.min(40, floor) * 0.0025;
-  return world ? scaled * 0.5 : scaled;
+  const base = { rocks: 0.35, spikes: 0.38, lightning: 0.3, flood: 0.4 }[kind] || 0.35;
+  const scaled = kind === "flood" ? base : base + Math.min(40, floor) * 0.004;
+  return world ? scaled * WORLD_HIT_SCALE : scaled;
 };
+// Boss slams and swings never drop below this share of the hero's max HP,
+// so an over-levelled hero still has to respect them.
+export const BOSS_SLAM_PCT = 0.3;
+export const BOSS_HIT_PCT = 0.1;
 // Seconds between two mechanics (shorter deeper down and when the boss is hurt).
 export const mechanicGap = (floor, enraged) =>
   Math.max(6, 10 - Math.min(40, floor) * 0.1) * (enraged ? 0.8 : 1);

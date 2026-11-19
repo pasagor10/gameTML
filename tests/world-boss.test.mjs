@@ -8,9 +8,11 @@ process.env.DB_PATH = path.join(dir, "test.sqlite");
 const { WORLD_BOSS, worldBossAt, worldRanking, worldReward } = await import(
   "../shared/world-boss.js"
 );
-// Shift the schedule so the boss rose a minute ago.
+// Shift the schedule so the boss rose a minute ago (never the 20:00 grand boss).
 const current = Date.now()/1000;
-process.env.WORLD_BOSS_OFFSET = String(worldBossAt(current).startsAt + 60 - current);
+let risen = worldBossAt(current).startsAt;
+if (worldBossAt(risen).grand) risen += WORLD_BOSS.every;
+process.env.WORLD_BOSS_OFFSET = String(risen + 60 - current);
 const { db, loadCharacter } = await import("../server/database.js");
 const world = await import("../server/world.js");
 
@@ -32,7 +34,12 @@ const bossOf = (i) => i.enemies.find((e) => e.boss);
 test("Nang Non appears every half hour and closes after twenty minutes", () => {
   const start = Date.parse("2026-11-18T20:00:00+07:00")/1000;
   assert.equal(worldBossAt(start-1).open, false);
-  assert.equal(worldBossAt(start).name, "เจ้าแม่นางนอน");
+  // 20:00 Bangkok is the grand boss; the other half hours are Nang Non.
+  assert.equal(worldBossAt(start).grand, true);
+  assert.equal(worldBossAt(start).name, "มหาเทพีนางนอน");
+  assert.equal(worldBossAt(start + 1800).grand, false);
+  assert.equal(worldBossAt(start + 1800).name, "เจ้าแม่นางนอน");
+  assert.equal(worldBossAt(start - 1800).nextGrand, true);
   assert.equal(worldBossAt(start).open, true);
   assert.equal(worldBossAt(start+1199).open, true);
   assert.equal(worldBossAt(start+1200).open, false);

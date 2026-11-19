@@ -128,6 +128,11 @@ const SUPPLIES = {
     text: "วัตถุดิบตีบวกอาวุธ ใช้ที่โรงตีของลุงเหล็ก",
     rarity: "rare",
   },
+  stone_100: {
+    name: "หินตีบวก 100%",
+    text: "ตีบวกสำเร็จแน่นอน 1 ครั้ง ไม่เสียทองและแร่ ใช้ได้ทุกช่องถึง +15 · กดปุ่ม 🌟 ที่โรงตีของลุงเหล็ก · ได้จากมหาบอสโลก 2 ทุ่ม",
+    rarity: "legendary",
+  },
 };
 
 // Supplies and costume items share the stack cells and detail card.

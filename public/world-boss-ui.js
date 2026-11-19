@@ -7,10 +7,11 @@ export const clock = (s) =>
   Math.floor(s / 60) + ":" + String(Math.max(0, s % 60)).padStart(2, "0");
 const short = (n) => (n >= 10000 ? (n / 1000).toFixed(n >= 100000 ? 0 : 1) + "k" : String(n));
 
+import { GRAND_BOSS } from "/shared/world-boss.js";
 let bound = false,
   lastBanner = "",
   lastRank = "";
-export function updateWorldBossHud(state, onJoin) {
+export function updateWorldBossHud(state, onJoin, onNews) {
   const wb = state.worldBoss,
     banner = $("#world-boss"),
     rank = $("#world-rank");
@@ -19,14 +20,20 @@ export function updateWorldBossHud(state, onJoin) {
     bound = true;
     banner.addEventListener("click", (e) => {
       if (e.target.closest("[data-wb-join]")) onJoin();
+      if (e.target.closest("[data-wb-news]")) onNews?.();
     });
   }
   const inArena = !!state.dungeon?.world,
-    showBanner = wb.open && state.area === "town";
+    soon = !wb.open && wb.grandIn > 0 && wb.grandIn <= 3600,
+    showBanner = (wb.open || soon) && state.area === "town";
   banner.classList.toggle("hidden", !showBanner);
-  if (showBanner) {
+  banner.classList.toggle("grand", showBanner && (soon || !!wb.grand));
+  if (showBanner && soon) {
+    const html = `<span class="wb-crown" aria-hidden="true">🌟</span><div class="wb-body"><small>มหาบอส 2 ทุ่ม · เริ่มในอีก ${clock(wb.grandIn)}</small><b>${esc(GRAND_BOSS.name)}</b><em>ปราบสำเร็จ ผู้เข้าร่วมทุกคนรับหินตีบวก 100%</em></div><button data-wb-news class="primary-button">รายละเอียด</button>`;
+    if (html !== lastBanner) banner.innerHTML = lastBanner = html;
+  } else if (showBanner) {
     const pct = wb.maxHp ? Math.round((wb.hp / wb.maxHp) * 100) : 100,
-      html = `<span class="wb-crown" aria-hidden="true">👑</span><div class="wb-body"><small>บอสโลกปรากฏ! · หนีในอีก ${clock(wb.left)}</small><b>${esc(wb.name)}</b><div class="wb-hp"><i style="width:${pct}%"></i><span>${pct}%</span></div><em>ผู้กล้าร่วมรบ ${wb.heroes} คน · ทุกคนที่ตีได้รับรางวัลตามความเสียหาย</em></div><button data-wb-join class="primary-button">${wb.joined ? "กลับเข้าสนาม" : "เข้าร่วม"} ➜</button>`;
+      html = `<span class="wb-crown" aria-hidden="true">${wb.grand ? "🌟" : "👑"}</span><div class="wb-body"><small>${wb.grand ? "มหาบอส 2 ทุ่มปรากฏ!" : "บอสโลกปรากฏ!"} · หนีในอีก ${clock(wb.left)}</small><b>${esc(wb.name)}</b><div class="wb-hp"><i style="width:${pct}%"></i><span>${pct}%</span></div><em>ผู้กล้าร่วมรบ ${wb.heroes} คน · ${wb.grand ? "ปราบได้ ทุกคนที่เข้าร่วมรับหินตีบวก 100%" : "ทุกคนที่ตีได้รับรางวัลตามความเสียหาย"}</em></div><button data-wb-join class="primary-button">${wb.joined ? "กลับเข้าสนาม" : "เข้าร่วม"} ➜</button>`;
     if (html !== lastBanner) banner.innerHTML = lastBanner = html;
   }
   rank.classList.toggle("hidden", !inArena);
@@ -48,4 +55,10 @@ export function updateWorldBossHud(state, onJoin) {
 
 // Line for the minimap zone while waiting for the next one.
 export const worldBossCountdown = (wb) =>
-  !wb ? "" : wb.open ? "👑 บอสโลกอยู่!" : `👑 เจ้าแม่นางนอน · ทุก 30 นาที`;
+  !wb
+    ? ""
+    : wb.open
+      ? wb.grand ? "🌟 มหาบอส 2 ทุ่มอยู่!" : "👑 บอสโลกอยู่!"
+      : wb.grandIn > 0 && wb.grandIn <= 3600
+        ? `🌟 มหาบอส 2 ทุ่ม · อีก ${clock(wb.grandIn)}`
+        : `👑 เจ้าแม่นางนอน · ทุก 30 นาที · มหาบอส 20:00`;

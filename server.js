@@ -352,7 +352,7 @@ io.on("connection", (socket) => {
   execute("stats:auto", (p) => world.autoStats(p), 3);
   execute("stats:reset", (p) => world.resetStats(p), 2);
   execute("quest:claim", (p, d) => world.claimQuest(p, d.index), 5);
-  execute("equipment:enhance", (p, d) => world.enhance(p, d.key, d.slot), 3);
+  execute("equipment:enhance", (p, d) => world.enhance(p, d.key, d.slot, d.blessed === true), 3);
   execute("shop:create", (p, d) => world.createShop(p, d), 3);
   execute("shop:buy", (p, d) => world.buyShop(p, d), 5);
   execute("shop:close", (p, d) => world.closeShop(p, d.key), 3);

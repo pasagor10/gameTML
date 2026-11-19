@@ -18,14 +18,38 @@ export const WORLD_BOSSES = [
   { type: "serpent", name: "เจ้าแม่นางนอน", tint: 0xffdf9a },
 ];
 export const worldBossOf = () => WORLD_BOSSES[0];
+// Grand boss: the 20:00 Bangkok appearance (13:00 UTC) every day. Bigger,
+// much tankier, and everyone who joined gets a blessed enhance stone.
+export const GRAND_BOSS = {
+  hourUtc: 13,
+  name: "มหาเทพีนางนอน",
+  type: "serpent",
+  tint: 0xff8a5c,
+  hpMul: 3,
+  scale: 1.35, // on top of WORLD_BOSS.scale
+  stones: 1,
+};
+export const isGrandAt = (startsAt) =>
+  (((startsAt % 86400) + 86400) % 86400) === GRAND_BOSS.hourUtc * 3600;
+// Seconds until the next grand boss starts (0 while it is up).
+export function nextGrandIn(t) {
+  const day = 86400,
+    start = Math.floor(t / day) * day + GRAND_BOSS.hourUtc * 3600;
+  if (t >= start && t < start + WORLD_BOSS.window) return 0;
+  return (t < start ? start : start + day) - t;
+}
 // Half-hour boundaries also align with Bangkok local time.
 export function worldBossAt(t) {
   const startHourUtc = 0;
   let cycle = Math.floor((t - startHourUtc) / WORLD_BOSS.every);
   const startsAt = cycle * WORLD_BOSS.every + startHourUtc;
   const endsAt = startsAt + WORLD_BOSS.window;
+  const grand = isGrandAt(startsAt),
+    boss = grand
+      ? { type: GRAND_BOSS.type, name: GRAND_BOSS.name, tint: GRAND_BOSS.tint }
+      : worldBossOf(cycle);
   return { cycle, open: t >= startsAt && t < endsAt, startsAt, endsAt,
-    nextAt: startsAt + WORLD_BOSS.every, ...worldBossOf(cycle) };
+    nextAt: startsAt + WORLD_BOSS.every, grand, nextGrand: isGrandAt(startsAt + WORLD_BOSS.every), ...boss };
 }
 
 // Damage ranking, best first: [{ id, name, damage, share, place }].

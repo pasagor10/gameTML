@@ -1,4 +1,4 @@
-import { communityPanel } from "/community-ui.js?v=1";
+import { communityPanel, NEWS_ID } from "/community-ui.js?v=2";
 import { screenShakeEnabled, setScreenShakeEnabled, shakeCamera } from "/screen-shake.js?v=1";
 import { BOSSES } from "/shared/bosses.js";
 import { MECHANICS, WATER_Y, SPIKE_BAND } from "/shared/boss-mechanics.js";
@@ -81,6 +81,7 @@ import {
   CLASSES,
   ITEMS,
   POTIONS,
+  BLESS_STONE,
   MAX_LEVEL,
   expToLevel,
   POTION_SIZES,
@@ -100,8 +101,8 @@ import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.7";
 import { createCombatFx } from "/combat-fx.js?v=0.14.0";
 import { activeEffects, effectTint, effectRow, hudEffects } from "/status-ui.js?v=1";
 import { STATUSES, BUFFS } from "/shared/skills.js";
-import { WORLD_BOSS, worldInfo } from "/shared/world-boss.js";
-import { updateWorldBossHud, worldBossCountdown, clock as wbClock } from "/world-boss-ui.js?v=1";
+import { WORLD_BOSS, GRAND_BOSS, worldInfo } from "/shared/world-boss.js";
+import { updateWorldBossHud, worldBossCountdown, clock as wbClock } from "/world-boss-ui.js?v=2";
 import {
   animateHeroBody,
   animateMonsterBody,
@@ -1009,7 +1010,13 @@ async function enterGame() {
     scheduleHUD();
     if (!posterShown && state.area === "town" && !activePanel) {
       posterShown = true;
-      showPanel("poster");
+      // New patch news first (once per patch on this device), else the poster.
+      let seen = false;
+      try {
+        seen = localStorage.getItem("tml-news") === NEWS_ID;
+        localStorage.setItem("tml-news", NEWS_ID);
+      } catch {}
+      showPanel(seen ? "poster" : "news");
     }
     if (scene?.ready) scene.applySnapshot(packet);
   });
@@ -1023,7 +1030,7 @@ async function enterGame() {
   });
 }
 const forgeHash = (p) =>
-  JSON.stringify([p.equipment, p.upgrade, p.enhancements, p.gold, p.inventory.ore]);
+  JSON.stringify([p.equipment, p.upgrade, p.enhancements, p.gold, p.inventory.ore, p.inventory[BLESS_STONE]]);
 let posterShown = false;
 let potionQty = 1;
 const potionHash = (p) => JSON.stringify([p.gold, p.inventory]);
@@ -1379,7 +1386,7 @@ function updateHUD() {
     button.innerHTML = remaining > 0 ? `${Math.ceil(remaining)}<small>วิ</small>` : "";
   }
   updateHudFx(state);
-  updateWorldBossHud(state, joinWorldBoss);
+  updateWorldBossHud(state, joinWorldBoss, () => showPanel("news"));
   // Call to arms when the world boss rises.
   const wbOpen = !!state.worldBoss?.open;
   if (wbOpen && !worldBossWasOpen && state.area === "town") {
@@ -1740,7 +1747,7 @@ function bindMarket(panel) {
 function showPanel(panel) {
   if (!state) return;
   const p = state.self;
-  if (communityPanel(panel, { modal, escape, self: p, open: showPanel })) return;
+  if (communityPanel(panel, { modal, escape, self: p, open: showPanel, worldBoss: state.worldBoss, join: joinWorldBoss })) return;
   const row = (icon, name, desc, button) =>
     `<div class="item-row"><span>${icon}</span><div><strong>${escape(name)}</strong><small>${escape(desc)}</small></div>${button || ""}</div>`;
   const btn = (data, label) => `<button ${data}>${label}</button>`;
@@ -1872,18 +1879,25 @@ function showPanel(panel) {
           ? `${item.name} · ถึงระดับสูงสุด`
           : `${item.name} · ${bonus} ต่อขั้น · สำเร็จ ${Math.round(enhancementChance(level) * 100)}% · ${gold} ทอง + แร่ ×${ore}${level >= ENHANCE_BREAK_LEVEL ? " · ⚠ ล้มเหลวกลับเป็น +0" : ""}`;
       const disabled = !item || level >= MAX_ENHANCE || p.gold < gold || p.inventory.ore < ore;
+      const stones = p.inventory[BLESS_STONE] || 0,
+        blessed = item && level < MAX_ENHANCE && stones > 0
+          ? btn(`data-enhance="${slot}" data-blessed="1" class="bless-button"`, `🌟 100% +${level + 1}`)
+          : "";
       return row(item?.icon || "⚒", `${label} +${level}`, description,
-        btn(`data-enhance="${slot}" ${disabled ? "disabled" : ""}`, level >= MAX_ENHANCE ? "เต็มแล้ว" : `ตี +${level + 1}`));
+        blessed + btn(`data-enhance="${slot}" ${disabled ? "disabled" : ""}`, level >= MAX_ENHANCE ? "เต็มแล้ว" : `ตี +${level + 1}`));
     }).join("");
     modal(
       "ลุงเหล็ก · โรงตีอุปกรณ์",
-      `<p>มี ${p.gold.toLocaleString()} ทอง · แร่จันทรา ${p.inventory.ore} ชิ้น</p>${slots}<p class="hint">ระดับตีบวกติดกับช่องอุปกรณ์ เปลี่ยนของในช่องเดิมแล้วใช้โบนัสต่อได้ ตีบวกได้ถึง +${MAX_ENHANCE} · ต่ำกว่า +${ENHANCE_BREAK_LEVEL} ตีไม่สำเร็จจะเสียทองและแร่แต่ระดับเท่าเดิม · ตั้งแต่ +${ENHANCE_BREAK_LEVEL} ขึ้นไปถ้าล้มเหลวอุปกรณ์จะกลับเป็น +0 · อาวุธ +11 ขึ้นไปมีแสงวิ่งรอบตัวพร้อมฟอง สีเปลี่ยนตามระดับ +11 ถึง +15</p>`,
+      `<p>มี ${p.gold.toLocaleString()} ทอง · แร่จันทรา ${p.inventory.ore} ชิ้น${p.inventory[BLESS_STONE] ? ` · 🌟 หินตีบวก 100% ×${p.inventory[BLESS_STONE]}` : ""}</p>${slots}<p class="hint">ระดับตีบวกติดกับช่องอุปกรณ์ เปลี่ยนของในช่องเดิมแล้วใช้โบนัสต่อได้ ตีบวกได้ถึง +${MAX_ENHANCE} · ต่ำกว่า +${ENHANCE_BREAK_LEVEL} ตีไม่สำเร็จจะเสียทองและแร่แต่ระดับเท่าเดิม · ตั้งแต่ +${ENHANCE_BREAK_LEVEL} ขึ้นไปถ้าล้มเหลวอุปกรณ์จะกลับเป็น +0 · อาวุธ +11 ขึ้นไปมีแสงวิ่งรอบตัวพร้อมฟอง สีเปลี่ยนตามระดับ +11 ถึง +15</p>`,
       "forge",
     );
     $$("[data-enhance]").forEach((button) => {
       button.onclick = async () => {
         button.disabled = true;
-        await transaction("equipment:enhance", { slot: button.dataset.enhance });
+        await transaction("equipment:enhance", {
+          slot: button.dataset.enhance,
+          blessed: button.dataset.blessed === "1",
+        });
         button.disabled = false;
       };
     });
@@ -2022,11 +2036,12 @@ function showPanel(panel) {
   } else if (panel === "settings") {
     modal(
       "บันทึกการเดินทาง",
-      `<p>เกมบันทึกตัวละคร เงิน อุปกรณ์ และดันเจียนบนเซิร์ฟเวอร์อัตโนมัติ<br>บัญชีผู้มาเยือนผูกกับคุกกี้ในเบราว์เซอร์นี้</p><button id="open-account-link" class="primary-button">${account?.registered ? "บัญชีผู้เล่น" : "ผูกบัญชี · เก็บตัวละครและเล่นต่อเครื่องอื่น"}</button><button id="open-announcements" class="primary-button">📣 ประกาศจากระบบ · บอสโลกทุก 30 นาที</button><button id="open-poster" class="primary-button">🏹 โปสเตอร์ TML ONLINE</button><button id="toggle-sound" class="primary-button">${muted ? "เปิดเสียงทั้งหมด" : "ปิดเสียงทั้งหมด"}</button><button id="toggle-music" class="primary-button">${musicOn() ? "ปิดเพลงประกอบ" : "เปิดเพลงประกอบ"}</button><button id="toggle-screen-shake" class="primary-button" role="switch" aria-checked="${screenShakeEnabled()}">จอสั่น: ${screenShakeEnabled() ? "เปิด" : "ปิด"}</button><p class="hint">ปิดจอสั่นและซูมกระแทกเพื่อลดอาการเวียนหัว · บันทึกการตั้งค่าในเครื่องนี้</p><div class="quality-picker"><small>คุณภาพกราฟิก · ตอนนี้ ${qualityLabel()}</small><div>${CHOICES.map((c) => `<button data-quality="${c}" class="${c === qualityChoice ? "active" : ""}">${c === "auto" ? "อัตโนมัติ" : PRESETS[c].name}</button>`).join("")}</div></div><button id="toggle-perf" class="primary-button">${perfOn ? "ซ่อนตัววัดประสิทธิภาพ" : "แสดงตัววัดประสิทธิภาพ"}</button><button id="back-selection" class="text-button">กลับหน้าเลือกตัวละคร</button><p class="hint">Demo v0.3 · นักดาบหญิงและสไลม์มีเฟรมแอนิเมชันชุดแรก · ตัวอื่นยังใช้ภาพ idle · เป้าหมาย 20–30 คนต่อห้องยังไม่ได้ยืนยันด้วย load test</p>`,
+      `<p>เกมบันทึกตัวละคร เงิน อุปกรณ์ และดันเจียนบนเซิร์ฟเวอร์อัตโนมัติ<br>บัญชีผู้มาเยือนผูกกับคุกกี้ในเบราว์เซอร์นี้</p><button id="open-account-link" class="primary-button">${account?.registered ? "บัญชีผู้เล่น" : "ผูกบัญชี · เก็บตัวละครและเล่นต่อเครื่องอื่น"}</button><button id="open-announcements" class="primary-button">📣 ประกาศจากระบบ · บอสโลกทุก 30 นาที</button><button id="open-news" class="primary-button">📰 ข่าวอัปเดต · Lv.60 และมหาบอส 2 ทุ่ม</button><button id="open-poster" class="primary-button">🏹 โปสเตอร์ TML ONLINE</button><button id="toggle-sound" class="primary-button">${muted ? "เปิดเสียงทั้งหมด" : "ปิดเสียงทั้งหมด"}</button><button id="toggle-music" class="primary-button">${musicOn() ? "ปิดเพลงประกอบ" : "เปิดเพลงประกอบ"}</button><button id="toggle-screen-shake" class="primary-button" role="switch" aria-checked="${screenShakeEnabled()}">จอสั่น: ${screenShakeEnabled() ? "เปิด" : "ปิด"}</button><p class="hint">ปิดจอสั่นและซูมกระแทกเพื่อลดอาการเวียนหัว · บันทึกการตั้งค่าในเครื่องนี้</p><div class="quality-picker"><small>คุณภาพกราฟิก · ตอนนี้ ${qualityLabel()}</small><div>${CHOICES.map((c) => `<button data-quality="${c}" class="${c === qualityChoice ? "active" : ""}">${c === "auto" ? "อัตโนมัติ" : PRESETS[c].name}</button>`).join("")}</div></div><button id="toggle-perf" class="primary-button">${perfOn ? "ซ่อนตัววัดประสิทธิภาพ" : "แสดงตัววัดประสิทธิภาพ"}</button><button id="back-selection" class="text-button">กลับหน้าเลือกตัวละคร</button><p class="hint">Demo v0.3 · นักดาบหญิงและสไลม์มีเฟรมแอนิเมชันชุดแรก · ตัวอื่นยังใช้ภาพ idle · เป้าหมาย 20–30 คนต่อห้องยังไม่ได้ยืนยันด้วย load test</p>`,
     );
     $("#open-account-link").onclick = () => $("#account-open").click();
     $("#open-announcements").onclick = () => showPanel("announcements");
     $("#open-poster").onclick = () => showPanel("poster");
+    $("#open-news").onclick = () => showPanel("news");
     $("#toggle-sound").onclick = () => {
       setSound(!soundOn());
       syncSoundButton();
@@ -2848,7 +2863,7 @@ class Adventure extends Phaser.Scene {
             (mset ? mset.height + 12 : e.boss ? 210 : 95) *
             (e.elite ? 1.25 : 1) *
             (traitOf(e).scale || 1) *
-            (e.world ? WORLD_BOSS.scale : e.night ? NIGHT_BOSS.scale : 1);
+            (e.world ? WORLD_BOSS.scale * (e.grand ? GRAND_BOSS.scale : 1) : e.night ? NIGHT_BOSS.scale : 1);
         const image = this.add
           .image(e.x, e.y, BOSSES[e.type] ? `boss-preview:${e.type}` : "monsters",
             BOSSES[e.type] ? undefined : Math.max(0, types.indexOf(e.type)))
@@ -3663,7 +3678,7 @@ class Adventure extends Phaser.Scene {
             (mset.height + 12) *
             (e.elite ? 1.25 : 1) *
             (traitOf(e).scale || 1) *
-            (e.world ? WORLD_BOSS.scale : e.night ? NIGHT_BOSS.scale : 1);
+            (e.world ? WORLD_BOSS.scale * (e.grand ? GRAND_BOSS.scale : 1) : e.night ? NIGHT_BOSS.scale : 1);
         }
         playMonsterSet(m.image, mset, e, mpose, serverTime);
       }

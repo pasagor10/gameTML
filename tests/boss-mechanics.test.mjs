@@ -83,7 +83,7 @@ test('a falling rock hurts only the hero under it', () => {
   p.hp = full;
   run(t + 0.05, 1.5);
   const lost = full - p.hp;
-  assert.ok(lost > full * 0.15 && lost < full * 0.4, `rock took ${lost} of ${full}`);
+  assert.ok(lost > full * 0.3 && lost < full * 0.5, `rock took ${lost} of ${full}`);
 
   const b = bossStage(1);
   world.tick(0.05, b.t + 0.05);

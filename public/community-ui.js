@@ -1,6 +1,55 @@
 const labels = { level: "เลเวล", dungeon: "ชั้นที่พิชิต", gold: "ทอง" };
 const jobs = { swordsman: "นักดาบ", archer: "นักธนู", mage: "จอมเวท", priest: "พระ" };
-export function communityPanel(panel, { modal, escape, self, open }) {
+// Patch news: the Lv.60 update and the 20:00 grand boss, as two banners.
+export const NEWS_ID = "patch-lv60-grand-1";
+const hms = (s) => {
+  s = Math.max(0, Math.round(s));
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
+  return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(x).padStart(2, "0");
+};
+let newsTimer = 0;
+function newsPanel({ modal, worldBoss, join }) {
+  const live = !!(worldBoss?.open && worldBoss.grand),
+    target = Date.now() + (worldBoss?.grandIn || 0) * 1000,
+    when = () => (live ? "🔥 สนามเปิดอยู่ตอนนี้! เข้าร่วมก่อนบอสหนี" : `เริ่มในอีก ${hms((target - Date.now()) / 1000)}`);
+  modal("ข่าวอัปเดต · TML ONLINE", `<div class="news">
+<article class="news-banner patch">
+  <span class="nb-tag">PATCH UPDATE</span>
+  <div class="nb-big" aria-label="เลเวลสูงสุด 60">Lv.<b>60</b></div>
+  <h3>ขยายเลเวลสูงสุดเป็น Lv.60</h3>
+  <ul>
+    <li>เลเวล 41–60 · HP MP ATK และแต้มสเตตัสเพิ่มทุกเลเวล</li>
+    <li>บอสทุกชั้นมีกลไกใหม่ 🪨 หินถล่ม · 🌊 น้ำท่วม · ⛰ หนามปะทุ · ⚡ อัสนีตามตัว</li>
+    <li>สกิลบอสแรงขึ้นมาก ดูวงเตือนแล้วหลบให้ทัน · น้ำท่วมต้องขึ้นไปยืนบนชั้น</li>
+  </ul>
+</article>
+<article class="news-banner grand">
+  <img src="/assets/items/supply-8.webp" alt="หินตีบวก 100%" width="96" height="96">
+  <span class="nb-tag">ทุกวัน 20:00 น.</span>
+  <h3>มหาบอส 2 ทุ่ม<small>มหาเทพีนางนอน</small></h3>
+  <p>บอสใหญ่ที่สุดของถ้ำหลวง ถึกกว่าบอสโลกปกติ 3 เท่า · ใช้กลไกครบทุกแบบ</p>
+  <p class="nb-reward">ปราบสำเร็จ ผู้เข้าร่วม<b>ทุกคน</b>รับ 🌟 หินตีบวก 100%</p>
+  <p class="nb-note">ตีบวกสำเร็จแน่นอน 1 ครั้ง ไม่เสียทองและแร่ · ใช้ที่โรงตีลุงเหล็ก</p>
+  <div class="nb-when" aria-live="polite">${when()}</div>
+  ${live ? '<button id="news-join" class="primary-button">เข้าร่วมมหาบอส ➜</button>' : ""}
+</article>
+<button id="news-close" class="primary-button">เข้าใจแล้ว ลุยเลย!</button>
+</div>`, "news");
+  document.querySelector("#news-close").onclick = () => document.querySelector("#modal-close").click();
+  const btn = document.querySelector("#news-join");
+  if (btn) btn.onclick = () => join();
+  clearInterval(newsTimer);
+  newsTimer = setInterval(() => {
+    const el = document.querySelector('#modal[data-panel="news"] .nb-when');
+    if (!el) return clearInterval(newsTimer);
+    el.textContent = when();
+  }, 1000);
+}
+export function communityPanel(panel, { modal, escape, self, open, worldBoss, join }) {
+  if (panel === "news") {
+    newsPanel({ modal, worldBoss, join });
+    return true;
+  }
   if (panel === "poster") {
     modal("TML ONLINE · รวมพลผู้กล้า", `<div class="game-poster"><img src="/assets/poster-tml.webp?v=1" alt="โปสเตอร์ TML ONLINE นักธนูใต้แสงจันทร์"><button class="primary-button" id="poster-ranking">🏆 ดูอันดับผู้กล้า</button></div>`, "poster");
     document.querySelector("#poster-ranking").onclick = () => open("ranking");

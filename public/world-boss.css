@@ -136,3 +136,15 @@
   .world-boss button { padding: 6px 8px; font-size: 11px; }
   #game-screen .world-rank { top: auto; bottom: 120px; right: 8px; width: 140px; padding: 5px 6px; }
 }
+
+/* 20:00 grand boss: gold instead of red, and the countdown before it. */
+#game-screen .world-boss.grand {
+  border-color: #ffd36a;
+  background:
+    radial-gradient(120% 140% at 0% 0%, #8a5a12cc, transparent 60%),
+    linear-gradient(180deg, #2a1d08f2, #120c04f2);
+  box-shadow: inset 0 0 0 1px #00000080, 0 0 0 1px #3a2a0f, 0 6px 22px #000a, 0 0 30px #ffc84d55;
+}
+.world-boss.grand .wb-crown { background: radial-gradient(circle at 40% 30%, #fff1a8, #c98a16 70%); }
+.world-boss.grand .wb-body small { color: #ffd98a; }
+.world-boss.grand .wb-body em { color: #fff0c2; }

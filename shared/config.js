@@ -71,7 +71,9 @@ export const POTION_SIZES = {
   mp: ["mp_s", "mp", "mp_l"],
 };
 // Stackable supplies that can be traded, sold in shops or discarded.
-export const STACK_SUPPLIES = [...Object.keys(POTIONS), "ore"];
+// Blessed stone: one guaranteed enhancement, no gold or ore (grand world boss reward).
+export const BLESS_STONE = "stone_100";
+export const STACK_SUPPLIES = [...Object.keys(POTIONS), "ore", BLESS_STONE];
 export const potionCount = (inventory, kind) =>
   POTION_SIZES[kind].reduce((n, id) => n + (inventory?.[id] || 0), 0);
 // Quick-use (R / G and auto-play): the smallest owned potion that refills
@@ -89,6 +91,7 @@ export const ITEMS = {
   mp: { name: "ยา MP กลาง", icon: "💧", price: 15 },
   mp_l: { name: "ยา MP ใหญ่", icon: "💧", price: 60 },
   ore: { name: "แร่จันทรา", icon: "💎", price: 20 },
+  stone_100: { name: "หินตีบวก 100%", icon: "🌟", price: 5000 },
   weapon: { name: "อาวุธผู้พิทักษ์", icon: "⚔", price: 70 },
   armor: { name: "เกราะนักเดินทาง", icon: "🛡", price: 60 },
 };
