@@ -1,14 +1,14 @@
 {
   "schemaVersion": "3.0",
   "name": "move",
-  "artSource": "painted sheet (supplied artwork)",
+  "artSource": "pixel sheet (supplied artwork)",
   "sourceSize": [
-    274,
-    131
+    44,
+    51
   ],
   "sourceAnchor": [
-    137.0,
-    121.27
+    20.98,
+    44
   ],
   "frameCount": 4,
   "durationsMs": [
@@ -20,14 +20,14 @@
   "durationSeconds": 0.44,
   "fps": 9.091,
   "loop": true,
-  "bodyHeightPx": 112.0,
+  "bodyHeightPx": 26,
   "events": [],
   "sampling": "nearest",
   "fallback": {
     "type": "png-atlas",
     "cellSize": [
-      114,
-      54
+      44,
+      51
     ],
     "pages": [
       {

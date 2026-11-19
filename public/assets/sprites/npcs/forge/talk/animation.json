@@ -1,14 +1,14 @@
 {
   "schemaVersion": "3.0",
   "name": "talk",
-  "artSource": "painted sheet (supplied artwork)",
+  "artSource": "pixel sheet (supplied artwork)",
   "sourceSize": [
-    168,
-    173
+    70,
+    77
   ],
   "sourceAnchor": [
-    81.58,
-    167.16
+    33.11,
+    71
   ],
   "frameCount": 4,
   "durationsMs": [
@@ -20,14 +20,14 @@
   "durationSeconds": 1.06,
   "fps": 3.774,
   "loop": true,
-  "bodyHeightPx": 159.6,
+  "bodyHeightPx": 64,
   "events": [],
   "sampling": "nearest",
   "fallback": {
     "type": "png-atlas",
     "cellSize": [
-      63,
-      65
+      70,
+      77
     ],
     "pages": [
       {

@@ -36,6 +36,8 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1] / "public/assets/sprites"
 SLIME = HERE.parents[1] / "public/assets/animations/slime.png"
 COLOURS = 48
+# Pixel sizes the grid search gets wrong (it halves a strong 2-pixel pattern).
+HINT = {"batking": 6.4}
 
 
 def cells(sheet: Image.Image, cols: int, rows: int):
@@ -68,7 +70,7 @@ def stats(im: Image.Image):
 
 def true_sheet(path: Path, cols: int, rows: int):
     rgb = Image.open(path).convert("RGB")
-    p, ox, oy = grid(rgb)
+    p, ox, oy = grid(rgb, hint=HINT.get(path.stem))
     small = snap(rgb, p, ox, oy)
     grid_cells = cells(small, cols, rows)
     flat = quantize([c for row in grid_cells for c in row], COLOURS)

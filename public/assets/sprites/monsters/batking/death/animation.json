@@ -1,14 +1,14 @@
 {
   "schemaVersion": "3.0",
   "name": "death",
-  "artSource": "painted sheet (supplied artwork)",
+  "artSource": "pixel sheet (supplied artwork)",
   "sourceSize": [
-    256,
-    270
+    41,
+    48
   ],
   "sourceAnchor": [
-    128.0,
-    232.0
+    18.82,
+    39
   ],
   "frameCount": 4,
   "durationsMs": [
@@ -20,14 +20,14 @@
   "durationSeconds": 0.63,
   "fps": 6.349,
   "loop": false,
-  "bodyHeightPx": 224.0,
+  "bodyHeightPx": 32,
   "events": [],
   "sampling": "nearest",
   "fallback": {
     "type": "png-atlas",
     "cellSize": [
-      116,
-      123
+      41,
+      48
     ],
     "pages": [
       {

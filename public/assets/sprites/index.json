@@ -1270,7 +1270,7 @@
       "height": 175,
       "facing": 1,
       "flyer": true,
-      "source": "supplied painted sheet; pixelated (pixelate_sprites.py)",
+      "source": "supplied pixel sheet (import_pixel_monsters.py)",
       "actions": {
         "idle": "idle",
         "move": "move",
@@ -1334,7 +1334,7 @@
       "height": 82,
       "facing": 1,
       "flyer": false,
-      "source": "supplied painted sheet; pixelated (pixelate_sprites.py)",
+      "source": "supplied pixel sheet (import_pixel_monsters.py)",
       "actions": {
         "idle": "idle",
         "move": "move",
@@ -1366,7 +1366,7 @@
       "height": 80,
       "facing": 1,
       "flyer": false,
-      "source": "supplied painted sheet; pixelated (pixelate_sprites.py)",
+      "source": "supplied pixel sheet (import_pixel_monsters.py)",
       "actions": {
         "idle": "idle",
         "move": "move",
@@ -1378,7 +1378,7 @@
       "pixel": true
     }
   },
-  "version": 1795037281314923000,
+  "version": 1795050526364744000,
   "npcs": {
     "elder": {
       "dir": "npcs/elder",
@@ -1395,7 +1395,7 @@
       "dir": "npcs/forge",
       "height": 114,
       "facing": 1,
-      "source": "supplied painted sheet; pixelated (pixelate_sprites.py)",
+      "source": "supplied pixel sheet (import_pixel_monsters.py)",
       "actions": {
         "idle": "idle",
         "talk": "talk"
@@ -1406,7 +1406,7 @@
       "dir": "npcs/potion",
       "height": 108,
       "facing": 1,
-      "source": "supplied painted sheet; pixelated (pixelate_sprites.py)",
+      "source": "supplied pixel sheet (import_pixel_monsters.py)",
       "actions": {
         "idle": "idle",
         "talk": "talk"
