@@ -106,7 +106,8 @@
   body #modal .dg-tip { display: none; }
   body #modal .dg-list { gap: 6px; }
   body #modal .dg-card {
-    grid-template-columns: 72px minmax(0, 1fr) 112px; gap: 10px;
+    grid-template-columns: 72px minmax(0, 1fr) 112px;
+    grid-template-areas: "thumb info enter" "loot loot enter"; gap: 10px;
     padding: 6px 8px 6px 6px; border-radius: 6px;
   }
   body #modal .dg-thumb { height: 64px; border-radius: 4px; }
@@ -120,8 +121,8 @@
   body #modal .dg-chips { gap: 3px; }
   body #modal .dg-chip { font-size: 9px; padding: 1px 5px; }
   body #modal .dg-mons { display: none; }
-  body #modal .dg-loot-col { display: none; }
-  body #modal .dg-enter { grid-column: auto; width: 100%; min-width: 0; min-height: 44px; padding: 6px; font-size: 11px; line-height: 1.4; }
+  body #modal .dg-loot-col { display: block; padding-left: 0; }
+  body #modal .dg-enter { grid-area: enter; width: 100%; min-width: 0; min-height: 44px; padding: 6px; font-size: 11px; line-height: 1.4; }
   body #modal .dg-deep-banner { padding: 10px; gap: 3px; }
   body #modal .dg-deep-banner strong { font-size: 14px; }
   body #modal .dg-deep-banner span { font-size: 10px; }
@@ -138,7 +139,7 @@
 }
 @media (pointer: coarse) and (max-width: 540px) {
   body #modal .dg-head { flex-direction: column; align-items: flex-start; gap: 4px; }
-  body #modal .dg-card { grid-template-columns: 54px minmax(0,1fr) 86px; gap: 7px; }
+  body #modal .dg-card { grid-template-columns: 54px minmax(0,1fr); grid-template-areas: "thumb info" "loot loot" "enter enter"; gap: 7px; }
   body #modal .dg-thumb { height: 58px; }
   body #modal .dg-info h3 { font-size: 12px; }
   body #modal .dg-info > p { font-size: 9px; }
