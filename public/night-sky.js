@@ -36,9 +36,8 @@ export function createNightSky(scene, openCave) {
   const LIT = {
     "anim-lantern": [0, 62],
     "anim-brazier": [0, -60],
-    "prop-ground-8": [0, -70],
-    "prop-ground-9": [24, -78],
-    "prop-hanging-2": [0, 32],
+    "prop-px-2": [0, -66],
+    "prop-px-3": [-6, -72],
   };
   const lights = [
     ...TOWN_PROPS.filter((p) => LIT[p.key]).map((p) =>

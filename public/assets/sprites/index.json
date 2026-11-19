@@ -1254,7 +1254,7 @@
       "height": 72,
       "facing": 1,
       "flyer": true,
-      "source": "supplied painted sheet; pixelated (pixelate_sprites.py)",
+      "source": "supplied pixel sheet (import_pixel_monsters.py)",
       "actions": {
         "idle": "idle",
         "move": "move",
@@ -1286,7 +1286,7 @@
       "height": 78,
       "facing": 1,
       "flyer": false,
-      "source": "supplied painted sheet; pixelated (pixelate_sprites.py)",
+      "source": "supplied pixel sheet (import_pixel_monsters.py)",
       "actions": {
         "idle": "idle",
         "move": "move",
@@ -1318,7 +1318,7 @@
       "height": 185,
       "facing": 1,
       "flyer": false,
-      "source": "supplied painted sheet; pixelated (pixelate_sprites.py)",
+      "source": "supplied pixel sheet (import_pixel_monsters.py)",
       "actions": {
         "idle": "idle",
         "move": "move",
@@ -1350,7 +1350,7 @@
       "height": 190,
       "facing": 1,
       "flyer": false,
-      "source": "supplied painted sheet; pixelated (pixelate_sprites.py)",
+      "source": "supplied pixel sheet (import_pixel_monsters.py)",
       "actions": {
         "idle": "idle",
         "move": "move",
@@ -1378,13 +1378,13 @@
       "pixel": true
     }
   },
-  "version": 1795035855694009000,
+  "version": 1795037281314923000,
   "npcs": {
     "elder": {
       "dir": "npcs/elder",
       "height": 104,
       "facing": 1,
-      "source": "supplied painted sheet; pixelated (pixelate_sprites.py)",
+      "source": "supplied pixel sheet (import_pixel_monsters.py)",
       "actions": {
         "idle": "idle",
         "talk": "talk"
@@ -1417,7 +1417,7 @@
       "dir": "npcs/weapon",
       "height": 114,
       "facing": 1,
-      "source": "supplied painted sheet; pixelated (pixelate_sprites.py)",
+      "source": "supplied pixel sheet (import_pixel_monsters.py)",
       "actions": {
         "idle": "idle",
         "talk": "talk"

@@ -361,3 +361,38 @@ body #game-screen #mobile-interact b {
     gap: 8px;
   }
 }
+
+/* ---------- UI kit art (tools/town-kit/pixel_kit.py: public/assets/ui) ---------- */
+/* Menu buttons are green tiles with a gold rim, as in the UI kit; the ones
+   the kit draws an icon for use its tile as is. */
+body #game-screen #top-menu button,
+body #game-screen #chat-toggle {
+  background: #1f8a43 !important;
+}
+body #game-screen #top-menu button:is(:hover, :focus-visible),
+body #game-screen #chat-toggle:is(:hover, :focus-visible) {
+  background: #27a052 !important;
+}
+body #game-screen :is(#top-menu button[data-panel="class"], #top-menu button[data-panel="inventory"], #top-menu button[data-panel="party"], #top-menu button[data-panel="settings"], #chat-toggle) {
+  background: center / 100% 100% no-repeat var(--kit-icon) !important;
+  border: 0 !important;
+  box-shadow: 2px 3px 0 #00000070 !important;
+  image-rendering: pixelated;
+}
+body #game-screen :is(#top-menu button[data-panel="class"], #top-menu button[data-panel="inventory"], #top-menu button[data-panel="party"], #top-menu button[data-panel="settings"]) b {
+  visibility: hidden;
+}
+body #game-screen #chat-toggle {
+  font-size: 0 !important;
+}
+body #game-screen #top-menu button[data-panel="class"] { --kit-icon: url("/assets/ui/px-hero.webp"); }
+body #game-screen #top-menu button[data-panel="inventory"] { --kit-icon: url("/assets/ui/px-bag.webp"); }
+body #game-screen #top-menu button[data-panel="party"] { --kit-icon: url("/assets/ui/px-party.webp"); }
+body #game-screen #top-menu button[data-panel="settings"] { --kit-icon: url("/assets/ui/px-settings.webp"); }
+body #game-screen #chat-toggle { --kit-icon: url("/assets/ui/px-chat.webp"); }
+body #game-screen #quests .quest-badge {
+  background: center / contain no-repeat url("/assets/ui/px-quest.webp") !important;
+  box-shadow: none !important;
+  color: transparent !important;
+  image-rendering: pixelated;
+}

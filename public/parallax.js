@@ -365,10 +365,12 @@ export function createParallax(scene) {
   // top: world y of the strip's top at the camera's resting height.
   const FAR = [
     { key: "sky", top: -760, h: 1400, fx: 0.03, fy: 0.15, depth: -38 },
-    { key: "clouds", top: -360, fx: 0.12, fy: 0.3, depth: -37, drift: 0.006 },
-    { key: "mountains", top: -400, fx: 0.22, fy: 0.45, depth: -36 },
-    { key: "hills", top: -40, fx: 0.4, fy: 0.65, depth: -35 },
-    { key: "treeline", top: 110, fx: 0.62, fy: 0.85, depth: -34 },
+    { key: "clouds", top: -330, fx: 0.12, fy: 0.3, depth: -37, drift: 0.006 },
+    // Each strip ends in its own grass and earth, which the next strip
+    // (opaque below its skyline) hides.
+    { key: "mountains", top: -110, fx: 0.22, fy: 0.45, depth: -36 },
+    { key: "hills", top: 40, fx: 0.4, fy: 0.65, depth: -35 },
+    { key: "treeline", top: 281, fx: 0.62, fy: 0.85, depth: -34 },
   ];
   const far = FAR.map((l) => {
     const src = scene.textures.get(`town-far-${l.key}`).getSourceImage(),

@@ -1,14 +1,14 @@
 {
   "schemaVersion": "3.0",
   "name": "hit",
-  "artSource": "painted sheet (supplied artwork)",
+  "artSource": "pixel sheet (supplied artwork)",
   "sourceSize": [
-    362,
-    195
+    43,
+    50
   ],
   "sourceAnchor": [
-    181.0,
-    177.0
+    20.75,
+    43
   ],
   "frameCount": 4,
   "durationsMs": [
@@ -20,14 +20,14 @@
   "durationSeconds": 0.31,
   "fps": 12.903,
   "loop": false,
-  "bodyHeightPx": 169.0,
+  "bodyHeightPx": 38,
   "events": [],
   "sampling": "nearest",
   "fallback": {
     "type": "png-atlas",
     "cellSize": [
-      230,
-      124
+      43,
+      50
     ],
     "pages": [
       {

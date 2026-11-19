@@ -1,14 +1,14 @@
 {
   "schemaVersion": "3.0",
   "name": "idle",
-  "artSource": "painted sheet (supplied artwork)",
+  "artSource": "pixel sheet (supplied artwork)",
   "sourceSize": [
-    253,
-    136
+    64,
+    71
   ],
   "sourceAnchor": [
-    126.5,
-    120.4
+    32.37,
+    61
   ],
   "frameCount": 4,
   "durationsMs": [
@@ -20,14 +20,14 @@
   "durationSeconds": 0.6,
   "fps": 6.667,
   "loop": true,
-  "bodyHeightPx": 109.2,
+  "bodyHeightPx": 38,
   "events": [],
   "sampling": "nearest",
   "fallback": {
     "type": "png-atlas",
     "cellSize": [
-      105,
-      56
+      64,
+      71
     ],
     "pages": [
       {

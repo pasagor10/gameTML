@@ -14,22 +14,22 @@ export const TOWN_GROUND = 600;
 
 // Width and height are the keyed piece sizes (public/assets/town-kit/kit.json).
 export const TOWN_PIECES = {
-  tree: { w: 599, h: 686, ledges: [] },
-  stall: { w: 369, h: 550, ledges: [] },
-  shop: {
-    w: 521,
-    h: 523,
+  tree: { w: 644, h: 572, ledges: [] },
+  stall: { w: 580, h: 480, ledges: [] },
+  stairs: {
+    w: 504,
+    h: 372,
     ledges: [
-      [0, 521, 60],
-      [0, 521, 206],
+      [200, 504, 125],
+      [326, 500, 236],
     ],
   },
-  stairs: {
-    w: 430,
-    h: 633,
+  shop: {
+    w: 610,
+    h: 375,
     ledges: [
-      [0, 430, 153],
-      [0, 430, 298],
+      [86, 326, 154],
+      [30, 560, 222],
     ],
   },
   smithy: {
@@ -41,26 +41,26 @@ export const TOWN_PIECES = {
     ],
   },
   tower: {
-    w: 430,
-    h: 637,
+    w: 340,
+    h: 556,
     ledges: [
-      [0, 430, 92],
-      [27, 403, 190],
-      [85, 345, 345],
+      [50, 290, 130],
+      [40, 300, 210],
+      [30, 310, 348],
     ],
   },
-  cavegate: { w: 456, h: 605, ledges: [[130, 340, 152]] }, // portal landing
+  cavegate: { w: 680, h: 420, ledges: [] }, // the portal stands in the arch
 };
 
 // Left to right; x is where each piece's left edge stands.
 export const TOWN_LAYOUT = [
-  { piece: "tree", x: -40 }, // canopy tucks behind the stall roof
-  { piece: "stall", x: 512 },
-  { piece: "shop", x: 881 },
-  { piece: "stairs", x: 1402 },
-  { piece: "smithy", x: 1832 },
-  { piece: "tower", x: 2498 },
-  { piece: "cavegate", x: 2928 },
+  { piece: "tree", x: -40 },
+  { piece: "stall", x: 560 },
+  { piece: "stairs", x: 1180 },
+  { piece: "shop", x: 1720 },
+  { piece: "smithy", x: 2360 },
+  { piece: "tower", x: 3060 },
+  { piece: "cavegate", x: 3420 },
 ];
 
 export const TOWN_WIDTH = TOWN_LAYOUT.reduce(
@@ -72,26 +72,24 @@ export const TOWN_WIDTH = TOWN_LAYOUT.reduce(
 // Ground props stand on y (default the street); hanging props hang from y.
 // front: drawn in front of the heroes. step: [w, h] climbable top.
 export const TOWN_PROPS = [
-  { key: "prop-foliage-0", x: 36 },
-  { key: "prop-ground-1", x: 140 },
-  { key: "prop-foliage-4", x: 250, front: true },
-  { key: "prop-ground-8", x: 455 },
-  { key: "prop-ground-4", x: 900 },
-  { key: "prop-hanging-2", x: 880, y: 300, hang: true },
-  { key: "prop-ground-7", x: 1010 },
-  { key: "anim-banner", x: 1020, y: 405, hang: true },
-  { key: "prop-ground-3", x: 1335 },
-  { key: "prop-ground-9", x: 1400 },
-  { key: "prop-foliage-1", x: 1790 },
-  { key: "prop-ground-6", x: 1825 },
-  { key: "prop-ground-11", x: 2405 },
-  { key: "prop-ground-1", x: 2462, step: [57, 100] },
-  { key: "anim-brazier", x: 2350 },
-  { key: "prop-foliage-5", x: 2560, front: true },
-  { key: "anim-lantern", x: 2713, y: 400, hang: true },
-  { key: "prop-foliage-3", x: 2935 },
-  { key: "prop-foliage-2", x: 3345 },
-  { key: "prop-foliage-7", x: 3300, front: true },
+  { key: "prop-px-20", x: 40 },
+  { key: "prop-px-8", x: 150 },
+  { key: "prop-px-2", x: 470 },
+  { key: "prop-px-10", x: 540, front: true },
+  { key: "prop-px-16", x: 1110 },
+  { key: "prop-px-4", x: 1150, step: [77, 84] },
+  { key: "prop-px-12", x: 1440 },
+  { key: "prop-px-3", x: 1700 },
+  { key: "prop-px-17", x: 2350 },
+  { key: "prop-px-7", x: 2340 },
+  { key: "anim-brazier", x: 2330 },
+  { key: "prop-px-11", x: 2600, front: true },
+  { key: "prop-px-6", x: 3040, step: [74, 68] },
+  { key: "anim-lantern", x: 3230, y: 410, hang: true },
+  { key: "prop-px-22", x: 3440 },
+  { key: "prop-px-9", x: 3450, front: true },
+  { key: "prop-px-21", x: 4090 },
+  { key: "prop-px-13", x: 4060, front: true },
 ];
 
 // Animated props: 4-frame loops, frame size in px (kit.json).
@@ -103,13 +101,13 @@ export const TOWN_ANIMS = {
 
 // NPC spots and the portal (world coordinates).
 export const TOWN_SPOTS = {
-  elder: 385, // under the great tree
-  potion: 680, // at the stall counter
-  weapon: 2000, // beside the weapon rack
-  forge: 2150, // at the anvil
-  portal: { x: 3168, y: TOWN_BASE - 245 },
-  forgeFire: { x: 2277, y: TOWN_BASE - 52 },
-  chimney: { x: 2312, y: TOWN_BASE - 410 },
+  elder: 300, // under the great tree
+  potion: 850, // at the stall counter
+  weapon: 2050, // in front of the shop
+  forge: 2678, // at the anvil
+  portal: { x: 3760, y: TOWN_BASE - 100 }, // inside the cave arch
+  forgeFire: { x: 2805, y: TOWN_BASE - 52 },
+  chimney: { x: 2840, y: TOWN_BASE - 410 },
 };
 
 // Front-facing stairs can't be walked in a side view, so stair pieces only

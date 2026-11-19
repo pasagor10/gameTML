@@ -914,7 +914,7 @@ function updateHUD() {
   $("#map-ping").setAttribute("transform", dotAt);
   $("#map-gate").setAttribute(
     "transform",
-    `translate(${town ? mapX(WORLD.portal).toFixed(1) : 205} ${town ? mapY(WORLD.portalY + 245) : 52})`,
+    `translate(${town ? mapX(WORLD.portal).toFixed(1) : 205} ${town ? mapY(WORLD.ground) : 52})`,
   );
   const npcDots = town
     ? WORLD.npcs
@@ -1907,7 +1907,7 @@ class Adventure extends Phaser.Scene {
     });
     queueSpriteSets(this);
     // Town kit: pieces, props, animated props and far layers (tools/town-kit).
-    const kit = (key) => `/assets/town-kit/${key}.webp?v=8`;
+    const kit = (key) => `/assets/town-kit/${key}.webp?v=9`;
     for (const piece of new Set(TOWN_LAYOUT.map((p) => p.piece)))
       this.load.image(`town-piece-${piece}`, kit(`piece-${piece}`));
     for (const key of new Set(TOWN_PROPS.map((p) => p.key)))
@@ -1944,7 +1944,7 @@ class Adventure extends Phaser.Scene {
     this.load.image("slot-machine", "/assets/town-kit/slot-machine-v2.png?v=2");
     this.load.image("cave", "/assets/cave.webp?v=2");
     this.load.image("knight-motion", "/assets/animations/knight-female.png");
-    this.load.image("slime-motion", "/assets/animations/slime.png?v=2");
+    this.load.image("slime-motion", "/assets/animations/slime.png?v=3");
     this.load.spritesheet("heroes", "/assets/heroes.png", {
       frameWidth: 512,
       frameHeight: 512,

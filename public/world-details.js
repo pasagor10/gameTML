@@ -7,9 +7,8 @@ export function createWorldDetails(scene) {
   // Warm glow around the lamp props (light centre relative to the prop).
   const LIGHT = {
     "anim-lantern": [0, 62],
-    "prop-ground-8": [0, -70],
-    "prop-ground-9": [24, -78],
-    "prop-hanging-2": [0, 32],
+    "prop-px-2": [0, -66],
+    "prop-px-3": [-6, -72],
   };
   const lamps = TOWN_PROPS.filter((p) => LIGHT[p.key])
     .map((p) => [
