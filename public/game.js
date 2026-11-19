@@ -52,7 +52,7 @@ import {
   claimable,
 } from "/quest-ui.js?v=3";
 import { dungeonPanelHtml } from "/dungeon-ui.js?v=1";
-import { createNightSky } from "/night-sky.js?v=2";
+import { createNightSky } from "/night-sky.js?v=3";
 import {
   nightInfo,
   nightBoss,
@@ -81,7 +81,7 @@ import {
   areaWidth,
   combatStats,
 } from "/shared/config.js";
-import { createParallax } from "/parallax.js?v=0.8.1";
+import { createParallax } from "/parallax.js?v=0.8.2";
 import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.6";
 import { createCombatFx } from "/combat-fx.js?v=0.12.2";
 import { activeEffects, effectTint, effectRow, hudEffects } from "/status-ui.js?v=1";
@@ -1712,6 +1712,27 @@ $("#chat-toggle").onclick = () => {
   if (open) $("#chat-log").scrollTop = $("#chat-log").scrollHeight;
 };
 $("#quests").onclick = () => $("#quests").classList.toggle("open");
+// "More" opens the secondary menu icons; any menu choice or a tap elsewhere closes it.
+{
+  const menu = $("#top-menu"), more = $("#menu-more");
+  const setMore = (open) => {
+    menu.classList.toggle("open", open);
+    more.setAttribute("aria-expanded", String(open));
+  };
+  more.onclick = (e) => {
+    e.stopPropagation();
+    setMore(!menu.classList.contains("open"));
+  };
+  document.addEventListener("pointerdown", (e) => {
+    if (menu.classList.contains("open") && !menu.contains(e.target) && !e.target.closest("#chat-toggle, #training-open"))
+      setMore(false);
+  });
+  menu.addEventListener("click", (e) => {
+    if (e.target.closest("[data-panel]")) setMore(false);
+  });
+  for (const id of ["#chat-toggle", "#training-open"])
+    $(id).addEventListener("click", () => setMore(false));
+}
 // Block pinch and double-tap zoom (iOS ignores user-scalable=no).
 for (const type of ["gesturestart", "gesturechange", "gestureend"])
   document.addEventListener(type, (e) => e.preventDefault(), {

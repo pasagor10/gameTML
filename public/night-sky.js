@@ -2,14 +2,14 @@
 // stay readable above it), warm lamp and torch glows that bloom after dark,
 // and the mysterious cave mouth that rises under the great tree at night.
 import { WORLD } from "/shared/config.js";
-import { TOWN_PROPS, TOWN_SPOTS, TOWN_BASE } from "/shared/town-layout.js";
+import { TOWN_PROPS, TOWN_SPOTS, TOWN_BASE, TOWN_LAYOUT } from "/shared/town-layout.js";
 import { SLOT_MACHINE } from "/shared/slots.js";
 import { NIGHT_CAVE } from "/shared/night.js";
 
 const DUSK = [0xe3, 0x9a, 0x7a],
-  NIGHT = [0x2b, 0x37, 0x74];
+  NIGHT = [0x83, 0x93, 0xbd];
 const lerp = (a, b, k) => Math.round(a + (b - a) * k);
-// White at noon, warm at dusk, deep blue at midnight.
+// White at noon, warm at dusk, readable moonlit blue at midnight.
 export function skyColor(dark) {
   const [from, to, k] =
     dark < 0.5 ? [[255, 255, 255], DUSK, dark * 2] : [DUSK, NIGHT, (dark - 0.5) * 2];
@@ -39,13 +39,23 @@ export function createNightSky(scene, openCave) {
   };
   const lights = [
     ...TOWN_PROPS.filter((p) => LIT[p.key]).map((p) =>
-      glow(p.x + LIT[p.key][0], (p.y ?? WORLD.ground) + LIT[p.key][1], 260, 240, 0xffb24d),
+      glow(p.x + LIT[p.key][0], (p.y ?? WORLD.ground) + LIT[p.key][1], 380, 340, 0xffc477),
+    ),
+    // Broad, low pools overlap along the pavement without washing out the sky.
+    ...TOWN_PROPS.filter((p) => LIT[p.key]).map((p) =>
+      glow(p.x, WORLD.ground + 12, 400, 115, 0xffc477).setData("strength", 0.18),
+    ),
+    // Warm light from inhabited buildings makes the street feel welcoming.
+    ...TOWN_LAYOUT.filter((p) => /house|potion|weapon|cottage|smithy|stall/.test(p.piece)).map((p) =>
+      glow(p.x + ({ house0: 80, house3: 160, house4: 90, stall: 170,
+        potion: 180, weapon: 170, cottage: 150, smithy: 180 }[p.piece] || 100),
+        TOWN_BASE - 85, 260, 230, 0xffcf85).setData("strength", 0.22),
     ),
     glow(TOWN_SPOTS.forgeFire.x, TOWN_SPOTS.forgeFire.y, 340, 280, 0xff7a36),
     glow(SLOT_MACHINE.x, WORLD.ground - 90, 260, 260, 0xffd27a),
     glow(WORLD.portal, WORLD.portalY + 120, 420, 360, 0x8fdcff),
   ].map((img, i) => ({ img, phase: i * 1.3 }));
-  const torch = glow(0, 0, 420, 360, 0xffd9a0);
+  const torch = glow(0, 0, 520, 420, 0xffe5bb);
 
   // The cave: the town gate art, smaller and drenched in violet.
   const cx = NIGHT_CAVE.x;
@@ -112,11 +122,11 @@ export function createNightSky(scene, openCave) {
       shade.setVisible(dark > 0.01);
       if (dark > 0.01) shade.setFillStyle(skyColor(dark), 1);
       const flicker = (p) => 0.88 + Math.sin(time * 0.004 + p) * 0.08 + Math.sin(time * 0.011 + p) * 0.04;
-      for (const l of lights) l.img.setAlpha(dark * 0.75 * flicker(l.phase));
+      for (const l of lights) l.img.setAlpha(dark * (l.img.getData("strength") ?? 0.46) * flicker(l.phase));
       const me = state?.self;
       const hero = me && scene.actors?.get(me.id)?.image;
       if (town && (hero || me)) torch.setPosition(hero?.x ?? me.x, (hero?.y ?? me.y) - 70);
-      torch.setAlpha(dark * 0.42);
+      torch.setAlpha(dark * 0.3);
 
       // The cave rises with dusk and is open only at night.
       const open = town && sky?.night,

@@ -1302,7 +1302,7 @@
       "height": 92,
       "facing": 1,
       "flyer": false,
-      "source": "supplied painted sheet; pixelated (pixelate_sprites.py)",
+      "source": "supplied pixel sheet (import_pixel_monsters.py)",
       "actions": {
         "idle": "idle",
         "move": "move",
@@ -1378,7 +1378,7 @@
       "pixel": true
     }
   },
-  "version": 1795050526364744000,
+  "version": 1795055951126925000,
   "npcs": {
     "elder": {
       "dir": "npcs/elder",

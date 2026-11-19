@@ -16,7 +16,7 @@ import {
   TOWN_ANIMS,
   TOWN_GROUND,
 } from "/shared/town-layout.js";
-import { skyColor } from "/night-sky.js?v=2";
+import { skyColor } from "/night-sky.js?v=3";
 
 const WORLD_W = 2400,
   BACK_Y = -180,

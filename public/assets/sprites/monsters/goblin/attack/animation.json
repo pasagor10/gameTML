@@ -1,14 +1,14 @@
 {
   "schemaVersion": "3.0",
   "name": "attack",
-  "artSource": "painted sheet (supplied artwork)",
+  "artSource": "pixel sheet (supplied artwork)",
   "sourceSize": [
-    159,
-    167
+    85,
+    92
   ],
   "sourceAnchor": [
-    79.5,
-    148.62
+    41.02,
+    82
   ],
   "frameCount": 4,
   "durationsMs": [
@@ -20,7 +20,7 @@
   "durationSeconds": 0.46,
   "fps": 8.696,
   "loop": false,
-  "bodyHeightPx": 128.8,
+  "bodyHeightPx": 68,
   "events": [
     {
       "name": "hit",
@@ -32,8 +32,8 @@
   "fallback": {
     "type": "png-atlas",
     "cellSize": [
-      66,
-      69
+      85,
+      92
     ],
     "pages": [
       {

@@ -72,6 +72,11 @@ export const TOWN_WIDTH = TOWN_LAYOUT.reduce(
 // Ground props stand on y (default the street); hanging props hang from y.
 // front: drawn in front of the heroes. step: [w, h] climbable top.
 export const TOWN_PROPS = [
+  // Closely spaced lanterns keep the full walking route lit after sunset.
+  ...[160, 430, 710, 1280, 1510, 1980, 2250, 2510, 2790, 3070,
+      3350, 3620, 4170, 4540, 4790].map((x, i) => ({
+    key: i % 3 === 0 ? "prop-px-21" : "prop-px-1", x,
+  })),
   { key: "prop-px-19", x: 395 },
   { key: "prop-px-20", x: 545 },
   { key: "prop-px-8", x: 600, front: true },

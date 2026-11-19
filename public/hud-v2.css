@@ -1,0 +1,374 @@
+/* HUD v2: one clean pixel HUD on top of every older layer.
+   Only the key controls stay on screen: the hero card, four menu icons (the
+   rest sit behind "more"), the quest line as plain text, the dungeon button,
+   and on touch screens the joystick plus one attack button ringed by skills.
+   Loaded last; `html body #game-screen` outranks the older stylesheets. */
+
+html body #game-screen {
+  --hud-ink: #12102a;
+  --hud-navy: #141c3d;
+  --hud-navy-2: #1d2a55;
+  --hud-gold: #d9a441;
+  --hud-gold-hi: #ffe29a;
+  --hud-gold-lo: #7c5420;
+  --hud-text: #fff3d2;
+  --hud-edge-l: calc(10px + env(safe-area-inset-left));
+  --hud-edge-r: calc(10px + env(safe-area-inset-right));
+  --hud-edge-t: calc(8px + env(safe-area-inset-top));
+  --hud-edge-b: calc(10px + env(safe-area-inset-bottom));
+  --hud-frame: 0 0 0 2px var(--hud-ink), inset 0 0 0 2px var(--hud-gold), inset 0 0 0 4px var(--hud-gold-lo), 0 4px 0 2px #0006;
+}
+
+/* ---------- Gone: debug toggles, hints, map, footer, gold ---------- */
+html body #game-screen #walkability-toggle,
+html body #game-screen #traversal-hint,
+html body #game-screen #keyboard-help,
+html body #game-screen .world-title,
+html body #game-screen .gold-display,
+html body #game-screen .bottom-actions,
+html body #game-screen #minimap .map-head,
+html body #game-screen #minimap .map-frame,
+html body #game-screen .profile-meta,
+html body #game-screen #quests .panel-tabs,
+html body #game-screen #quests .quest-progress,
+html body #game-screen #quests:not(.open) p,
+html body #game-screen #quests:not(.open) #quest-counter,
+html body #game-screen #quests:not(.open) #dungeon-explore,
+html body #game-screen #quests:not(.open) #daily-tracker { display: none !important; }
+
+/* ---------- Hero card (top left) ---------- */
+html body #game-screen .hud-top {
+  position: absolute !important; top: var(--hud-edge-t) !important; left: var(--hud-edge-l) !important;
+  right: var(--hud-edge-r) !important; display: flex !important; justify-content: space-between;
+  align-items: flex-start; gap: 8px; pointer-events: none; padding: 0 !important; background: none !important;
+}
+html body #game-screen .hud-top > * { pointer-events: auto; }
+html body #game-screen .profile-panel {
+  display: flex !important; align-items: center; gap: 8px; flex: 1 1 auto; width: auto !important; max-width: 250px !important; min-width: 0 !important;
+  margin: 0 !important; padding: 6px 10px 7px 6px !important; border: 0 !important; border-radius: 0 !important;
+  background: linear-gradient(var(--hud-navy-2), var(--hud-navy)) !important; box-shadow: var(--hud-frame) !important;
+  animation: none !important; transform: none !important;
+}
+html body #game-screen .profile-panel::before,
+html body #game-screen .profile-panel::after { display: none !important; }
+html body #game-screen #avatar {
+  flex: 0 0 auto; width: 50px !important; height: 50px !important; margin: 0 !important; border-radius: 0 !important;
+  border: 0 !important; background-color: #2b2350 !important; box-shadow: 0 0 0 2px var(--hud-ink), inset 0 0 0 2px var(--hud-gold) !important;
+  image-rendering: pixelated;
+}
+html body #game-screen .profile-info { flex: 1 1 auto; min-width: 0 !important; display: flex; flex-direction: column; gap: 3px; }
+html body #game-screen .profile-info > div:first-child { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+html body #game-screen #player-name {
+  flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--hud-text) !important;
+  font: 700 14px/1.2 'Noto Sans Thai', sans-serif !important; text-shadow: 0 2px 0 #000;
+}
+html body #game-screen #player-level {
+  flex: 0 0 auto; padding: 1px 7px !important; border: 0 !important; border-radius: 0 !important;
+  background: linear-gradient(#ffe38e, #d79a30) !important; color: #3a2108 !important;
+  box-shadow: 0 0 0 2px var(--hud-ink), inset 0 -2px 0 #a8701e !important;
+  font: 700 11px/1.3 Georgia, serif !important; text-shadow: none !important;
+}
+html body #game-screen .profile-info .stat-bar {
+  position: relative; height: 13px !important; margin: 0 !important; border: 0 !important; border-radius: 0 !important;
+  background: #0a0b1c !important; box-shadow: 0 0 0 2px var(--hud-ink), inset 0 0 0 1px #3c3f6a !important; overflow: hidden;
+}
+html body #game-screen .stat-bar.hp i { background: linear-gradient(#ff7468, #d6243a 55%, #9a1427) !important; }
+html body #game-screen .stat-bar.mp i { background: linear-gradient(#78c4ff, #2a74e8 55%, #1a49a8) !important; }
+html body #game-screen .profile-info .stat-bar i { border-radius: 0 !important; box-shadow: inset 0 2px 0 #ffffff40 !important; }
+html body #game-screen .profile-info .stat-bar span {
+  position: absolute; inset: 0; display: grid; place-items: center; color: #fff !important;
+  font: 700 10px/1 'Noto Sans Thai', sans-serif !important; text-shadow: 0 1px 0 #000, 1px 0 0 #000, -1px 0 0 #000, 0 -1px 0 #000 !important;
+}
+/* EXP: a thin gold line under the bars; the number only on wide screens. */
+html body #game-screen .exp-row { display: flex !important; align-items: center; gap: 5px; margin: 1px 0 0 !important; }
+html body #game-screen .exp-row > b { display: none !important; }
+html body #game-screen .exp-row .stat-bar.exp {
+  flex: 1; height: 4px !important; margin: 0 !important; border: 0 !important; border-radius: 0 !important;
+  background: #0a0b1c !important; box-shadow: 0 0 0 1px var(--hud-ink) !important;
+}
+html body #game-screen .exp-row .stat-bar.exp i { background: linear-gradient(#ffe89a, #e0a83a) !important; border-radius: 0 !important; }
+html body #game-screen #exp-label { display: none; color: #e8d6a6 !important; font: 9px/1 Georgia, serif !important; white-space: nowrap; }
+html body #game-screen .self-effects:empty { display: none !important; }
+
+/* ---------- Menu icons (top right) ---------- */
+html body #game-screen #top-menu {
+  flex: 0 0 auto; position: relative; display: flex !important; flex-wrap: nowrap !important; gap: 6px !important; margin: 0 !important;
+  padding: 0 !important; background: none !important; border: 0 !important; box-shadow: none !important;
+}
+html body #game-screen #top-menu > button {
+  display: grid !important; place-items: center; flex: 0 0 auto; width: 42px !important; height: 42px !important; min-width: 0 !important;
+  padding: 0 !important; border: 0 !important; border-radius: 0 !important;
+  background: linear-gradient(#2a3a6e, var(--hud-navy)) !important; box-shadow: var(--hud-frame) !important;
+  color: var(--hud-text) !important; transform: none !important;
+}
+html body #game-screen #top-menu > button:active { filter: brightness(1.25); translate: 0 1px; }
+html body #game-screen #top-menu > button > span { display: none !important; }
+html body #game-screen #top-menu > button > b {
+  display: block !important; width: 30px !important; height: 30px !important; margin: 0 !important; font-size: 0 !important;
+  background: var(--kit-icon, none) center / contain no-repeat !important; image-rendering: pixelated; border: 0 !important; box-shadow: none !important;
+}
+html body #game-screen #top-menu > button > b svg { display: none !important; }
+/* Pixel kit art for every menu icon. */
+html body #game-screen #top-menu [data-panel="inventory"] { order: 1; --kit-icon: url('/assets/ui/px-bag.webp'); }
+html body #game-screen #top-menu [data-panel="class"] { order: 2; --kit-icon: url('/assets/ui/px-hero.webp'); }
+html body #game-screen #top-menu [data-panel="quest"] { order: 3; --kit-icon: url('/assets/ui/px-quest.webp'); }
+html body #game-screen #top-menu [data-panel="settings"] { order: 4; --kit-icon: url('/assets/ui/px-settings.webp'); }
+html body #game-screen #top-menu #menu-more { order: 5; position: absolute; right: 0; top: 50px; width: 42px !important; height: 30px !important; }
+html body #game-screen #top-menu [data-panel="party"] { order: 6; --kit-icon: url('/assets/ui/px-party.webp'); }
+html body #game-screen #top-menu [data-panel="players"],
+html body #game-screen #top-menu [data-panel="status"],
+html body #game-screen #top-menu [data-panel="market"] { order: 7; }
+html body #game-screen #top-menu [data-panel="players"] > b,
+html body #game-screen #top-menu [data-panel="status"] > b,
+html body #game-screen #top-menu [data-panel="market"] > b { font-size: 20px !important; background: none !important; display: grid !important; place-items: center; color: var(--hud-gold-hi); }
+html body #game-screen #top-menu [data-panel="status"] > b svg,
+html body #game-screen #top-menu [data-panel="market"] > b svg { display: block !important; width: 22px; height: 22px; fill: var(--hud-gold-hi); }
+html body #game-screen #top-menu [data-panel="status"] > b svg path[fill],
+html body #game-screen #top-menu [data-panel="market"] > b svg path[fill] { fill: var(--hud-navy); }
+/* "More": three gold dots. */
+html body #game-screen #top-menu #menu-more > b {
+  background: radial-gradient(circle, var(--hud-gold-hi) 0 2.5px, transparent 3px) center / 9px 9px repeat-x !important;
+  height: 9px !important; width: 27px !important;
+}
+html body #game-screen #top-menu.open #menu-more { filter: brightness(1.3); }
+/* The secondary icons drop down in a column under "more". */
+html body #game-screen #top-menu > [data-panel="party"],
+html body #game-screen #top-menu > [data-panel="players"],
+html body #game-screen #top-menu > [data-panel="status"],
+html body #game-screen #top-menu > [data-panel="market"] { display: none !important; }
+html body #game-screen #top-menu.open > [data-panel="party"],
+html body #game-screen #top-menu.open > [data-panel="players"],
+html body #game-screen #top-menu.open > [data-panel="status"],
+html body #game-screen #top-menu.open > [data-panel="market"] { display: grid !important; position: absolute; right: 0; }
+html body #game-screen #top-menu.open > [data-panel="party"] { top: 90px; }
+html body #game-screen #top-menu.open > [data-panel="status"] { top: 138px; }
+html body #game-screen #top-menu.open > [data-panel="market"] { top: 186px; }
+html body #game-screen #top-menu.open > [data-panel="players"] { top: 234px; }
+/* Text labels beside the dropped icons. */
+html body #game-screen #top-menu.open > button[data-panel="party"] > span,
+html body #game-screen #top-menu.open > button[data-panel="status"] > span,
+html body #game-screen #top-menu.open > button[data-panel="market"] > span,
+html body #game-screen #top-menu.open > button[data-panel="players"] > span {
+  display: block !important; position: absolute !important; left: auto !important; bottom: auto !important; right: calc(100% + 8px) !important; top: 50% !important; translate: 0 -50%; white-space: nowrap; padding: 0 !important; background: none !important; border: 0 !important; height: auto !important; line-height: 1 !important;
+  width: auto !important; max-width: none !important; opacity: 1 !important; overflow: visible !important; transform: none !important;
+  color: var(--hud-text); font: 700 12px/1 'Noto Sans Thai', sans-serif; text-shadow: 0 1px 0 #000, 1px 0 0 #000, -1px 0 0 #000, 0 -1px 0 #000, 0 2px 4px #000;
+}
+
+/* ---------- Quest line: plain in-world text, no panel ---------- */
+html body #game-screen #quests {
+  position: absolute !important; top: var(--quest-top, 90px) !important; left: var(--hud-edge-l) !important;
+  width: auto !important; max-width: min(320px, 70vw) !important; max-height: none !important; overflow: visible !important;
+  padding: 0 0 0 26px !important; margin: 0 !important; border: 0 !important; border-radius: 0 !important;
+  background: none !important; box-shadow: none !important; cursor: pointer;
+}
+html body #game-screen #quests::before,
+html body #game-screen #quests::after { display: none !important; }
+html body #game-screen #quests .quest-badge {
+  position: absolute !important; left: 0; top: 0; display: grid !important; place-items: center; width: 20px !important; height: 20px !important;
+  margin: 0 !important; border: 0 !important; border-radius: 0 !important; transform: rotate(45deg) scale(.8);
+  background: linear-gradient(#ffe38e, #d79a30) !important; box-shadow: 0 0 0 2px var(--hud-ink) !important;
+  color: #3a2108 !important; font: 900 13px/1 Georgia, serif !important; font-style: normal !important;
+}
+html body #game-screen #quests h3,
+html body #game-screen #quests p,
+html body #game-screen #quests small,
+html body #game-screen #quests li {
+  color: var(--hud-text) !important; text-shadow: 0 1px 0 #000, 1px 0 0 #000, -1px 0 0 #000, 0 -1px 0 #000, 0 2px 6px #000c !important;
+  background: none !important;
+}
+html body #game-screen #quests h3 { margin: 0 !important; font: 700 14px/20px 'Noto Sans Thai', sans-serif !important; color: var(--hud-gold-hi) !important; }
+html body #game-screen #quests.open p { margin: 2px 0 0 !important; font: 12px/1.45 'Noto Sans Thai', sans-serif !important; }
+html body #game-screen #quests.open small { display: block; font: 11px/1.5 'Noto Sans Thai', sans-serif !important; }
+html body #game-screen #quests.open #daily-tracker { margin: 4px 0 0 !important; padding: 0 !important; list-style: none; }
+html body #game-screen #quests.open #daily-tracker li { font: 11px/1.5 'Noto Sans Thai', sans-serif !important; border: 0 !important; padding: 0 !important; }
+html body #game-screen #quests.has-reward .quest-badge { animation: hud-pulse 1.2s ease-in-out infinite; }
+
+/* ---------- Dungeon & training buttons (under the menu icons) ---------- */
+html body #game-screen #minimap {
+  position: absolute !important; top: calc(var(--hud-edge-t) + 50px) !important; right: calc(var(--hud-edge-r) + 50px) !important; left: auto !important;
+  width: auto !important; padding: 0 !important; margin: 0 !important; border: 0 !important; background: none !important; box-shadow: none !important;
+  display: flex !important; flex-direction: column; align-items: flex-end; gap: 6px;
+}
+html body #game-screen #minimap::before,
+html body #game-screen #minimap::after { display: none !important; }
+html body #game-screen:has(#top-menu.open) #minimap { visibility: hidden; }
+html body #game-screen #dungeon-open,
+html body #game-screen #training-open {
+  display: flex !important; align-items: center; gap: 6px; width: auto !important; min-height: 30px !important; height: 30px; margin: 0 !important;
+  padding: 4px 12px 4px 8px !important; border: 0 !important; border-radius: 0 !important;
+  background: linear-gradient(#2fa457, #1b7a3c) !important; box-shadow: var(--hud-frame) !important;
+  color: var(--hud-text) !important; font: 700 13px/1 'Noto Sans Thai', sans-serif !important; text-shadow: 0 1px 0 #0b3a1a !important;
+}
+html body #game-screen #dungeon-open .map-btn-icon,
+html body #game-screen #training-open .map-btn-icon {
+  display: grid !important; place-items: center; width: 20px; height: 20px; margin: 0 !important; border: 0 !important; border-radius: 0 !important;
+  background: none !important; box-shadow: none !important; color: var(--hud-gold-hi) !important; font-size: 13px !important;
+}
+html body #game-screen #dungeon-open .map-btn-text,
+html body #game-screen #training-open .map-btn-text { white-space: nowrap; }
+html body #game-screen #dungeon-open .map-btn-go { color: var(--hud-gold-hi); margin-left: 2px; }
+/* Training is a side trip: only in the "more" menu. */
+html body #game-screen #training-open { display: none !important; }
+html body #game-screen:has(#top-menu.open) #training-open:not(:disabled) {
+  display: flex !important; position: absolute; visibility: visible;
+  top: 232px; right: -50px;
+  background: linear-gradient(#2a3a6e, var(--hud-navy)) !important;
+}
+html body #game-screen #training-open:disabled { opacity: .5; }
+
+/* ---------- Chat button lives in "more" on touch; panel stays on desktop ---------- */
+html body #game-screen #chat-toggle {
+  width: 42px !important; height: 42px !important; border: 0 !important; border-radius: 0 !important;
+  background: linear-gradient(#2a3a6e, var(--hud-navy)) url('/assets/ui/px-chat.webp') center / 30px no-repeat !important;
+  box-shadow: var(--hud-frame) !important; font-size: 0 !important; image-rendering: pixelated;
+}
+
+/* ---------- Context action: floating text, no box ---------- */
+html body #game-screen #context-hint,
+html body #game-screen #mobile-interact {
+  border: 0 !important; border-radius: 0 !important; background: none !important; box-shadow: none !important;
+  color: var(--hud-gold-hi) !important; font: 700 15px/1.2 'Noto Sans Thai', sans-serif !important;
+  text-shadow: 0 1px 0 #000, 1px 0 0 #000, -1px 0 0 #000, 0 -1px 0 #000, 0 2px 8px #000 !important;
+}
+html body #game-screen #context-hint {
+  left: 50% !important; translate: -50% 0; bottom: calc(var(--hud-edge-b) + 120px) !important; top: auto !important; padding: 0 !important;
+}
+html body #game-screen #context-hint kbd {
+  display: inline-grid; place-items: center; min-width: 22px; height: 22px; margin-right: 6px; padding: 0 4px;
+  background: linear-gradient(#ffe38e, #d79a30); color: #3a2108; border: 0; border-radius: 0; box-shadow: 0 0 0 2px var(--hud-ink);
+  font: 700 12px/1 Georgia, serif; text-shadow: none;
+}
+html body #game-screen #mobile-interact > b {
+  display: grid; place-items: center; width: 30px; height: 30px; font-size: 16px;
+  background: linear-gradient(#ffe38e, #d79a30); box-shadow: 0 0 0 2px var(--hud-ink), 0 3px 0 2px #0006; text-shadow: none;
+}
+
+@keyframes hud-pulse { 50% { filter: brightness(1.5); transform: rotate(45deg) scale(.95); } }
+
+/* =================== Touch screens =================== */
+@media (pointer: coarse) {
+  /* Joystick: gold ring, gold knob. */
+  html body #game-screen #joystick {
+    width: 116px !important; height: 116px !important; opacity: .9;
+    background: radial-gradient(circle, #0d1330aa 58%, #1a2450cc 60%, #0d1330cc 70%) !important;
+    border: 0 !important; box-shadow: 0 0 0 3px var(--hud-gold), 0 0 0 5px var(--hud-ink), inset 0 0 0 2px var(--hud-gold-lo), 0 6px 12px #0008 !important;
+  }
+  html body #game-screen #joystick i {
+    width: 52% !important; height: 52% !important; margin: -26% 0 0 -26% !important;
+    background: radial-gradient(circle at 35% 30%, #fff6d6, #e7b453 50%, #8c5d1c) !important;
+    border: 0 !important; box-shadow: 0 0 0 2px var(--hud-ink), 0 4px 8px #000a !important;
+  }
+
+  /* Chat: an icon in the "more" column. */
+  html body #game-screen #chat-toggle { display: none !important; }
+  html body #game-screen:has(#top-menu.open) #chat-toggle {
+    display: block !important; position: absolute !important; left: auto !important; right: var(--hud-edge-r) !important;
+    top: calc(var(--hud-edge-t) + 282px) !important; z-index: 40;
+  }
+  html body #game-screen:has(#top-menu.open) #training-open:not(:disabled) { top: 284px; }
+  html body #game-screen #chat { top: calc(var(--hud-edge-t) + 130px) !important; left: var(--hud-edge-l) !important; }
+
+  /* Context action above the joystick, in the open middle of the screen. */
+  html body #game-screen #mobile-interact {
+    display: flex; align-items: center; gap: 8px; left: 50% !important; right: auto !important; translate: -50% 0;
+    bottom: calc(var(--hud-edge-b) + 330px) !important; max-width: 80vw !important; padding: 0 !important; animation: none !important;
+  }
+  html body #game-screen #mobile-interact.hidden { display: none !important; }
+
+  /* Right thumb: one big attack button with the skills on an arc. */
+  html body #game-screen .hud-bottom {
+    position: absolute !important; inset: auto var(--hud-edge-r) var(--hud-edge-b) auto !important;
+    width: 240px !important; height: 300px !important; margin: 0 !important; padding: 0 !important;
+    display: block !important; background: none !important; pointer-events: none; z-index: 15;
+  }
+  html body #game-screen .hud-bottom .skillbar {
+    position: absolute !important; inset: 0 !important; display: block !important; width: auto !important; height: auto !important;
+    margin: 0 !important; padding: 0 !important; transform: none !important; background: none !important; border: 0 !important; box-shadow: none !important;
+  }
+  html body #game-screen .hud-bottom .skillbar::before,
+  html body #game-screen .hud-bottom .skillbar::after { display: none !important; }
+  html body #game-screen .hud-bottom .skillbar .skill {
+    position: absolute !important; margin: 0 !important; padding: 0 !important; border: 0 !important; border-radius: 50% !important;
+    display: grid !important; place-items: center; pointer-events: auto; overflow: visible !important; transform: none !important;
+    background: radial-gradient(circle at 40% 35%, #2c3d78, #121a3a 70%) !important;
+    box-shadow: 0 0 0 3px var(--hud-gold), 0 0 0 5px var(--hud-ink), inset 0 0 0 2px var(--hud-gold-lo), 0 5px 8px #0009 !important;
+  }
+  html body #game-screen .hud-bottom .skillbar .skill > span,
+  html body #game-screen .hud-bottom .skillbar .skill > small { display: none !important; }
+  html body #game-screen .hud-bottom .skillbar .skill::before,
+  html body #game-screen .hud-bottom .skillbar .skill::after { display: none !important; }
+  html body #game-screen .hud-bottom .skillbar .skill { clip-path: none !important; outline: 0; }
+  html body #game-screen .hud-bottom .skillbar .skill > b {
+    display: grid !important; place-items: center; width: 74% !important; height: 74% !important; margin: 0 !important;
+    font-size: 20px !important; line-height: 1 !important; color: var(--hud-text); background: none !important; border: 0 !important; box-shadow: none !important;
+  }
+  html body #game-screen .hud-bottom .skillbar .skill > b svg { width: 100% !important; height: 100% !important; }
+  html body #game-screen .hud-bottom .skillbar .skill > i {
+    border-radius: 50% !important; inset: 0 !important;
+  }
+  html body #game-screen .hud-bottom .skillbar .skill .skill-cost { display: none !important; }
+  html body #game-screen .hud-bottom .skillbar .skill:disabled { filter: saturate(.5) brightness(.75); opacity: 1 !important; }
+  html body #game-screen .hud-bottom .skillbar .skill:active { translate: 0 2px; filter: brightness(1.25); }
+  /* Positions inside the 240 x 300 box (attack centre at 196, 250). */
+  html body #game-screen .hud-bottom .skillbar .skill.basic {
+    left: 152px !important; top: 206px !important; width: 88px !important; height: 88px !important;
+    background: radial-gradient(circle at 40% 35%, #3fc56c, #1a7d3e 70%) !important;
+    box-shadow: 0 0 0 4px var(--hud-gold), 0 0 0 6px var(--hud-ink), inset 0 0 0 3px #e8c46a, inset 0 -6px 0 #0f5a2a, 0 6px 10px #000a !important;
+  }
+  html body #game-screen .hud-bottom .skillbar .skill.basic > b { width: 62% !important; height: 62% !important; font-size: 34px !important; }
+  html body #game-screen .hud-bottom .skillbar [data-action="skill1"] { left: 52px !important; top: 192px !important; width: 52px !important; height: 52px !important; }
+  html body #game-screen .hud-bottom .skillbar [data-action="skill2"] { left: 79px !important; top: 142px !important; width: 52px !important; height: 52px !important; }
+  html body #game-screen .hud-bottom .skillbar [data-action="skill3"] { left: 126px !important; top: 110px !important; width: 52px !important; height: 52px !important; }
+  html body #game-screen .hud-bottom .skillbar [data-action="skill4"] { left: 183px !important; top: 103px !important; width: 52px !important; height: 52px !important; }
+  html body #game-screen .hud-bottom .skillbar .skill.jump { left: 46px !important; top: 246px !important; width: 58px !important; height: 58px !important; }
+  html body #game-screen .hud-bottom .skillbar .skill.jump > b { font-size: 26px !important; color: var(--hud-gold-hi); }
+  html body #game-screen .hud-bottom .skillbar [data-action="hp"] { left: 196px !important; top: 46px !important; width: 42px !important; height: 42px !important; }
+  html body #game-screen .hud-bottom .skillbar [data-action="mp"] { left: 146px !important; top: 46px !important; width: 42px !important; height: 42px !important; }
+  html body #game-screen .hud-bottom .skillbar [data-action="hp"] > small,
+  html body #game-screen .hud-bottom .skillbar [data-action="mp"] > small {
+    display: block !important; position: absolute; right: -4px; bottom: -6px; padding: 0 3px; font: 700 10px/1.3 Georgia, serif;
+    color: #fff; background: var(--hud-ink); font-size: 0 !important;
+  }
+  html body #game-screen .hud-bottom .skillbar .skill.auto { left: 100px !important; top: 52px !important; width: 40px !important; height: 40px !important; }
+  html body #game-screen .hud-bottom .skillbar .skill.auto > b { font-size: 0 !important; background: url('/assets/ui/skills/auto.webp') center / 80% no-repeat !important; image-rendering: pixelated; }
+  html body #game-screen .hud-bottom .skillbar .skill.auto.on { box-shadow: 0 0 0 3px #8ef08a, 0 0 0 5px var(--hud-ink), 0 0 12px #8ef08a99 !important; }
+  html body #game-screen .hud-bottom .skillbar .skill.recall { left: 40px !important; top: 120px !important; width: 40px !important; height: 40px !important; }
+  html body #game-screen .hud-bottom .skillbar .skill.recall > b { font-size: 20px !important; color: var(--hud-gold-hi); }
+  /* Leave the arc's corner free for the joystick zone. */
+  html body #game-screen #joystick-zone { width: calc(100% - 250px - var(--hud-edge-r)) !important; max-width: 60% !important; }
+}
+
+/* =================== Mouse & keyboard =================== */
+@media (pointer: fine) {
+  html body #game-screen #exp-label { display: block; }
+  /* Chat keeps its panel, bottom left, framed like the rest. */
+  html body #game-screen #chat-toggle { display: none !important; }
+  html body #game-screen #chat {
+    border: 0 !important; border-radius: 0 !important; background: #0d1330d9 !important; box-shadow: var(--hud-frame) !important;
+  }
+  /* Action bar: one row of square slots, bottom centre. */
+  html body #game-screen .hud-bottom { pointer-events: none; background: none !important; }
+  html body #game-screen .hud-bottom .skillbar { pointer-events: auto; }
+  html body #game-screen .hud-bottom .skillbar .skill {
+    border-radius: 0 !important; background: linear-gradient(#24346a, #111938) !important;
+    box-shadow: 0 0 0 2px var(--hud-ink), inset 0 0 0 2px var(--hud-gold), inset 0 0 0 3px var(--hud-gold-lo), 0 4px 0 #0007 !important;
+  }
+  html body #game-screen .hud-bottom .skillbar .skill.basic { background: linear-gradient(#36b862, #1a7d3e) !important; }
+  html body #game-screen .hud-bottom .skillbar .skill > small { display: none !important; }
+  html body #game-screen .hud-bottom .skillbar .skill > span {
+    color: var(--hud-gold-hi) !important; background: var(--hud-ink) !important; border: 0 !important; border-radius: 0 !important;
+    font: 700 10px/1.2 Georgia, serif !important;
+  }
+}
+
+/* Narrow phones: slightly smaller menu icons so the hero card keeps room. */
+@media (max-width: 420px) {
+  html body #game-screen #top-menu { gap: 4px !important; }
+  html body #game-screen #top-menu > button { width: 38px !important; height: 38px !important; }
+  html body #game-screen #top-menu > button > b { width: 27px !important; height: 27px !important; }
+  html body #game-screen #top-menu #menu-more { top: 46px; width: 38px !important; height: 28px !important; }
+  html body #game-screen #minimap { top: calc(var(--hud-edge-t) + 46px) !important; right: calc(var(--hud-edge-r) + 44px) !important; }
+  html body #game-screen:has(#top-menu.open) #training-open:not(:disabled) { right: -44px; }
+  html body #game-screen #avatar { width: 44px !important; height: 44px !important; }
+  html body #game-screen .profile-panel { gap: 6px; padding: 5px 8px 6px 5px !important; }
+}
