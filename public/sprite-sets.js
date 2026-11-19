@@ -159,8 +159,38 @@ export function createSpriteRegistry(scene) {
       else tryBuild();
     }
   };
+  // A set is ready once its clips' manifests and atlas pages are all in.
+  const ready = ({ set }) =>
+    Object.values(set.actions || {}).every((folder) => {
+      const key = clipKey(set, folder),
+        manifest = scene.cache.json.get(key);
+      return (
+        manifest &&
+        (manifest.fallback?.pages || []).every((page) =>
+          scene.textures.exists(`${key}:${page.file}`),
+        )
+      );
+    });
+  // Build each set the moment its own files land, rather than when the whole
+  // loader run ends: a hero or gear look asked for during a long batch would
+  // otherwise wait for every other file in it.
+  const buildReady = () => {
+    for (const [id, r] of requested) {
+      if (finished.has(id) || !r.set || !ready(r)) continue;
+      const built = buildSet(scene, r.group, r.name, r.set);
+      if (built) maps[r.group].set(r.name, built);
+      finished.add(id);
+    }
+  };
+  scene.load.on("filecomplete", buildReady);
+  // Anything still unbuilt when the run ends (a missing file) is settled
+  // here, so callers stop waiting and keep their fallback.
   scene.load.on("complete", tryBuild);
   return {
+    // True when index.json lists art for this name, built or not yet.
+    listed(group, name) {
+      return !!index()?.[group]?.[name];
+    },
     heroes: maps.sets,
     monsters: maps.monsters,
     npcs: maps.npcs,

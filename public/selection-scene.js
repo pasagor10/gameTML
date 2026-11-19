@@ -3,7 +3,7 @@ import {
   createSpriteRegistry,
   playSpriteSet,
   playLayers,
-} from "/sprite-sets.js?v=0.21.1";
+} from "/sprite-sets.js?v=0.22.0";
 import { gearDress } from "/hero-gear.js?v=5";
 
 // The hero-select stage: the same sprite sets, costume layers and held

@@ -40,7 +40,7 @@ import {
   enhancementCost,
   enhancementChance,
 } from "/shared/rpg.js";
-import { createTownNpcs, footGlow, createRim } from "/town-npcs.js?v=10";
+import { createTownNpcs, footGlow, createRim } from "/town-npcs.js?v=11";
 import { updateEnhanceAura, AURA_LEVEL } from "/enhance-aura.js?v=3";
 import { marketHtml, shopManagerHtml, marketState } from "/market-ui.js?v=10";
 import { sampleMotion } from "/shared/smoothing.js";
@@ -71,7 +71,7 @@ import {
   animateSlime,
   monsterDeath,
 } from "/combat-visuals.js?v=0.3.1";
-import { createSelectionPreview } from "/selection-scene.js?v=0.14.3";
+import { createSelectionPreview } from "/selection-scene.js?v=0.14.4";
 import {
   CLASSES,
   ITEMS,
@@ -102,7 +102,7 @@ import {
   playMonsterSet,
   playMonsterDeath,
   playLayers,
-} from "/sprite-sets.js?v=0.21.1";
+} from "/sprite-sets.js?v=0.22.0";
 import { gearDress } from "/hero-gear.js?v=5";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
@@ -852,6 +852,9 @@ function skyText(sky, time) {
   return sky.night ? `🌙 ถ้ำลึกลับเปิด ${left} น.` : `☀ มืดใน ${left} น.`;
 }
 
+// How long a hero or monster waits, hidden, for its painted sprite set
+// before the old placeholder art is shown instead.
+const ART_WAIT_MS = 4000;
 // The HUD is DOM: redrawing it for all 20 snapshots a second kept tablets
 // busy restyling. 10 redraws a second look the same; the latest always lands.
 const HUD_INTERVAL = 100;
@@ -2162,8 +2165,8 @@ class Adventure extends Phaser.Scene {
       hero = characters.find((c) => c.id === selectedId),
       skin = hero && heroSkins(hero).find((name) => index.sets?.[name]);
     // Townsfolk are needed on arrival. Monster animations (6 actions for
-    // every enemy and boss, hundreds of files) aren't seen in town: they
-    // load in the background once the player is in (see warmMonsters below).
+    // every enemy and boss, hundreds of files) load per type when one first
+    // appears (applySnapshot), so a tablet only fetches what it meets.
     for (const name of Object.keys(index.npcs || {})) this.sprites.want("npcs", name);
     if (skin) {
       this.sprites.want("sets", skin);
@@ -2186,12 +2189,6 @@ class Adventure extends Phaser.Scene {
     // Requests above can append atlas pages to the same loader run.
     if (this.load.isLoading()) this.load.once("complete", () => resolveAdventureLoaded?.());
     else resolveAdventureLoaded?.();
-    const warmMonsters = () =>
-      setTimeout(() => {
-        for (const name of Object.keys(index.monsters || {})) this.sprites.want("monsters", name);
-      }, 0);
-    if (this.load.isLoading()) this.load.once("complete", warmMonsters);
-    else warmMonsters();
     this.spriteSets = this.sprites.heroes;
     this.monsterSets = this.sprites.monsters;
     this.slimeAtlas = registerMotionAtlas(this, "slime-motion", 6);
@@ -2469,6 +2466,7 @@ class Adventure extends Phaser.Scene {
           };
         });
       }
+      a.bornAt = this.time.now;
       this.actors.set(p.id, a);
     }
     a.target = p;
@@ -2575,7 +2573,7 @@ class Adventure extends Phaser.Scene {
           .setOrigin(0.5)
           .setDepth(15);
         const bar = this.add.graphics().setDepth(14);
-        m = { image, label, bar, target: e, size };
+        m = { image, label, bar, target: e, size, bornAt: this.time.now };
         createMonsterExtras(this, m, e, true);
         this.monsters.set(e.id, m);
       }
@@ -3095,6 +3093,13 @@ class Adventure extends Phaser.Scene {
         skin = a.skins.find((key) => this.spriteSets.has(key)),
         spriteSet = this.spriteSets.get(skin),
         pose = animateHero(a.image, p, serverTime, this.knightAtlas && !spriteSet);
+      // Heroes with painted sets stay hidden until the set arrives, so the old
+      // placeholder sheet never flashes; it shows only if loading fails.
+      a.image.setVisible(
+        !!spriteSet ||
+          !a.skins.some((key) => this.sprites.listed("sets", key)) ||
+          time - a.bornAt > ART_WAIT_MS,
+      );
       if (spriteSet) {
         playSpriteSet(a.image, spriteSet, p, pose, serverTime);
         if (!a.image._spriteStill) a.image.setAngle(0);
@@ -3225,6 +3230,10 @@ class Adventure extends Phaser.Scene {
           m.size,
         ),
         mset = this.monsterSets.get(e.type);
+      // As with heroes: no old placeholder art while the painted set loads.
+      m.image.setVisible(
+        !!mset || !this.sprites.listed("monsters", e.type) || time - m.bornAt > ART_WAIT_MS,
+      );
       if (mset) {
         // A set that finished loading after spawn: adopt its size.
         if (!m.setSized) {
