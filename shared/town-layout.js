@@ -106,6 +106,8 @@ export const TOWN_ANIMS = {
 
 // NPC spots and the portal (world coordinates).
 export const TOWN_SPOTS = {
+  trainer: 1880, // class trainer at the stairs
+  stones: 2930, // stone merchant beside the cottage
   elder: 300, // under the great tree
   potion: 1360, // at the herb counter
   weapon: 2330, // at the shop door

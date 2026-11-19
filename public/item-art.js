@@ -24,6 +24,10 @@ const artIndex = {
   divine_nangnon_staff: 32,
   divine_nangnon_scepter: 32,
 };
+// Rescue shop sets reuse the established item and held-weapon artwork.
+for (let tier = 1; tier <= 4; tier++)
+  for (const kind of ["swordsman", "archer", "mage", "priest", "armor", "charm", "boots"])
+    artIndex[`rescue_${tier}_${kind}`] = [1, 18, 24, 30][tier - 1];
 // By floor 1..10 (floor 2 has no charm).
 const FLOOR = [8, 7, 15, 18, 6, 12, 28, 29, 22, 26];
 const floorIndex = {

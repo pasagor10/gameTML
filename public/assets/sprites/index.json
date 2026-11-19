@@ -1499,7 +1499,7 @@
       "pixel": false
     }
   },
-  "version": 1795099695178181000,
+  "version": 1795126885417718000,
   "npcs": {
     "elder": {
       "dir": "npcs/elder",
@@ -1539,6 +1539,28 @@
       "height": 114,
       "facing": 1,
       "source": "supplied pixel sheet (import_pixel_monsters.py)",
+      "actions": {
+        "idle": "idle",
+        "talk": "talk"
+      },
+      "pixel": true
+    },
+    "trainer": {
+      "dir": "npcs/trainer",
+      "height": 114,
+      "facing": 1,
+      "source": "generated transparent sheet (import_service_npcs.py)",
+      "actions": {
+        "idle": "idle",
+        "talk": "talk"
+      },
+      "pixel": true
+    },
+    "stones": {
+      "dir": "npcs/stones",
+      "height": 108,
+      "facing": 1,
+      "source": "generated transparent sheet (import_service_npcs.py)",
       "actions": {
         "idle": "idle",
         "talk": "talk"

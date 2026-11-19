@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "3.0",
+  "name": "idle",
+  "artSource": "AI generated transparent pixel sprite sheet",
+  "sourceSize": [
+    180,
+    187
+  ],
+  "sourceAnchor": [
+    93.15,
+    184
+  ],
+  "frameCount": 4,
+  "durationsMs": [
+    420,
+    380,
+    160,
+    400
+  ],
+  "durationSeconds": 1.36,
+  "fps": 2.941,
+  "loop": true,
+  "bodyHeightPx": 180,
+  "events": [],
+  "sampling": "nearest",
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      180,
+      187
+    ],
+    "pages": [
+      {
+        "file": "idle-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  }
+}

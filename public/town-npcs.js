@@ -69,6 +69,8 @@ export function createTownNpcs(scene, definitions, sprites) {
   const objects = [],
     rigs = [];
   const palettes = {
+    trainer: [0x584578, 0xe0c879, 0xe3d3b0],
+    stones: [0x286b78, 0xb7e3dd, 0x49352d],
     elder: [0x345f68, 0xa8c2b2, 0xe3d3b0],
     potion: [0x477867, 0xc1d6ac, 0x563c34],
     weapon: [0x334c65, 0xb9c6ce, 0x30323c],

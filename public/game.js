@@ -1775,6 +1775,8 @@ function showPanel(panel) {
       currentPlayer: () => state?.self,
       onSettled: () => { if (activePanel === "slots") showPanel("slots"); },
     });
+  } else if (panel === "trainer") {
+    showPanel("class");
   } else if (["inventory", "class", "status", "wardrobe"].includes(panel)) {
     modal(
       { class: "เส้นทางผู้กล้า", status: "สเตตัสผู้กล้า", wardrobe: "ตู้ชุดผู้กล้า" }[panel] || "อุปกรณ์และกระเป๋า",
@@ -1865,20 +1867,14 @@ function showPanel(panel) {
             b.disabled = false;
         }),
     );
-  } else if (panel === "weapon") {
-    const items = ["weapon", "armor", "ore"];
-    modal(
-      "อริน · อาวุธและอุปกรณ์",
-      `<p>ยินดีต้อนรับผู้กล้า · ทองของเจ้า ${p.gold}</p>${items.map((id) => row(supplyArt(id) || ITEMS[id].icon, ITEMS[id].name, id === "weapon" ? "เพิ่ม ATK 10 · สวมให้อัตโนมัติ" : id === "armor" ? "เพิ่ม HP 30 · ป้องกันเพิ่ม" : "วัตถุดิบตีบวก", btn(`data-buy="${id}"`, ITEMS[id].price + " ◈"))).join("")}`,
-    );
-    $$("[data-buy]").forEach(
-      (b) =>
-        (b.onclick = async () => {
-          b.disabled = true;
-          await transaction("npc:buy", { item: b.dataset.buy });
-          b.disabled = false;
-        }),
-    );
+  } else if (panel === "stones") {
+    const items = [BLESS_STONE, HIGH_STONE, "ore"];
+    modal("มณี · ร้านหินตีบวก", `<p>ทอง ${p.gold.toLocaleString()} · หิน 100% ใช้ได้ทุกระดับจนถึง +15 โดยไม่เสียทองหรือแร่เพิ่ม</p>${items.map(id => row(supplyArt(id) || ITEMS[id].icon, ITEMS[id].name, `มี ${p.inventory[id] || 0} ชิ้น${id === HIGH_STONE ? " · ใช้ตั้งแต่ +10 ขึ้นไป" : ""}`, btn(`data-buy="${id}" ${p.gold < ITEMS[id].price ? "disabled" : ""}`, `${ITEMS[id].price.toLocaleString()} ◈`))).join("")}`, "stones");
+    $$("[data-buy]").forEach(b => b.onclick = async () => {
+      b.disabled = true;
+      await transaction("npc:buy", { item: b.dataset.buy });
+      if (activePanel === "stones") showPanel("stones");
+    });
   } else if (panel === "forge") {
     if (state.area !== "town") return;
     lastRpgPanelHash = forgeHash(p);

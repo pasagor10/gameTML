@@ -1319,3 +1319,33 @@ test('auto drinks owned HP and MP sizes before fighting and during stage intro',
   assert.equal(p.inventory.mp_l, 1, 'must respect MP potion cooldown');
   p.auto = false;
 });
+
+test("town services sell guaranteed stones and rescue gear improves solo survival", async () => {
+  const { ITEMS, BLESS_STONE, HIGH_STONE } = await import("../shared/config.js");
+  assert.equal(WORLD.npcs.length, 6);
+  assert.ok(WORLD.npcs.some(n => n.id === "trainer"));
+  assert.ok(WORLD.npcs.some(n => n.id === "stones"));
+  for (const job of ["swordsman", "archer", "mage", "priest"]) {
+    const p = create(`rescue-${job}`, job);
+    const before = combatStats(p);
+    const c = loadCharacter(p.id);
+    c.gold = 1000000;
+    persist(c);
+    world.buyEquipment(p, `rescue_1_${job}`, `weapon-${job}`);
+    world.buyEquipment(p, "rescue_1_armor", `armor-${job}`);
+    world.equip(p, "weapon", `rescue_1_${job}`);
+    world.equip(p, "armor", "rescue_1_armor");
+    const after = combatStats(p);
+    assert.ok(after.atk > before.atk);
+    assert.ok(after.hp > before.hp + 60);
+    assert.ok(after.def > before.def);
+    assert.equal(ITEMS[BLESS_STONE].price, 500000);
+    assert.equal(ITEMS[HIGH_STONE].price, 500000);
+    world.buyNpc(p, BLESS_STONE, `stone-${job}`);
+    const gold = p.gold;
+    world.enhance(p, `bless-${job}`, "weapon", true);
+    assert.equal(p.upgrade, 1);
+    assert.equal(p.gold, gold);
+    assert.equal(p.inventory[BLESS_STONE], 0);
+  }
+});

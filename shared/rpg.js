@@ -595,6 +595,26 @@ export function rollDivineLoot(player, floor, random = Math.random) {
   return pool[Math.min(pool.length-1, Math.floor(random()*pool.length))];
 }
 
+// Reliable shop progression for solo heroes who have not won boss loot yet.
+// Boss relics remain the stronger offensive rewards.
+for (const [tier, level, price] of [[1, 1, 90], [2, 5, 650], [3, 10, 2400], [4, 20, 9000]]) {
+  const rarity = tier < 3 ? "rare" : "epic";
+  for (const [job, name, icon] of [
+    ["swordsman", "ดาบ", "⚔"], ["archer", "ธนู", "➶"],
+    ["mage", "คทาเวท", "✦"], ["priest", "คทาศักดิ์สิทธิ์", "✚"],
+  ]) GEAR[`rescue_${tier}_${job}`] = {
+    name: `${name}หน่วยกู้ภัย ${tier}`, icon, slot: "weapon", class: job,
+    rarity, level, price, stats: { atk: 8 + tier * 8, hp: tier * 20, mp: tier * 10 },
+  };
+  for (const [slot, name, icon, stats] of [
+    ["armor", "เกราะหน่วยกู้ภัย", "🛡", { hp: tier * 65, def: tier * 15 }],
+    ["charm", "เครื่องรางคุ้มชีพ", "◈", { hp: tier * 35, mp: tier * 25, atk: tier * 3 }],
+    ["boots", "รองเท้าตั้งหลัก", "♧", { hp: tier * 20, def: tier * 7, speed: 10 + tier * 3 }],
+  ]) GEAR[`rescue_${tier}_${slot}`] = {
+    name: `${name} ${tier}`, icon, slot, rarity, level, price, stats,
+  };
+}
+
 // Base-stat bonuses on gear (RO style "+3 DEX"): weapons push their class's
 // attack stat, other slots a fixed pair. Higher level and rarity give more,
 // so two pieces that share a picture still differ by level and bonus.
