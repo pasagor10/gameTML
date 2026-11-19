@@ -9,7 +9,7 @@ import { mkdirSync, readdirSync, unlinkSync } from "node:fs";
 import { db, loadCharacter, persist } from "./server/database.js";
 import { CLASSES, maxHp, maxMp } from "./shared/config.js";
 import * as world from "./server/world.js";
-import { releaseStamp, RELEASE } from "./server/release-stamp.js";
+import { releaseStamp } from "./server/release-stamp.js";
 import { createSnapshotMemo, packSnapshot, SNAPSHOT_PROTOCOL } from "./shared/snapshot-delta.js";
 const app = express(),
   server = http.createServer(app),
@@ -214,7 +214,8 @@ const revalidate = (res, file) => {
     res.setHeader("Cache-Control", "public, max-age=86400");
   if (/\.(js|mjs|json|css|html|webmanifest)$/.test(file)) res.setHeader("Cache-Control", "no-cache");
 };
-app.use(releaseStamp({ publicDir: path.resolve("public"), sharedDir: path.resolve("shared") }));
+const stamps = releaseStamp({ publicDir: path.resolve("public"), sharedDir: path.resolve("shared") });
+app.use(stamps);
 app.use("/shared", express.static(path.resolve("shared"), { setHeaders: revalidate }));
 app.use(
   express.static(path.resolve("public"), {
@@ -256,7 +257,7 @@ io.on("connection", (socket) => {
     if (world.players.has(socket.id)) throw Error("เลือกตัวละครแล้ว");
     const p = world.makeRuntime(c, socket);
     world.players.set(socket.id, p);
-    return { message: "ยินดีต้อนรับ " + p.name, release: RELEASE, onlinePlayers: world.onlineRoster(), announcements: world.announcements.slice(-10) };
+    return { message: "ยินดีต้อนรับ " + p.name, release: stamps.release(), onlinePlayers: world.onlineRoster(), announcements: world.announcements.slice(-10) };
   });
   execute(
     "player:input",

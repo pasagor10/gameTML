@@ -724,6 +724,14 @@ function setMapLayer(selector, markup) {
 // (common on tablets and the installed app) still runs the old code and
 // shows old data, so reload it once onto the new files.
 const PAGE_RELEASE = new URL(import.meta.url).searchParams.get("r");
+// Show which build this device runs (lobby footer), e.g. "v0.49.0 · Ab3xYz".
+// The stamp matches the server's when the device is up to date.
+const BUILD_LABEL = [
+  "v" + (new URL(import.meta.url).searchParams.get("v") || "?"),
+  (PAGE_RELEASE || "dev").slice(0, 6),
+].join(" · ");
+if ($("#build-version")) $("#build-version").textContent = BUILD_LABEL;
+console.info("TML build", BUILD_LABEL);
 function reloadForRelease(release) {
   if (!release || !PAGE_RELEASE || release === PAGE_RELEASE) return false;
   try {

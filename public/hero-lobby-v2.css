@@ -100,6 +100,8 @@ html body #landing.hero-lobby .hl-global-footer { grid-column:1/-1; grid-row:3; 
 html body #landing.hero-lobby .hl-global-footer span:first-child { display:flex; align-items:center; gap:8px; }
 html body #landing.hero-lobby .hl-global-footer i { width:5px; height:5px; border-radius:50% !important; background:#a5d6b3; box-shadow:0 0 10px #b2e2b257; }
 html body #landing.hero-lobby .hl-global-footer b { color:#ced6bd; font-weight:400; }
+/* Running build (game.js ?v and content stamp) so a device can be checked. */
+html body #landing.hero-lobby .hl-global-footer .build-version { margin-left:10px; font-style:normal; color:#ced6bd; opacity:.75; font-variant-numeric:tabular-nums; }
 html body #landing.hero-lobby .hl-gender { border-color:#c7d8be26; background:#0b2223; }
 html body #landing.hero-lobby .hl-gender button.active { background:#d9c18d !important; color:#24372c; }
 html body #landing.hero-lobby .hl-class { background:#0b22235e !important; border-color:#d4e2c91c !important; border-radius:9px !important; }
