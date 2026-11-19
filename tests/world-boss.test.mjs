@@ -29,15 +29,31 @@ function create(id, extra = {}) {
 const arena = () => world.instances.get(world.worldBoss.instanceId);
 const bossOf = (i) => i.enemies.find((e) => e.boss);
 
-test("Nang Non appears daily at 20:00 Bangkok and closes at 20:30", () => {
+test("Nang Non appears every half hour and closes after twenty minutes", () => {
   const start = Date.parse("2026-11-18T20:00:00+07:00")/1000;
   assert.equal(worldBossAt(start-1).open, false);
   assert.equal(worldBossAt(start).name, "เจ้าแม่นางนอน");
   assert.equal(worldBossAt(start).open, true);
-  assert.equal(worldBossAt(start+1799).open, true);
-  assert.equal(worldBossAt(start+1800).open, false);
-  assert.equal(worldBossAt(start).nextAt, start+86400);
-  assert.equal(worldBossAt(start+86400).open, true);
+  assert.equal(worldBossAt(start+1199).open, true);
+  assert.equal(worldBossAt(start+1200).open, false);
+  assert.equal(worldBossAt(start).nextAt, start+1800);
+  assert.equal(worldBossAt(start+1800).open, true);
+});
+
+test("divine weapons cover every class and stay outside ordinary loot and shops", async () => {
+  const { GEAR, WORLD_BOSS_WEAPONS, FLOOR_LOOT } = await import("../shared/rpg.js");
+  assert.equal(Object.keys(WORLD_BOSS_WEAPONS).length, 4);
+  for (const [job, id] of Object.entries(WORLD_BOSS_WEAPONS)) {
+    const g = GEAR[id];
+    assert.equal(g.class, job);
+    assert.equal(g.source, "world-boss");
+    assert.equal(g.price, undefined);
+    assert.ok(g.stats.atk > GEAR[`floor_10_${job}_weapon`].stats.atk);
+    for (const table of Object.values(FLOOR_LOOT)) {
+      assert.ok(!Object.values(table.weapons).includes(id));
+      assert.ok(!table.pool.includes(id));
+    }
+  }
 });
 
 test("ranking and rewards follow the share of damage", () => {
@@ -129,10 +145,12 @@ test("everyone who hit it is paid by place, even after going home", () => {
   assert.equal(res.world.place, 1);
   assert.equal(i.rewards[a.id].items.length, 3);
   assert.equal(i.rewards[b.id].items.length, 2);
+  assert.ok(a.ownedEquipment.includes("divine_nangnon_staff"));
+  assert.ok(b.ownedEquipment.includes("divine_nangnon_staff"));
   const completed = world.worldBoss;
   completed.cycle = -1;
   world.updateWorldBoss();
-  assert.equal(world.worldBoss, completed, "a completed daily boss cannot respawn");
+  assert.equal(world.worldBoss, completed, "a completed boss cycle cannot respawn");
   completed.cycle = worldBossAt(world.worldBossClock()).cycle;
   assert.equal(res.hasNext, false);
   assert.ok(a.gold - goldA >= worldReward(1, 0).gold);

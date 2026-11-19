@@ -1,3 +1,4 @@
+import { communityPanel } from "/community-ui.js?v=1";
 import { screenShakeEnabled, setScreenShakeEnabled, shakeCamera } from "/screen-shake.js?v=1";
 import { BOSSES } from "/shared/bosses.js";
 import { bindAnnouncements, receiveAnnouncement, announcementHistory } from "/announcements.js";
@@ -996,6 +997,10 @@ async function enterGame() {
         ? nextOffset
         : serverOffset + (nextOffset - serverOffset) * 0.08;
     scheduleHUD();
+    if (!posterShown && state.area === "town" && !activePanel) {
+      posterShown = true;
+      showPanel("poster");
+    }
     if (scene?.ready) scene.applySnapshot(packet);
   });
   socket.on("chat:message", (packet) => addChat(packet));
@@ -1009,6 +1014,7 @@ async function enterGame() {
 }
 const forgeHash = (p) =>
   JSON.stringify([p.equipment, p.upgrade, p.enhancements, p.gold, p.inventory.ore]);
+let posterShown = false;
 let worldBossWasOpen = false;
 async function joinWorldBoss() {
   if (activePanel) closeModal();
@@ -1690,6 +1696,7 @@ function bindMarket(panel) {
 function showPanel(panel) {
   if (!state) return;
   const p = state.self;
+  if (communityPanel(panel, { modal, escape, self: p, open: showPanel })) return;
   const row = (icon, name, desc, button) =>
     `<div class="item-row"><span>${icon}</span><div><strong>${escape(name)}</strong><small>${escape(desc)}</small></div>${button || ""}</div>`;
   const btn = (data, label) => `<button ${data}>${label}</button>`;
@@ -1932,14 +1939,15 @@ function showPanel(panel) {
       else b.disabled = false;
     });
   } else if (panel === "announcements") {
-    modal("ประกาศจากระบบ", `<p>เจ้าแม่นางนอน · ทุกวัน 20:00–20:30 น. เวลาไทย</p><p>รางวัลเมื่อปราบสำเร็จ: อันดับดาเมจ 1 ได้ตำนาน 3 ชิ้น · อันดับ 2–3 ได้ 2 ชิ้น · ผู้ทำดาเมจคนอื่นได้ 1 ชิ้น · มีของครบแล้วรับแร่แทน</p>${announcementHistory().map(a => `<article class="system-notice"><small>${new Date(a.at * 1000).toLocaleString("th-TH", {timeZone:"Asia/Bangkok"})}</small><p>${escape(a.message)}</p></article>`).join("") || "<p>ยังไม่มีประกาศใหม่</p>"}`, "announcements");
+    modal("ประกาศจากระบบ", `<p>เจ้าแม่นางนอน · ทุก 30 นาที (:00 และ :30) · เปิดรอบละ 20 นาที · อาวุธเทพเฉพาะบอสโลกตามอาชีพ 1 ชิ้นก่อนรางวัลตำนานที่เหลือ</p><p>รางวัลเมื่อปราบสำเร็จ: อันดับดาเมจ 1 ได้ตำนาน 3 ชิ้น · อันดับ 2–3 ได้ 2 ชิ้น · ผู้ทำดาเมจคนอื่นได้ 1 ชิ้น · มีของครบแล้วรับแร่แทน</p>${announcementHistory().map(a => `<article class="system-notice"><small>${new Date(a.at * 1000).toLocaleString("th-TH", {timeZone:"Asia/Bangkok"})}</small><p>${escape(a.message)}</p></article>`).join("") || "<p>ยังไม่มีประกาศใหม่</p>"}`, "announcements");
   } else if (panel === "settings") {
     modal(
       "บันทึกการเดินทาง",
-      `<p>เกมบันทึกตัวละคร เงิน อุปกรณ์ และดันเจียนบนเซิร์ฟเวอร์อัตโนมัติ<br>บัญชีผู้มาเยือนผูกกับคุกกี้ในเบราว์เซอร์นี้</p><button id="open-account-link" class="primary-button">${account?.registered ? "บัญชีผู้เล่น" : "ผูกบัญชี · เก็บตัวละครและเล่นต่อเครื่องอื่น"}</button><button id="open-announcements" class="primary-button">📣 ประกาศจากระบบ · บอสโลก 20:00 น.</button><button id="toggle-sound" class="primary-button">${muted ? "เปิดเสียงทั้งหมด" : "ปิดเสียงทั้งหมด"}</button><button id="toggle-music" class="primary-button">${musicOn() ? "ปิดเพลงประกอบ" : "เปิดเพลงประกอบ"}</button><button id="toggle-screen-shake" class="primary-button" role="switch" aria-checked="${screenShakeEnabled()}">จอสั่น: ${screenShakeEnabled() ? "เปิด" : "ปิด"}</button><p class="hint">ปิดจอสั่นและซูมกระแทกเพื่อลดอาการเวียนหัว · บันทึกการตั้งค่าในเครื่องนี้</p><div class="quality-picker"><small>คุณภาพกราฟิก · ตอนนี้ ${qualityLabel()}</small><div>${CHOICES.map((c) => `<button data-quality="${c}" class="${c === qualityChoice ? "active" : ""}">${c === "auto" ? "อัตโนมัติ" : PRESETS[c].name}</button>`).join("")}</div></div><button id="toggle-perf" class="primary-button">${perfOn ? "ซ่อนตัววัดประสิทธิภาพ" : "แสดงตัววัดประสิทธิภาพ"}</button><button id="back-selection" class="text-button">กลับหน้าเลือกตัวละคร</button><p class="hint">Demo v0.3 · นักดาบหญิงและสไลม์มีเฟรมแอนิเมชันชุดแรก · ตัวอื่นยังใช้ภาพ idle · เป้าหมาย 20–30 คนต่อห้องยังไม่ได้ยืนยันด้วย load test</p>`,
+      `<p>เกมบันทึกตัวละคร เงิน อุปกรณ์ และดันเจียนบนเซิร์ฟเวอร์อัตโนมัติ<br>บัญชีผู้มาเยือนผูกกับคุกกี้ในเบราว์เซอร์นี้</p><button id="open-account-link" class="primary-button">${account?.registered ? "บัญชีผู้เล่น" : "ผูกบัญชี · เก็บตัวละครและเล่นต่อเครื่องอื่น"}</button><button id="open-announcements" class="primary-button">📣 ประกาศจากระบบ · บอสโลกทุก 30 นาที</button><button id="open-poster" class="primary-button">🏹 โปสเตอร์ TML ONLINE</button><button id="toggle-sound" class="primary-button">${muted ? "เปิดเสียงทั้งหมด" : "ปิดเสียงทั้งหมด"}</button><button id="toggle-music" class="primary-button">${musicOn() ? "ปิดเพลงประกอบ" : "เปิดเพลงประกอบ"}</button><button id="toggle-screen-shake" class="primary-button" role="switch" aria-checked="${screenShakeEnabled()}">จอสั่น: ${screenShakeEnabled() ? "เปิด" : "ปิด"}</button><p class="hint">ปิดจอสั่นและซูมกระแทกเพื่อลดอาการเวียนหัว · บันทึกการตั้งค่าในเครื่องนี้</p><div class="quality-picker"><small>คุณภาพกราฟิก · ตอนนี้ ${qualityLabel()}</small><div>${CHOICES.map((c) => `<button data-quality="${c}" class="${c === qualityChoice ? "active" : ""}">${c === "auto" ? "อัตโนมัติ" : PRESETS[c].name}</button>`).join("")}</div></div><button id="toggle-perf" class="primary-button">${perfOn ? "ซ่อนตัววัดประสิทธิภาพ" : "แสดงตัววัดประสิทธิภาพ"}</button><button id="back-selection" class="text-button">กลับหน้าเลือกตัวละคร</button><p class="hint">Demo v0.3 · นักดาบหญิงและสไลม์มีเฟรมแอนิเมชันชุดแรก · ตัวอื่นยังใช้ภาพ idle · เป้าหมาย 20–30 คนต่อห้องยังไม่ได้ยืนยันด้วย load test</p>`,
     );
     $("#open-account-link").onclick = () => $("#account-open").click();
     $("#open-announcements").onclick = () => showPanel("announcements");
+    $("#open-poster").onclick = () => showPanel("poster");
     $("#toggle-sound").onclick = () => {
       setSound(!soundOn());
       syncSoundButton();

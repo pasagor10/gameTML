@@ -90,6 +90,10 @@ html body #modal[data-panel] .modal-box {
   background: linear-gradient(135deg,#192d38fa,#0c1924fc) !important;
   border: 1px solid #c1dce230 !important; border-radius: 20px !important;
   box-shadow: 0 28px 100px #0009 !important; overflow: hidden;
+  /* Bound the content scroller while keeping the title and close button visible. */
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 html body #modal[data-panel] .modal-box::before,
 html body #modal[data-panel] .modal-box::after,
@@ -161,7 +165,16 @@ html body #modal .inv-stats b { font-size: 13px !important; }
 html body #modal .inv-crest { transform: none; border: 1px solid var(--ui-line); border-radius: 10px !important; background: #8ad7c512; }
 html body #modal .inv-nameplate { border: 0 !important; }
 html body #modal :is(select,.inv-pills span) { border: 1px solid var(--ui-line) !important; border-radius: 6px !important; background: #152c39 !important; color: #b9ced6 !important; }
-html body #modal #modal-body { scrollbar-width: thin; scrollbar-color: #607c8766 transparent; }
+html body #modal[data-panel] .modal-box > header { flex: 0 0 auto; }
+html body #modal #modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
+  scrollbar-width: thin;
+  scrollbar-color: #607c87 #101e2b;
+}
 /* Full control reskin: replace baked-in pixel frames as well as CSS frames. */
 html body #game-screen #top-menu button[data-panel] {
   --menu-art: url('/assets/ui/modern/hero.svg');
@@ -177,6 +190,7 @@ html body #game-screen #top-menu button[data-panel="market"] { --menu-art: url('
 html body #game-screen #top-menu button[data-panel="players"] { --menu-art: url('/assets/ui/modern/players.svg'); }
 html body #game-screen #top-menu button[data-panel="party"] { --menu-art: url('/assets/ui/modern/party.svg'); }
 html body #game-screen #top-menu button[data-panel="settings"] { --menu-art: url('/assets/ui/modern/settings.svg'); }
+html body #game-screen #top-menu button[data-panel="ranking"] { --menu-art: url('/assets/ui/modern/ranking.svg'); }
 html body #game-screen #top-menu button[data-panel] > b { visibility: hidden !important; }
 html body #game-screen #top-menu.open button[data-panel] > span { text-shadow: 0 2px 8px #000c !important; }
 html body #game-screen #chat-toggle {
@@ -404,3 +418,21 @@ html body #toast {
 @media(pointer:coarse) {
   html body #toast { top:auto !important; bottom:calc(90px + env(safe-area-inset-bottom)) !important; }
 }
+
+/* Community: moonlit poster and gold tournament standings. */
+html body #modal[data-panel="poster"] .modal-box { width: min(470px,100%); }
+html body #modal[data-panel="poster"] #modal-body { padding: 0; }
+.game-poster { background: #001332; }
+.game-poster img { display: block; width: auto; max-width: 100%; height: auto; max-height: calc(85dvh - 200px); margin: 0 auto; }
+.game-poster { padding-bottom: 16px; overflow: hidden; }
+.game-poster button { display: block; box-sizing: border-box; width: calc(100% - 32px) !important; margin: 16px auto 0 !important; }
+.ranking-tabs { display: flex; gap: 8px; }
+.ranking-tabs button { flex: 1; padding: 10px; border: 1px solid #b59454; border-radius: 6px; background: #102237; color: #efd399; }
+.ranking-tabs button.active { background: #efd399; color: #172238; }
+.ranking-table { width: 100%; border-collapse: collapse; }
+.ranking-table th { color: #efd399; text-align: left; }
+.ranking-table td, .ranking-table th { padding: 12px 8px; border-bottom: 1px solid #bad7df24; }
+.ranking-table td:last-child, .ranking-table th:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+.ranking-table small { display: block; color: #9db3bd; }
+.ranking-self { background: #dcb46020; }
+.ranking-summary { color: #efd399; }

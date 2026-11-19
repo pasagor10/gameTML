@@ -17,6 +17,7 @@ import {
   GEAR,
   SLOTS,
   FLOOR_LOOT,
+  WORLD_BOSS_WEAPONS,
   bossLootCandidates,
   SPECIALIZATIONS,
   initializeGear,
@@ -422,7 +423,7 @@ function openWorldBoss(sched) {
     names: new Map(),
     joined: new Set(),
   };
-  announce(`worldboss:${sched.cycle}:open`, "เจ้าแม่นางนอนปรากฏแล้ว! ร่วมปราบบอสโลก รับของตำนานตามอันดับดาเมจ · ปิดสนาม 20:30 น.");
+  announce(`worldboss:${sched.cycle}:open`, "เจ้าแม่นางนอนปรากฏแล้ว! ร่วมปราบบอสโลก รับของตำนานตามอันดับดาเมจ · เปิดสนามรอบละ 20 นาที · รับอาวุธเทพเฉพาะบอสโลก");
   log(null, "worldboss:open", { cycle: sched.cycle, boss: sched.name });
   return i;
 }
@@ -432,14 +433,14 @@ export function updateWorldBoss(clock = worldBossClock()) {
   const until = sched.nextAt - clock;
   if (!sched.open && until > 0 && until <= 600) {
     const minutes = until <= 60 ? 1 : until <= 300 ? 5 : 10;
-    announce(`worldboss:${sched.cycle + 1}:warning:${minutes}`, `อีกไม่เกิน ${minutes} นาที เจ้าแม่นางนอนจะปรากฏเวลา 20:00 น. เตรียมรับอุปกรณ์ตำนานตามดาเมจ!`);
+    announce(`worldboss:${sched.cycle + 1}:warning:${minutes}`, `อีกไม่เกิน ${minutes} นาที เจ้าแม่นางนอนจะปรากฏในรอบถัดไป เตรียมรับอุปกรณ์ตำนานตามดาเมจ!`);
   }
   if (sched.open && !completedWorldCycles.has(sched.cycle) && worldBoss?.cycle !== sched.cycle) {
     if (worldBoss) closeWorldBoss();
     openWorldBoss(sched);
   } else if (worldBoss && !worldBoss.done && clock >= worldBoss.endsAt) {
     worldBoss.done = "escaped";
-    announce(`worldboss:${worldBoss.cycle}:escaped`, "เจ้าแม่นางนอนลับหายไปแล้ว พบกันพรุ่งนี้ 20:00 น.");
+    announce(`worldboss:${worldBoss.cycle}:escaped`, "เจ้าแม่นางนอนลับหายไปแล้ว พบกันรอบถัดไป ทุก 30 นาที");
     closeWorldBoss();
   }
 }
@@ -548,8 +549,11 @@ function worldBossDown(i, t) {
     reward.ore += pay.ore;
     reward.exp += pay.exp;
     for (let n = 0; n < pay.itemCount; n++) {
-      const pool = bossLootCandidates(MAIN_FLOORS, m.class, m.ownedEquipment)
-        .filter(id => GEAR[id].rarity === "legendary");
+      const divine = WORLD_BOSS_WEAPONS[m.class];
+      const pool = divine && !m.ownedEquipment.includes(divine)
+        ? [divine]
+        : bossLootCandidates(MAIN_FLOORS, m.class, m.ownedEquipment)
+          .filter(id => GEAR[id].rarity === "legendary");
       if (!pool.length) { m.inventory.ore += 15; reward.ore += 15; continue; }
       const item = pool[Math.floor(Math.random() * pool.length)];
       m.ownedEquipment.push(item);

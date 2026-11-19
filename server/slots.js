@@ -30,6 +30,7 @@ export function spinSlotMachine(p, key, rng = randomInt, at = Date.now()) {
       const pool = Object.entries(GEAR).filter(
         ([id, g]) =>
           !id.startsWith("starter_") &&
+          g.source !== "world-boss" &&
           g.rarity === reward.rarity &&
           (!g.class || g.class === c.class) &&
           g.level <= c.level &&

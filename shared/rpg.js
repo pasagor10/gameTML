@@ -556,6 +556,27 @@ for (const tier of ADVANCED_FLOOR_GEAR) {
   };
 }
 
+// Exclusive world-boss weapons: deliberately absent from shops and floor loot.
+export const WORLD_BOSS_WEAPONS = {
+  swordsman: "divine_nangnon_blade",
+  archer: "divine_nangnon_bow",
+  mage: "divine_nangnon_staff",
+  priest: "divine_nangnon_scepter",
+};
+for (const [job, name, icon, stats] of [
+  ["swordsman", "ดาบเทพนางนอน", "⚔", { atk: 125, def: 20, hp: 150 }],
+  ["archer", "ธนูเทพนางนอน", "➶", { atk: 120, range: 200, speed: 25 }],
+  ["mage", "คทาเทพนางนอน", "✦", { atk: 130, mp: 180 }],
+  ["priest", "คทาพรเทพนางนอน", "✚", { atk: 115, mp: 160, hp: 220 }],
+]) {
+  GEAR[WORLD_BOSS_WEAPONS[job]] = {
+    name, icon, slot: "weapon", rarity: "legendary", class: job, level: 19,
+    source: "world-boss",
+    lore: "อาวุธเทพ · ได้จากการปราบเจ้าแม่นางนอน บอสโลกเท่านั้น",
+    stats,
+  };
+}
+
 // Base-stat bonuses on gear (RO style "+3 DEX"): weapons push their class's
 // attack stat, other slots a fixed pair. Higher level and rarity give more,
 // so two pieces that share a picture still differ by level and bonus.

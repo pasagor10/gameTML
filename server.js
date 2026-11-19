@@ -1,3 +1,4 @@
+import { rankCharacters } from "./server/ranking.js";
 import { spinSlotMachine } from "./server/slots.js";
 import express from "express";
 import http from "node:http";
@@ -76,6 +77,16 @@ function login(res, user) {
 app.get("/api/health", (req, res) =>
   res.json({ ok: true, version: "0.3.0", online: world.players.size }),
 );
+app.get("/api/ranking", (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  const user = sessions(req);
+  if (!user) return res.status(401).json({ error: "กรุณาเข้าสู่ระบบ" });
+  const metric = req.query.metric || "level";
+  if (!["level", "dungeon", "gold"].includes(metric)) return res.status(400).json({ error: "อันดับไม่ถูกต้อง" });
+  const entries = rankCharacters(db.prepare("SELECT id,name,state FROM characters").all(), world.players.values(), metric);
+  const ids = new Set(db.prepare("SELECT id FROM characters WHERE user_id=?").all(user.id).map(p => p.id));
+  res.json({ metric, total: entries.length, entries: entries.slice(0,100), self: entries.find(p => ids.has(p.id)) || null });
+});
 app.get("/api/me", (req, res) => {
   res.setHeader("Cache-Control", "no-store");
   const user = sessions(req);

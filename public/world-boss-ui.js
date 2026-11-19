@@ -48,4 +48,4 @@ export function updateWorldBossHud(state, onJoin) {
 
 // Line for the minimap zone while waiting for the next one.
 export const worldBossCountdown = (wb) =>
-  !wb ? "" : wb.open ? "👑 บอสโลกอยู่!" : `👑 เจ้าแม่นางนอน · ทุกวัน 20:00 น.`;
+  !wb ? "" : wb.open ? "👑 บอสโลกอยู่!" : `👑 เจ้าแม่นางนอน · ทุก 30 นาที`;

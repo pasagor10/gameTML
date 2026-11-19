@@ -1,9 +1,9 @@
 // World boss: one giant everyone online fights together in a shared arena.
-// It rises daily at 20:00 Bangkok and stays for thirty minutes. HP grows with each hero
+// It rises every thirty minutes and stays for twenty minutes. HP grows with each hero
 // who joins; rewards follow each hero's share of the damage.
 export const WORLD_BOSS = {
-  every: 86400, // one appearance per day
-  window: 1800, // how long it stays before it escapes
+  every: 1800, // at :00 and :30 each hour
+  window: 1200, // how long it stays before it escapes
   hp: 1000000,
   hpPerHero: 200000, // added when a new hero joins this appearance
   damage: 1.8, // on top of a floor-10 boss hit
@@ -17,9 +17,9 @@ export const WORLD_BOSSES = [
   { type: "serpent", name: "เจ้าแม่นางนอน", tint: 0xffdf9a },
 ];
 export const worldBossOf = () => WORLD_BOSSES[0];
-// 20:00 Asia/Bangkok = 13:00 UTC. Bangkok has no daylight-saving changes.
+// Half-hour boundaries also align with Bangkok local time.
 export function worldBossAt(t) {
-  const startHourUtc = 13 * 3600;
+  const startHourUtc = 0;
   let cycle = Math.floor((t - startHourUtc) / WORLD_BOSS.every);
   const startsAt = cycle * WORLD_BOSS.every + startHourUtc;
   const endsAt = startsAt + WORLD_BOSS.window;
