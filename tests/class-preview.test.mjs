@@ -15,7 +15,7 @@ test("picking a class previews its character; confirmation and character changes
     .replace('"/hero-appearance.js?v=3"', JSON.stringify(asModule(portraitSource)));
   for (const [from, to] of [["/item-art.js", "../public/item-art.js"],
     ["/shared/rpg.js", "../shared/rpg.js"], ["/shared/config.js", "../shared/config.js"],
-    ["/shared/motion.js", "../shared/motion.js"], ["/shared/costumes.js", "../shared/costumes.js"], ["/shared/stats.js", "../shared/stats.js"], ["/skill-icons.js?v=4", "../public/skill-icons.js"]])
+    ["/shared/motion.js", "../shared/motion.js"], ["/shared/costumes.js", "../shared/costumes.js"], ["/shared/stats.js", "../shared/stats.js"], ["/skill-icons.js?v=5", "../public/skill-icons.js"]])
     source = source.replace(JSON.stringify(from), JSON.stringify(url(to)));
   const savedFetch = globalThis.fetch;
   let ui;

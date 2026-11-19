@@ -6,7 +6,7 @@ import { isWorldPointer } from "/world-input.js";
 import { SLOT_MACHINE } from "/shared/slots.js";
 import { slotPanelHtml, bindSlotPanel } from "/slots-ui.js?v=2";
 import { heroPortraitStyle } from "/hero-appearance.js?v=3";
-import { skillIcon, potionIcon, manaPotionIcon, autoIcon } from "/skill-icons.js?v=4";
+import { skillIcon, potionIcon, manaPotionIcon, autoIcon } from "/skill-icons.js?v=5";
 import { dungeonPlatforms, withinDungeonSign } from "/shared/dungeons.js";
 import { supplyArt, itemArtPath, costumeArtPath } from "/item-art.js";
 import { COSTUME_ITEMS } from "/shared/costumes.js";

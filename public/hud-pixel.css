@@ -396,3 +396,66 @@ body #game-screen #quests .quest-badge {
   color: transparent !important;
   image-rendering: pixelated;
 }
+
+/* ---------- Action bar ---------- */
+/* Navy panel with the gold pixel rim; each slot a dark navy tile with a
+   2 px gold-brown rim, pixel icons (public/skill-icons.js) and gold keys. */
+@media (pointer: fine) {
+  /* On touch the controls are round thumb targets with no frame behind. */
+  body #game-screen .hud-bottom .skillbar {
+    background: var(--hx-navy) !important;
+    border: 2px solid var(--hx-gold) !important;
+    box-shadow: var(--hx-frame) !important;
+  }
+}
+body #game-screen .hud-bottom .skillbar::before,
+body #game-screen .hud-bottom .skillbar::after {
+  display: none !important;
+}
+body #game-screen .hud-bottom .skillbar .skill {
+  background: #0f1c3a !important;
+  border: 2px solid #8a6a2c !important;
+  border-radius: 0 !important;
+  box-shadow: 0 0 0 2px var(--hx-ink), inset 0 0 0 2px #0a1228, inset 0 4px 0 2px #ffffff10 !important;
+}
+body #game-screen .hud-bottom .skillbar .skill:is(:hover, :focus-visible) {
+  background: #1a2c56 !important;
+  border-color: var(--hx-gold) !important;
+}
+body #game-screen .hud-bottom .skillbar .skill:active {
+  transform: translateY(2px);
+}
+body #game-screen .hud-bottom .skillbar .skill.basic {
+  background: #1f8a43 !important;
+  border-color: var(--hx-gold) !important;
+  box-shadow: 0 0 0 2px var(--hx-ink), inset 0 0 0 2px #14602d, inset 0 4px 0 2px #ffffff22 !important;
+}
+body #game-screen .hud-bottom .skillbar .skill.basic:is(:hover, :focus-visible) {
+  background: #27a052 !important;
+}
+body #game-screen .hud-bottom .skillbar .skill.auto.on {
+  background: #1f8a43 !important;
+  border-color: var(--hx-gold) !important;
+}
+body #game-screen .hud-bottom .skillbar .skill b {
+  filter: drop-shadow(2px 2px 0 #00000080) !important;
+}
+body #game-screen .hud-bottom .skillbar .skill b .px-icon {
+  width: 100%;
+  height: 100%;
+}
+body #game-screen .hud-bottom .skillbar .skill > span {
+  background: var(--hx-ink) !important;
+  border: 1px solid var(--hx-gold) !important;
+  border-radius: 0 !important;
+  color: var(--hx-gold) !important;
+  box-shadow: none !important;
+}
+body #game-screen .hud-bottom .skillbar .skill .skill-cost {
+  color: #a8d8ff !important;
+  text-shadow: 1px 1px 0 var(--hx-ink) !important;
+}
+body #game-screen .hud-bottom .skillbar .skill small {
+  color: var(--hx-text) !important;
+  text-shadow: 1px 1px 0 var(--hx-ink) !important;
+}

@@ -28,7 +28,7 @@ import {
   resetCost,
 } from "/shared/stats.js";
 import { ACTIONS } from "/shared/motion.js";
-import { skillIcon } from "/skill-icons.js?v=4";
+import { skillIcon } from "/skill-icons.js?v=5";
 const statNames = {
   atk: "ATK",
   def: "DEF",
