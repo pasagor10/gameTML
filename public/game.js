@@ -1,3 +1,5 @@
+import { prepareUltimate, showUltimateCutin, showUltimateImpact } from "/ultimate-ui.js?v=1";
+import { ULTIMATES } from "/shared/ultimates.js";
 import { communityPanel, NEWS_ID } from "/community-ui.js?v=2";
 import { screenShakeEnabled, setScreenShakeEnabled, shakeCamera } from "/screen-shake.js?v=1";
 import { BOSSES } from "/shared/bosses.js";
@@ -29,7 +31,7 @@ import {
   rpgPanel,
   bindRpgPanel,
   gearShop,
-} from "/rpg-ui.js?v=18";
+} from "/rpg-ui.js?v=19";
 import {
   GEAR,
   RARITIES,
@@ -1139,6 +1141,12 @@ function updateHUD() {
     button.setAttribute("aria-label", tip);
     button.querySelector(".skill-cost").textContent = ACTIONS[i + 1].mp + " MP";
   });
+  const ultimateButton = $('[data-action="skill5"]');
+  const ultimate = ULTIMATES[p.class];
+  ultimateButton.dataset.tip = `${ultimate.name} · ศัตรูทั่วจอ · 50 MP · 45 วินาที`;
+  ultimateButton.setAttribute('aria-label', ultimateButton.dataset.tip);
+  ultimateButton.querySelector('.skill-cost').textContent = '50 MP';
+  prepareUltimate(p.gender);
   const basicAttack = $('[data-action="attack"]');
   if (basicAttack.dataset.iconClass !== p.class) {
     basicAttack.querySelector("b").innerHTML = skillIcon(p.class, 0);
@@ -1371,7 +1379,7 @@ function updateHUD() {
   if (p.hp <= 0 && wasAlive) sfx("death", null, 0);
   wasCleared = cleared;
   wasAlive = p.hp > 0;
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     const button = $(`[data-action="skill${i}"] i`),
       remaining = ACTIONS[i].cooldown - (state.time - (p.cooldowns[i] || 0));
     const skillButton = button.parentElement;
@@ -1490,7 +1498,11 @@ function action(name) {
   if (!state || activePanel) return;
   if (name === "attack") emit("player:attack", { skill: 0 });
   else if (name.startsWith("skill"))
-    emit("player:attack", { skill: Number(name.slice(-1)) });
+    emit("player:attack", { skill: Number(name.slice(-1)),
+      ...(name === "skill5" && scene ? { view: {
+        x:scene.cameras.main.worldView.x, y:scene.cameras.main.worldView.y,
+        width:scene.cameras.main.worldView.width, height:scene.cameras.main.worldView.height,
+      } } : {}) });
   else if (name === "hp" || name === "mp")
     emit("player:potion", { type: name, auto: true }).then((r) => r && sfx("potion"));
   else if (name === "auto") emit("player:auto", { enabled: !state.self.auto });
@@ -2243,6 +2255,7 @@ addEventListener("keydown", (e) => {
     KeyW: "skill2",
     KeyE: "skill3",
     KeyS: "skill4",
+    KeyX: "skill5",
     KeyR: "hp",
     KeyG: "mp",
     KeyT: "auto",
@@ -3074,6 +3087,10 @@ class Adventure extends Phaser.Scene {
     });
   }
   effect(e) {
+    if (e.kind === "ultimate") {
+      if (e.actorId === state?.self.id) showUltimateCutin(e.class, e.gender);
+      return;
+    }
     if (e.kind === "loot") {
       if (e.actorId === state.self.id) {
         const item = GEAR[e.item];
@@ -3281,6 +3298,10 @@ class Adventure extends Phaser.Scene {
         { volume: e.actorId === state?.self.id ? 1 : 0.35 },
         e.actorId === state?.self.id ? 0.02 : 0.1,
       );
+      if (e.skill === 5) {
+        if (e.actorId === state?.self.id) showUltimateImpact(e.class);
+        return;
+      }
       this.fx.attack(e);
       // Double strafe: the second arrow follows right behind the first.
       if (e.double) this.time.delayedCall(90, () => this.fx.attack({ ...e, y: e.y + 12, echo: true }));

@@ -316,7 +316,7 @@ io.on("connection", (socket) => {
     // dropped the newest one (the press the player just made).
     80,
   );
-  execute("player:attack", (p, d) => world.attack(p, d.skill ?? 0), 40);
+  execute("player:attack", (p, d) => world.attack(p, d.skill ?? 0, undefined, d.view), 40);
   // Round-trip probe for the on-screen FPS/ping readout.
   execute("net:ping", () => ({}), 5);
   execute("player:auto", (p, d) => {

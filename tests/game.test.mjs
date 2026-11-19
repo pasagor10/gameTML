@@ -1246,3 +1246,30 @@ test("replaying a floor needs a finished floor and a valid run count", () => {
   assert.equal(world.MAX_REPLAYS, 99);
   assert.deepEqual(Object.keys(world.stopReplay(p)), ["message"]);
 });
+
+test('all classes and genders have an authoritative fullscreen ultimate with MP and cooldown limits',()=>{
+  let count=0;
+  for(const cls of ['swordsman','archer','mage','priest']) for(const gender of ['male','female']) {
+    const p=create('ult-'+(++count),cls);p.gender=gender;
+    world.beginDungeon(p,1);p.x=800;p.y=600;p.mp=200;
+    const i=world.instances.get(p.instance);
+    i.enemies=i.enemies.slice(0,3);
+    assert.equal(i.enemies.length,3);
+    for(const [n,e] of i.enemies.entries()){e.x=[500,1150,2000][n];e.y=600;e.hp=e.maxHp=100000;e.speed=0;}
+    const t=Date.now()/1000;
+    world.attack(p,5,t,{x:300,y:0,width:1000,height:1000});
+    assert.equal(p.mp,150);
+    assert.equal(i.events.filter(e=>e.kind==='ultimate').length,1);
+    assert.equal(i.events.find(e=>e.kind==='ultimate').gender,gender);
+    assert.equal(i.enemies[0].hp,100000,'cut-in windup does not hit early');
+    world.tick(.01,t+1.26);
+    assert.ok(i.enemies[0].hp<100000,cls+' hits behind');
+    assert.ok(i.enemies[1].hp<100000,cls+' hits distant target');
+    assert.equal(i.enemies[2].hp,100000,'offscreen target is untouched');
+    const mp=p.mp;world.attack(p,5,t+2,{x:300,y:0,width:1000,height:1000});
+    assert.equal(p.mp,mp,'cooldown blocks repeated ultimate');
+    p.action=null;p.pending=null;p.cooldowns[5]=0;p.mp=49;
+    world.attack(p,5,t+50);
+    assert.equal(p.mp,49,'insufficient MP cannot cast');assert.equal(p.pending,null);
+  }
+});

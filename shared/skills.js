@@ -1,3 +1,4 @@
+import { ULTIMATES } from "./ultimates.js";
 // Skill kits and status effects, shared by the server (rules) and the client
 // (skill bar, tooltips, status icons). Each attack skill strikes several
 // times per target, so damage shows as a stack of numbers, and may leave a
@@ -56,6 +57,7 @@ export const SKILL_KITS = {
     { name: "พรศักดิ์สิทธิ์", icon: "✚", buff: "blessing", duration: 12, detail: "ปาร์ตี้ฟื้น HP 4% ทุกวินาที · 12 วิ" },
   ],
 };
+for (const [cls, ultimate] of Object.entries(ULTIMATES)) SKILL_KITS[cls].push({ ...ultimate, icon: "✦" });
 export const skillOf = (cls, skill) => SKILL_KITS[cls]?.[skill] || SKILL_KITS.swordsman[0];
 // Players asked for more, harder crits: 20% base, ×1.75 damage.
 export const BASE_CRIT = 0.2;

@@ -49,7 +49,8 @@ function cast(p, skill, t) {
 
 test("every class has three attack skills and a party buff, with distinct statuses", () => {
   for (const [cls, kit] of Object.entries(SKILL_KITS)) {
-    assert.equal(kit.length, 5, cls);
+    assert.equal(kit.length, 6, cls);
+    assert.ok(kit[5].hits > 0 && kit[5].power > 0, cls);
     assert.equal(CLASS_SKILLS[cls].length, 4);
     for (const s of kit.slice(1, 4)) {
       assert.ok(s.hits >= 2, `${cls} ${s.name} hits several times`);
@@ -58,7 +59,9 @@ test("every class has three attack skills and a party buff, with distinct status
     }
     assert.ok(BUFFS[kit[4].buff]);
   }
-  assert.equal(ACTIONS.length, 5);
+  assert.equal(ACTIONS.length, 6);
+  assert.equal(ACTIONS[5].cooldown, 45);
+  assert.equal(ACTIONS[5].mp, 50);
 });
 
 test("a multi-hit skill sends one stacked line per strike", () => {

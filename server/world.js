@@ -1,3 +1,4 @@
+import { ultimateArea, inUltimateArea } from "../shared/ultimates.js";
 import { BOSSES } from "../shared/bosses.js";
 import {
   bossMechanics,
@@ -1456,9 +1457,9 @@ export function resetStats(p) {
 function aspdOf(p, t) {
   return combatStats(p).aspd * (t < (p.lightningUntil || 0) ? 1 + LIGHTNING.aspd : 1);
 }
-export function attack(p, skill = 0, t = now()) {
+export function attack(p, skill = 0, t = now(), view = null) {
   if (
-    !ACTIONS[skill] ||
+    !Number.isInteger(skill) || !ACTIONS[skill] ||
     p.area !== "dungeon" ||
     statusActive(p, "stun", t) ||
     p.hp <= 0 ||
@@ -1472,7 +1473,7 @@ export function attack(p, skill = 0, t = now()) {
   // AGI speeds up the basic attack (ASPD); DEX shortens a skill's cast.
   const stats = combatStats(p),
     tempo = skill ? 1 : aspdOf(p, t),
-    windup = skill ? spec.windup * (1 - stats.cast) : spec.windup / tempo,
+    windup = skill === 5 ? spec.windup : skill ? spec.windup * (1 - stats.cast) : spec.windup / tempo,
     recovery = spec.recovery / tempo,
     cooldown = spec.cooldown / tempo;
   if (
@@ -1507,7 +1508,9 @@ export function attack(p, skill = 0, t = now()) {
     impactAt: t + windup,
     endsAt: t + windup + recovery,
   };
-  p.pending = { ...p.action };
+  p.pending = { ...p.action, ...(skill === 5 ? { area: ultimateArea(p, view) } : {}) };
+  if (skill === 5) i.events.push({ id: randomUUID(), kind:"ultimate", actorId:p.id,
+    class:p.class, gender:p.gender, x:p.x, y:p.y, at:t });
 }
 function resolveAttack(p, t) {
   const a = p.pending;
@@ -1571,9 +1574,9 @@ function resolveAttack(p, t) {
   for (const e of i.enemies) {
     if (
       e.hp <= 0 ||
-      Math.abs(e.x - p.x) > range ||
-      Math.abs(e.y - p.y) > 130 ||
-      ((e.x - p.x) * a.direction < -35 && skill !== 3)
+      (skill === 5 ? !inUltimateArea(e, a.area || ultimateArea(p)) :
+        Math.abs(e.x - p.x) > range || Math.abs(e.y - p.y) > 130 ||
+        ((e.x - p.x) * a.direction < -35 && skill !== 3))
     )
       continue;
     if ((p.class === "archer" || p.class === "priest") && skill < 2 && hits > 0) continue;

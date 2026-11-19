@@ -691,7 +691,7 @@ export const SPECIALIZATIONS = {
 };
 // Q, W, E attacks and the S party buff (shared/skills.js).
 export const CLASS_SKILLS = Object.fromEntries(
-  Object.entries(SKILL_KITS).map(([cls, kit]) => [cls, kit.slice(1)]),
+  Object.entries(SKILL_KITS).map(([cls, kit]) => [cls, kit.slice(1, 5)]),
 );
 export const ENHANCEMENT_BONUSES = {
   weapon: { atk: 8 },
