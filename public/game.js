@@ -2649,7 +2649,7 @@ class Adventure extends Phaser.Scene {
         viewH = h / zoom;
       this.camY = Math.min(
         TOWN_VIEW.bottom - viewH / 2,
-        portrait ? WORLD.ground - 0.14 * viewH : h < 520 ? WORLD.ground - 0.24 * viewH : 340,
+        portrait ? WORLD.ground - 0.18 * viewH : h < 520 ? WORLD.ground - 0.24 * viewH : 340,
       );
       this.cameras.main.setZoom(zoom * r);
       this.cameras.main.setBounds(0, TOWN_VIEW.top, areaWidth("town"), TOWN_VIEW.bottom - TOWN_VIEW.top);
@@ -2664,12 +2664,12 @@ class Adventure extends Phaser.Scene {
         viewH = h / zoom;
       // Ground at ~2/3 on portrait phones, ~3/4 on short landscape screens
       // (phones sideways); tall desktop windows keep the original framing.
-      // Portrait: ground at ~64% like the town, so monsters walk above the
-      // skill arc; the camera may look past the painting's bottom there
+      // Portrait: ground just above the skill buttons (~60%), so the
+      // fight uses the lower screen instead of leaving it empty; the camera may look past the painting's bottom there
       // (the controls and the foreground strip cover it).
       const bottom = portrait ? Math.max(1000, WORLD.ground + 0.36 * viewH) : 850;
       this.camY = portrait
-        ? Math.min(bottom - viewH / 2, WORLD.ground - 0.14 * viewH)
+        ? Math.min(bottom - viewH / 2, WORLD.ground - 0.15 * viewH)
         : h < 520
           ? Math.min(bottom - viewH / 2, WORLD.ground - 0.26 * viewH)
           : 340;
@@ -2678,7 +2678,9 @@ class Adventure extends Phaser.Scene {
       // than the view make Phaser centre it, which lifted the ground to
       // mid-screen and left the bottom empty. Reach up far enough to frame
       // the ground at camY (plus headroom for climbs).
-      const top = Math.min(-100, this.camY - viewH / 2 - 400);
+      // Wider screens keep -100: above it there is no backdrop, and a jump
+      // would lift the view into the empty band.
+      const top = portrait ? Math.min(-100, this.camY - viewH / 2 - 400) : -100;
       this.cameras.main.setBounds(0, top, areaWidth(state?.area), bottom + 100 - top);
     }
     this.parallax?.resize();

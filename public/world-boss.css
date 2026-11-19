@@ -124,6 +124,11 @@
   .world-boss button { padding: 7px 10px; font-size: 12px; }
   #game-screen .world-rank { top: 130px; right: 8px; width: 145px; font-size: 9px; }
 }
+/* Portrait phones: the ranking sits under the boss bar and the hazard
+   line instead of on top of them. */
+@media (max-width: 700px) and (orientation: portrait) {
+  html body #game-screen .world-rank { top: calc(var(--hud-edge-t, 0px) + 186px); right: var(--hud-edge-r, 8px); width: 150px; }
+}
 /* Phones in landscape: a slim strip between the hero card and the minimap. */
 @media (max-height: 500px) {
   #game-screen .world-boss { top: 60px; width: min(236px, 30vw); padding: 5px 6px; gap: 6px; border-radius: 8px; }
@@ -168,4 +173,21 @@
   html body #game-screen #world-boss .wb-body small { font-size: 10px; }
   html body #game-screen #world-boss .wb-body b { font-size: 12px; }
   html body #game-screen #world-boss button { flex: 0 0 auto; min-height: 36px; padding: 6px 10px; font-size: 11px; }
+}
+
+/* Mouse screens: keep the banner centred, but never over the hero card
+   (left) or the trophy/menu buttons (right); it narrows to fit between. */
+@media (min-width: 701px) and (min-height: 501px) and (pointer: fine) {
+  html body #game-screen #world-boss {
+    --wb-w: min(560px, 52vw);
+    left: max(var(--chat-left, 270px), calc(50% - var(--wb-w) / 2));
+    right: max(calc(var(--hud-edge-r, 10px) + 120px), calc(50% - var(--wb-w) / 2));
+    width: auto; transform: none; box-sizing: border-box;
+    animation: wb-glow 2.4s ease-in-out infinite;
+  }
+  html body #game-screen #world-boss .wb-body small,
+  html body #game-screen #world-boss .wb-body b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
+@media (min-width: 701px) and (max-width: 900px) and (min-height: 501px) and (pointer: fine) {
+  html body #game-screen #world-boss { --wb-w: min(440px, 60vw); }
 }

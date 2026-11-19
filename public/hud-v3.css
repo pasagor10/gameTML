@@ -98,6 +98,8 @@ html body #game-screen #top-menu.open > button[data-panel="settings"] > span {
 html body #game-screen[data-area="town"] #minimap { top: var(--hud-edge-t) !important; right: var(--hud-edge-r) !important; }
 html body #game-screen[data-area="town"]:has(#top-menu.open) #minimap { visibility: visible; }
 html body #game-screen[data-area="town"]:has(#top-menu.open) #training-open:not(:disabled) { top: 290px !important; right: 0 !important; }
+/* The chat icon in the open menu sits under the training button, not on it. */
+html body #game-screen[data-area="town"]:has(#top-menu.open):has(#training-open:not(:disabled)) #chat-toggle { top: calc(var(--hud-edge-t) + 344px) !important; }
 
 /* ---------- Dungeon top bar: floor + pause (leave lives in pause) ---------- */
 html body #game-screen #dungeon-bar,
