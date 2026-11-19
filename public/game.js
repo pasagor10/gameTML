@@ -1,3 +1,4 @@
+import { screenShakeEnabled, setScreenShakeEnabled, shakeCamera } from "/screen-shake.js?v=1";
 import { BOSSES } from "/shared/bosses.js";
 import { bindAnnouncements, receiveAnnouncement, announcementHistory } from "/announcements.js";
 import { updatePartyUi, bindPartyUi } from "/party-ui.js?v=2";
@@ -86,7 +87,7 @@ import { createParallax } from "/parallax.js?v=0.12.0";
 import { PRESETS, CHOICES, autoLevel, createAutoTuner } from "/graphics-quality.js";
 import { createPerfOverlay, logEvent, readLog, textureStats } from "/perf-overlay.js";
 import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.7";
-import { createCombatFx } from "/combat-fx.js?v=0.13.0";
+import { createCombatFx } from "/combat-fx.js?v=0.14.0";
 import { activeEffects, effectTint, effectRow, hudEffects } from "/status-ui.js?v=1";
 import { STATUSES, BUFFS } from "/shared/skills.js";
 import { WORLD_BOSS, worldInfo } from "/shared/world-boss.js";
@@ -1935,7 +1936,7 @@ function showPanel(panel) {
   } else if (panel === "settings") {
     modal(
       "บันทึกการเดินทาง",
-      `<p>เกมบันทึกตัวละคร เงิน อุปกรณ์ และดันเจียนบนเซิร์ฟเวอร์อัตโนมัติ<br>บัญชีผู้มาเยือนผูกกับคุกกี้ในเบราว์เซอร์นี้</p><button id="open-account-link" class="primary-button">${account?.registered ? "บัญชีผู้เล่น" : "ผูกบัญชี · เก็บตัวละครและเล่นต่อเครื่องอื่น"}</button><button id="open-announcements" class="primary-button">📣 ประกาศจากระบบ · บอสโลก 20:00 น.</button><button id="toggle-sound" class="primary-button">${muted ? "เปิดเสียงทั้งหมด" : "ปิดเสียงทั้งหมด"}</button><button id="toggle-music" class="primary-button">${musicOn() ? "ปิดเพลงประกอบ" : "เปิดเพลงประกอบ"}</button><div class="quality-picker"><small>คุณภาพกราฟิก · ตอนนี้ ${qualityLabel()}</small><div>${CHOICES.map((c) => `<button data-quality="${c}" class="${c === qualityChoice ? "active" : ""}">${c === "auto" ? "อัตโนมัติ" : PRESETS[c].name}</button>`).join("")}</div></div><button id="toggle-perf" class="primary-button">${perfOn ? "ซ่อนตัววัดประสิทธิภาพ" : "แสดงตัววัดประสิทธิภาพ"}</button><button id="back-selection" class="text-button">กลับหน้าเลือกตัวละคร</button><p class="hint">Demo v0.3 · นักดาบหญิงและสไลม์มีเฟรมแอนิเมชันชุดแรก · ตัวอื่นยังใช้ภาพ idle · เป้าหมาย 20–30 คนต่อห้องยังไม่ได้ยืนยันด้วย load test</p>`,
+      `<p>เกมบันทึกตัวละคร เงิน อุปกรณ์ และดันเจียนบนเซิร์ฟเวอร์อัตโนมัติ<br>บัญชีผู้มาเยือนผูกกับคุกกี้ในเบราว์เซอร์นี้</p><button id="open-account-link" class="primary-button">${account?.registered ? "บัญชีผู้เล่น" : "ผูกบัญชี · เก็บตัวละครและเล่นต่อเครื่องอื่น"}</button><button id="open-announcements" class="primary-button">📣 ประกาศจากระบบ · บอสโลก 20:00 น.</button><button id="toggle-sound" class="primary-button">${muted ? "เปิดเสียงทั้งหมด" : "ปิดเสียงทั้งหมด"}</button><button id="toggle-music" class="primary-button">${musicOn() ? "ปิดเพลงประกอบ" : "เปิดเพลงประกอบ"}</button><button id="toggle-screen-shake" class="primary-button" role="switch" aria-checked="${screenShakeEnabled()}">จอสั่น: ${screenShakeEnabled() ? "เปิด" : "ปิด"}</button><p class="hint">ปิดจอสั่นและซูมกระแทกเพื่อลดอาการเวียนหัว · บันทึกการตั้งค่าในเครื่องนี้</p><div class="quality-picker"><small>คุณภาพกราฟิก · ตอนนี้ ${qualityLabel()}</small><div>${CHOICES.map((c) => `<button data-quality="${c}" class="${c === qualityChoice ? "active" : ""}">${c === "auto" ? "อัตโนมัติ" : PRESETS[c].name}</button>`).join("")}</div></div><button id="toggle-perf" class="primary-button">${perfOn ? "ซ่อนตัววัดประสิทธิภาพ" : "แสดงตัววัดประสิทธิภาพ"}</button><button id="back-selection" class="text-button">กลับหน้าเลือกตัวละคร</button><p class="hint">Demo v0.3 · นักดาบหญิงและสไลม์มีเฟรมแอนิเมชันชุดแรก · ตัวอื่นยังใช้ภาพ idle · เป้าหมาย 20–30 คนต่อห้องยังไม่ได้ยืนยันด้วย load test</p>`,
     );
     $("#open-account-link").onclick = () => $("#account-open").click();
     $("#open-announcements").onclick = () => showPanel("announcements");
@@ -1944,6 +1945,12 @@ function showPanel(panel) {
       syncSoundButton();
       sfx("click");
       closeModal();
+    };
+    $("#toggle-screen-shake").onclick = () => {
+      const enabled = setScreenShakeEnabled(!screenShakeEnabled());
+      const button = $("#toggle-screen-shake");
+      button.textContent = `จอสั่น: ${enabled ? "เปิด" : "ปิด"}`;
+      button.setAttribute("aria-checked", String(enabled));
     };
     $("#toggle-music").onclick = () => {
       setMusic(!musicOn());
@@ -1976,6 +1983,15 @@ function showPanel(panel) {
     };
   }
 }
+window.addEventListener("tml:screen-shake-change", (event) => {
+  if (event.detail) return;
+  scene?.cameras.main.shakeEffect.reset();
+  if (scene?.zoomPunch) {
+    scene.zoomPunch.stop();
+    scene.zoomPunch = null;
+    scene.resize();
+  }
+});
 function showTrade() {
   const t = state?.trade;
   if (!t) return;
@@ -3049,7 +3065,7 @@ class Adventure extends Phaser.Scene {
     }
     if (e.kind === "summon") {
       this.floatBanner(e.x, e.y, "บอสโลกเรียกสมุน ×" + e.count + "!", "#ff9a8a", "#3a0a0a");
-      this.cameras.main.shake(260, 0.006);
+      shakeCamera(this.cameras.main, 260, 0.006);
       sfx("roar", null, 0.2);
       return;
     }

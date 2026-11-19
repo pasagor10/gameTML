@@ -1,3 +1,4 @@
+import { screenShakeEnabled, shakeCamera } from "/screen-shake.js?v=1";
 // Combat visuals for the Adventure scene: slashes, projectiles, impacts,
 // damage numbers, skill blasts, charge-up and death bursts. Purely cosmetic:
 // every effect is triggered by authoritative server events.
@@ -274,12 +275,12 @@ export function createCombatFx(scene) {
   };
 
   const shake = (ms, intensity) => {
-    if (!reduced) cam.shake(ms, intensity);
+    if (!reduced) shakeCamera(cam, ms, intensity);
   };
 
   // Brief zoom "punch" that settles back to whatever zoom resize() chose.
   const punch = (amount = 0.035, ms = 90) => {
-    if (reduced || scene.zoomPunch) return;
+    if (reduced || !screenShakeEnabled() || scene.zoomPunch) return;
     const base = cam.zoom;
     scene.zoomPunch = scene.tweens.add({
       targets: cam,
