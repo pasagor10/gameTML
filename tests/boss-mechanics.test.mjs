@@ -123,3 +123,18 @@ test('every boss-stage step and ledge stands above the flood', () => {
   for (let f = 1; f <= 40; f++)
     for (const q of dungeonPlatforms(f, 3)) assert.ok(q.y < WATER_Y, `floor ${f} surface at ${q.y}`);
 });
+
+test('auto cancels a cast and escapes a flood from multiple arena positions', () => {
+  for (const x of [300, 800, 1300, 1800, 2200]) {
+    const { p, i, t } = bossStage(3);
+    p.x = x;
+    p.auto = true;
+    p.action = { skill: 5, direction: 1, endsAt: t + 2 };
+    p.pending = { skill: 5, impactAt: t + 1.25 };
+    i.mech = { id: `flood-${x}`, kind: 'flood', startedAt: t, riseAt: t + 3.5, endsAt: t + 10, tickAt: 0 };
+    run(t, 7);
+    assert.ok(p.hp > 0, `drowned from x=${x}`);
+    assert.ok(p.y <= WATER_Y, `did not reach safety from x=${x}: y=${p.y}`);
+    p.auto = false;
+  }
+});

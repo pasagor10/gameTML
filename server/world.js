@@ -13,6 +13,7 @@ import {
   rockCount,
   inSpikeBand,
   underwater,
+  flooding,
   FLOOD_WARN,
   FLOOD_LAST,
   ROCK_RADIUS,
@@ -2370,32 +2371,33 @@ export function tick(dt, t = now()) {
     }
     if (statusActive(p, "stun", t)) p.input = 0;
     if (p.auto && i) {
+      // Supplies work while repositioning, during stage intros and between waves.
+      // Heal before choosing an attack so low resources never starve the brain.
+      for (const [kind, needed] of [
+        ["hp", p.hp < maxHp(p) * 0.65],
+        ["mp", p.mp < Math.min(maxMp(p), Math.max(50, maxMp(p) * 0.45))],
+      ]) {
+        if (needed && (potionCount(p.inventory, kind) || i.training)) {
+          try { potion(p, kind, t, true); } catch { /* Empty bag / shared potion cooldown. */ }
+        }
+      }
       if (t - (i.stageAt || 0) < STAGE_INTRO) {
         // Still behind the loading card: stand still, don't swing yet.
         p.input = 0;
-      } else if (i.enemies.some((e) => e.hp > 0)) {
+      } else if (i.enemies.some((e) => e.hp > 0) || flooding(i.mech, t)) {
         const plan = autoBrain(p, i, t, {
           range: combatStats(p).range,
           mpMax: maxMp(p),
           aspd: aspdOf(p, t),
           platforms: dungeonPlatforms(i.floor, i.stage, i.training),
         });
+        if (plan.evade) { p.action = null; p.pending = null; }
         p.input = plan.input;
         p.running = true;
         if (plan.jump && p.grounded) p.jumpBufferedAt = t;
         // Turn only between swings so a windup keeps its aim.
         if (!p.action || t >= p.action.endsAt) p.direction = plan.direction;
         if (plan.skill !== null) attack(p, plan.skill, t);
-        if (p.hp < maxHp(p) * 0.4 && (potionCount(p.inventory, "hp") || i.training)) {
-          try {
-            potion(p, "hp", t, true);
-          } catch {}
-        }
-        if (p.mp < 20 && (potionCount(p.inventory, "mp") || i.training)) {
-          try {
-            potion(p, "mp", t, true);
-          } catch {}
-        }
       } else if (
         i.clear &&
         !i.completed &&

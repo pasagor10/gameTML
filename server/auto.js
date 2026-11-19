@@ -1,6 +1,7 @@
 // Auto-battle brain: lock onto one monster, close to a good fighting distance,
 // only swing when something is really in reach, pick skills by the situation,
 // and step or hop out of telegraphed attacks. Pure decisions; the world applies them.
+import { ultimateArea, inUltimateArea } from "../shared/ultimates.js";
 import { ACTIONS } from "../shared/motion.js";
 import { skillOf } from "../shared/skills.js";
 import { climbStep } from "../shared/dungeons.js";
@@ -63,10 +64,6 @@ function threat(p, i, t) {
 export function autoBrain(p, i, t, { range, mpMax, platforms, aspd = 1 }) {
   const enemies = i.enemies.filter((e) => e.hp > 0);
   const plan = { input: 0, jump: false, skill: null, direction: p.direction };
-  if (!enemies.length) {
-    p.autoTarget = null;
-    return plan;
-  }
 
   // 1. Dodge first: nothing else matters if a slam is about to land on us.
   //    A flood beats everything: get up onto a ledge and stay there.
@@ -78,14 +75,17 @@ export function autoBrain(p, i, t, { range, mpMax, platforms, aspd = 1 }) {
         near = (q) => Math.abs(Math.max(q.x, Math.min(q.x + q.w, p.x)) - p.x);
       if (safe.length) {
         const ledge = safe.reduce((a, b) => (near(b) < near(a) ? b : a)),
-          climb = climbStep(p, { x: ledge.x + ledge.w / 2, y: ledge.y }, platforms);
-        plan.input = Math.sign(climb.x - p.x);
+          climb = p.grounded || !p.autoFloodStep
+            ? climbStep(p, { x: ledge.x + ledge.w / 2, y: ledge.y }, platforms)
+            : p.autoFloodStep;
+        p.autoFloodStep = climb;
+        plan.input = Math.abs(climb.x - p.x) > 8 ? Math.sign(climb.x - p.x) : 0;
         plan.jump = p.grounded && climb.jump;
       }
     }
     const strike = threat(p, i, t);
     if (strike?.away && !underwater(p.y)) plan.input = Math.sign(p.x - strike.zone.x) || 1;
-  } else danger = threat(p, i, t);
+  } else { p.autoFloodStep = null; danger = threat(p, i, t); }
   if (danger && !danger.flood) {
     if (danger.goal !== undefined) plan.input = Math.sign(danger.goal - p.x) || 1;
     else if (danger.away) {
@@ -94,6 +94,11 @@ export function autoBrain(p, i, t, { range, mpMax, platforms, aspd = 1 }) {
     } else if (danger.eta < 0.45) plan.jump = true;
     else plan.input = Math.sign(p.x - danger.zone.x) || -p.direction || 1;
   }
+
+  // Escape without starting another cast (casts slow movement by 64%).
+  plan.evade = !!danger && (!danger.flood || !p.grounded || underwater(p.y));
+  if (plan.evade) return plan;
+  if (!enemies.length) { p.autoTarget = null; return plan; }
 
   // 2. Keep the locked target unless it died, we are stuck on it, or a much
   //    better one shows up (stops flip-flopping between two monsters).
@@ -152,9 +157,12 @@ export function autoBrain(p, i, t, { range, mpMax, platforms, aspd = 1 }) {
       (s === 3 && count(3) > 0),
     big = target.boss || target.elite,
     reserve = mpMax * 0.25; // keep enough for a big skill when it matters
-  // Party buff first when a fight is on and nobody has it.
+  // Use the ultimate for a visible boss/crowd, then normal party buffs and skills.
   const buff = skillOf(p.class, 4).buff;
-  if (ready(4) && (p.buffs?.[buff]?.until || 0) <= t && (big ? hitsTarget(3) : count(3) >= 2) && mp - ACTIONS[4].mp >= reserve * 0.5)
+  const ultimateHits = enemies.filter(e => inUltimateArea(e, ultimateArea(p)));
+  if (!danger && ready(5) && (ultimateHits.length >= 3 || ultimateHits.some(e => e.boss || e.elite)))
+    plan.skill = 5;
+  else if (ready(4) && (p.buffs?.[buff]?.until || 0) <= t && (big ? hitsTarget(3) : count(3) >= 2) && mp - ACTIONS[4].mp >= reserve * 0.5)
     plan.skill = 4;
   else if (ready(3) && hitsTarget(3) && (count(3) >= 3 || big)) plan.skill = 3;
   else if (ready(2) && hitsTarget(2) && (count(2) >= 2 || big)) plan.skill = 2;

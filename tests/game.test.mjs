@@ -1273,3 +1273,21 @@ test('all classes and genders have an authoritative fullscreen ultimate with MP 
     assert.equal(p.mp,49,'insufficient MP cannot cast');assert.equal(p.pending,null);
   }
 });
+
+test('auto drinks owned HP and MP sizes before fighting and during stage intro', () => {
+  const p = create('auto-supplies');
+  world.beginDungeon(p, 1);
+  const i = world.instances.get(p.instance), t = Date.now() / 1000;
+  p.inventory = { hp_s: 2, mp_l: 2 };
+  p.hp = 90; p.mp = 25; p.auto = true;
+  i.stageAt = t;
+  world.tick(.05, t + .1);
+  assert.ok(p.hp > 90);
+  assert.ok(p.mp > 25);
+  assert.equal(p.inventory.hp_s, 1);
+  assert.equal(p.inventory.mp_l, 1);
+  world.tick(.05, t + .2);
+  assert.equal(p.inventory.hp_s, 1, 'must respect HP potion cooldown');
+  assert.equal(p.inventory.mp_l, 1, 'must respect MP potion cooldown');
+  p.auto = false;
+});
