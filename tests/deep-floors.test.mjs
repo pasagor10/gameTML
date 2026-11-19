@@ -111,14 +111,13 @@ test("traits change combat: armor cuts damage, regen heals, giants have more HP"
   world.returnTown(p);
 });
 
-test("deep boss pays more ore and can drop floor-10 gear", () => {
-  const p = create("deep-boss", { unlocked: 13, quest: 12 });
+test("deep boss drops its own floor gear and unlocks the next floor", () => {
+  const p = create("deep-boss", { unlocked: 13, quest: 40 });
   world.beginDungeon(p, 13);
   const i = world.instances.get(p.instance);
   i.stage = 3;
   i.nextHazardAt = Infinity;
   const t = Date.now() / 1000 + 4000;
-  const ore = p.inventory.ore;
   i.enemies = [i.enemies[0]];
   const e = i.enemies[0];
   Object.assign(e, { boss: true, hp: 1, x: p.x + 30, y: p.y, type: FLOORS[12].bossType });
@@ -127,10 +126,9 @@ test("deep boss pays more ore and can drop floor-10 gear", () => {
   world.tick(0.05, t + 0.17);
   assert.ok(i.completed);
   const rewards = i.rewards[p.id];
-  assert.ok(
-    rewards.items.length > 0 || p.inventory.ore - ore >= 2 + (13 - MAIN_FLOORS),
-    "a floor-10 item or the deep ore payout",
-  );
+  const drop = rewards.items.find(id => id.startsWith("deep_13_"));
+  assert.ok(drop, "repeat clears award the actual floor's missing equipment");
+  assert.ok(loadCharacter(p.id).ownedEquipment.includes(drop), "loot persists");
   assert.equal(p.unlocked, 14);
   world.returnTown(p);
 });
@@ -218,4 +216,34 @@ test("floors past 15 grow gently, since heroes stop levelling at 40", async () =
   };
   const ratio = bossHp(40) / bossHp(15);
   assert.ok(ratio > 1.5 && ratio < 3, `floor 40 boss is ${ratio.toFixed(2)}x floor 15`);
+});
+
+test("deep floor loot is guaranteed until each class has the full unique set", async () => {
+  const { FLOOR_LOOT, GEAR } = await import("../shared/rpg.js");
+  for (const job of ["swordsman", "archer", "mage", "priest"]) {
+    let atk = 0;
+    for (let floor = 11; floor <= 40; floor++) {
+      const table = FLOOR_LOOT[floor];
+      const hero = { class: job, ownedEquipment: [], quest: 40 };
+      const wanted = [table.weapons[job], ...table.pool];
+      for (let n = 0; n < 4; n++) {
+        const id = world.rollBossLoot(hero, floor, false, () => 0.9999);
+        assert.ok(wanted.includes(id));
+        assert.ok(!hero.ownedEquipment.includes(id));
+        assert.equal(GEAR[id].floor, floor);
+        assert.ok(GEAR[id].level <= 60);
+        hero.ownedEquipment.push(id);
+      }
+      assert.equal(world.rollBossLoot(hero, floor, false, () => 0), null);
+      const weapon = GEAR[table.weapons[job]];
+      assert.ok(weapon.stats.atk > atk, "deeper floor improves weapon");
+      atk = weapon.stats.atk;
+    }
+    const final = GEAR[FLOOR_LOOT[40].weapons[job]];
+    assert.equal(final.level, 60);
+    assert.equal(final.rarity, "divine");
+    assert.ok(final.stats.atk > 130);
+  }
+  for (const slot of ["armor", "charm", "boots"])
+    assert.equal(GEAR[`deep_40_${slot}`].rarity, "divine");
 });

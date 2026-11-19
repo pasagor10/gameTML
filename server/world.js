@@ -294,6 +294,7 @@ export function rollBossLoot(p, floor, firstClear, random = Math.random) {
   if (firstClear && weapon && !p.ownedEquipment.includes(weapon)) return weapon;
   const candidates = bossLootCandidates(floor, p.class, p.ownedEquipment);
   if (!candidates.length) return null;
+  if (table.guaranteed) return candidates[Math.min(candidates.length - 1, Math.floor(random() * candidates.length))];
   const legendary = candidates.find((id) => GEAR[id].rarity === "legendary");
   const roll = random();
   if (legendary && roll < 0.03) return legendary;
@@ -1857,9 +1858,9 @@ function checkClear(i, t, p) {
           );
           m.gold += 40;
           if (i.rewards?.[m.id]) i.rewards[m.id].gold += 40;
-          // Deep floors keep dropping the floor-10 legendary pool.
+          // Deep floors award their own missing gear, including repeat clears.
           const deep = i.floor > MAIN_FLOORS,
-            item = rollBossLoot(m, deep ? MAIN_FLOORS : i.floor, firstClear && !deep);
+            item = rollBossLoot(m, i.floor, firstClear);
           if (item) {
             m.ownedEquipment.push(item);
             i.rewards?.[m.id]?.items.push(item);

@@ -1,3 +1,4 @@
+import { DEEP_DUNGEONS } from "./deep-dungeons.js";
 import { SKILL_KITS, STATUSES } from "./skills.js";
 import { bestiaryBonuses } from "./quests.js";
 import { costumeSet } from "./costumes.js";
@@ -555,6 +556,35 @@ for (const tier of ADVANCED_FLOOR_GEAR) {
     },
     pool: [ids.armor, ids.charm, ids.boots],
   };
+}
+
+// Each deep floor has its own progression set instead of reusing floor 10.
+for (let floor = 11; floor <= 40; floor++) {
+  const n = floor - 10, level = Math.min(60, floor * 2 - 1);
+  const prefix = ["ห้วงน้ำ", "ราสาป", "ลาวา", "วิญญาณ", "จันทราดับ"][floor - 11]
+    || DEEP_DUNGEONS[floor - 16].prefix;
+  const rarity = floor >= 26 ? "divine" : "legendary";
+  const weapons = {};
+  for (const [job, name, icon] of [["swordsman", "ดาบ", "⚔"], ["archer", "ธนู", "➶"], ["mage", "คทาเวท", "✦"], ["priest", "คทาศักดิ์สิทธิ์", "✚"]]) {
+    const id = `deep_${floor}_${job}_weapon`;
+    weapons[job] = id;
+    GEAR[id] = { name: `${name}${prefix}`, icon, slot: "weapon", class: job,
+      rarity, level, floor, effect: ["drain", "venom", "flame", "frost"][(floor - 11) % 4],
+      lore: `สมบัติประจำชั้น ${floor} · ชนะบอสรับชิ้นที่ยังไม่มีแน่นอนจนกว่าจะครบชุด`,
+      stats: { atk: 65 + n * 4, hp: 60 + n * 5, mp: 80 + n * 3 } };
+  }
+  const pool = [];
+  for (const [slot, name, icon, stats] of [
+    ["armor", "เกราะ", "🛡", { hp: 200 + n * 16, def: 50 + n * 3 }],
+    ["charm", "เครื่องราง", "◈", { atk: 25 + n * 2, hp: 80 + n * 6, mp: 80 + n * 5 }],
+    ["boots", "รองเท้า", "♧", { speed: 35 + n, def: 25 + n * 2, hp: 80 + n * 7 }],
+  ]) {
+    const id = `deep_${floor}_${slot}`;
+    pool.push(id);
+    GEAR[id] = { name: `${name}${prefix}`, icon, slot, rarity, level, floor,
+      lore: `สมบัติประจำชั้น ${floor} · ชนะบอสรับชิ้นที่ยังไม่มีแน่นอนจนกว่าจะครบชุด`, stats };
+  }
+  FLOOR_LOOT[floor] = { weapons, pool, guaranteed: true };
 }
 
 // Exclusive world-boss weapons: deliberately absent from shops and floor loot.

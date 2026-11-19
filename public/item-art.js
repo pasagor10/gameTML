@@ -43,7 +43,7 @@ function artOf(id, item, heroClass) {
     item.slot === "weapon" ? CLASS_GROUP[item.class || heroClass] || "sword" : item.slot;
   const index = id?.startsWith("starter_")
     ? 0
-    : artIndex[id] ?? floorIndex[item.slot]?.[item.floor - 1];
+    : artIndex[id] ?? floorIndex[item.slot]?.[(item.floor - 1) % FLOOR.length];
   return group && index !== undefined ? [group, index] : null;
 }
 const escape = (value) =>
