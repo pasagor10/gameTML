@@ -1,3 +1,4 @@
+import { renderCampSelection } from "/camp-select.js?v=1";
 import { bindAnnouncements, receiveAnnouncement, announcementHistory } from "/announcements.js";
 import { updatePartyUi, bindPartyUi } from "/party-ui.js";
 import { showWorldHeroPreview } from "/hero-preview.js";
@@ -19,7 +20,7 @@ import {
   musicOn,
   prepareMusic,
 } from "/sound.js?v=20261118-audio2";
-import { TOWN_ANIMS, TOWN_LAYOUT, TOWN_PROPS } from "/shared/town-layout.js";
+import { TOWN_ANIMS, TOWN_LAYOUT, TOWN_PROPS, TOWN_VIEW } from "/shared/town-layout.js";
 import { createWorldDetails } from "/world-details.js?v=4";
 import {
   rpgPanel,
@@ -295,6 +296,15 @@ function renderCards() {
     detail = heroDescriptions[job];
   $("#landing").dataset.heroClass = job;
   $("#landing").dataset.lobbyMode = lobbyMode;
+  renderCampSelection({ job, saved, characters, gender, classes: CLASSES, onSelect: (key, character) => {
+    if (character) {
+      document.querySelector(`[data-resume="${character.id}"]`)?.click();
+    } else {
+      if (lobbyCharacterId) resetLobbyCreation();
+      job = key;
+      renderCards();
+    }
+  }});
   $("#roster-subtitle").textContent =
     lobbyMode === "create" ? "CREATE A NEW HERO" : "YOUR CHARACTERS";
   $("#roster-title").textContent =
@@ -315,7 +325,7 @@ function renderCards() {
   $("#identity-label").innerHTML = saved
     ? "ผู้กล้าที่เลือก <small>พร้อมเดินทางต่อ</small>"
     : "ชื่อผู้กล้าใหม่ <small>2–20 ตัวอักษร</small>";
-  $("#start-label").textContent = saved ? "เข้าสู่โลก" : "สร้างผู้กล้า";
+  $("#start-label").textContent = saved ? "เข้าเกม" : "สร้างผู้กล้า";
   $("#start").disabled = !saved && characters.length >= 3;
   $$("[data-resume]").forEach((b) => {
     b.classList.toggle("active", b.dataset.resume === lobbyCharacterId);
@@ -390,7 +400,7 @@ $$("[data-gender]").forEach(
 );
 renderCards();
 try {
-  selectionPreview = createSelectionPreview();
+  if (!$("#landing").classList.contains("camp-select")) selectionPreview = createSelectionPreview();
 } catch {
   /* The full-body static art remains available if WebGL is unavailable. */
 }
@@ -1907,7 +1917,7 @@ class Adventure extends Phaser.Scene {
     });
     queueSpriteSets(this);
     // Town kit: pieces, props, animated props and far layers (tools/town-kit).
-    const kit = (key) => `/assets/town-kit/${key}.webp?v=9`;
+    const kit = (key) => `/assets/town-kit/${key}.webp?v=11`;
     for (const piece of new Set(TOWN_LAYOUT.map((p) => p.piece)))
       this.load.image(`town-piece-${piece}`, kit(`piece-${piece}`));
     for (const key of new Set(TOWN_PROPS.map((p) => p.key)))
@@ -1921,10 +1931,10 @@ class Adventure extends Phaser.Scene {
     for (const key of [
       "street",
       "far-sky",
-      "far-clouds",
       "far-mountains",
       "far-hills",
       "far-treeline",
+      "far-village",
     ])
       this.load.image(`town-${key}`, kit(key));
     for (const [id, item] of Object.entries(GEAR)) {
@@ -2096,27 +2106,43 @@ class Adventure extends Phaser.Scene {
     const w = this.scale.width,
       h = this.scale.height,
       portrait = h > w && w < 700,
+      town = (state?.area ?? "town") === "town";
+    this.portrait = portrait;
+    if (town) {
+      // The town is pixel art with tall scenery: pull the camera back for a
+      // wide view (portrait phones see ~600 world px across), with the street
+      // at ~64% of the screen so thumb controls sit below the action.
+      const zoom = portrait
+          ? Phaser.Math.Clamp(w / 600, 0.5, 1.1)
+          : w < 700
+            ? Math.max(0.45, h / 1150)
+            : Math.max(0.55, h / 1150),
+        viewH = h / zoom;
+      this.camY = Math.min(
+        TOWN_VIEW.bottom - viewH / 2,
+        portrait ? WORLD.ground - 0.14 * viewH : h < 520 ? WORLD.ground - 0.24 * viewH : 340,
+      );
+      this.cameras.main.setZoom(zoom);
+      this.cameras.main.setBounds(0, TOWN_VIEW.top, areaWidth("town"), TOWN_VIEW.bottom - TOWN_VIEW.top);
+    } else {
       // Portrait phones: frame by width so heroes stay readable, and put the
       // ground near 2/3 of the screen so thumb controls sit below the action.
-      // Zoomed out for a wide view; portrait stays tall enough to fill the
-      // screen with the 950px-high world.
-      zoom = portrait
-        ? Phaser.Math.Clamp(Math.max(w / 520, h / 940), 0.6, 1.2)
-        : w < 700
-          ? Math.max(0.5, h / 1050)
-          : Math.max(0.6, h / 950),
-      viewH = h / zoom;
-    this.portrait = portrait;
-    // Ground at ~2/3 on portrait phones, ~3/4 on short landscape screens
-    // (phones sideways); tall desktop windows keep the original framing.
-    this.camY = portrait
-      ? Math.min(850 - viewH / 2, WORLD.ground - 0.17 * viewH)
-      : h < 520
-        ? Math.min(850 - viewH / 2, WORLD.ground - 0.26 * viewH)
-        : 340;
-    this.cameras.main.setZoom(zoom);
-    // The town is as long as its kit layout; dungeons keep WORLD.width.
-    this.cameras.main.setBounds(0, -100, areaWidth(state?.area), 950);
+      const zoom = portrait
+          ? Phaser.Math.Clamp(Math.max(w / 520, h / 940), 0.6, 1.2)
+          : w < 700
+            ? Math.max(0.5, h / 1050)
+            : Math.max(0.6, h / 950),
+        viewH = h / zoom;
+      // Ground at ~2/3 on portrait phones, ~3/4 on short landscape screens
+      // (phones sideways); tall desktop windows keep the original framing.
+      this.camY = portrait
+        ? Math.min(850 - viewH / 2, WORLD.ground - 0.17 * viewH)
+        : h < 520
+          ? Math.min(850 - viewH / 2, WORLD.ground - 0.26 * viewH)
+          : 340;
+      this.cameras.main.setZoom(zoom);
+      this.cameras.main.setBounds(0, -100, areaWidth(state?.area), 950);
+    }
     this.parallax?.resize();
   }
   hotspot(x, bottom, w, h, open) {
@@ -2283,11 +2309,11 @@ class Adventure extends Phaser.Scene {
       music(town ? "town" : bossStage ? "boss" : "dungeon");
       if (fromTown && !town) sfx("portal");
       if (bossStage) setTimeout(() => sfx("roar"), 600);
-      this.cameras.main.setBounds(0, -100, areaWidth(s.area), 950);
       this.parallax.setArea(
         town ? "town" : "cave",
         town ? null : floorInfo(s.dungeon).color,
       );
+      this.resize(); // the town and the dungeons frame the camera differently
       this.lookX = 0;
       this.npcs.forEach((n) => n.setVisible(town));
       this.hotspots.forEach((z) => (z.input.enabled = town));

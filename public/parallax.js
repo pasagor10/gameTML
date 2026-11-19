@@ -364,13 +364,12 @@ export function createParallax(scene) {
   // scroll slower the further away they are (tools/town-kit/far_layers.py).
   // top: world y of the strip's top at the camera's resting height.
   const FAR = [
-    { key: "sky", top: -760, h: 1400, fx: 0.03, fy: 0.15, depth: -38 },
-    { key: "clouds", top: -330, fx: 0.12, fy: 0.3, depth: -37, drift: 0.006 },
-    // Each strip ends in its own grass and earth, which the next strip
-    // (opaque below its skyline) hides.
-    { key: "mountains", top: -110, fx: 0.22, fy: 0.45, depth: -36 },
-    { key: "hills", top: 40, fx: 0.4, fy: 0.65, depth: -35 },
-    { key: "treeline", top: 281, fx: 0.62, fy: 0.85, depth: -34 },
+    { key: "sky", top: -1248, fx: 0.05, fy: 0.15, depth: -38, drift: 0.006 },
+    // Each strip carries its bottom colour on down, hidden by the next one.
+    { key: "mountains", top: 0, fx: 0.22, fy: 0.5, depth: -37 },
+    { key: "hills", top: 150, fx: 0.42, fy: 0.7, depth: -36 },
+    { key: "treeline", top: 255, fx: 0.62, fy: 0.85, depth: -35 },
+    { key: "village", top: 345, fx: 0.8, fy: 0.92, depth: -34 },
   ];
   const far = FAR.map((l) => {
     const src = scene.textures.get(`town-far-${l.key}`).getSourceImage(),
@@ -405,7 +404,7 @@ export function createParallax(scene) {
   const kit = [
     ...far.map((l) => l.layer),
     scene.add
-      .tileSprite(-200, TOWN_STREET_Y, TOWN_WIDTH + 400, 254, "town-street")
+      .tileSprite(-200, TOWN_STREET_Y, TOWN_WIDTH + 400, 600, "town-street")
       .setOrigin(0)
       .setDepth(-31),
     ...TOWN_LAYOUT.map((p) =>

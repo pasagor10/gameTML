@@ -1,0 +1,128 @@
+/* A layered pixel-art camp; percentages keep the composition together at every size. */
+body #landing.game-lobby.camp-select {
+  display: block !important; position: fixed; inset: 0; width: 100%; height: 100dvh !important;
+  padding: 0 !important; overflow: auto !important; background: #382450 !important;
+  color: #fff0bb; --camp-width: min(100vw, 66.667dvh);
+}
+body #landing.game-lobby.camp-select[data-lobby-mode] .camp-scene {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: var(--camp-width); height: max(100dvh, 150vw); max-height: 150%;
+  background: linear-gradient(transparent 39%, #42483d 47%, #68613d 70%, #424333), url('/assets/selection-camp/sky.webp') center/100% 100%;
+  overflow: hidden; isolation: isolate;
+}
+@media (min-aspect-ratio: 2/3) { body #landing.game-lobby.camp-select[data-lobby-mode] .camp-scene { height: 100dvh; } }
+body #landing.game-lobby.camp-select[data-lobby-mode] .camp-scene::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 50px #23193255; pointer-events: none; z-index: 8; }
+.camp-mountains,.camp-village,.camp-ground,.camp-fire { position: absolute; background-repeat: no-repeat; background-size: 100% 100%; pointer-events: none; }
+.camp-mountains { top: 20%; left: -40%; width: 180%; height: 24%; background-image: url('/assets/selection-camp/mountains.webp'); }
+.camp-village { top: 19%; left: -21%; width: 155%; height: 25%; background-image: url('/assets/selection-camp/village.webp'); }
+.camp-ground { top: 37%; left: -24%; width: 150%; height: 65%; background-image: url('/assets/selection-camp/ground.webp'); }
+.camp-fire { top: 43%; left: 48%; width: 20%; height: 15%; background-image: url('/assets/selection-camp/fire.webp'); z-index: 3; filter: drop-shadow(0 0 16px #ffad3744); }
+.camp-logo { position: absolute; width: 29%; height: 11%; object-fit: contain; top: 1%; left: 35.5%; }
+body #landing.game-lobby.camp-select[data-lobby-mode] .camp-title { position: absolute; margin: 0; top: 12%; left: 23%; width: 54%; height: 6%; display: grid; place-items: center; background: url('/assets/selection-camp/title.webp') center/100% 100% no-repeat; color: transparent; font-size: 0; }
+body #landing.game-lobby.camp-select[data-lobby-mode][data-lobby-mode="create"] .camp-title { color: #fff0bb; font: clamp(15px, 3dvh, 32px) 'Chonburi', serif; background: #321c32; border: 3px double #efc56e; }
+.camp-party { position: absolute; inset: 0; }
+body #landing.game-lobby.camp-select[data-lobby-mode] .camp-character { position: absolute; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; cursor: pointer; z-index: 4; overflow: visible; transition: filter .2s; }
+.camp-character img { width: 100%; height: 100%; object-fit: contain; object-position: center bottom; position: relative; z-index: 2; pointer-events: none; image-rendering: auto; }
+.camp-character span { position: absolute; left: 50%; bottom: -12%; transform: translateX(-50%); z-index: 3; white-space: nowrap; padding: 1px 7px; font: clamp(10px,1.5dvh,15px)/1.4 'Noto Sans Thai',sans-serif; color: #fff0bb; background: #1d1430d9; border: 1px solid #b98a45; text-shadow: 0 1px #000; opacity: .85; }
+.camp-character.active span { opacity: 0; }
+.camp-character:focus-visible { outline: 2px solid #ffdf8a !important; outline-offset: 4px; }
+/* Each hero stands on its own spot (bottom = feet); the box takes the art's
+   shape so the ring and the pointer sit on the hero, not on empty space. */
+body #landing.game-lobby.camp-select[data-lobby-mode] .camp-character { height: auto; aspect-ratio: 760 / 975; transform: translateX(-50%); transform-origin: 50% 100%; transition: filter .2s, transform .25s; }
+.camp-archer { left: 17%; bottom: 44.5%; width: 21%; }
+.camp-swordsman { left: 37%; bottom: 41.5%; width: 23%; }
+.camp-mage { left: 71%; bottom: 40.5%; width: 21%; }
+.camp-priest { left: 89%; bottom: 45.5%; width: 18%; }
+body #landing.game-lobby.camp-select[data-lobby-mode] .camp-character:not(.active) { filter: brightness(.82) saturate(.9); }
+body #landing.game-lobby.camp-select[data-lobby-mode] .camp-character:not(.active):hover { filter: brightness(1) drop-shadow(0 0 6px #ffd27a88); }
+body #landing.game-lobby.camp-select[data-lobby-mode] .camp-character.active { transform: translateX(-50%) scale(1.18); z-index: 5; filter: drop-shadow(0 0 8px #ffcf6a55); }
+.camp-character.active::before { content: ''; position: absolute; left: -12%; width: 124%; height: 14%; bottom: -5%; background: url('/assets/selection-camp/ring.webp') center/100% 100% no-repeat; }
+.camp-character.active::after { content: ''; position: absolute; width: 22%; height: 9%; top: -8%; left: 39%; background: url('/assets/selection-camp/arrow.webp') center/contain no-repeat; animation: camp-pointer 1.5s ease-in-out infinite; }
+.camp-summary { position: absolute; top: 69%; left: 4%; width: 92%; height: 28%; background: url('/assets/selection-camp/panel.webp') center/100% 100% no-repeat; z-index: 6; }
+.camp-portrait { position: absolute; left: 7%; top: 9%; width: 27%; height: 55%; overflow: hidden; border: 3px double #efc56e; background: #342340; }
+.camp-portrait img { position: absolute; width: 180%; max-width: none; left: -40%; top: 0; }
+.camp-copy { position: absolute; left: 43%; top: 9%; width: 48%; }
+.camp-copy h2 { margin: 0 0 6%; padding-bottom: 3%; border-bottom: 1px solid #d6a94e; font: clamp(18px,4dvh,44px) 'Chonburi',Georgia,serif; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff0bb; }
+.camp-copy > div { display: flex; justify-content: space-between; align-items: center; gap: 5px; font-size: clamp(12px,2dvh,24px); }
+.camp-level { border: 1px solid #e3b85e; padding: 1% 4%; white-space: nowrap; font-family: Georgia,serif; }
+body #landing.game-lobby.camp-select[data-lobby-mode] .landing-shade,body #landing.game-lobby.camp-select[data-lobby-mode] .lobby-atmosphere,body #landing.game-lobby.camp-select[data-lobby-mode] .landing-header,body #landing.game-lobby.camp-select[data-lobby-mode] .hero-showcase,body #landing.game-lobby.camp-select[data-lobby-mode] .lobby-details,body #landing.game-lobby.camp-select[data-lobby-mode] .landing-footer,body #landing.game-lobby.camp-select[data-lobby-mode] .entry-status { display: none !important; }
+body #landing.game-lobby.camp-select[data-lobby-mode] .lobby-layout,body #landing.game-lobby.camp-select[data-lobby-mode] .lobby-entry { display: contents !important; }
+body #landing.game-lobby.camp-select[data-lobby-mode] .lobby-roster { position: absolute; z-index: 12; top: 18.5%; left: 50%; transform: translateX(-50%); width: calc(var(--camp-width) * .92); max-height: 11%; margin: 0; padding: 0; background: none; border: 0; box-shadow: none; backdrop-filter: none; overflow: auto; }
+body #landing.game-lobby.camp-select[data-lobby-mode] .lobby-roster::before,body #landing.game-lobby.camp-select[data-lobby-mode] .lobby-panel-title,body #landing.game-lobby.camp-select[data-lobby-mode] .roster-divider,body #landing.game-lobby.camp-select[data-lobby-mode] #class-cards,body #landing.game-lobby.camp-select[data-lobby-mode] .empty-roster,body #landing.game-lobby.camp-select[data-lobby-mode] .creation-back { display: none !important; }
+body #landing.game-lobby.camp-select[data-lobby-mode] #saved-characters { display: flex; gap: 5px; justify-content: center; }
+body #landing.game-lobby.camp-select[data-lobby-mode] .saved-hero { display: block; min-height: 0; width: auto; margin: 0; padding: 3px 8px; background: #251c36c9; border: 1px solid #cfaa6b; border-radius: 2px; font-size: 10px; }
+body #landing.game-lobby.camp-select[data-lobby-mode] .saved-hero.active { background: #5d3b31; }
+body #landing.game-lobby.camp-select[data-lobby-mode] .saved-hero::before,body #landing.game-lobby.camp-select[data-lobby-mode] .saved-hero::after,body #landing.game-lobby.camp-select[data-lobby-mode] .roster-pose,body #landing.game-lobby.camp-select[data-lobby-mode] .saved-hero small,body #landing.game-lobby.camp-select[data-lobby-mode] .saved-hero > b { display: none; }
+body #landing.game-lobby.camp-select[data-lobby-mode] .saved-hero strong { font-size: 11px; }
+body #landing.game-lobby.camp-select[data-lobby-mode] #new-hero,body #landing.game-lobby.camp-select[data-lobby-mode] #account-open,body #landing.game-lobby.camp-select[data-lobby-mode] #delete-hero { display: inline-block; margin: 3px 4px; padding: 2px 5px; min-height: 24px; width: auto; font-size: 9px; border: 0; background: #241b32b8; color: #ffebbd; }
+body #landing.game-lobby.camp-select[data-lobby-mode] .identity-row { display: flex; position: absolute; z-index: 10; top: 88%; left: 50%; transform: translateX(-50%); width: calc(var(--camp-width) * .56); height: 8%; margin: 0; padding: 0; }
+body #landing.game-lobby.camp-select[data-lobby-mode] .identity-row label { display: none; }
+body #landing.game-lobby.camp-select[data-lobby-mode][data-lobby-mode="create"] .identity-row label { display: block; position: absolute; bottom: 112%; width: 100%; max-width: none; }
+body #landing.game-lobby.camp-select[data-lobby-mode] #identity-label { display: none; }
+body #landing.game-lobby.camp-select[data-lobby-mode] #character-name { width: 100%; height: 32px; min-height: 0; padding: 4px 9px; border: 1px solid #d6ae66; background: #16152ce8; color: #fff0bb; font-size: 13px; }
+body #landing.game-lobby.camp-select[data-lobby-mode] #start { width: 100%; height: 100%; min-height: 0; padding: 0; border: 0; border-radius: 0; clip-path: none; background: url('/assets/selection-camp/enter.webp') center/100% 100% no-repeat; box-shadow: none; }
+body #landing.game-lobby.camp-select[data-lobby-mode] #start b { display: none; }
+body #landing.game-lobby.camp-select[data-lobby-mode] #start-label { color: transparent; font-size: 0; }
+body #landing.game-lobby.camp-select[data-lobby-mode][data-lobby-mode="create"] #start-label { color: #fff0bb; font: clamp(14px,2.7dvh,30px) 'Chonburi',serif; background: #305c1b; padding: 0 9%; text-shadow: 0 2px #172a0e; }
+body #landing.game-lobby.camp-select[data-lobby-mode] #start:disabled { opacity: .5; }
+body #landing.game-lobby.camp-select[data-lobby-mode] .camp-back { position: absolute; left: calc(50% - var(--camp-width) * .47); top: 2%; width: calc(var(--camp-width) * .08); aspect-ratio: 1; padding: 0; z-index: 15; border: 0; background: url('/assets/selection-camp/back.webp') center/contain no-repeat; }
+body #landing.game-lobby.camp-select[data-lobby-mode] .camp-back[hidden] { display: none; }
+@keyframes camp-pointer { 50% { transform: translateY(-5px); } }
+@media(prefers-reduced-motion:reduce) { .camp-character.active::after { animation: none; } }
+body #landing.game-lobby.camp-select.hidden { display: none !important; }
+body #landing.game-lobby.camp-select[data-lobby-mode] #start:focus-visible { outline: 2px solid #fff1ac; outline-offset: 4px; }
+body #landing.game-lobby.camp-select[data-lobby-mode] .lobby-roster::after { display: none; }
+body #landing.game-lobby.camp-select[data-lobby-mode] #delete-hero[hidden] { display: none; }
+body #landing.game-lobby.camp-select[data-lobby-mode] .lobby-roster { text-align: center; }
+body #landing.game-lobby.camp-select[data-lobby-mode] .camp-genders { display: flex; justify-content: center; gap: 4px; }
+body #landing.game-lobby.camp-select[data-lobby-mode] .camp-genders button { padding: 2px 10px; min-height: 24px; border: 1px solid #cfa66a; color: #ffebbd; background: #241b32c9; font-size: 10px; }
+body #landing.game-lobby.camp-select[data-lobby-mode] .camp-genders button[aria-pressed="true"] { background: #65442f; }
+
+/* Wide screens: the heroes and panels keep their 2:3 column, but the sky,
+   the mountains and the ground run across the whole screen, so the camp is
+   not a cut-out strip. The islands inside the column show unclipped and fade
+   into the same ground colours. */
+@media (min-aspect-ratio: 2/3) {
+  body #landing.game-lobby.camp-select {
+    overflow: hidden !important;
+    background:
+      linear-gradient(transparent 39%, #42483d 47%, #68613d 70%, #424333),
+      url('/assets/selection-camp/mountains.webp') center 21dvh / calc(var(--camp-width) * 1.5) 22dvh repeat-x,
+      #2a1c40 url('/assets/selection-camp/sky.webp') center top / max(100vw, 66.667dvh) auto no-repeat !important;
+  }
+  body #landing.game-lobby.camp-select[data-lobby-mode] .camp-scene { background: none; overflow: visible; }
+  body #landing.game-lobby.camp-select[data-lobby-mode] .camp-scene::after { display: none; }
+  body #landing.game-lobby.camp-select[data-lobby-mode] .camp-mountains { display: none; }
+  body #landing.game-lobby.camp-select[data-lobby-mode] .lobby-roster { width: min(94vw, calc(var(--camp-width) * 1.6)); }
+  body #landing.game-lobby.camp-select[data-lobby-mode] #saved-characters .saved-hero { max-width: none; }
+}
+
+/* Saved heroes: a centred row of pixel name plates instead of full-width bars. */
+body #landing.game-lobby.camp-select[data-lobby-mode] .lobby-roster { top: 19%; max-height: none; overflow: visible; display: flex !important; flex-flow: row wrap !important; justify-content: center; align-items: center; gap: 6px 2px; }
+body #landing.game-lobby.camp-select[data-lobby-mode] #saved-characters { display: flex !important; flex: 0 0 100%; flex-flow: row wrap !important; align-items: center; justify-content: center; gap: 6px; width: 100%; margin: 0; padding: 0; grid-template-columns: none; }
+body #landing.game-lobby.camp-select[data-lobby-mode] #saved-characters .saved-hero { display: inline-flex !important; align-items: center; gap: 6px; flex: 0 1 auto; width: auto !important; min-width: 0 !important; max-width: 24%; min-height: 0; height: auto; margin: 0; padding: 4px 9px; grid-template-columns: none; border: 2px solid #8a6a3c; border-radius: 0; background: #21173ae6; box-shadow: inset 0 0 0 1px #000a, 0 2px 0 #0007; color: #e9d7ae; clip-path: none; transform: none; cursor: pointer; }
+body #landing.game-lobby.camp-select[data-lobby-mode] #saved-characters .saved-hero > span:not(.roster-pose) { display: block; min-width: 0; }
+body #landing.game-lobby.camp-select[data-lobby-mode] #saved-characters .saved-hero strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 clamp(11px,1.5dvh,14px)/1.3 'Noto Sans Thai',sans-serif; color: inherit; }
+body #landing.game-lobby.camp-select[data-lobby-mode] #saved-characters .saved-hero > b { display: block !important; position: static; font: clamp(9px,1.2dvh,12px) Georgia,serif; color: #d8b26a; background: none; border: 0; padding: 0; }
+body #landing.game-lobby.camp-select[data-lobby-mode] #saved-characters .saved-hero:hover { border-color: #d6ae66; color: #fff0bb; }
+body #landing.game-lobby.camp-select[data-lobby-mode] #saved-characters .saved-hero.active { border-color: #f0c870; background: #6a3b26f0; color: #fff4cc; box-shadow: inset 0 0 0 1px #000a, 0 0 8px #ffc65a66; }
+body #landing.game-lobby.camp-select[data-lobby-mode] #saved-characters .saved-hero.active > b { color: #ffe08a; }
+body #landing.game-lobby.camp-select[data-lobby-mode] #new-hero,body #landing.game-lobby.camp-select[data-lobby-mode] #account-open,body #landing.game-lobby.camp-select[data-lobby-mode] #delete-hero { margin: 0 2px !important; padding: 3px 9px !important; min-height: 0 !important; width: auto !important; font: clamp(10px,1.3dvh,13px)/1.4 'Noto Sans Thai',sans-serif !important; border: 1px solid #6d5434 !important; border-radius: 0 !important; background: #1b1330e6 !important; color: #d9c49a !important; box-shadow: none !important; text-shadow: none !important; }
+body #landing.game-lobby.camp-select[data-lobby-mode] #new-hero:hover,body #landing.game-lobby.camp-select[data-lobby-mode] #account-open:hover,body #landing.game-lobby.camp-select[data-lobby-mode] #delete-hero:hover { border-color: #d6ae66; color: #fff0bb; }
+body #landing.game-lobby.camp-select[data-lobby-mode] #delete-hero:hover { border-color: #c4573f; color: #ffb4a1; }
+
+/* The enter button is its own art: no glow or shine from the old lobby. */
+body #landing.game-lobby.camp-select[data-lobby-mode] #start { filter: drop-shadow(0 3px 0 #0008); background-color: transparent !important; animation: none; }
+body #landing.game-lobby.camp-select[data-lobby-mode] #start::before,body #landing.game-lobby.camp-select[data-lobby-mode] #start::after,body #landing.game-lobby.camp-select[data-lobby-mode] .lobby-entry::before,body #landing.game-lobby.camp-select[data-lobby-mode] .lobby-entry::after,body #landing.game-lobby.camp-select[data-lobby-mode] .identity-row::before,body #landing.game-lobby.camp-select[data-lobby-mode] .identity-row::after { display: none !important; }
+body #landing.game-lobby.camp-select[data-lobby-mode] #start:not(:disabled):hover { filter: brightness(1.1) drop-shadow(0 3px 0 #0008); }
+body #landing.game-lobby.camp-select[data-lobby-mode] .identity-row { background: none !important; box-shadow: none !important; border: 0 !important; }
+body #landing.game-lobby.camp-select[data-lobby-mode] .camp-genders { flex: 0 0 100%; }
+/* Narrow screens: two name plates per row, so names are not cut short. */
+@media (max-width: 520px) {
+  body #landing.game-lobby.camp-select[data-lobby-mode] #saved-characters .saved-hero { max-width: 47%; padding: 3px 8px; }
+  body #landing.game-lobby.camp-select[data-lobby-mode] .lobby-roster { top: 18.4%; gap: 4px 2px; }
+}
+body #landing.game-lobby.camp-select[data-lobby-mode] #new-hero,body #landing.game-lobby.camp-select[data-lobby-mode] #account-open { opacity: 1 !important; filter: none !important; }
+body #landing.game-lobby.camp-select[data-lobby-mode] #new-hero::before,body #landing.game-lobby.camp-select[data-lobby-mode] #new-hero::after,body #landing.game-lobby.camp-select[data-lobby-mode] #account-open::before,body #landing.game-lobby.camp-select[data-lobby-mode] #account-open::after { display: none !important; }
+body #landing.game-lobby.camp-select[data-lobby-mode] #new-hero b { display: inline; margin-right: 3px; color: #f0c870; font-size: inherit; background: none; border: 0; padding: 0; }
+.camp-character.active::after { top: -3%; }

@@ -11,56 +11,55 @@
 export const TOWN_BASE = 592;
 export const TOWN_STREET_Y = 571; // the street tile's back edge
 export const TOWN_GROUND = 600;
+// How far up and down the town camera may look (the sky and the street fill
+// reach this far).
+export const TOWN_VIEW = { top: -900, bottom: 1150 };
 
 // Width and height are the keyed piece sizes (public/assets/town-kit/kit.json).
 export const TOWN_PIECES = {
-  tree: { w: 644, h: 572, ledges: [] },
-  stall: { w: 580, h: 480, ledges: [] },
+  tree: { w: 426, h: 374, ledges: [] },
+  stall: { w: 402, h: 288, ledges: [] },
+  potion: {
+    w: 454,
+    h: 340,
+    ledges: [
+      [240, 445, 154], // the green awning
+      [200, 420, 284], // the flat roof ridge behind it
+    ],
+  },
   stairs: {
-    w: 504,
-    h: 372,
+    w: 354,
+    h: 270,
     ledges: [
-      [200, 504, 125],
-      [326, 500, 236],
+      [120, 185, 78], // a step half way up
+      [225, 350, 140], // the terrace
     ],
   },
-  shop: {
-    w: 610,
-    h: 375,
-    ledges: [
-      [86, 326, 154],
-      [30, 560, 222],
-    ],
-  },
-  smithy: {
-    w: 666,
-    h: 489,
-    ledges: [
-      [0, 666, 220],
-      [0, 666, 333],
-    ],
-  },
-  tower: {
-    w: 340,
-    h: 556,
-    ledges: [
-      [50, 290, 130],
-      [40, 300, 210],
-      [30, 310, 348],
-    ],
-  },
-  cavegate: { w: 680, h: 420, ledges: [] }, // the portal stands in the arch
+  weapon: { w: 458, h: 306, ledges: [[290, 450, 150]] }, // the lean-to roof
+  cottage: { w: 364, h: 304, ledges: [] },
+  smithy: { w: 476, h: 300, ledges: [[200, 470, 200]] }, // the forge roof
+  bridge: { w: 420, h: 183, ledges: [[90, 330, 100]] }, // the deck
+  cavegate: { w: 468, h: 264, ledges: [] }, // the portal stands in the arch
+  house0: { w: 171, h: 138, ledges: [] },
+  house3: { w: 183, h: 144, ledges: [] },
+  house4: { w: 180, h: 141, ledges: [] },
 };
 
 // Left to right; x is where each piece's left edge stands.
 export const TOWN_LAYOUT = [
   { piece: "tree", x: -40 },
-  { piece: "stall", x: 560 },
-  { piece: "stairs", x: 1180 },
-  { piece: "shop", x: 1720 },
-  { piece: "smithy", x: 2360 },
-  { piece: "tower", x: 3060 },
-  { piece: "cavegate", x: 3420 },
+  { piece: "house0", x: 400 },
+  { piece: "stall", x: 590 },
+  { piece: "potion", x: 1020 },
+  { piece: "house3", x: 1530 },
+  { piece: "stairs", x: 1740 },
+  { piece: "weapon", x: 2130 },
+  { piece: "cottage", x: 2630 },
+  { piece: "house4", x: 3020 },
+  { piece: "smithy", x: 3220 },
+  { piece: "house0", x: 3720 },
+  { piece: "bridge", x: 3910 },
+  { piece: "cavegate", x: 4360 },
 ];
 
 export const TOWN_WIDTH = TOWN_LAYOUT.reduce(
@@ -68,28 +67,29 @@ export const TOWN_WIDTH = TOWN_LAYOUT.reduce(
   0,
 );
 
-// Props: key is the texture (prop-<sheet>-<n> or anim-<name>), x the centre.
+// Props (tools/town-kit/source/cottage/props.webp, numbered row by row):
+// key is the texture (prop-px-<n> or anim-<name>), x the centre.
 // Ground props stand on y (default the street); hanging props hang from y.
 // front: drawn in front of the heroes. step: [w, h] climbable top.
 export const TOWN_PROPS = [
-  { key: "prop-px-20", x: 40 },
-  { key: "prop-px-8", x: 150 },
-  { key: "prop-px-2", x: 470 },
-  { key: "prop-px-10", x: 540, front: true },
-  { key: "prop-px-16", x: 1110 },
-  { key: "prop-px-4", x: 1150, step: [77, 84] },
-  { key: "prop-px-12", x: 1440 },
-  { key: "prop-px-3", x: 1700 },
-  { key: "prop-px-17", x: 2350 },
-  { key: "prop-px-7", x: 2340 },
-  { key: "anim-brazier", x: 2330 },
-  { key: "prop-px-11", x: 2600, front: true },
-  { key: "prop-px-6", x: 3040, step: [74, 68] },
-  { key: "anim-lantern", x: 3230, y: 410, hang: true },
-  { key: "prop-px-22", x: 3440 },
-  { key: "prop-px-9", x: 3450, front: true },
-  { key: "prop-px-21", x: 4090 },
-  { key: "prop-px-13", x: 4060, front: true },
+  { key: "prop-px-19", x: 395 },
+  { key: "prop-px-20", x: 545 },
+  { key: "prop-px-8", x: 600, front: true },
+  { key: "prop-px-21", x: 1000 },
+  { key: "prop-px-15", x: 1490 },
+  { key: "prop-px-9", x: 1520, front: true },
+  { key: "prop-px-1", x: 1722 },
+  { key: "prop-px-2", x: 2105 },
+  { key: "prop-px-14", x: 2600 },
+  { key: "prop-px-11", x: 2860, front: true },
+  { key: "prop-px-23", x: 3005 },
+  { key: "prop-px-16", x: 3150 },
+  { key: "prop-px-6", x: 3300 },
+  { key: "prop-px-4", x: 3660, step: [75, 69] },
+  { key: "prop-px-1", x: 3900 },
+  { key: "prop-px-10", x: 4345 },
+  { key: "prop-px-17", x: 4400, front: true },
+  { key: "prop-px-18", x: 4790 },
 ];
 
 // Animated props: 4-frame loops, frame size in px (kit.json).
@@ -102,12 +102,12 @@ export const TOWN_ANIMS = {
 // NPC spots and the portal (world coordinates).
 export const TOWN_SPOTS = {
   elder: 300, // under the great tree
-  potion: 850, // at the stall counter
-  weapon: 2050, // in front of the shop
-  forge: 2678, // at the anvil
-  portal: { x: 3760, y: TOWN_BASE - 100 }, // inside the cave arch
-  forgeFire: { x: 2805, y: TOWN_BASE - 52 },
-  chimney: { x: 2840, y: TOWN_BASE - 410 },
+  potion: 1360, // at the herb counter
+  weapon: 2330, // at the shop door
+  forge: 3496, // at the anvil
+  portal: { x: 4594, y: TOWN_BASE - 100 }, // inside the cave arch
+  forgeFire: { x: 3581, y: TOWN_BASE - 54 },
+  chimney: { x: 3624, y: TOWN_BASE - 270 },
 };
 
 // Front-facing stairs can't be walked in a side view, so stair pieces only

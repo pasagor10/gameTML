@@ -34,10 +34,8 @@ export function createNightSky(scene, openCave) {
       .setAlpha(0);
   // Lamps, brazier, forge and the slot cabinet light the street at night.
   const LIT = {
-    "anim-lantern": [0, 62],
-    "anim-brazier": [0, -60],
-    "prop-px-2": [0, -66],
-    "prop-px-3": [-6, -72],
+    "prop-px-1": [0, -78], // street lamp
+    "prop-px-21": [16, -50], // paper lantern post
   };
   const lights = [
     ...TOWN_PROPS.filter((p) => LIT[p.key]).map((p) =>
