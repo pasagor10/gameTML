@@ -11,19 +11,19 @@ import { gearDress } from "/hero-gear.js?v=5";
 // stands in front on a rune circle; the others wait on either side facing
 // it, smaller and in shadow. Tapping a waiting hero picks it.
 //
-// Sizes follow each set's in-game height (index.json "height"), so heroes
-// keep their real proportions, at whole multiples of the 48px pixel body
-// (front 6x, beside 4x, far 3x) so every art pixel stays square.
+// Sizes follow each set's in-game height while the entire composition fits
+// inside the stage. Parent dimensions are supplied explicitly on resize so
+// crossing a responsive breakpoint cannot retain the previous canvas size.
 export function createSelectionPreview({ onPick } = {}) {
   const host = document.querySelector("#hero-preview");
   const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
   const RES = 2,
-    W = 600,
-    H = 520,
-    FEET = 438,
+    W = 720,
+    H = 600,
+    FEET = 490,
     // Display height per set height unit, by distance from the front.
-    SIZE = [3, 2, 1.5],
-    SPREAD = [0, 178, 290],
+    SIZE = [3.1, 1.7, 1.3],
+    SPREAD = [0, 170, 290],
     LIFT = [0, 26, 44];
   let lineup = [],
     selected = 0,
@@ -40,7 +40,7 @@ export function createSelectionPreview({ onPick } = {}) {
       this.sprites = createSpriteRegistry(this);
       this.slots = new Map();
       // Rune circle under the chosen hero.
-      this.glow = this.add.ellipse(W / 2, FEET, 300, 58, 0xffc75a, 0.16).setDepth(1);
+      this.glow = this.add.ellipse(W / 2, FEET, 300, 58, 0xb1e6ca, 0.12).setDepth(1);
       this.ring = this.add.graphics().setDepth(2);
       this.motes = Array.from({ length: 22 }, (_, i) => ({
         dot: this.add
@@ -109,7 +109,7 @@ export function createSelectionPreview({ onPick } = {}) {
         slot.x += (W / 2 + Math.sign(o) * SPREAD[d] - slot.x) * k;
         slot.size += (SIZE[d] - slot.size) * k;
         slot.lift += (LIFT[d] - slot.lift) * k;
-        slot.fade += ((front ? 1 : d === 1 ? 0.9 : 0.6) - slot.fade) * k;
+        slot.fade += ((front ? 1 : d === 1 ? 0.5 : 0.3) - slot.fade) * k;
         const set = slot.entry.skins.map((s) => this.sprites.heroes.get(s)).find(Boolean);
         const { image, shadow } = slot;
         if (!set) {
@@ -141,7 +141,7 @@ export function createSelectionPreview({ onPick } = {}) {
           .setAlpha(slot.fade)
           .setDepth(front ? 20 : 10 - d);
         if (front) image.clearTint();
-        else image.setTint(d === 1 ? 0xb3aed0 : 0x7d7998);
+        else image.setTint(d === 1 ? 0x86a89b : 0x57796d);
         shadow
           .setVisible(true)
           .setPosition(slot.x, FEET - slot.lift + 2)
@@ -159,7 +159,7 @@ export function createSelectionPreview({ onPick } = {}) {
         [150, 30, 0.75, 1, 24],
         [118, 23, 0.45, -1.4, 14],
       ]) {
-        this.ring.lineStyle(4, 0xffd57a, a);
+        this.ring.lineStyle(1.4, 0xd8e6b7, a);
         for (let j = 0; j < dash; j++) {
           const a0 = spin * dir + (j / dash) * Math.PI * 2,
             a1 = a0 + (Math.PI * 2) / dash / 2;
@@ -185,9 +185,9 @@ export function createSelectionPreview({ onPick } = {}) {
     transparent: true,
     width: W * RES,
     height: H * RES,
-    // Cover the stage: on a narrow phone the outer heroes are cut by the
-    // screen edge rather than the whole lineup shrinking.
-    scale: { mode: Phaser.Scale.ENVELOP, autoCenter: Phaser.Scale.CENTER_BOTH },
+    // Fit the entire composition so heroes and their base never crop on wide
+    // monitors or narrow phones. CSS owns the available stage rectangle.
+    scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
     scene: SelectionScene,
     audio: { noAudio: true },
     render: { antialias: false, pixelArt: true },
@@ -203,7 +203,10 @@ export function createSelectionPreview({ onPick } = {}) {
     else game.loop.wake();
   };
   // Refit whenever the stage box changes (rotation, panel growing, resize).
-  const refit = new ResizeObserver(() => game.scale.refresh());
+  const refit = new ResizeObserver(([entry]) => {
+    const { width, height } = entry.contentRect;
+    if (width > 0 && height > 0) game.scale.setParentSize(width, height);
+  });
   refit.observe(host);
   const observer = new MutationObserver(visibility);
   for (const id of ["landing", "prologue"])
