@@ -972,9 +972,12 @@ function pendingSigns(p, i) {
 function autoCollect(p, i, t, platforms) {
   const signs = pendingSigns(p, i);
   if (!signs.length) return false;
-  const sign = signs.reduce((a, b) =>
+  const sign = signs.find(s => s.id === p.autoSign) || signs.reduce((a, b) =>
     Math.abs(b.x - p.x) + Math.abs(b.y - p.y) < Math.abs(a.x - p.x) + Math.abs(a.y - p.y) ? b : a);
-  if (p.autoSign !== sign.id) { p.autoSign = sign.id; p.autoSignAt = t; p.autoSignStep = null; }
+  if (p.autoSign !== sign.id || p.autoSignStage !== i.stageAt) { p.autoSignStage = i.stageAt; p.autoSign = sign.id; p.autoSignAt = t; p.autoSignStep = null; p.autoSignProgress = { x: p.x, y: p.y }; }
+  if (Math.hypot(p.x - p.autoSignProgress.x, p.y - p.autoSignProgress.y) > 40) {
+    p.autoSignAt = t; p.autoSignProgress = { x: p.x, y: p.y };
+  }
   if (withinDungeonSign(p, sign)) {
     p.input = 0;
     try { useDungeonSign(p, { id: sign.id, instanceId: i.id, floor: i.floor, stage: i.stage }); }
@@ -988,8 +991,11 @@ function autoCollect(p, i, t, platforms) {
   }
   if (p.grounded || !p.autoSignStep) p.autoSignStep = climbStep(p, sign, platforms);
   const step = p.autoSignStep;
-  p.input = Math.abs(step.x - p.x) > 10 ? Math.sign(step.x - p.x) : 0;
-  p.running = true;
+  const dx = step.x - p.x, vx = p.vx || 0;
+  // Brake before narrow landings: air acceleration is lower than on ground.
+  const stop = Math.sign(vx) === Math.sign(dx) ? vx * vx / 1800 + Math.abs(vx) * 0.05 : 0;
+  p.input = Math.abs(dx) > Math.max(2, stop) ? Math.sign(dx) : 0;
+  p.running = Math.abs(dx) > 140;
   if (p.input) p.direction = p.input;
   if (step.jump && p.grounded) p.jumpBufferedAt = t;
   return true;

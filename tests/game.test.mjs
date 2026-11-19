@@ -1349,3 +1349,25 @@ test("town services sell guaranteed stones and rescue gear improves solo surviva
     assert.equal(p.inventory[BLESS_STONE], 0);
   }
 });
+
+test("auto climbs to every stage-two rune on every cave layout", async () => {
+  world.players.clear(); // Isolate physics from heroes created by previous tests.
+  const { dungeonSigns } = await import("../shared/dungeons.js");
+  for (const job of ["swordsman", "archer", "mage", "priest"])
+  for (const start of [120, 600, 1200, 2100]) for (let floor = 1; floor <= 10; floor++) {
+    const p = create(`auto-high-runes-${job}-${floor}-${start}`, job);
+    world.beginDungeon(p, 1);
+    const i = world.instances.get(p.instance);
+    let t = Date.now() / 1000;
+    Object.assign(i, { floor, stage: 2, stageAt: t - world.STAGE_INTRO - 1,
+      enemies: [], clear: true, clearedAt: t, completed: true,
+      signs: dungeonSigns(floor, 2), collectedSigns: new Map() });
+    Object.assign(p, { auto: true, x: start, y: 600, vx: 0, vy: 0, grounded: true });
+    for (let n = 0; n < 1800 && i.collectedSigns.get(p.id)?.size !== i.signs.length; n++)
+      world.tick(0.05, (t += 0.05));
+    assert.equal(i.collectedSigns.get(p.id)?.size, i.signs.length,
+      `${job}, floor ${floor}, start ${start}: stuck at ${Math.round(p.x)},${Math.round(p.y)}, skipped ${[...(p.autoSkip?.ids || [])]}`);
+    world.returnTown(p);
+    world.players.delete(p.id);
+  }
+});

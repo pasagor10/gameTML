@@ -180,28 +180,56 @@ export function dungeonPlatforms(floor = 1, stage = 1, training = false) {
     })),
   );
 }
-// Where to walk (and whether to hop) to get up toward a higher target:
-// head for the reachable surface above that leads closest to the target.
+// Route through connected surfaces rather than choosing a locally close step.
+// The ground connects each staircase; upper steps must overlap so a short
+// vertical jump can land without relying on a running jump.
 export function climbStep(actor, target, platforms) {
-  if (target.y >= actor.y - 65) return { x: target.x, jump: false };
-  let best = null,
-    score = Infinity;
-  for (const p of platforms) {
-    const rise = actor.y - p.y;
-    if (rise < 20 || rise > STEP_RISE + 25) continue;
-    const toward = Math.abs(
-        Math.max(p.x, Math.min(p.x + p.w, target.x)) - target.x,
-      ),
-      cost = toward + Math.abs(p.x + p.w / 2 - actor.x) * 0.5;
-    if (cost < score) [best, score] = [p, cost];
+  if (target.y >= actor.y - 65) {
+    const support = platforms.find(p => Math.abs(actor.y - p.y) < 8 && actor.x >= p.x && actor.x <= p.x + p.w);
+    if (support && target.y > actor.y + 52 && target.x >= support.x && target.x <= support.x + support.w)
+      return { x: actor.x < support.x + support.w / 2 ? support.x - 28 : support.x + support.w + 28, jump: false };
+    return { x: target.x, jump: false };
   }
-  if (!best) return { x: target.x, jump: false };
-  const inside = actor.x >= best.x + 8 && actor.x <= best.x + best.w - 8;
-  // Under the step: hop and drift to its middle so the landing is safe.
+  const ground = { x: 45, y: GROUND, w: 2310 };
+  const nodes = [ground, ...platforms];
+  const start = nodes.find(p => Math.abs(actor.y - p.y) < 8 && actor.x >= p.x && actor.x <= p.x + p.w) || ground;
+  const goal = platforms.find(p => Math.abs(target.y - p.y) < 8 && target.x >= p.x && target.x <= p.x + p.w);
+  if (!goal) return { x: target.x, jump: false };
+  function route(from) {
+    const costs = new Map([[from, 0]]), prev = new Map(), open = new Set([from]);
+    while (open.size) {
+      const a = [...open].reduce((a, b) => costs.get(a) <= costs.get(b) ? a : b);
+      open.delete(a);
+      if (a === goal) {
+        let next = a;
+        while (prev.get(next) && prev.get(next) !== from) next = prev.get(next);
+        return next;
+      }
+      for (const b of platforms) {
+        const rise = a.y - b.y;
+        const overlap = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
+        if (rise < 15 || rise > 145 || overlap < 16) continue;
+        const cost = costs.get(a) + 60 + Math.abs(b.x + b.w / 2 - (a === from ? actor.x : a.x + a.w / 2));
+        if (cost >= (costs.get(b) ?? Infinity)) continue;
+        costs.set(b, cost); prev.set(b, a); open.add(b);
+      }
+    }
+    return null;
+  }
+  const next = route(start);
+  if (!next) {
+    // On the wrong ledge: step off toward the correct staircase, then route
+    // again from the ground instead of jumping forever on an unrelated step.
+    const entry = route(ground);
+    if (!entry || start === ground) return { x: target.x, jump: false };
+    const center = entry.x + entry.w / 2;
+    return { x: center < start.x + start.w / 2 ? start.x - 28 : start.x + start.w + 28, jump: false };
+  }
+  const left = Math.max(start.x, next.x) + 2,
+    right = Math.min(start.x + start.w, next.x + next.w) - 2;
+  const inside = actor.x >= left && actor.x <= right;
   return {
-    x: inside
-      ? best.x + best.w / 2
-      : Math.max(best.x + 20, Math.min(best.x + best.w - 20, actor.x)),
+    x: inside ? next.x + next.w / 2 : (left + right) / 2,
     jump: inside,
   };
 }
