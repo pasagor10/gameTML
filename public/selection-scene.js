@@ -28,7 +28,7 @@ export function createSelectionPreview({ onPick } = {}) {
     SPREAD = [0, 170, 290],
     LIFT = [0, 26, 44],
     // Front hero on the select stage: about this many times its in-town size.
-    BOOST = 1.75;
+    BOOST = 2.2;
   const ratio = () => Math.min(3, Math.max(1, window.devicePixelRatio || 1));
   let lineup = [],
     selected = 0,
@@ -101,7 +101,7 @@ export function createSelectionPreview({ onPick } = {}) {
     // Camera zoom (device pixels per world unit) that makes the front hero
     // BOOST times as large as in town (same zoom rule as the game camera),
     // rounded so one art pixel spans whole device pixels. Feet stay on the
-    // rune circle; the 720x600 composition never grows past the canvas.
+    // rune circle.
     frame() {
       const w = innerWidth,
         h = innerHeight,
@@ -111,16 +111,24 @@ export function createSelectionPreview({ onPick } = {}) {
         town = h > w && w < 700
           ? Phaser.Math.Clamp(w / 600, 0.5, 1.1)
           : Math.max(w < 700 ? 0.45 : 0.55, h / 1150),
-        most = Math.min(cw / W, ch / H);
-      let z = Phaser.Math.Clamp((town * BOOST * r) / SIZE[0], most * 0.2, most);
-      const front = [...this.slots.values()].find((s) => s.index === selected),
+        front = [...this.slots.values()].find((s) => s.index === selected),
         set = front?.entry.skins.map((s) => this.sprites.heroes.get(s)).find(Boolean),
-        body = set?.clips.idle?.bodyPx;
+        body = set?.clips.idle?.bodyPx,
+        // Largest zoom: the front hero fills at most 72% of the stage height
+        // and the middle 440 world units fit across (neighbours may crop).
+        most = Math.min(cw / 440, (ch * 0.72) / ((set?.height || 83) * SIZE[0]));
+      // At least BOOST times the in-town size, and at least 55% of the stage
+      // height so it reads as the centrepiece on large screens too.
+      let z = Math.min(
+        most,
+        Math.max((town * BOOST * r) / SIZE[0], (ch * 0.55) / ((set?.height || 83) * SIZE[0])),
+      );
       if (body) {
         const worldPerArt = (set.height * SIZE[0]) / body,
           px = z * worldPerArt;
         if (px >= 1.5)
-          z = Math.max(1, Math.min(Math.round(px), Math.floor(most * worldPerArt))) / worldPerArt;
+          // Round up to the next whole pixel size when it still fits.
+          z = Math.max(1, Math.min(Math.ceil(px - 0.15), Math.floor(most * worldPerArt))) / worldPerArt;
       }
       const key = `${z.toFixed(5)}:${cw}:${ch}`;
       if (key === this.frameKey) return;
