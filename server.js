@@ -356,7 +356,7 @@ io.on("connection", (socket) => {
     return { message: "พักฟื้นพลังเต็มแล้ว" };
   });
   execute("town:travel", (p, d) => world.travelTown(p, d.destination), 2);
-  execute("mine:enter", (p) => world.beginMine(p), 2);
+  execute("mine:enter", (p, d) => world.beginMine(p, d?.floor ?? 41), 2);
   execute("training:enter", (p) => world.beginTraining(p), 2);
   execute("dungeon:enter", (p, d) => world.beginDungeon(p, d.floor));
   execute("night:enter", (p) => world.beginNightCave(p), 2);

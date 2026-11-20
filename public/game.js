@@ -143,7 +143,7 @@ let lastQuestHash = "",
 let autoInstance = null;
 // Floor data for the current dungeon; the night cave stands in for a floor.
 const floorInfo = (d) =>
-  d?.mine ? { ...FLOORS[(d?.floor || 1) - 1], ...MINE_INFO } : d?.world
+  d?.world
     ? worldInfo(d.world)
     : d?.night
       ? nightInfo(d.night)
@@ -533,7 +533,7 @@ function modal(title, html, panel) {
     ["inventory", "class", "status", "wardrobe", "weapon"].includes(panel),
   );
   $("#modal").classList.toggle("quest-modal", panel === "quest");
-  $("#modal").classList.toggle("dungeon-modal", panel === "dungeon");
+  $("#modal").classList.toggle("dungeon-modal", panel === "dungeon" || panel === "mine");
   $("#modal").classList.toggle(
     "market-modal",
     ["market", "shop"].includes(panel),
@@ -1325,9 +1325,9 @@ function updateHUD() {
   }
   if (area === "town") autoInstance = null;
   setText($("#dock-label"), townOf(p).id === "riverside" ? "สำรวจเหมือง" : p.quest > 0
-    ? `เล่นต่อ ชั้น ${Math.min(p.unlocked || 1, FLOORS.length)}`
+    ? `เล่นต่อ ชั้น ${Math.min(p.unlocked || 1, 40)}`
     : "ผจญภัย");
-  setText($("#floor-chip"), d?.mine ? `เหมือง · ${d.stage}/3` : d?.world ? "บอสโลก" : d?.night ? "ถ้ำลึกลับ" : d ? `ชั้น ${d.floor} · ${d.stage}/3${d.replay?.total > 1 ? ` · รอบ ${d.replay.run}/${d.replay.total}` : ""}` : "");
+  setText($("#floor-chip"), d?.mine ? `เหมือง ชั้น ${d.floor} · ${d.stage}/3` : d?.world ? "บอสโลก" : d?.night ? "ถ้ำลึกลับ" : d ? `ชั้น ${d.floor} · ${d.stage}/3${d.replay?.total > 1 ? ` · รอบ ${d.replay.run}/${d.replay.total}` : ""}` : "");
   setText($("#quest-description"), d?.training
     ? "ฝึกเดิน กระโดด ฟัน และ Q/W/E · หลบเมื่อสไลม์ขึ้นวงเตือน"
     : d
@@ -1336,6 +1336,8 @@ function updateHUD() {
         : `กำจัด${d.stage === 3 ? floorInfo(d).boss : "มอนสเตอร์"} ${d.defeated || 0}/${d.totalEnemies || d.enemies.length}`
       : p.quest >= FLOORS.length
         ? "พิชิตห้วงลึกครบทุกชั้น! ท้าทายซ้ำเพื่อของตำนาน"
+        : p.quest >= 40
+          ? "พิชิตถ้ำหลวงแล้ว! เหมืองชั้น 41–80 เปิดที่ชุมชนริมน้ำสาย"
         : p.quest >= MAIN_FLOORS
           ? "ตำนานบทแรกสำเร็จ! ห้วงลึกถ้ำหลวงเปิดแล้ว"
         : "คุยกับผู้ใหญ่คำ แล้วเข้าสู่ประตูถ้ำหลวง");
@@ -1793,10 +1795,11 @@ function showPanel(panel) {
       if (await emit("town:travel", { destination: target.id })) { closeModal(); sfx("portal"); }
     };
   } else if (panel === "mine") {
-    modal(MINE_INFO.name, `<p>สำรวจอุโมงค์เหมือง ผลึกแร่เรืองแสง และทางรถแร่ใต้ภูเขา</p><p>รอบละ 3 ด่าน · ใช้มอนสเตอร์และรางวัลเดิมตามความคืบหน้าของทีม · จบรอบกลับชุมชนริมน้ำสาย</p><button id="mine-enter" class="primary-button">เข้าสู่เหมือง ➜</button>`, "mine");
-    $("#mine-enter").onclick = async () => {
-      if (await emit("mine:enter")) closeModal();
-    };
+    modal(MINE_INFO.name, dungeonPanelHtml(p, state.time, true), "mine");
+    $(`[data-card="${Math.max(41, Math.min(p.unlocked, 80))}"]`)?.scrollIntoView({ block: "center" });
+    $$("[data-floor]").forEach(b => b.onclick = async () => {
+      if (await emit("mine:enter", { floor: Number(b.dataset.floor) })) closeModal();
+    });
   } else if (panel === "trainer") {
     showPanel("class");
   } else if (["inventory", "class", "status", "wardrobe"].includes(panel)) {
@@ -1993,7 +1996,7 @@ function showPanel(panel) {
   } else if (panel === "dungeon") {
     modal("ประตูถ้ำหลวง · เลือกดันเจียน", dungeonPanelHtml(p, state.time), "dungeon");
     // Open on the newest floor the hero can enter.
-    $(`[data-card="${Math.min(p.unlocked, FLOORS.length)}"]`)?.scrollIntoView({ block: "center" });
+    $(`[data-card="${Math.min(p.unlocked, 40)}"]`)?.scrollIntoView({ block: "center" });
     $$("[data-floor]").forEach(
       (b) =>
         (b.onclick = async () => {
@@ -2939,6 +2942,8 @@ class Adventure extends Phaser.Scene {
             e.y - size - 15,
             e.boss
               ? floorInfo(s.dungeon).boss
+              : s.dungeon?.mine
+                ? `${TRAITS[e.trait]?.icon || ""} ${e.elite ? "หัวหน้า " : ""}${MONSTERS[e.type]?.name || e.type}กลายพันธุ์`
               : e.variant
                 ? `${e.elite ? "★ หัวหน้า " : ""}${TRAITS[e.trait]?.icon || ""} ${e.variant}`
                 : `${e.elite ? "★ หัวหน้า " : ""}${floorInfo(s.dungeon).prefix} · ${MONSTERS[e.type]?.name || e.type}`,
@@ -3705,10 +3710,20 @@ class Adventure extends Phaser.Scene {
     // position, label and bar in step; animation work resumes 300 px before
     // they come into view.
     const cam = this.cameras.main,
-      cullX = this.quality?.cull ? cam.worldView.width / 2 + 300 : Infinity;
+      cullX = this.quality?.cull || state?.dungeon?.mine ? cam.worldView.width / 2 + 300 : Infinity,
+      cullY = state?.dungeon?.mine ? cam.worldView.height / 2 + 220 : Infinity;
+    let mineFocus = null, focusDistance = Infinity;
+    if (state?.dungeon?.mine) for (const m of this.monsters.values()) {
+      const distance = Math.hypot(m.target.x - state.self.x, m.target.y - state.self.y);
+      if (m.target.hp > 0 && distance < focusDistance && distance < 340) {
+        mineFocus = m; focusDistance = distance;
+      }
+    }
     for (const m of this.monsters.values()) {
       const e = m.target;
-      if (Math.abs(m.image.x - cam.midPoint.x) > cullX) {
+      // Crowded mine floors keep one readable name instead of thirty overlapping labels.
+      m.label.setVisible(!state?.dungeon?.mine || e.boss || m === mineFocus);
+      if (Math.abs(m.image.x - cam.midPoint.x) > cullX || Math.abs(m.image.y - cam.midPoint.y) > cullY) {
         const point = sampleMotion(m.history, serverTime - 0.08);
         m.image.setPosition(point.x, point.y);
         m.label.setPosition(point.x, point.y - m.size - 14);
@@ -3758,7 +3773,7 @@ class Adventure extends Phaser.Scene {
       if (serverTime - (e.hitAt || 0) > 0.18 && (statusTint || !state.dungeon?.training)) {
         // Status colours win; frenzied variants flush red below half health.
         m.image.setTint(
-          statusTint ??
+          statusTint ?? (state.dungeon?.mine ? floorInfo(state.dungeon).tint : undefined) ??
             (traitOf(e).frenzy && e.hp <= e.maxHp * 0.5
               ? 0xff7a6a
               : BOSSES[e.type] || EXTRA_MONSTERS[e.type] || e.world ? 0xffffff : floorInfo(state.dungeon).tint),

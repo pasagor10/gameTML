@@ -6,8 +6,8 @@ import { TOWN_PROPS, TOWN_SPOTS, TOWN_BASE, TOWN_LAYOUT } from "/shared/town-lay
 import { SLOT_MACHINE } from "/shared/slots.js";
 import { NIGHT_CAVE } from "/shared/night.js";
 
-const DUSK = [0xe3, 0x9a, 0x7a],
-  NIGHT = [0x83, 0x93, 0xbd];
+const DUSK = [0xfa, 0xec, 0xe0],
+  NIGHT = [0xd7, 0xdf, 0xef];
 const lerp = (a, b, k) => Math.round(a + (b - a) * k);
 // White at noon, warm at dusk, readable moonlit blue at midnight.
 export function skyColor(dark) {

@@ -1,3 +1,4 @@
+import { MINE_DUNGEONS } from "./mine-dungeons.js";
 import { DEEP_DUNGEONS } from "./deep-dungeons.js";
 import { SKILL_KITS, STATUSES } from "./skills.js";
 import { bestiaryBonuses } from "./quests.js";
@@ -559,10 +560,10 @@ for (const tier of ADVANCED_FLOOR_GEAR) {
 }
 
 // Each deep floor has its own progression set instead of reusing floor 10.
-for (let floor = 11; floor <= 40; floor++) {
+for (let floor = 11; floor <= 80; floor++) {
   const n = floor - 10, level = Math.min(60, floor * 2 - 1);
   const prefix = ["ห้วงน้ำ", "ราสาป", "ลาวา", "วิญญาณ", "จันทราดับ"][floor - 11]
-    || DEEP_DUNGEONS[floor - 16].prefix;
+    || (floor > 40 ? MINE_DUNGEONS[floor - 41] : DEEP_DUNGEONS[floor - 16]).prefix;
   const rarity = floor >= 26 ? "divine" : "legendary";
   const weapons = {};
   for (const [job, name, icon] of [["swordsman", "ดาบ", "⚔"], ["archer", "ธนู", "➶"], ["mage", "คทาเวท", "✦"], ["priest", "คทาศักดิ์สิทธิ์", "✚"]]) {

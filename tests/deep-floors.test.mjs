@@ -35,7 +35,7 @@ function create(id, extra = {}) {
 }
 
 test("thirty deep floors follow floor 10, each with its own monster lineup", () => {
-  assert.equal(FLOORS.length, 40);
+  assert.equal(FLOORS.length, 80);
   assert.equal(DUNGEON_ROSTERS.length, FLOORS.length);
   const lineups = new Set();
   for (let floor = MAIN_FLOORS + 1; floor <= FLOORS.length; floor++) {
@@ -46,7 +46,7 @@ test("thirty deep floors follow floor 10, each with its own monster lineup", () 
     for (const v of FLOOR_VARIANTS[floor]) assert.ok(TRAITS[v.trait], v.trait);
     lineups.add(JSON.stringify([0, 1, 2].map((n) => rosterEntry(floor, n))));
   }
-  assert.equal(lineups.size, 30, "no two deep floors share a lineup");
+  assert.equal(lineups.size, 70, "no two deep floors share a lineup");
   const allNames = Object.values(FLOOR_VARIANTS).flat().map((v) => v.name);
   assert.equal(new Set(allNames).size, allNames.length, "every variant is unique");
 });
@@ -136,7 +136,7 @@ test("deep boss drops its own floor gear and unlocks the next floor", () => {
 
 test("all 25 added floors spawn three complete stages with reachable geometry and bosses", () => {
   const names = new Set(FLOORS.map(f => f.name));
-  assert.equal(names.size, 40);
+  assert.equal(names.size, 80);
   for (let floor = 16; floor <= 40; floor++) {
     const p = create(`expanded-${floor}`, { unlocked: floor, level: 40 });
     assert.throws(() => world.beginDungeon(p, floor + 1));
@@ -182,16 +182,16 @@ test("new floor clears persist rewards and unlocks; floor 40 ends the dungeon", 
     world.attack(p, 0, t);
     world.tick(0.05, t + 0.17);
     assert.ok(i.completed, `floor ${floor} clears`);
-    assert.equal(p.unlocked, Math.min(40, floor + 1));
+    assert.equal(p.unlocked, Math.min(80, floor + 1));
     assert.equal(p.quest, floor);
     assert.ok(i.rewards[p.id].gold > 0);
     assert.ok(i.rewards[p.id].items.length || i.rewards[p.id].ore >= 2 + floor - MAIN_FLOORS);
-    assert.equal(loadCharacter(p.id).unlocked, Math.min(40, floor + 1));
+    assert.equal(loadCharacter(p.id).unlocked, Math.min(80, floor + 1));
     assert.equal(i.results[p.id].hasNext, floor < 40);
     world.nextStage(p);
     if (floor === 40) {
       assert.equal(p.area, "town");
-      assert.throws(() => world.beginDungeon(p, 41), /ชั้นไม่ถูกต้อง/);
+      assert.throws(() => world.beginDungeon(p, 41), /ชุมชนริมน้ำสาย/);
     } else {
       assert.equal(i.floor, floor + 1);
       assert.equal(i.stage, 1);

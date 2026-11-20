@@ -38,7 +38,7 @@ test('riverside ground has no invisible old rooftops and mine returns to the rig
  p.x=WORLD.portal;world.beginMine(p);let i=world.instances.get(p.instance);
  assert.equal(i.mine,true);assert.equal(world.snapshot(p).dungeon.mine,true);assert.ok(i.enemies.length>0);
  for(let stage=1;stage<3;stage++){i.clear=true;world.nextStage(p);}
- assert.equal(i.stage,3);i.clear=true;i.completed=true;i.results={};world.nextStage(p);
+ assert.equal(i.stage,3);i.floor=80;i.clear=true;i.completed=true;i.results={};world.nextStage(p);
  assert.equal(p.area,'town');assert.equal(p.townId,'riverside');
  // A hero falling onto an old town roof position must reach the new street.
  p.x=1300;p.y=400;p.vy=0;p.grounded=false;

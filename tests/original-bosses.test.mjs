@@ -33,9 +33,9 @@ function enter(floor, suffix = '') {
 
 test('all new floors use five original boss families with complete sprite assets', () => {
   assert.equal(Object.keys(BOSSES).length, 5);
-  assert.equal(new Set(FLOORS.slice(15).map(f => f.bossType)).size, 5);
-  assert.equal(new Set(FLOORS.slice(15).map(f => f.boss)).size, 25);
-  assert.ok(FLOORS.slice(15).every(f => BOSSES[f.bossType]));
+  assert.equal(new Set(FLOORS.slice(15, 40).map(f => f.bossType)).size, 5);
+  assert.equal(new Set(FLOORS.slice(15, 40).map(f => f.boss)).size, 25);
+  assert.ok(FLOORS.slice(15, 40).every(f => BOSSES[f.bossType]));
   for (const [id, profile] of Object.entries(BOSSES)) {
     assert.ok(STATUSES[profile.status.type]);
     const spec = index.monsters[id];

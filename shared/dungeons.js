@@ -1,3 +1,4 @@
+import { MINE_DUNGEONS } from "./mine-dungeons.js";
 import { EXTRA_MONSTERS, flyingMonster } from "./extra-monsters.js";
 import { DEEP_DUNGEONS } from "./deep-dungeons.js";
 // Shared geometry keeps server collisions, enemy spawns and the minimap aligned.
@@ -85,6 +86,7 @@ export const DUNGEON_ROSTERS = [
   ["moon-reaper", "bat", "mushroom"],
   ["golem", "serpent", "mimic"],
   ...DEEP_DUNGEONS.map((floor) => floor.roster),
+  ...MINE_DUNGEONS.map((floor) => floor.roster),
 ];
 // Trait multipliers: hp, move speed, attack cooldown, damage dealt, damage
 // taken; regen is max-HP share healed per second while not hit; drain is the
@@ -131,6 +133,16 @@ DEEP_DUNGEONS.forEach((floor, index) => {
     name: `${EXTRA_MONSTERS[type]?.name || monsterNames[type]}${floor.prefix}`, trait: floor.traits[slot],
   }));
 });
+MINE_DUNGEONS.forEach((floor, index) => {
+  FLOOR_VARIANTS[index + 41] = floor.roster.map((type, slot) => ({
+    name: `${EXTRA_MONSTERS[type]?.name || monsterNames[type]}กลายพันธุ์ · ${floor.prefix}`,
+    trait: floor.traits[slot],
+  }));
+});
+// Shared proximity rule: distant map-wide damage must not wake a monster.
+export const canAggro = (enemy, hero) =>
+  Math.abs(hero.x - enemy.x) < (enemy.type === "bat" ? 340 : 280) &&
+  Math.abs(hero.y - enemy.y) < 180;
 // The monster in roster slot `index` of a floor: sprite type plus variant.
 export function rosterEntry(floor, index) {
   const roster = DUNGEON_ROSTERS[floor - 1] || DUNGEON_ROSTERS[0],
@@ -164,6 +176,7 @@ function withStairs(list) {
   }
   return out.sort((a, b) => a.x - b.x || b.y - a.y);
 }
+const minePlatforms = new Map();
 export function dungeonPlatforms(floor = 1, stage = 1, training = false) {
   if (training)
     return withStairs([
@@ -171,6 +184,16 @@ export function dungeonPlatforms(floor = 1, stage = 1, training = false) {
       { x: 1100, y: 440, w: 260 },
       { x: 1620, y: 470, w: 210 },
     ]);
+  if (floor > 40) {
+    // Six levels, 80px apart; overlapping stair flights remain jumpable.
+    if (minePlatforms.has(stage)) return minePlatforms.get(stage);
+    const platforms = withStairs(Array.from({ length: 6 }, (_, n) => ({
+      x: stage === 2 ? 1920 - n * 230 : 260 + n * 230,
+      y: 520 - n * 80, w: 340,
+    })));
+    minePlatforms.set(stage, platforms);
+    return platforms;
+  }
   // Deep floors reuse the cave layouts in order.
   const source = ledges[Math.max(0, floor - 1) % ledges.length];
   return withStairs(
@@ -254,6 +277,7 @@ export const withinDungeonSign = (player, sign) =>
 // Monsters per stage: deep floors fill the whole cave, the boss brings guards.
 export function dungeonEnemyCount(floor, stage) {
   // Deep floors stay at floor-12 crowd size; their variants make them harder.
+  if (floor > 40) return stage === 3 ? 13 : 30 + (stage === 2 ? 6 : 0);
   const crowd = Math.min(floor, 12);
   // Fewer but tougher monsters (see MONSTER_HP in server/world.js).
   if (stage === 3) return 1 + 2 + Math.floor(crowd / 3);
@@ -278,6 +302,10 @@ export function dungeonSpawn(floor, stage, n, boss = false, count) {
     slot = (to - from) / total,
     jitter = ((n * 79 + floor * 31 + stage * 17) % 100) / 100 - 0.5,
     x = Math.round(from + slot * (n + 0.5 + jitter * 0.6));
+  if (floor > 40 && stage !== 3 && n % 4 !== 0) {
+    const ledge = platforms[n % platforms.length];
+    return { x: ledge.x + 35 + ((n * 53) % (ledge.w - 70)), y: ledge.y };
+  }
   // Two in three monsters take a ledge when one covers their slot.
   if ((n + floor + stage) % 3 !== 0) {
     const ledge =

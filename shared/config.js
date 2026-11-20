@@ -1,3 +1,4 @@
+import { MINE_DUNGEONS } from "./mine-dungeons.js";
 import { DEEP_DUNGEONS } from "./deep-dungeons.js";
 import { SLOT_MACHINE } from "./slots.js";
 import { rpgBonuses } from "./rpg.js";
@@ -119,6 +120,7 @@ export const FLOORS = [
   { name: "หุบเงาวิญญาณ", boss: "นาคาเงาวิญญาณ", color: 0x4c6f8f, tint: 0xa8c4ff, prefix: "วิญญาณ", bossType: "serpent", icon: "👻", deep: true },
   { name: "บัลลังก์จันทราดับ", boss: "จักรพรรดิหินจันทรา", color: 0x3b2c63, tint: 0xc9a8ff, prefix: "จันทราดับ", bossType: "golem", icon: "🌑", deep: true },
   ...DEEP_DUNGEONS.map(({ roster, traits, ...floor }) => ({ ...floor, deep: true })),
+  ...MINE_DUNGEONS.map(({ roster, traits, ...floor }) => floor),
 ];
 // Difficulty bands shown on the dungeon cards.
 export function floorDifficulty(floor) {
@@ -138,6 +140,7 @@ export const SCALE_FLOOR = 15;
 export const powerFloor = (floor) =>
   floor <= SCALE_FLOOR ? floor : SCALE_FLOOR + (floor - SCALE_FLOOR) * 0.4;
 export const recommendedLevel = (floor) =>
+  floor > 40 ? Math.min(60, 45 + Math.floor((floor - 41) / 2)) :
   floor > MAIN_FLOORS ? Math.min(40, 30 + (floor - MAIN_FLOORS) * 2) : Math.max(1, floor * 3 - 2);
 export const WORLD = {
   width: 2400,

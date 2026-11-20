@@ -74,15 +74,16 @@ function card(p, f, index) {
 ${button}</article>`;
 }
 
-export function dungeonPanelHtml(p, time) {
+export function dungeonPanelHtml(p, time, mine = false) {
+  if (mine) return `<div class="dg-window"><p class="dg-tip">เหมืองแร่แรร์เอิร์ธ · ชั้น 41–80 · ทางขึ้น 6 ระดับ · มอนกลายพันธุ์ (เรื่องแต่งในเกม) · ใช้ภาพเดิมแต่งสี</p><div class="dg-list">${FLOORS.slice(40).map((f, i) => card(p, f, i + 40)).join("")}</div></div>`;
   const main = FLOORS.slice(0, MAIN_FLOORS),
-    deep = FLOORS.slice(MAIN_FLOORS);
+    deep = FLOORS.slice(MAIN_FLOORS, 40);
   const deepOpen = p.unlocked > MAIN_FLOORS;
   return `<div class="dg-window">
 <header class="dg-head"><div class="dg-rules"><p>เข้าดันเจียนได้ไม่จำกัด · สนามฝึกเล่นฟรี</p><p>แต่ละชั้นมี 3 ด่าน: มอนสเตอร์ → อีลิท → บอส · ปาร์ตี้สูงสุด 3 คน สมาชิกต้องกดพร้อมก่อนหัวหน้าเริ่ม</p></div></header>
 <p class="dg-tip"><span>SPACE กระโดดหลบคริสตัลและบอสทุบพื้น · รอบแรกได้อาวุธประจำอาชีพแน่นอน · ชั้น 1–10 เล่นซ้ำลุ้นอุปกรณ์สูงสุด 35% · ชั้น 11–40 รับชิ้นที่ยังไม่มีแน่นอนจนกว่าจะครบชุด</span></p>
 <p class="dg-warning">✦ ชุดเทพแห่งดารา 3 ชิ้น (รางวัลพิเศษแยก): Lv.40+ ชนะบอสชั้น 10 ขึ้นไป ลุ้น 5% ต่อรอบ · สุ่มชิ้นที่ยังไม่มี · 20 รอบมีโอกาสได้อย่างน้อยหนึ่งชิ้นประมาณ 64% ไม่การันตี</p>
 <div class="dg-list">${main.map((f, i) => card(p, f, i)).join("")}
-<div class="dg-deep-banner ${deepOpen ? "open" : ""}"><strong>ห้วงลึกถ้ำหลวง · ชั้น 11–${FLOORS.length}</strong><span>${deepOpen ? "มอนสเตอร์กลายพันธุ์ แต่ละชั้นมีความสามารถพิเศษต่างกัน · อุปกรณ์เฉพาะชั้น Lv.21–60 · ชั้น 26+ ระดับเทพ · ครบชุดแล้วรับแร่แทน" : "ปลดล็อกเมื่อพิชิตชั้น 10 · มอนสเตอร์กลายพันธุ์ที่โหดกว่าเดิม"}</span></div>
+<div class="dg-deep-banner ${deepOpen ? "open" : ""}"><strong>ห้วงลึกถ้ำหลวง · ชั้น 11–40</strong><span>${deepOpen ? "มอนสเตอร์กลายพันธุ์ แต่ละชั้นมีความสามารถพิเศษต่างกัน · อุปกรณ์เฉพาะชั้น Lv.21–60 · ชั้น 26+ ระดับเทพ · ครบชุดแล้วรับแร่แทน" : "ปลดล็อกเมื่อพิชิตชั้น 10 · มอนสเตอร์กลายพันธุ์ที่โหดกว่าเดิม"}</span></div>
 ${deep.map((f, i) => card(p, f, i + MAIN_FLOORS)).join("")}</div></div>`;
 }

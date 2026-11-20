@@ -22,6 +22,7 @@ import {
 } from "../shared/boss-mechanics.js";
 import { dungeonRank } from "../shared/dungeon-results.js";
 import {
+  canAggro,
   dungeonPlatforms,
   dungeonSpawn,
   dungeonEnemyCount,
@@ -1030,6 +1031,7 @@ export function makeRuntime(c, socket) {
   dropUnownedSkin(c);
   return {
     ...c,
+    unlocked: c.unlocked >= 40 && c.quest >= 40 ? Math.max(c.unlocked, Math.min(80, c.quest + 1)) : c.unlocked,
     socket,
     x: 480,
     y: WORLD.ground,
@@ -1107,6 +1109,7 @@ function dungeonEnergy(p, t) {
     : { points, nextAt: p.energy.nextAt + recovered * DUNGEON_ENERGY_INTERVAL };
 }
 export function beginDungeon(p, floor) {
+  if (floor > 40 && townOf(p).id !== "riverside") throw Error("เข้าสู่เหมืองได้จากชุมชนริมน้ำสาย");
   if (!validInt(floor, 1, FLOORS.length)) throw Error("ชั้นไม่ถูกต้อง");
   const party = parties.get(p.party),
     members = party ? party.members.map(live).filter(Boolean) : [p];
@@ -1116,6 +1119,7 @@ export function beginDungeon(p, floor) {
   if (party && members.some((m) => m.id !== p.id && !party.ready.has(m.id)))
     throw Error("สมาชิกทุกคนต้องกดพร้อมก่อน");
   openInstance(members, floor, 1);
+  if (floor > 40) instances.get(p.instance).mine = true;
   for (const m of members) track(m.socket?.request?.headers, "dungeon", m.userId);
   if (party) party.ready.clear();
   return { message: "เข้าสู่ " + FLOORS[floor - 1].name };
@@ -1135,16 +1139,13 @@ export function travelTown(p, destination) {
   savePlayer(p);
   return { message: "เดินทางถึง " + TOWNS[destination].name };
 }
-export function beginMine(p) {
+export function beginMine(p, floor = 41) {
   ensureTown(p);
   if (townOf(p).id !== "riverside") throw Error("เข้าสู่เหมืองได้จากชุมชนริมน้ำสาย");
   if (Math.abs(p.x - WORLD.portal) > 160 || Math.abs(p.y - WORLD.ground) > 100)
     throw Error("เดินไปที่ทางเข้าเหมืองก่อน");
-  const members = parties.get(p.party)?.members.map(live).filter(Boolean) || [p];
-  const floor = Math.max(1, Math.min(13, ...members.map(m => m.unlocked)));
-  beginDungeon(p, floor);
-  instances.get(p.instance).mine = true;
-  return { message: "เข้าสู่เหมืองแร่แรร์เอิร์ธ · ใช้มอนสเตอร์และรางวัลเดิม" };
+  if (!validInt(floor, 41, 80)) throw Error("ชั้นเหมืองไม่ถูกต้อง");
+  return beginDungeon(p, floor);
 }
 // The night cave: free, boss stage only, open while it is night.
 export function beginNightCave(p) {
@@ -1396,7 +1397,7 @@ export function nextStage(p) {
     if (!i.completed || !i.results) throw Error("รอสรุปผลก่อน");
     if (i.members.length > 1 && parties.get(p.party)?.leader !== p.id)
       throw Error("ให้หัวหน้าปาร์ตี้เลือกไปชั้นถัดไป");
-    if (i.night || i.world || i.mine || i.floor >= FLOORS.length) return returnTown(p);
+    if (i.night || i.world || i.floor >= (i.mine ? 80 : 40)) return returnTown(p);
     const members = i.members.map(live).filter(Boolean);
     if (members.some((m) => m.unlocked < i.floor + 1))
       throw Error("สมาชิกยังไม่ปลดล็อกชั้นถัดไป");
@@ -1705,7 +1706,7 @@ function resolveAttack(p, t) {
     if (status && e.status[status]) e.status[status].by = p.id;
     if (status && STATUSES[status].control) e.action = null;
     e.hitAt = t;
-    e.aggro = true;
+    if (canAggro(e, p)) e.aggro = true;
     e.hitDirection = a.direction;
     e.x = Math.max(
       70,
@@ -2021,8 +2022,7 @@ function checkClear(i, t, p) {
               hasNext:
                 !i.night &&
                 !i.world &&
-                !i.mine &&
-                i.floor < FLOORS.length &&
+                i.floor < (i.mine ? 80 : 40) &&
                 i.members
                   .map(live)
                   .filter(Boolean)
@@ -2588,11 +2588,12 @@ export function tick(dt, t = now()) {
         else i.enemies = i.enemies.filter((e) => e.hp > 0);
       }
     }
+    const livingMembers = i.members.map(live).filter(p => p && p.hp > 0);
     for (const e of i.enemies) {
-      const p = i.members
-        .map(live)
-        .filter((p) => p && p.hp > 0)
-        .sort((a, b) => Math.abs(a.x - e.x) - Math.abs(b.x - e.x))[0];
+      // Choose a nearby hero across six levels without allocating/sorting per mob.
+      const distanceSq = p => (p.x - e.x) ** 2 + (p.y - e.y) ** 2;
+      const p = livingMembers.reduce((best, candidate) =>
+        !best || distanceSq(candidate) < distanceSq(best) ? candidate : best, null);
       e.moving = false;
       const bossProfile = e.boss ? BOSSES[e.type] : null;
       const mods = traitOf(e),
@@ -2610,11 +2611,10 @@ export function tick(dt, t = now()) {
       }
       // Monsters guard their spot until a hero comes close, then call the pack.
       if (!e.aggro && !i.training) {
-        const reach = e.type === "bat" ? 340 : 280;
-        if (Math.abs(p.x - e.x) < reach && Math.abs(p.y - e.y) < 280) {
+        if (canAggro(e, p)) {
           e.aggro = true;
           for (const o of i.enemies)
-            if (!o.aggro && Math.abs(o.x - e.x) < 130) o.aggro = true;
+            if (!o.aggro && Math.abs(o.x - e.x) < 130 && canAggro(o, p)) o.aggro = true;
         }
       }
       if (!e.aggro && !i.training) {
