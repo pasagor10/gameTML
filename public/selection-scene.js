@@ -11,9 +11,11 @@ import { gearDress } from "/hero-gear.js?v=6";
 // stands in front on a rune circle; the others wait on either side facing
 // it, smaller and in shadow. Tapping a waiting hero picks it.
 //
-// The front hero is drawn with the town's smooth filtering at BOOST times
-// its in-town on-screen size; the whole lineup scales with it. Parent dimensions are supplied explicitly on resize so
-// crossing a responsive breakpoint cannot retain the previous canvas size.
+// The canvas is backed by real device pixels (no CSS stretch) and the front
+// hero is drawn at about BOOST times its in-town size, snapped so each art
+// pixel covers a whole number of screen pixels: pixel art stays crisp and
+// even instead of breaking into 5- and 6-pixel stripes. The whole lineup
+// scales with it.
 export function createSelectionPreview({ onPick } = {}) {
   const host = document.querySelector("#hero-preview");
   const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
@@ -25,9 +27,9 @@ export function createSelectionPreview({ onPick } = {}) {
     SIZE = [2.45, 1.4, 1.05],
     SPREAD = [0, 170, 290],
     LIFT = [0, 26, 44],
-    // Front hero on the select stage: this many times its in-town size.
-    // Smooth filtering keeps it clean; larger needs dedicated art.
+    // Front hero on the select stage: about this many times its in-town size.
     BOOST = 1.75;
+  const ratio = () => Math.min(3, Math.max(1, window.devicePixelRatio || 1));
   let lineup = [],
     selected = 0,
     ready = false,
@@ -96,19 +98,37 @@ export function createSelectionPreview({ onPick } = {}) {
       this.previewMode = "idle";
       this.previewAt = this.time.now;
     }
-    // Camera zoom that makes the front hero as large on screen as in town
-    // (same zoom rule as the game camera), feet kept on the rune circle.
+    // Camera zoom (device pixels per world unit) that makes the front hero
+    // BOOST times as large as in town (same zoom rule as the game camera),
+    // rounded so one art pixel spans whole device pixels. Feet stay on the
+    // rune circle; the 720x600 composition never grows past the canvas.
     frame() {
       const w = innerWidth,
         h = innerHeight,
+        r = ratio(),
+        cw = this.scale.width,
+        ch = this.scale.height,
         town = h > w && w < 700
           ? Phaser.Math.Clamp(w / 600, 0.5, 1.1)
           : Math.max(w < 700 ? 0.45 : 0.55, h / 1150),
-        cssPerWorld = (this.scale.displaySize.width || W) / W,
-        fit = Phaser.Math.Clamp((town * BOOST) / (SIZE[0] * cssPerWorld), 0.2, 1);
-      if (Math.abs(fit - (this.fit || 0)) < 0.002) return;
-      this.fit = fit;
-      this.cameras.main.setZoom(RES * fit).centerOn(W / 2, FEET - (FEET - H / 2) / fit);
+        most = Math.min(cw / W, ch / H);
+      let z = Phaser.Math.Clamp((town * BOOST * r) / SIZE[0], most * 0.2, most);
+      const front = [...this.slots.values()].find((s) => s.index === selected),
+        set = front?.entry.skins.map((s) => this.sprites.heroes.get(s)).find(Boolean),
+        body = set?.clips.idle?.bodyPx;
+      if (body) {
+        const worldPerArt = (set.height * SIZE[0]) / body,
+          px = z * worldPerArt;
+        if (px >= 1.5)
+          z = Math.max(1, Math.min(Math.round(px), Math.floor(most * worldPerArt))) / worldPerArt;
+      }
+      const key = `${z.toFixed(5)}:${cw}:${ch}`;
+      if (key === this.frameKey) return;
+      this.frameKey = key;
+      this.z = z;
+      this.r = r;
+      const feet = Math.round((ch * FEET) / H);
+      this.cameras.main.setZoom(z).centerOn(W / 2, FEET - (feet - ch / 2) / z);
     }
     update(time, delta) {
       this.frame();
@@ -126,6 +146,8 @@ export function createSelectionPreview({ onPick } = {}) {
           front = d === 0;
         slot.x += (W / 2 + Math.sign(o) * SPREAD[d] - slot.x) * k;
         slot.size += (SIZE[d] - slot.size) * k;
+        // Land exactly on the stop size so the front hero's pixels stay whole.
+        if (Math.abs(SIZE[d] - slot.size) < 0.003) slot.size = SIZE[d];
         slot.lift += (LIFT[d] - slot.lift) * k;
         slot.fade += ((front ? 1 : d === 1 ? 0.5 : 0.3) - slot.fade) * k;
         const set = slot.entry.skins.map((s) => this.sprites.heroes.get(s)).find(Boolean);
@@ -177,7 +199,7 @@ export function createSelectionPreview({ onPick } = {}) {
         [150, 30, 0.75, 1, 24],
         [118, 23, 0.45, -1.4, 14],
       ]) {
-        this.ring.lineStyle(2 / (this.fit || 1), 0xffd77a, a);
+        this.ring.lineStyle((2 * (this.r || 1)) / (this.z || 1), 0xffd77a, a);
         for (let j = 0; j < dash; j++) {
           const a0 = spin * dir + (j / dash) * Math.PI * 2,
             a1 = a0 + (Math.PI * 2) / dash / 2;
@@ -203,13 +225,14 @@ export function createSelectionPreview({ onPick } = {}) {
     transparent: true,
     width: W * RES,
     height: H * RES,
-    // Fit the entire composition so heroes and their base never crop on wide
-    // monitors or narrow phones. CSS owns the available stage rectangle.
-    scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+    // The canvas is sized to the stage box in device pixels (see refit), so
+    // nothing resamples it after Phaser draws. CSS owns the stage rectangle.
+    scale: { mode: Phaser.Scale.NONE, zoom: 1 / ratio() },
     scene: SelectionScene,
     audio: { noAudio: true },
-    // Same filtering as the world renderer: the sprite sets are painted art.
-    render: { antialias: true, pixelArt: false },
+    // Pixel sets carry nearest sampling on their own textures; rounding
+    // positions keeps their pixels on the device grid.
+    render: { antialias: true, pixelArt: false, roundPixels: true },
     fps: { target: 30, forceSetTimeOut: true },
     banner: false,
   });
@@ -224,7 +247,10 @@ export function createSelectionPreview({ onPick } = {}) {
   // Refit whenever the stage box changes (rotation, panel growing, resize).
   const refit = new ResizeObserver(([entry]) => {
     const { width, height } = entry.contentRect;
-    if (width > 0 && height > 0) game.scale.setParentSize(width, height);
+    if (!(width > 0 && height > 0)) return;
+    const r = ratio();
+    game.scale.resize(Math.round(width * r), Math.round(height * r));
+    game.scale.setZoom(1 / r);
   });
   refit.observe(host);
   const observer = new MutationObserver(visibility);
