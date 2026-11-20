@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "3.0",
+  "name": "skill",
+  "artSource": "pixel sheet swordsman-male-maple-v1-empty.png",
+  "sourceSize": [
+    111,
+    107
+  ],
+  "encodedAnchor": [
+    52,
+    103
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    90,
+    110,
+    120,
+    170
+  ],
+  "durationSeconds": 0.49,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 200
+    }
+  ],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      111,
+      107
+    ],
+    "pages": [
+      {
+        "file": "skill-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        42.21,
+        72.71,
+        -154
+      ],
+      [
+        69.6,
+        75.34,
+        -8
+      ],
+      [
+        81.52,
+        78.12,
+        -5
+      ],
+      [
+        69.09,
+        79.03,
+        20
+      ]
+    ]
+  }
+}

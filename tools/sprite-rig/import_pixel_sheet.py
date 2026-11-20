@@ -218,7 +218,11 @@ def shrink(rgba, k):
     return small
 
 
-def build(sheet, key, grid, col_range, name):
+def build(sheet, key, grid, col_range, name, body=BODY, register=True, grips=None):
+    """body: idle body height in output px (BODY in game; larger for the
+    hero-select stage's finer copies). register=False leaves index.json alone. grips:
+    {"c,r": [x, y, deg]} in sheet-cell px (erase_baked_weapon.py), used
+    instead of fist detection."""
     cols, rows = grid
     im = Image.open(sheet).convert("RGB")
     boxes, cw, ch = find_frames(im, cols, rows, col_range)
@@ -228,7 +232,7 @@ def build(sheet, key, grid, col_range, name):
         raise SystemExit(f"{sheet}: frames not found at {missing}")
     # Scale: idle frames' median height becomes BODY px.
     idle_h = sorted(boxes[(c, 0)][3] - boxes[(c, 0)][1] for c in range(n_cols))[n_cols // 2]
-    k = BODY / idle_h
+    k = body / idle_h
     # Frame boxes relative to their grid cell; each row's ground = lowest feet.
     rel = {}
     for (c, r), b in boxes.items():
@@ -254,7 +258,11 @@ def build(sheet, key, grid, col_range, name):
         for c in range(n_cols):
             b = boxes[(c, r)]
             crop = keyed(im.crop(b))
-            fist = front_fist(crop, ROWS[r] in LOW_FIST_ROWS)
+            g = (grips or {}).get(f"{c + col_range[0]},{r}")
+            if g:
+                fist = (round((c + col_range[0]) * cw) + g[0] - b[0], round(r * ch) + g[1] - b[1])
+            else:
+                fist = None if grips else front_fist(crop, ROWS[r] in LOW_FIST_ROWS)
             small = shrink(crop, k)
             px0 = round((placed[(c, r)][0] - ux0) * k) + 1
             py0 = round((placed[(c, r)][1] - uy0) * k) + 1
@@ -274,7 +282,7 @@ def build(sheet, key, grid, col_range, name):
         for c in range(n_cols):
             if sockets[(c, r)] is None:
                 src = min(known, key=lambda q: abs(q - c)) if known else None
-                sockets[(c, r)] = sockets[(src, r)] if src is not None else (anchor[0] + BODY * 0.25, anchor[1] - BODY * 0.42)
+                sockets[(c, r)] = sockets[(src, r)] if src is not None else (anchor[0] + body * 0.25, anchor[1] - body * 0.42)
 
     folder = SPRITES / key
     for r, action in enumerate(ROWS):
@@ -288,7 +296,7 @@ def build(sheet, key, grid, col_range, name):
                 frame.alpha_composite(small, (x, y))
                 if layer == "hand":
                     sx, sy = sockets[(c, r)]
-                    rad = max(2.5, BODY * 0.075)
+                    rad = max(2.5, body * 0.075)
                     m = Image.new("L", cell, 0)
                     mp = m.load()
                     for yy in range(cell[1]):
@@ -307,7 +315,10 @@ def build(sheet, key, grid, col_range, name):
                 "artSource": f"pixel sheet {Path(sheet).name}",
                 "sourceSize": list(cell),
                 "encodedAnchor": anchor,
-                "bodyHeightPx": BODY,
+                "bodyHeightPx": body,
+                # Output px per game art px: the game keeps held weapons at
+                # their world size on finer copies.
+                **({"pixelDetail": body / BODY} if body != BODY else {}),
                 "frameCount": n_cols,
                 "durationsMs": durations,
                 "durationSeconds": sum(durations) / 1000,
@@ -321,7 +332,8 @@ def build(sheet, key, grid, col_range, name):
                 },
             }
             if layer == "body":
-                socks = [[round(sockets[(c, r)][0], 2), round(sockets[(c, r)][1], 2), ANGLES[action][c]] for c in range(n_cols)]
+                socks = [[round(sockets[(c, r)][0], 2), round(sockets[(c, r)][1], 2),
+                          (grips or {}).get(f"{c + col_range[0]},{r}", [0, 0, ANGLES[action][c]])[2]] for c in range(n_cols)]
                 manifest["sockets"] = {"hand": socks}
             (out / "animation.json").write_text(json.dumps(manifest, indent=2) + "\n")
     # Portrait: the first idle frame, cropped, 4x nearest.
@@ -331,6 +343,9 @@ def build(sheet, key, grid, col_range, name):
     portrait = portrait.resize((portrait.width * 4, portrait.height * 4), Image.NEAREST)
     portrait.save(folder / "portrait.webp", "WEBP", lossless=True)
 
+    if not register:
+        print(f"{key}: cell {cell}, scale {k:.3f}")
+        return
     index_path = SPRITES / "index.json"
     index = json.loads(index_path.read_text())
     index["sets"][key] = {
@@ -356,10 +371,14 @@ def main():
     ap.add_argument("--grid", default="4x8")
     ap.add_argument("--cols", default=None, help="columns of this look, e.g. 4-7")
     ap.add_argument("--name", default=None)
+    ap.add_argument("--body", type=int, default=BODY, help="idle body height in output px")
+    ap.add_argument("--no-register", action="store_true", help="leave index.json alone")
+    ap.add_argument("--grips", default=None, help="JSON from erase_baked_weapon.py --grips")
     a = ap.parse_args()
     cols, rows = map(int, a.grid.split("x"))
     lo, hi = map(int, a.cols.split("-")) if a.cols else (0, cols - 1)
-    build(a.sheet, a.key, (cols, rows), (lo, hi), a.name)
+    build(a.sheet, a.key, (cols, rows), (lo, hi), a.name, a.body, not a.no_register,
+          json.loads(Path(a.grips).read_text()) if a.grips else None)
 
 
 if __name__ == "__main__":

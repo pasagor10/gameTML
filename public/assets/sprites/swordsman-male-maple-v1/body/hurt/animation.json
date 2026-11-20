@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "hurt",
+  "artSource": "pixel sheet swordsman-male-maple-v1-empty.png",
+  "sourceSize": [
+    111,
+    107
+  ],
+  "encodedAnchor": [
+    52,
+    103
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    70,
+    90,
+    90,
+    110
+  ],
+  "durationSeconds": 0.36,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      111,
+      107
+    ],
+    "pages": [
+      {
+        "file": "hurt-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        71.32,
+        73.16,
+        -29
+      ],
+      [
+        74.97,
+        68.59,
+        -7
+      ],
+      [
+        69.1,
+        76.31,
+        1
+      ],
+      [
+        68.39,
+        80.6,
+        20
+      ]
+    ]
+  }
+}

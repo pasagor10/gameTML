@@ -109,11 +109,11 @@
       "pixel": true
     },
     "swordsman-male": {
-      "dir": "swordsman-male",
+      "dir": "swordsman-male-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (swordsman-male-tier1.webp), weapon drawn in the front fist",
+      "source": "Remake of the in-game starter swordsman; imagegen 4x8 sheet, baked sword erased (erase_baked_weapon.py), imported at 2x detail with the equipped weapon in the front fist",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -1626,7 +1626,7 @@
       }
     }
   },
-  "version": 1795129585753117000,
+  "version": "20261120-swordsman-maple-v2",
   "npcs": {
     "elder": {
       "dir": "npcs/elder",

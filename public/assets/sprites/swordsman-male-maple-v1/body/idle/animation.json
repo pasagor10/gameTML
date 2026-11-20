@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "idle",
+  "artSource": "pixel sheet swordsman-male-maple-v1-empty.png",
+  "sourceSize": [
+    111,
+    107
+  ],
+  "encodedAnchor": [
+    52,
+    103
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    220,
+    220,
+    220,
+    220
+  ],
+  "durationSeconds": 0.88,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      111,
+      107
+    ],
+    "pages": [
+      {
+        "file": "idle-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        69.88,
+        78.18,
+        25
+      ],
+      [
+        72.02,
+        78.14,
+        27
+      ],
+      [
+        72.54,
+        75.37,
+        29
+      ],
+      [
+        69.36,
+        78.69,
+        23
+      ]
+    ]
+  }
+}

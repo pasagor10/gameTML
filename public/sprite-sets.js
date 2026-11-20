@@ -124,9 +124,12 @@ function clipFrom(scene, key, manifest) {
   if (pages.some((page) => !scene.textures.exists(`${key}:${page.file}`))) return null;
   let [cw, ch] = fb.cellSize;
   // One upscale factor for the whole clip (the smallest any page allows).
-  const detail = pixel && scene.pixelDetail > 1
-    ? Math.min(...pages.map((page) => detailFactor(scene, `${key}:${page.file}`, scene.pixelDetail)))
-    : 1;
+  // Sets drawn finer than the game's art pixel (pixelDetail in the
+  // manifest) need less EPX upscaling.
+  const drawn = manifest.pixelDetail || 1,
+    detail = pixel && scene.pixelDetail > drawn
+      ? Math.min(...pages.map((page) => detailFactor(scene, `${key}:${page.file}`, scene.pixelDetail / drawn)))
+      : 1;
   for (const page of pages) {
     const texKey = detailPage(scene, `${key}:${page.file}`, detail),
       tex = scene.textures.get(texKey),
@@ -184,8 +187,8 @@ function clipFrom(scene, key, manifest) {
       ? Object.fromEntries(Object.entries(manifest.sockets).map(([k, list]) =>
           [k, list.map((s) => s && [s[0] * detail, s[1] * detail, ...s.slice(2)])]))
       : manifest.sockets || null,
-    // Cell pixels per original art pixel (pixelDetail upscaling).
-    detail,
+    // Cell pixels per game art pixel (finer source art and EPX upscaling).
+    detail: detail * drawn,
   };
 }
 
