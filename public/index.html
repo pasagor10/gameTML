@@ -62,7 +62,7 @@
     <link rel="stylesheet" href="/hero-lobby.css?v=1" />
     <link rel="stylesheet" href="/hud-v2.css?v=3" />
     <link rel="stylesheet" href="/hud-v3.css?v=3" />
-    <link rel="stylesheet" href="/modern-ui.css?v=26" />
+    <link rel="stylesheet" href="/modern-ui.css?v=27" />
     <link rel="stylesheet" href="/hero-lobby-v2.css?v=7" />
     <link rel="stylesheet" href="/ultimate-ui.css?v=3" />
     <script src="/install.js?v=3" defer></script>
@@ -160,7 +160,7 @@
             </div>
             <div id="self-effects" class="self-effects"></div>
             <div class="profile-meta">
-              <button id="player-class" data-panel="class">นักดาบ</button>
+              <button id="player-class" data-panel="class" data-badge="class">นักดาบ</button>
             </div>
           </div>
         </div>
@@ -171,13 +171,13 @@
         </div>
         <nav id="top-menu">
           <button data-panel="players" title="คนออนไลน์" aria-label="รายชื่อคนออนไลน์"><b>♧</b><span>ออนไลน์</span></button>
-          <button data-panel="class" title="คลาส"
+          <button data-panel="class" title="คลาส" data-badge="class"
             ><b><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="10" r="6"/><path d="M5 29c0-7 5-11 11-11s11 4 11 11Z"/></svg></b
             ><span>คลาส</span></button
           ><button data-panel="inventory" title="อุปกรณ์"
             ><b><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M12 8V6a4 4 0 0 1 8 0v2" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M6 13a5 5 0 0 1 5-5h10a5 5 0 0 1 5 5v13a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3Z"/><path d="M11 18h10v5H11Z" fill="#0b1a17"/></svg></b
             ><span>อุปกรณ์</span></button
-          ><button data-panel="status" title="สเตตัส (K)" id="status-menu"
+          ><button data-panel="status" title="สเตตัส (K)" id="status-menu" data-badge="status"
             ><b><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 27V17h5v10Zm8.5 0V9h5v18ZM22 27V4h5v23Z"/></svg></b
             ><span>สเตตัส</span></button
           ><button data-panel="quest" title="เควส"
@@ -342,11 +342,16 @@
       </div>
       <!-- Town menu bar; in a dungeon the top bar and the pause menu take over. -->
       <nav id="town-dock" aria-label="เมนูเมือง">
-        <button data-panel="class" type="button"><b class="dock-icon dock-hero"></b><span>ตัวละคร</span></button
+        <button data-panel="class" type="button" data-badge="class"><b class="dock-icon dock-hero"></b><span>ตัวละคร</span></button
         ><button data-panel="inventory" type="button"><b class="dock-icon dock-bag"></b><span>กระเป๋า</span></button
         ><button id="dock-adventure" type="button"><b class="dock-icon dock-go"></b><span id="dock-label">ผจญภัย</span></button
         ><button data-panel="quest" type="button"><b class="dock-icon dock-quest"></b><span>เควส</span></button
-        ><button data-panel="party" type="button"><b class="dock-icon dock-party"></b><span>ปาร์ตี้</span></button>
+        ><button data-panel="party" type="button"><b class="dock-icon dock-party"></b><span>ปาร์ตี้</span></button
+        ><button data-panel="status" type="button" class="dock-extra" data-badge="status"><b class="dock-icon dock-status"></b><span>สเตตัส</span></button
+        ><button data-panel="market" type="button" class="dock-extra"><b class="dock-icon dock-market"></b><span>ตลาด</span></button
+        ><button data-panel="ranking" type="button" class="dock-extra"><b class="dock-icon dock-ranking"></b><span>อันดับ</span></button
+        ><button data-panel="players" type="button" class="dock-extra"><b class="dock-icon dock-players"></b><span>ออนไลน์</span></button
+        ><button data-panel="settings" type="button" class="dock-extra"><b class="dock-icon dock-settings"></b><span>ตั้งค่า</span></button>
       </nav>
       <div id="dungeon-bar">
         <b id="floor-chip">ชั้น 1</b>
@@ -458,7 +463,7 @@
     </div>
     <script src="/vendor/phaser.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <script type="module" src="/game.js?v=0.64.0"></script>
+    <script type="module" src="/game.js?v=0.65.0"></script>
     <script type="module" src="/orientation.js?v=3"></script>
     <script type="module" src="/screen-awake.js?v=1"></script>
   </body>

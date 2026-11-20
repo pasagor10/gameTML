@@ -52,6 +52,7 @@ import {
   enhancementChance,
   MAX_ENHANCE,
   ENHANCE_BREAK_LEVEL,
+  ADVANCE_LEVEL,
 } from "/shared/rpg.js";
 import { createTownNpcs, footGlow, createRim } from "/town-npcs.js?v=11";
 import { updateEnhanceAura, updateSetGlow, AURA_LEVEL } from "/enhance-aura.js?v=7";
@@ -1091,14 +1092,16 @@ function updateHUD() {
     SPECIALIZATIONS[p.class].find((s) => s.id === p.specialization)?.name ||
     CLASSES[p.class].name;
   setText($("#exp-label"), p.level >= MAX_LEVEL ? `Lv.${MAX_LEVEL} สูงสุด` : `${p.exp} / ${expToLevel(p.level)} EXP`);
-  // Unspent status points: a badge on the status menu button.
-  const statusMenu = $("#status-menu");
-  if (statusMenu) {
-    let badge = statusMenu.querySelector(".menu-badge");
-    if (p.statPoints > 0) {
-      badge ??= statusMenu.appendChild(document.createElement("i"));
+  // Red badges: unspent status points, and a class change waiting in town.
+  const classReady = d ? 0 : (!p.specialization && p.level >= 3) || (p.specialization && !p.advanced && p.level >= ADVANCE_LEVEL) ? "!" : 0;
+  const badges = { status: p.statPoints > 0 ? p.statPoints : 0, class: classReady };
+  for (const el of document.querySelectorAll("[data-badge]")) {
+    const value = badges[el.dataset.badge];
+    let badge = el.querySelector(":scope > .menu-badge");
+    if (value) {
+      badge ??= el.appendChild(document.createElement("i"));
       badge.className = "menu-badge";
-      badge.textContent = p.statPoints;
+      setText(badge, String(value));
     } else badge?.remove();
   }
   if (["inventory", "class", "status", "wardrobe"].includes(activePanel)) {

@@ -533,3 +533,30 @@ html body #modal .inv-detail.rarity-divine .inv-detail-art {
 html body #modal .rarity-divine .inv-pills .rarity { color:#062c2d; background:linear-gradient(120deg,#f9efbd,#aaffed); border-color:#e8fff7; }
 @keyframes celestial-breathe { 50% { box-shadow:0 0 24px #83ffe540,inset 0 0 22px #fff2ac3d; } }
 @media(prefers-reduced-motion:reduce) {html body #modal .inv-detail.rarity-divine .inv-detail-art{animation:none}}
+/* Red notice badges: unspent stat points, class change ready. */
+html body #game-screen [data-badge] { position: relative; }
+html body #game-screen [data-badge] > .menu-badge {
+  position: absolute; top: -5px; right: -5px; z-index: 2; min-width: 18px; height: 18px; padding: 0 4px;
+  display: grid; place-items: center; border-radius: 9px !important; pointer-events: none;
+  background: #e5394a !important; color: #fff !important; border: 0 !important;
+  font: 800 11px/1 'Noto Sans Thai', sans-serif !important; font-style: normal !important;
+  box-shadow: 0 0 0 2px #0c1822, 0 0 10px #e5394a99 !important;
+}
+html body #game-screen #town-dock > button > .menu-badge { top: 6px; right: calc(50% - 26px); }
+html body #game-screen #player-class > .menu-badge { top: -7px; right: -9px; min-width: 16px; height: 16px; font-size: 10px !important; }
+/* Desktop: town bar spans the screen and holds every menu, no ☰ needed. */
+html body #game-screen #town-dock > .dock-extra { display: none; }
+html body #game-screen #town-dock .dock-status { background-image: url('/assets/ui/modern/status.svg') !important; }
+html body #game-screen #town-dock .dock-market { background-image: url('/assets/ui/modern/market.svg') !important; }
+html body #game-screen #town-dock .dock-ranking { background-image: url('/assets/ui/modern/ranking.svg') !important; }
+html body #game-screen #town-dock .dock-players { background-image: url('/assets/ui/modern/players.svg') !important; }
+html body #game-screen #town-dock .dock-settings { background-image: url('/assets/ui/modern/settings.svg') !important; }
+@media (pointer: fine) and (min-width: 900px) {
+  html body #game-screen #town-dock {
+    left: 0 !important; right: 0 !important; width: auto !important; translate: none !important;
+    grid-template-columns: repeat(10, minmax(0, 132px)); justify-content: center; column-gap: 4px;
+  }
+  html body #game-screen #town-dock > .dock-extra { display: flex; }
+  html body #game-screen #town-dock > button:not(#dock-adventure):hover { color: #e3f1f2 !important; }
+  html body #game-screen[data-area="town"] #top-menu { display: none !important; }
+}
