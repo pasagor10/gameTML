@@ -100,7 +100,6 @@ import {
   nightFloor,
   nightReward,
   NIGHT_BOSS,
-  NIGHT_CAVE,
 } from "../shared/night.js";
 // SKY_OFFSET (seconds) shifts the day/night clock, e.g. to test the night cave.
 const SKY_OFFSET = Number(process.env.SKY_OFFSET) || 0;
@@ -1129,8 +1128,6 @@ export function travelTown(p, destination) {
   ensureTown(p);
   if (!Object.hasOwn(TOWNS, destination) || destination !== townOf(p).destination)
     throw Error("ปลายทางไม่ถูกต้อง");
-  if (Math.abs(p.x - TRAVEL_GATE.x) > TRAVEL_GATE.reach || Math.abs(p.y - TRAVEL_GATE.y) > 90)
-    throw Error("เดินเข้าใกล้ประตูวาร์ปก่อน");
   if ([...trades.values()].some(t => t.members.includes(p.id))) throw Error("จบการแลกเปลี่ยนก่อนเดินทาง");
   p.townId = destination;
   returnTown(p);
@@ -1142,8 +1139,6 @@ export function travelTown(p, destination) {
 export function beginMine(p, floor = 41) {
   ensureTown(p);
   if (townOf(p).id !== "riverside") throw Error("เข้าสู่เหมืองได้จากชุมชนริมน้ำสาย");
-  if (Math.abs(p.x - WORLD.portal) > 160 || Math.abs(p.y - WORLD.ground) > 100)
-    throw Error("เดินไปที่ทางเข้าเหมืองก่อน");
   if (!validInt(floor, 41, 80)) throw Error("ชั้นเหมืองไม่ถูกต้อง");
   return beginDungeon(p, floor);
 }
@@ -1157,8 +1152,6 @@ export function beginNightCave(p) {
   if (party && party.leader !== p.id) throw Error("ให้หัวหน้าปาร์ตี้พาเข้าถ้ำ");
   if (members.some((m) => m.area !== "town" || townOf(m).id !== townOf(p).id || m.hp <= 0))
     throw Error("สมาชิกทุกคนต้องอยู่ในเมือง");
-  if (p.x > NIGHT_CAVE.x + NIGHT_CAVE.reach)
-    throw Error("เดินไปที่ปากถ้ำลึกลับก่อน");
   if (party && members.some((m) => m.id !== p.id && !party.ready.has(m.id)))
     throw Error("สมาชิกทุกคนต้องกดพร้อมก่อน");
   const boss = nightBoss(sky.cycle);

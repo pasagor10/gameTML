@@ -13,10 +13,9 @@ function hero(id,townId='cave'){
  db.prepare('INSERT INTO characters VALUES(?,?,?,?)').run(id,id,id,JSON.stringify({class:'swordsman',gender:'male',level:60,unlocked:40,quest:40,gold:100000,inventory:{ore:0},townId}));
  const p=world.makeRuntime(loadCharacter(id),{emit(){}});world.players.set(id,p);return p;
 }
-test('town travel checks distance, destination and trades, and persists across reconnect',()=>{
+test('town travel works at any distance, checks destination and trades, and persists across reconnect',()=>{
  const p=hero('traveller');assert.equal(p.townId,'cave');
- assert.throws(()=>world.travelTown(p,'riverside'),/ประตู/);
- p.x=TRAVEL_GATE.x;assert.throws(()=>world.travelTown(p,'unknown'),/ปลายทาง/);
+ p.x=4000;p.y=300;assert.throws(()=>world.travelTown(p,'unknown'),/ปลายทาง/);
  world.trades.set('pending',{members:[p.id]});assert.throws(()=>world.travelTown(p,'riverside'),/แลกเปลี่ยน/);world.trades.clear();
  world.travelTown(p,'riverside');assert.equal(p.townId,'riverside');assert.equal(p.area,'town');
  assert.equal(world.snapshot(p).town.name,TOWNS.riverside.name);
@@ -34,8 +33,7 @@ test('towns isolate player visibility and prevent remote trading and mixed-town 
  a.party=b.party=null;world.parties.delete(party.id);
 });
 test('riverside ground has no invisible old rooftops and mine returns to the right town',()=>{
- const p=hero('miner','riverside');assert.throws(()=>world.beginMine(p),/ทางเข้า/);
- p.x=WORLD.portal;world.beginMine(p);let i=world.instances.get(p.instance);
+ const p=hero('miner','riverside');p.x=80;p.y=300;world.beginMine(p);let i=world.instances.get(p.instance);
  assert.equal(i.mine,true);assert.equal(world.snapshot(p).dungeon.mine,true);assert.ok(i.enemies.length>0);
  for(let stage=1;stage<3;stage++){i.clear=true;world.nextStage(p);}
  assert.equal(i.stage,3);i.floor=80;i.clear=true;i.completed=true;i.results={};world.nextStage(p);

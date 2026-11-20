@@ -63,11 +63,10 @@ test("night boss strength follows the best hero in the party", () => {
   assert.equal(nightFloor([{ quest: 99 }]), 15);
 });
 
-test("the night cave needs night, the cave mouth, and spawns a giant boss", () => {
+test("the night cave needs night, accepts distant entry, and spawns a giant boss", () => {
   const p = create("night-enter");
   p.x = 1200;
-  assert.throws(() => world.beginNightCave(p), /ปากถ้ำ/);
-  p.x = NIGHT_CAVE.x;
+  p.x = 4000; // Night cave entry works from anywhere in its town.
   const energy = world.snapshot(p).self.energy.points;
   world.beginNightCave(p);
   const i = world.instances.get(p.instance);

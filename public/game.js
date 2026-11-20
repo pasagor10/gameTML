@@ -1793,7 +1793,7 @@ function showPanel(panel) {
     });
   } else if (panel === "travel") {
     const target = TOWNS[townOf(p).destination];
-    modal("ประตูวาร์ปข้ามเมือง", `<p>ปลายทาง: <strong>${target.name}</strong></p><p>เดินเข้าใกล้ประตูวาร์ปแล้วกดเดินทาง · ใช้ได้ฟรี</p><button id="travel-go" class="primary-button">เดินทางไป ${target.name} ➜</button>`, "travel");
+    modal("ประตูวาร์ปข้ามเมือง", `<p>ปลายทาง: <strong>${target.name}</strong></p><p>กดเดินทางได้จากทุกจุดในเมือง · ใช้ได้ฟรี</p><button id="travel-go" class="primary-button">เดินทางไป ${target.name} ➜</button>`, "travel");
     $("#travel-go").onclick = async () => {
       if (await emit("town:travel", { destination: target.id })) { closeModal(); sfx("portal"); }
     };
