@@ -1,3 +1,4 @@
+import { RIVER_DOCKS } from "../shared/riverside-layout.js";
 import { TOWNS, townOf, TRAVEL_GATE } from "../shared/towns.js";
 import { BOSSES } from "../shared/bosses.js";
 import {
@@ -2238,7 +2239,7 @@ function physics(p, dt, t) {
   let floor = WORLD.ground;
   if (p.vy >= 0)
     for (const platform of p.area === "town"
-      ? (townOf(p).id === "riverside" ? [] : WORLD.platforms)
+      ? (townOf(p).id === "riverside" ? RIVER_DOCKS : WORLD.platforms)
       : dungeonPlatforms(
           instances.get(p.instance)?.floor,
           instances.get(p.instance)?.stage,

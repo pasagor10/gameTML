@@ -44,6 +44,12 @@ test('riverside ground has no invisible old rooftops and mine returns to the rig
  p.x=1300;p.y=400;p.vy=0;p.grounded=false;
  let t=Date.now()/1000;for(let n=0;n<30;n++)world.tick(0.05,t+=0.05);
  assert.equal(p.y,600);
+ p.x=3900;p.y=600;p.vy=0;p.grounded=true;p.jump=true;
+ for(let n=0;n<30;n++)world.tick(0.05,t+=0.05);
+ assert.equal(p.y,528,"land on the visible lower timber dock");
+ p.x=4150;p.y=600;p.vy=0;p.grounded=true;p.jump=true;
+ for(let n=0;n<30;n++)world.tick(0.05,t+=0.05);
+ assert.equal(p.y,480,"land on the visible upper timber dock");
 });
 test('both region paintings and the shared NPC services are present',()=>{
  assert.equal(WORLD.npcs.length,6);

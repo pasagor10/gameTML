@@ -1,3 +1,4 @@
+import { RIVER_DOCKS } from "/shared/riverside-layout.js";
 import { WORLD } from "/shared/config.js";
 import { dungeonPlatforms } from "/shared/dungeons.js";
 import { TOWN_PROPS, TOWN_SPOTS } from "/shared/town-layout.js";
@@ -79,7 +80,7 @@ export function createWorldDetails(scene) {
       // Same ledges the server collides with: each floor/stage has its own.
       const d = state.dungeon,
         platforms = town
-          ? (state.self.townId === "riverside" ? [] : WORLD.platforms)
+          ? (state.self.townId === "riverside" ? RIVER_DOCKS : WORLD.platforms)
           : dungeonPlatforms(d?.floor, d?.stage, d?.training);
       // Ledge lines and the landing ring are a debug aid (walkability toggle) only.
       if (full) for (const q of [

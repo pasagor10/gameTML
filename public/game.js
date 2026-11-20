@@ -1,3 +1,5 @@
+import { preloadRiverside } from "/riverside-map.js";
+import { RIVER_DOCKS } from "/shared/riverside-layout.js";
 import { TOWNS, townOf, TRAVEL_GATE, MINE_INFO } from "/shared/towns.js";
 import { EXTRA_MONSTERS } from "/shared/extra-monsters.js";
 import { createDungeonProps } from "/dungeon-props.js?v=1";
@@ -1296,7 +1298,7 @@ function updateHUD() {
     "d",
     "M8 52H211" +
       (state.area === "town"
-        ? (townOf(p).id === "riverside" ? [] : WORLD.platforms)
+        ? (townOf(p).id === "riverside" ? RIVER_DOCKS : WORLD.platforms)
         : dungeonPlatforms(
             state?.dungeon?.floor,
             state?.dungeon?.stage,
@@ -2450,7 +2452,7 @@ class Adventure extends Phaser.Scene {
       $("#connection-state").textContent = `กำลังโหลดทรัพยากร ${Math.round(value * 100)}%`;
     });
     queueSpriteSets(this);
-    this.load.image("riverside-town", "/assets/regions/riverside-town.webp?v=1");
+    preloadRiverside(this);
     this.load.image("rare-earth-mine", "/assets/regions/rare-earth-mine.webp?v=1");
     // Town kit: pieces, props, animated props and far layers (tools/town-kit).
     const kit = (key) => `/assets/town-kit/${key}.webp?v=11`;

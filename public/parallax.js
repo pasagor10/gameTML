@@ -1,3 +1,4 @@
+import { createRiversideMap } from "/riverside-map.js";
 // Layered, animated background for the Adventure scene.
 // The town is assembled from kit pieces (shared/town-layout.js) on a repeating
 // street tile, aligned 1:1 with the collision world. The cave backdrop is one
@@ -423,7 +424,9 @@ export function createParallax(scene) {
   // Kit pieces on the street tile, then props: behind the heroes, or in
   // front of them for a little foreground depth.
   const regionBase = scene.add.rectangle(0, -1000, TOWN_WIDTH, 2400, 0x173f42).setOrigin(0).setDepth(-29).setVisible(false);
-  const regionPainting = scene.add.image(0, 0, "riverside-town").setOrigin(0).setDepth(-28).setVisible(false);
+  const regionPainting = scene.add.image(0, 0, "rare-earth-mine").setOrigin(0).setDepth(-28).setVisible(false);
+  const riverside = createRiversideMap(scene);
+  riverside.setVisible(false);
   const animated = [];
   const props = TOWN_PROPS.map((p, i) => {
     const anim = p.key.startsWith("anim-"),
@@ -723,15 +726,14 @@ export function createParallax(scene) {
       kind === "town" ? Phaser.BlendModes.SCREEN : Phaser.BlendModes.MULTIPLY,
     );
     grade.setAlpha(theme.gradeAlpha);
-    regionBase.setVisible(customRegion).setFillStyle(isTown ? 0x173f42 : 0x101c26);
-    regionPainting.setVisible(customRegion);
+    regionBase.setVisible(customRegion).setDepth(isTown ? -40 : -29).setFillStyle(isTown ? 0x376e78 : 0x101c26);
+    riverside.setVisible(area === "riverside");
+    regionPainting.setVisible(area === "mine");
     seam.setVisible(!customRegion);
     fgBottom.setVisible(!customRegion);
     fgTop.setVisible(!customRegion && !lowPower);
-    if (customRegion) {
-      const width = isTown ? TOWN_WIDTH : WORLD_W, height = isTown ? width / 3 : 1200;
-      regionPainting.setTexture(isTown ? "riverside-town" : "rare-earth-mine")
-        .setPosition(0, TOWN_GROUND - height * (isTown ? 0.735 : 0.685)).setDisplaySize(width, height);
+    if (area === "mine") {
+      regionPainting.setPosition(0, TOWN_GROUND - 1200 * 0.685).setDisplaySize(WORLD_W, 1200);
     }
     town.forEach((e) => e.setVisible(kind === "town" && !lite).stop());
     cave.forEach((e) => e.setVisible(kind === "cave" && !lite).stop());
@@ -785,6 +787,7 @@ export function createParallax(scene) {
   }
 
   function update(time) {
+    riverside.update(time);
     const c = cam(),
       sx = c.scrollX,
       drift = reduced ? 0 : time * 0.012;
