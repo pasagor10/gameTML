@@ -4,11 +4,20 @@ import { tileStrip } from '/tile-strip.js';
 
 export function preloadRiverside(scene) {
  for (const name of Object.keys(RIVER_PIECES)) scene.load.image(`river-${name}`,`/assets/river-kit/${name}.webp?v=1`);
- scene.load.image('river-far','/assets/river-kit/far-river.webp?v=1');
+ scene.load.image('river-far','/assets/river-kit/far-nangnon-v2.webp?v=2');
 }
 export function createRiversideMap(scene) {
  const parts=[];
- const far=scene.add.image(-250,-900,'river-far').setOrigin(0).setDisplaySize(TOWN_WIDTH+1250,1900).setScrollFactor(.78,1).setDepth(-34);
+ const texture=scene.textures.get('river-far'),source=texture.getSourceImage();
+ if(!texture.has('sky-cap'))texture.add('sky-cap',0,0,0,source.width,2);
+ if(!texture.has('water-cap'))texture.add('water-cap',0,0,source.height-2,source.width,2);
+ texture.firstFrame='__BASE';
+ const width=TOWN_WIDTH+1250;
+ // Frame the stacked ridges above the shops; extend only sky and water outside
+ // the painting so tall screens never reveal a hard edge or repeated mountains.
+ parts.push(scene.add.image(-250,-1200,'river-far','sky-cap').setOrigin(0).setDisplaySize(width,900).setScrollFactor(.78,1).setDepth(-35));
+ parts.push(scene.add.image(-250,900,'river-far','water-cap').setOrigin(0).setDisplaySize(width,700).setScrollFactor(.78,1).setDepth(-35));
+ const far=scene.add.image(-250,-300,'river-far','__BASE').setOrigin(0).setDisplaySize(width,1200).setScrollFactor(.78,1).setDepth(-34);
  parts.push(far);
  parts.push(tileStrip(scene,-100,TOWN_STREET_Y,TOWN_WIDTH+200,80,'town-street').setOrigin(0).setDepth(-31));
  const edge=scene.add.graphics().setDepth(-29);
