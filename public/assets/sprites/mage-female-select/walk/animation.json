@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "3.0",
+  "name": "walk",
+  "artSource": "painted sheet (supplied artwork)",
+  "sourceSize": [
+    328,
+    199
+  ],
+  "sourceAnchor": [
+    164.0,
+    195.63
+  ],
+  "frameCount": 6,
+  "durationsMs": [
+    110,
+    110,
+    110,
+    110,
+    110,
+    110
+  ],
+  "durationSeconds": 0.66,
+  "fps": 9.091,
+  "loop": true,
+  "bodyHeightPx": 180.0,
+  "events": [],
+  "sampling": "linear",
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      328,
+      199
+    ],
+    "pages": [
+      {
+        "file": "walk-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 6,
+        "columns": 6
+      }
+    ]
+  }
+}

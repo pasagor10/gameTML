@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "3.0",
+  "name": "death",
+  "artSource": "painted sheet (supplied artwork)",
+  "sourceSize": [
+    328,
+    199
+  ],
+  "sourceAnchor": [
+    164.0,
+    195.63
+  ],
+  "frameCount": 6,
+  "durationsMs": [
+    90,
+    110,
+    130,
+    160,
+    200,
+    300
+  ],
+  "durationSeconds": 0.99,
+  "fps": 6.061,
+  "loop": false,
+  "bodyHeightPx": 180.0,
+  "events": [],
+  "sampling": "linear",
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      328,
+      199
+    ],
+    "pages": [
+      {
+        "file": "death-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 6,
+        "columns": 6
+      }
+    ]
+  }
+}

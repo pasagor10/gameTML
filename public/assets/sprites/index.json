@@ -1,5 +1,35 @@
 {
   "sets": {
+    "mage-male-select": {
+      "dir": "mage-male-select",
+      "height": 112,
+      "facing": 1,
+      "source": "full-resolution painted mage (before pixelation), shown only on the hero-select stage",
+      "actions": {
+        "walk": "walk",
+        "run": "run",
+        "hit": "hurt",
+        "death": "death",
+        "idle": "idle",
+        "attack": "attack",
+        "skill": "skill"
+      }
+    },
+    "mage-female-select": {
+      "dir": "mage-female-select",
+      "height": 112,
+      "facing": 1,
+      "source": "full-resolution painted mage (before pixelation), shown only on the hero-select stage",
+      "actions": {
+        "walk": "walk",
+        "run": "run",
+        "hit": "hurt",
+        "death": "death",
+        "idle": "idle",
+        "attack": "attack",
+        "skill": "skill"
+      }
+    },
     "archer-male": {
       "dir": "archer-male",
       "height": 96,

@@ -62,6 +62,13 @@ export function createSelectionPreview({ onPick } = {}) {
       host.parentElement.classList.add("preview-ready");
       this.sync();
     }
+    // A set may have a finer stage-only version ("<name>-select" in the
+    // sprite index, e.g. the painted mage before it was pixelated): prefer it,
+    // falling back to the town set while it loads.
+    skins(entry) {
+      const sets = (this.spriteSetIndex || this.cache.json.get("sprite-index"))?.sets || {};
+      return entry.skins.flatMap((s) => (sets[`${s}-select`] ? [`${s}-select`, s] : [s]));
+    }
     // Match the stage to the lineup: new heroes fade in, removed ones go.
     sync() {
       const ids = new Set(lineup.map((e) => e.id));
@@ -73,7 +80,7 @@ export function createSelectionPreview({ onPick } = {}) {
           this.slots.delete(id);
         }
       lineup.forEach((entry, i) => {
-        for (const skin of entry.skins) this.sprites.want("sets", skin);
+        for (const skin of this.skins(entry)) this.sprites.want("sets", skin);
         let slot = this.slots.get(entry.id);
         if (!slot) {
           const image = this.add
@@ -115,7 +122,7 @@ export function createSelectionPreview({ onPick } = {}) {
           ? Phaser.Math.Clamp(w / 600, 0.5, 1.1)
           : Math.max(w < 700 ? 0.45 : 0.55, h / 1150),
         front = [...this.slots.values()].find((s) => s.index === selected),
-        set = front?.entry.skins.map((s) => this.sprites.heroes.get(s)).find(Boolean),
+        set = front && this.skins(front.entry).map((s) => this.sprites.heroes.get(s)).find(Boolean),
         body = set?.clips.idle && set.clips.idle.bodyPx / (set.clips.idle.detail || 1),
         // Largest zoom: the front hero fills at most 72% of the stage height
         // and the middle 440 world units fit across (neighbours may crop).
@@ -126,7 +133,8 @@ export function createSelectionPreview({ onPick } = {}) {
         most,
         Math.max((town * BOOST * r) / SIZE[0], (ch * 0.55) / ((set?.height || 83) * SIZE[0])),
       );
-      if (body) {
+      // Whole-pixel snapping is for pixel art; painted sets scale freely.
+      if (body && set.pixel) {
         const worldPerArt = (set.height * SIZE[0]) / body,
           px = z * worldPerArt;
         if (px >= 1.5)
@@ -161,7 +169,7 @@ export function createSelectionPreview({ onPick } = {}) {
         if (Math.abs(SIZE[d] - slot.size) < 0.003) slot.size = SIZE[d];
         slot.lift += (LIFT[d] - slot.lift) * k;
         slot.fade += ((front ? 1 : d === 1 ? 0.5 : 0.3) - slot.fade) * k;
-        const set = slot.entry.skins.map((s) => this.sprites.heroes.get(s)).find(Boolean);
+        const set = this.skins(slot.entry).map((s) => this.sprites.heroes.get(s)).find(Boolean);
         const { image, shadow } = slot;
         if (!set) {
           image.setVisible(false);
