@@ -85,7 +85,7 @@ import {
   animateSlime,
   monsterDeath,
 } from "/combat-visuals.js?v=0.3.1";
-import { createSelectionPreview } from "/selection-scene.js?v=0.15.0";
+import { createSelectionPreview } from "/selection-scene.js?v=0.16.0";
 import {
   CLASSES,
   ITEMS,

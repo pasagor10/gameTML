@@ -35,7 +35,8 @@ function showAccount(account) {
   $('#guest-hint').textContent = user ? 'ใช้ตัวละครเดิมที่เคยสร้างในเบราว์เซอร์นี้ แล้วผูกบัญชีได้ในเกม' : 'ลองเล่นก่อนได้ แล้วผูกบัญชีจากในเกมเพื่อเล่นต่อบนเครื่องอื่น';
   $('#guest-note').hidden = !user || member;
   if (member) $('#member-name').textContent = user.name;
-  for (const link of document.querySelectorAll('[data-play]')) link.href = member ? '/play' : '#account';
+  for (const label of document.querySelectorAll('[data-play-label]'))
+    label.textContent = member ? 'เข้าเกม' : user ? 'เล่นต่อ · ตัวละครเดิม' : 'เล่นเลย · ไม่ต้องสมัคร';
   if (user && !member) setMode('register');
 }
 for (const button of document.querySelectorAll('[data-mode]')) button.onclick = () => setMode(button.dataset.mode);
@@ -71,18 +72,27 @@ $('#logout').onclick = async () => {
   catch (error) { $('#auth-error').textContent = error.message; }
   finally { $('#logout').disabled = false; }
 };
-$('#guest-play').onclick = async () => {
+// One click into the game: members and returning guests go straight in,
+// new visitors get a guest account first. No form, no scrolling.
+async function playNow(button, errorBox) {
   if (busy) return;
-  busy = true; $('#guest-play').disabled = true; $('#guest-error').textContent = '';
+  busy = true; button.disabled = true; errorBox.textContent = '';
   try {
     if (!user) { const result = await api('auth/guest', {}); user = result.user; }
     location.assign('/play');
   } catch (error) {
-    $('#guest-error').textContent = error.message;
+    errorBox.textContent = error.message;
   } finally {
-    busy = false; $('#guest-play').disabled = false;
+    busy = false; button.disabled = false;
   }
-};
+}
+$('#guest-play').onclick = () => playNow($('#guest-play'), $('#guest-error'));
+for (const button of document.querySelectorAll('[data-play-now]'))
+  button.onclick = () => {
+    const box = document.querySelector('[data-play-error]');
+    if (!button.closest('.hero')) box.scrollIntoView({ block: 'center' });
+    playNow(button, box);
+  };
 setMode(mode);
 api('me').then(({ user }) => showAccount(user)).catch(() => {
   showAccount(null); $('#auth-error').textContent = 'ยังเชื่อมต่อเซิร์ฟเวอร์ไม่ได้ กรุณาลองเข้าสู่ระบบอีกครั้ง';

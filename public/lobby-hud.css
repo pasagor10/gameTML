@@ -1,0 +1,99 @@
+/* Hero select in the in-game HUD style: navy glass panels, mint accents,
+   compact type. Loaded last so it settles the lobby's look and size. */
+html body #landing.hero-lobby {
+  --g-panel: linear-gradient(145deg, #1d3341ec, #0d1a25f2);
+  --g-line: #b7d7e02e;
+  --g-text: #edf5f6;
+  --g-muted: #99afb9;
+  --g-accent: #8ad7c5;
+  --g-soft: #8ad7c51c;
+}
+/* The marketing headline belongs to the entrance page, not the game. */
+html body #landing.hero-lobby .hl-world-title { display: none !important; }
+
+/* Panels */
+html body #landing.hero-lobby .hl-sheet {
+  background: var(--g-panel) !important;
+  border: 1px solid var(--g-line) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 10px 34px #0007, inset 0 1px 0 #ffffff10 !important;
+  backdrop-filter: blur(14px);
+}
+html body #landing.hero-lobby .hl-console-title { padding-bottom: 10px; gap: 8px; border-color: var(--g-line); }
+html body #landing.hero-lobby .hl-console-title > b { width: 26px; height: 26px; font-size: 15px !important; border-color: var(--g-line); color: var(--g-accent); background: var(--g-soft); border-radius: 8px !important; }
+html body #landing.hero-lobby .hl-console-title small { display: none; }
+html body #landing.hero-lobby .hl-console-title h2 { font-size: 14px !important; margin: 0; color: var(--g-text); }
+html body #landing.hero-lobby .hl-slots-head span,
+html body #landing.hero-lobby #character-count { color: var(--g-muted) !important; font-size: 11px !important; }
+
+/* Hero slots and class cards */
+html body #landing.hero-lobby .hl-slot { min-height: 46px; padding: 6px 9px; gap: 8px; background: #0a17206b !important; border: 1px solid var(--g-line) !important; border-radius: 10px !important; grid-template: auto / 32px minmax(0, 1fr) auto; }
+html body #landing.hero-lobby .hl-slot.active { border-color: #8ad7c5a0 !important; background: linear-gradient(110deg, #8ad7c524, #8ad7c508) !important; box-shadow: inset 3px 0 0 var(--g-accent) !important; }
+html body #landing.hero-lobby .hl-slot-icon { width: 30px; height: 30px; background: #0f2230; border-color: var(--g-line); }
+html body #landing.hero-lobby .hl-slot-icon svg { width: 20px; height: 20px; }
+html body #landing.hero-lobby .hl-slot-text strong { font-size: 12px !important; color: var(--g-text); }
+html body #landing.hero-lobby .hl-slot-text small { font-size: 10px !important; color: var(--g-muted); margin-top: 1px; }
+html body #landing.hero-lobby .hl-slot > b { color: var(--g-accent); font-size: 11px !important; }
+html body #landing.hero-lobby .hl-slot-new { min-height: 38px; }
+html body #landing.hero-lobby .hl-class { background: #0a17206b !important; border-color: var(--g-line) !important; }
+html body #landing.hero-lobby .hl-class.active { border-color: #8ad7c5a0 !important; background: var(--g-soft) !important; }
+html body #landing.hero-lobby .hl-gender { border-color: var(--g-line); background: #0a1720; }
+html body #landing.hero-lobby .hl-gender button.active { background: var(--g-accent) !important; color: #102e32; }
+html body #landing.hero-lobby :is(.hl-class-icon, #character-name, #random-name) { background: #0a1720 !important; border-color: var(--g-line) !important; }
+
+/* Stats and skills */
+html body #landing.hero-lobby #hero-stats { gap: 7px 8px; }
+html body #landing.hero-lobby #hero-stats .hl-stat-head { color: var(--g-muted); font-size: 10px !important; }
+html body #landing.hero-lobby #hero-stats .attribute strong { color: var(--g-text); font-size: 12px !important; }
+html body #landing.hero-lobby #hero-stats [data-lobby-skill] { padding: 5px 2px; border-color: var(--g-line) !important; background: #0a17206b !important; border-radius: 8px !important; }
+html body #landing.hero-lobby #hero-stats [data-lobby-skill] strong { color: #c9dbe1; }
+
+/* Enter button: the same mint as the town's adventure button. */
+html body #landing.hero-lobby .hl-start,
+html body #landing.hero-lobby[data-lobby-mode="roster"] .hl-start {
+  height: 44px !important;
+  background: linear-gradient(145deg, #b8e7d6, #78bfb1) !important;
+  border: 1px solid #c0ecdd !important;
+  border-radius: 12px !important;
+  box-shadow: 0 5px 18px #0005 !important;
+  gap: 10px;
+}
+html body #landing.hero-lobby #start-label { color: #102e32 !important; font-size: 15px !important; }
+html body #landing.hero-lobby .hl-start::after { content: '➜'; font-size: 16px !important; color: #102e32; }
+html body #landing.hero-lobby .hl-start:not(:disabled):hover { box-shadow: 0 6px 22px #8ad7c540 !important; }
+html body #landing.hero-lobby .hl-foot > span,
+html body #landing.hero-lobby .hl-delete { font-size: 10px !important; }
+
+/* Hero name and pose buttons under the stage */
+html body #landing.hero-lobby .hl-caption small { color: var(--g-accent); font-size: 9px !important; }
+html body #landing.hero-lobby .hl-caption h2 { font-size: clamp(18px, 1.6vw, 24px) !important; margin: 3px 0 !important; }
+html body #landing.hero-lobby .hl-caption p { font-size: 11px !important; color: var(--g-muted); }
+html body #landing.hero-lobby .hl-level { color: var(--g-accent) !important; border-color: var(--g-line) !important; background: #0a1720 !important; }
+html body #landing.hero-lobby .hl-poses button,
+html body #landing.hero-lobby .hl-cycle { border-color: var(--g-line) !important; background: #0d1a25cc !important; color: #c9dbe1 !important; }
+
+/* Desktop and tablet: slimmer top bar and side panel. */
+@media (min-width: 701px) {
+  html body #landing.hero-lobby { grid-template-rows: 64px minmax(0, 1fr) 36px !important; }
+  html body #landing.hero-lobby .hl-top { padding: 10px 0 !important; }
+  html body #landing.hero-lobby .hl-logo { width: 58px !important; }
+  html body #landing.hero-lobby .hl-heading h1 { font-size: 15px !important; }
+  html body #landing.hero-lobby .hl-sheet { padding: 14px !important; gap: 10px !important; max-height: calc(100dvh - 120px) !important; }
+  html body #landing.hero-lobby .hl-global-footer { font-size: 9px; }
+}
+@media (min-width: 1001px) {
+  html body #landing.hero-lobby { grid-template-columns: minmax(0, 1fr) 320px !important; }
+}
+@media (min-width: 701px) and (max-width: 1000px) {
+  html body #landing.hero-lobby { grid-template-columns: minmax(0, 1fr) 290px !important; }
+}
+/* Phones: tighter sheet so more of the hero stage shows. */
+@media (max-width: 700px) {
+  html body #landing.hero-lobby .hl-sheet { padding: 10px !important; gap: 8px !important; }
+  html body #landing.hero-lobby .hl-console-title { display: none !important; }
+  html body #landing.hero-lobby .hl-slot { min-height: 58px; }
+  html body #landing.hero-lobby .hl-start,
+  html body #landing.hero-lobby[data-lobby-mode="roster"] .hl-start { height: 42px !important; }
+}
+html body #landing.hero-lobby #character-name:focus { border-color: var(--g-accent) !important; outline: none; }
+html body #landing.hero-lobby .hl-class.active :is(.hl-class-icon, strong) { border-color: #8ad7c5a0 !important; color: var(--g-text) !important; }
