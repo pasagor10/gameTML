@@ -85,7 +85,7 @@ import {
   animateSlime,
   monsterDeath,
 } from "/combat-visuals.js?v=0.3.1";
-import { createSelectionPreview } from "/selection-scene.js?v=0.16.0";
+import { createSelectionPreview } from "/selection-scene.js?v=0.17.0";
 import {
   CLASSES,
   ITEMS,
@@ -260,7 +260,7 @@ async function refreshAccount() {
     ? characters
         .map(
           (c) =>
-            `<button data-resume="${c.id}" class="hl-slot" type="button"><span class="hl-slot-icon" aria-hidden="true">${skillIcon(c.class, 1)}</span><span class="hl-slot-text"><strong>${escape(c.name)}</strong><small>${CLASSES[c.class]?.name || ""}</small></span><b>Lv.${c.level}</b></button>`,
+            `<button data-resume="${c.id}" class="hl-slot" type="button"><span class="hl-slot-icon" aria-hidden="true">${skillIcon(c.class, 1)}</span><span class="hl-slot-face" aria-hidden="true" style="${heroStyle(c.class, c.gender, c)}"></span><span class="hl-slot-text"><strong>${escape(c.name)}</strong><small>Lv.${c.level} · ${CLASSES[c.class]?.name || ""}</small></span><b>Lv.${c.level}</b></button>`,
         )
         .join("") +
       (characters.length < 3
@@ -375,7 +375,7 @@ function renderCards() {
   $("#selected-lore").textContent = detail.lore;
   $(".hero-fallback").style.cssText = lobbyHeroStyle(job, gender, saved);
   $("#hero-stats").innerHTML =
-    `<div class="class-identity"><span>${c.icon}</span><div><h3>${c.name}</h3><p class="class-role">${detail.role}</p></div></div><div class="stats-heading"><span>${saved ? "ค่าสถานะปัจจุบัน" : "ค่าสถานะเริ่มต้น"}</span><small>ATTRIBUTES</small></div>${[
+    `<div class="class-identity"><span>${c.icon}</span><div><h3>${c.name}</h3><small class="class-eng">${eng[JOBS.indexOf(job)] || ""}</small><p class="class-role">${detail.role}</p></div><i class="class-face" aria-hidden="true" style="${heroStyle(job, gender, saved)}"></i></div><p class="class-lore">${detail.lore}</p><div class="stats-heading"><span>${saved ? "ค่าสถานะปัจจุบัน" : "ค่าสถานะเริ่มต้น"}</span><small>ATTRIBUTES</small></div>${[
       ["HP", "พลังชีวิต", c.hp, saved ? c.hp : 180],
       ["MP", "พลังเวท", c.mp, saved ? c.mp : 150],
       ["ATK", "พลังโจมตี", c.atk, saved ? Math.max(35, c.atk) : 35],

@@ -11,9 +11,8 @@ import { gearDress } from "/hero-gear.js?v=6";
 // stands in front on a rune circle; the others wait on either side facing
 // it, smaller and in shadow. Tapping a waiting hero picks it.
 //
-// The front hero appears at the same on-screen size and with the same smooth
-// filtering as in the town, so the select stage never upscales the art
-// beyond what the game shows; the whole lineup scales with it. Parent dimensions are supplied explicitly on resize so
+// The front hero is drawn with the town's smooth filtering at BOOST times
+// its in-town on-screen size; the whole lineup scales with it. Parent dimensions are supplied explicitly on resize so
 // crossing a responsive breakpoint cannot retain the previous canvas size.
 export function createSelectionPreview({ onPick } = {}) {
   const host = document.querySelector("#hero-preview");
@@ -25,7 +24,10 @@ export function createSelectionPreview({ onPick } = {}) {
     // Display height per set height unit, by distance from the front.
     SIZE = [2.45, 1.4, 1.05],
     SPREAD = [0, 170, 290],
-    LIFT = [0, 26, 44];
+    LIFT = [0, 26, 44],
+    // Front hero on the select stage: this many times its in-town size.
+    // Smooth filtering keeps it clean; larger needs dedicated art.
+    BOOST = 1.75;
   let lineup = [],
     selected = 0,
     ready = false,
@@ -41,7 +43,7 @@ export function createSelectionPreview({ onPick } = {}) {
       this.sprites = createSpriteRegistry(this);
       this.slots = new Map();
       // Rune circle under the chosen hero.
-      this.glow = this.add.ellipse(W / 2, FEET, 300, 58, 0xb1e6ca, 0.12).setDepth(1);
+      this.glow = this.add.ellipse(W / 2, FEET, 300, 58, 0xffc75a, 0.16).setDepth(1);
       this.ring = this.add.graphics().setDepth(2);
       this.motes = Array.from({ length: 22 }, (_, i) => ({
         dot: this.add
@@ -103,7 +105,7 @@ export function createSelectionPreview({ onPick } = {}) {
           ? Phaser.Math.Clamp(w / 600, 0.5, 1.1)
           : Math.max(w < 700 ? 0.45 : 0.55, h / 1150),
         cssPerWorld = (this.scale.displaySize.width || W) / W,
-        fit = Phaser.Math.Clamp(town / (SIZE[0] * cssPerWorld), 0.2, 1);
+        fit = Phaser.Math.Clamp((town * BOOST) / (SIZE[0] * cssPerWorld), 0.2, 1);
       if (Math.abs(fit - (this.fit || 0)) < 0.002) return;
       this.fit = fit;
       this.cameras.main.setZoom(RES * fit).centerOn(W / 2, FEET - (FEET - H / 2) / fit);
@@ -175,7 +177,7 @@ export function createSelectionPreview({ onPick } = {}) {
         [150, 30, 0.75, 1, 24],
         [118, 23, 0.45, -1.4, 14],
       ]) {
-        this.ring.lineStyle(1.4 / (this.fit || 1), 0xd8e6b7, a);
+        this.ring.lineStyle(2 / (this.fit || 1), 0xffd77a, a);
         for (let j = 0; j < dash; j++) {
           const a0 = spin * dir + (j / dash) * Math.PI * 2,
             a1 = a0 + (Math.PI * 2) / dash / 2;
