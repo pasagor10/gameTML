@@ -67,8 +67,9 @@ function card(p, f, index) {
   const button = locked
     ? `<button class="dg-enter" data-floor="${floor}" data-locked disabled>🔒 ${requirement}</button>`
     : `<button class="dg-enter" data-floor="${floor}" >เข้าดันเจียน <span aria-hidden="true">➜</span></button>`;
-  return `<article class="dg-card ${locked ? "is-locked" : ""} ${f.deep ? "is-deep" : ""}" data-card="${floor}" style="--floor:${hex(f.color)};--tint:${hex(f.tint)}">
-<div class="dg-thumb" aria-hidden="true"><i class="dg-scene" style="background-position:${(index * 37) % 100}% 55%"></i>${portrait(f.bossType)}<span class="dg-num"><b>${String(floor).padStart(2, "0")}</b></span>${cleared ? '<span class="dg-cleared">พิชิตแล้ว ✓</span>' : ""}</div>
+  const start = floor === 1 && !(p.quest > 0);
+  return `<article class="dg-card ${locked ? "is-locked" : ""} ${f.deep ? "is-deep" : ""} ${start ? "is-start" : ""}" data-card="${floor}" style="--floor:${hex(f.color)};--tint:${hex(f.tint)}">
+<div class="dg-thumb" aria-hidden="true"><i class="dg-scene" style="background-position:${(index * 37) % 100}% 55%"></i>${portrait(f.bossType)}<span class="dg-num"><b>${String(floor).padStart(2, "0")}</b></span>${cleared ? '<span class="dg-cleared">พิชิตแล้ว ✓</span>' : ""}${start ? '<span class="dg-start">เริ่มที่นี่ ★</span>' : ""}</div>
 <div class="dg-info"><h3>${esc(f.name)}</h3><p>บอส: ${esc(f.boss)} · 3 ด่าน · ${requirement}</p>${BOSSES[f.bossType] ? `<p class="dg-boss-skill" title="${esc(BOSSES[f.bossType].detail)}">✦ ${esc(BOSSES[f.bossType].skill)} · กระโดดหลบวงเตือน</p>` : ""}<p class="dg-boss-skill" title="${esc(bossMechanics(floor).map((k) => MECHANICS[k].name + ": " + MECHANICS[k].hint).join(" · "))}">กลไกบอส: ${bossMechanics(floor).map((k) => `${MECHANICS[k].icon} ${esc(MECHANICS[k].name)}`).join(" · ")}</p><div class="dg-chips"><span class="dg-chip diff-${diff.id}">⚔ ความยาก: ${diff.label}</span><span class="dg-chip ${p.level < level ? "warn" : ""}">แนะนำ Lv.${level}+</span>${traits.map((t) => `<span class="dg-chip trait" title="${esc(TRAITS[t].text)}">${TRAITS[t].icon} ${TRAITS[t].name}</span>`).join("")}</div><div class="dg-mons"><small>มอนสเตอร์:</small>${monsters(floor)}</div></div>
 <div class="dg-loot-col"><small>ของเด่น:</small><div>${lootIcons(p, floor)}</div>${lootHint}</div>
 ${button}</article>`;

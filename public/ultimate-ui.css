@@ -31,3 +31,15 @@ html body #game-screen#game-screen .hud-bottom .skillbar .skill.ultimate>b{width
 }
 @media(max-width:700px){#ultimate-overlay .ult-cutin{top:24%;height:clamp(70px,15vw,120px)}#ultimate-overlay .ult-name{right:5%;bottom:0;font-size:10px}}
 @media(prefers-reduced-motion:reduce){#ultimate-overlay.casting .ult-cutin{animation:ult-dim 1.5s forwards;transform:none}#ultimate-overlay.impact :is(.ult-impact,.ult-ring,.ult-flash){animation:ult-dim .7s forwards}}
+
+/* First-adventure guide: pulse the dock, prompt card, floor-1 badge. */
+html body #game-screen #town-dock #dock-adventure.first-run{position:relative}
+html body #game-screen #town-dock #dock-adventure.first-run::after{content:"";position:absolute;inset:-4px;border-radius:19px;border:2px solid #ffd76a;pointer-events:none;animation:first-run-pulse 1.4s ease-out infinite}
+@keyframes first-run-pulse{0%{opacity:.95;transform:scale(1)}100%{opacity:0;transform:scale(1.18)}}
+#modal .first-run{display:flex;flex-direction:column;gap:10px}
+#modal .first-run .first-run-lead{font-size:1.08em;font-weight:600;margin:0}
+#modal .first-run ul{margin:0;padding-left:1.1em;display:grid;gap:6px;line-height:1.45}
+#modal .first-run #first-run-go{font-size:1.1em;padding:12px 16px}
+.dg-card.is-start{outline:2px solid #ffd76a;outline-offset:2px}
+.dg-card .dg-start{position:absolute;left:6px;bottom:6px;padding:2px 8px;border-radius:999px;background:#ffd76a;color:#3a2a00;font-size:12px;font-weight:700;z-index:2}
+@media(prefers-reduced-motion:reduce){html body #game-screen #town-dock #dock-adventure.first-run::after{animation:none}}

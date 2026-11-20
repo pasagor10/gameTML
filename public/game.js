@@ -66,7 +66,7 @@ import {
   trackerHtml,
   claimable,
 } from "/quest-ui.js?v=4";
-import { dungeonPanelHtml } from "/dungeon-ui.js?v=42";
+import { dungeonPanelHtml } from "/dungeon-ui.js?v=43";
 import { createNightSky } from "/night-sky.js?v=3";
 import {
   nightInfo,
@@ -142,6 +142,9 @@ let lastQuestHash = "",
   lastTrackerHash = "";
 // The dungeon run that already got its automatic AUTO switch-on.
 let autoInstance = null;
+// First-adventure guide: heroes who have not cleared floor 1 are led there.
+const firstRunShown = new Set();
+let townSince = 0;
 // Floor data for the current dungeon; the night cave stands in for a floor.
 const floorInfo = (d) =>
   d?.world
@@ -1327,9 +1330,17 @@ function updateHUD() {
     if (!p.auto && p.hp > 0) emit("player:auto", { enabled: true });
   }
   if (area === "town") autoInstance = null;
+  const newcomer = isNewcomer(p);
+  $("#dock-adventure").classList.toggle("first-run", newcomer);
   setText($("#dock-label"), townOf(p).id === "riverside" ? "สำรวจเหมือง" : p.quest > 0
     ? `เล่นต่อ ชั้น ${Math.min(p.unlocked || 1, 40)}`
-    : "ผจญภัย");
+    : "เริ่ม ชั้น 1");
+  const loadingUp = !$("#area-loading").classList.contains("hidden");
+  townSince = area === "town" && !loadingUp ? townSince || performance.now() : 0;
+  if (newcomer && area === "town" && !activePanel && !firstRunShown.has(p.id) && performance.now() - townSince > 1500) {
+    firstRunShown.add(p.id);
+    showFirstRun();
+  }
   setText($("#floor-chip"), d?.mine ? `เหมือง ชั้น ${d.floor} · ${d.stage}/3` : d?.world ? "บอสโลก" : d?.night ? "ถ้ำลึกลับ" : d ? `ชั้น ${d.floor} · ${d.stage}/3${d.replay?.total > 1 ? ` · รอบ ${d.replay.run}/${d.replay.total}` : ""}` : "");
   setText($("#quest-description"), d?.training
     ? "ฝึกเดิน กระโดด ฟัน และ Q/W/E · หลบเมื่อสไลม์ขึ้นวงเตือน"
@@ -1532,7 +1543,24 @@ $$("[data-panel]").forEach(
   (b) => (b.onclick = () => showPanel(b.dataset.panel)),
 );
 $("#dungeon-open").onclick = () => showPanel("dungeon");
-$("#dock-adventure").onclick = () => openTown("portal");
+$("#dock-adventure").onclick = () =>
+  state && isNewcomer(state.self) && state.area === "town" ? enterFirstFloor() : openTown("portal");
+function isNewcomer(p) {
+  return !!p && !(p.quest > 0) && townOf(p).id !== "riverside";
+}
+async function enterFirstFloor() {
+  const r = await emit("dungeon:enter", { floor: 1 });
+  if (r) closeModal();
+}
+function showFirstRun() {
+  modal(
+    "การผจญภัยครั้งแรก",
+    `<div class="first-run"><p class="first-run-lead">ถ้ำหลวงชั้น 1 รออยู่! ปราบมอนสเตอร์ 3 ด่านแล้วล้มบอส</p><ul><li>⚔ รอบแรกได้<b>อาวุธประจำอาชีพแน่นอน</b></li><li>🤖 เริ่มด้วยโหมด <b>AUTO</b> ตีให้อัตโนมัติ · บังคับเองเมื่อไหร่ก็ได้</li><li>⤴ เห็นวงเตือนบนพื้นให้กระโดดหรือเดินหลบ</li></ul><button id="first-run-go" class="primary-button">ลงถ้ำชั้น 1 เลย ➜</button><button id="first-run-later" class="text-button">เดินดูเมืองก่อน</button><p class="hint">กลับมาเริ่มได้ทุกเมื่อที่ปุ่ม “เริ่ม ชั้น 1” มุมล่าง</p></div>`,
+    "first-run",
+  );
+  $("#first-run-go").onclick = enterFirstFloor;
+  $("#first-run-later").onclick = closeModal;
+}
 $("#avatar").onclick = () => showPanel("status");
 // Pause menu: leaving the dungeon lives here so it is never hit mid-fight.
 {
