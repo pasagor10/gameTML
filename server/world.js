@@ -105,7 +105,7 @@ import {
 const SKY_OFFSET = Number(process.env.SKY_OFFSET) || 0;
 export const skyNow = () => skyAt(Date.now() / 1000 + SKY_OFFSET);
 import { autoBrain } from "./auto.js";
-import { track } from "./analytics.js";
+import { track, trackFloor1Exit } from "./analytics.js";
 import { randomUUID } from "node:crypto";
 import { db, loadCharacter, persist, atomic, log } from "./database.js";
 import {
@@ -1419,9 +1419,15 @@ function resetFloor(i) {
     ]),
   );
 }
+// Floor 1 of the main cave, for a hero who has never cleared it.
+const firstFloorRun = (i, m) =>
+  i && m && i.floor === 1 && !i.training && !i.night && !i.world && !i.mine && !(m.quest >= 1);
 function enterStage(i) {
   i.stage++;
   spawnStage(i);
+  if (i.stage > 1)
+    for (const m of i.members.map(live))
+      if (firstFloorRun(i, m)) track(m.socket?.request?.headers, i.stage === 3 ? "boss1" : "stage2", m.userId);
   for (const id of i.members) {
     const m = live(id);
     if (m) {
@@ -2192,7 +2198,18 @@ export function tradeAction(
   }
   return { message: "อัปเดตการแลกเปลี่ยนแล้ว" };
 }
+// Record how a newcomer's floor-1 run ended (before returnTown clears it).
+function noteFloor1Exit(p, reason) {
+  const i = instances.get(p.instance);
+  if (!firstFloorRun(i, p) || i.completed) return;
+  trackFloor1Exit(p.socket?.request?.headers, p.userId, i.stage, p.hp <= 0 ? "death" : reason);
+}
+export function leaveDungeon(p) {
+  noteFloor1Exit(p, "leave");
+  return returnTown(p);
+}
 export function disconnect(p) {
+  noteFloor1Exit(p, "disconnect");
   partyInvites.delete(p.id);
   for (const [id, invite] of partyInvites) if (invite.from === p.id) partyInvites.delete(id);
   savePlayer(p);

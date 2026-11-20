@@ -42,7 +42,7 @@ function table(el, head, rows) {
 }
 
 // --- KPI tiles ---------------------------------------------------------------
-function kpis(t) {
+function kpis(t, d1) {
   const tiles = [
     ["ผู้เข้าชมทั้งหมด", fmt(t.visitors), `วันนี้ ${fmt(t.visitorsToday)} คน`],
     ["เข้าเว็บอย่างเดียว", fmt(t.visitOnly), `${pct(t.visitOnly, t.visitors)}% ของผู้เข้าชม ไม่กดเล่น`],
@@ -50,6 +50,12 @@ function kpis(t) {
     ["ตัวละคร", fmt(t.characters), `บัญชีที่ยังไม่สร้างตัวละคร ${fmt(t.noCharacter)}`],
     ["ออนไลน์ตอนนี้", fmt(t.online), "ผู้เล่นในเกมขณะนี้"],
   ];
+  if (d1)
+    tiles.splice(4, 0, [
+      "กลับมาวันถัดไป (D1)",
+      d1.players ? pct(d1.returned, d1.players) + "%" : "–",
+      d1.players ? `${fmt(d1.returned)} จาก ${fmt(d1.players)} คน · 13 วันล่าสุด` : "ยังไม่มีข้อมูล",
+    ]);
   $("#kpis").innerHTML = tiles
     .map(([l, v, s]) => `<div class="kpi"><small>${l}</small><strong>${v}</strong><span>${s}</span></div>`)
     .join("");
@@ -245,6 +251,54 @@ function hbars(items) {
     : `<p class="empty">ยังไม่มีตัวละคร</p>`;
 }
 
+// --- Floor 1 exits: stacked bars per stage -------------------------------------
+const REASONS = [
+  { key: "death", label: "ตาย", color: "var(--series-2)" },
+  { key: "leave", label: "ออกเอง", color: "var(--series-1)" },
+  { key: "disconnect", label: "หลุด/ปิดเกม", color: "var(--series-3)" },
+];
+function exits(rows, people) {
+  $("#exits-legend").innerHTML = REASONS.map((r) => `<span><i style="background:${r.color}"></i>${r.label}</span>`).join("");
+  const total = rows.reduce((a, r) => a + r.total, 0),
+    top = Math.max(1, ...rows.map((r) => r.total));
+  $("#exits-note").textContent = total
+    ? `${fmt(total)} รอบจาก ${fmt(people)} คน · นับเฉพาะคนที่ยังไม่เคยผ่านชั้น 1`
+    : "";
+  $("#exits").innerHTML = total
+    ? rows
+        .map(
+          (r) => `<div class="hbar stack" data-stage="${r.stage}"><span>${esc(r.label)}</span><div class="track">${REASONS.map(
+            (x) => `<div class="seg" style="width:${(r[x.key] / top) * 100}%;background:${x.color}"></div>`,
+          ).join("")}</div><span class="nums">${fmt(r.total)} รอบ</span></div>`,
+        )
+        .join("")
+    : `<p class="empty">ยังไม่มีข้อมูล · เริ่มนับตั้งแต่อัปเดตนี้</p>`;
+  for (const el of document.querySelectorAll("#exits .stack")) {
+    const r = rows.find((x) => x.stage === Number(el.dataset.stage));
+    el.onmousemove = (e) =>
+      showTip(
+        `<b>${esc(r.label)}</b>${REASONS.map((x) => `<div class="row"><i style="background:${x.color}"></i>${x.label} ${fmt(r[x.key])}</div>`).join("")}`,
+        e.clientX,
+        e.clientY,
+      );
+    el.onmouseleave = hideTip;
+  }
+  table($("#exits-table"), ["ด่าน", ...REASONS.map((r) => r.label), "รวม"], rows.map((r) => [r.label, ...REASONS.map((x) => fmt(r[x.key])), fmt(r.total)]));
+}
+
+function retention(rows) {
+  const shown = rows.filter((r) => r.players);
+  $("#retention").innerHTML = shown.length
+    ? shown
+        .map((r) => {
+          const [, mo, d] = r.day.split("-"),
+            live = r === rows.at(-1);
+          return `<div class="hbar"><span>${Number(d)}/${Number(mo)}</span><div class="track"><div class="bar" style="width:${pct(r.returned, r.players)}%"></div></div><span class="nums">${fmt(r.returned)}/${fmt(r.players)}${live ? " · วันนี้ยังนับอยู่" : ""}</span></div>`;
+        })
+        .join("")
+    : `<p class="empty">ยังไม่มีผู้เล่นใหม่ที่ครบ 1 วัน</p>`;
+}
+
 // --- Load ----------------------------------------------------------------------
 async function load() {
   for (const b of document.querySelectorAll("[data-days]")) b.classList.toggle("active", Number(b.dataset.days) === days);
@@ -270,8 +324,11 @@ for (const b of document.querySelectorAll("[data-days]"))
   };
 let last = null;
 const render = (data) => {
-  kpis(data.totals);
+  kpis(data.totals, data.d1);
   funnel(data.funnel);
+  exits(data.floor1Exits || [], data.exitPeople || 0);
+  retention(data.retention || []);
+  $("#excluded").textContent = data.totals.excludedAccounts ? ` · ไม่นับบัญชีทีมพัฒนา ${fmt(data.totals.excludedAccounts)} บัญชี` : "";
   daily(data.daily);
   bars($("#floors"), $("#floors-table"), data.floors);
   bars($("#levels"), $("#levels-table"), data.levels);

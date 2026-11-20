@@ -10,8 +10,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="/dashboard.css?v=1">
-<script type="module" src="/dashboard.js?v=1"></script>
+<link rel="stylesheet" href="/dashboard.css?v=3">
+<script type="module" src="/dashboard.js?v=2"></script>
 </head>
 <body>
 <main class="viz-root">
@@ -38,6 +38,22 @@
     <p class="insight" id="insight"></p>
     <div id="funnel" class="funnel"></div>
   </section>
+
+  <div class="grid">
+    <section class="card">
+      <div class="card-head">
+        <h2>ชั้น 1 · รอบที่จบก่อนผ่านครั้งแรก</h2>
+        <div class="legend" id="exits-legend"></div>
+      </div>
+      <p class="hint" id="exits-note"></p>
+      <div id="exits" class="stacks"></div>
+      <details><summary>ดูเป็นตาราง</summary><div id="exits-table"></div></details>
+    </section>
+    <section class="card">
+      <div class="card-head"><h2>กลับมาเล่นวันถัดไป (D1)</h2><p class="hint">คนที่เข้าเมืองครั้งแรกในวันนั้น แล้วกลับมาเข้าเกมอีกในวันถัดไป</p></div>
+      <div id="retention" class="hbars"></div>
+    </section>
+  </div>
 
   <section class="card">
     <div class="card-head">
@@ -66,7 +82,7 @@
     <div id="classes" class="hbars"></div>
   </section>
 
-  <p class="foot">ข้อมูลรวมแบบไม่ระบุตัวตน · อัปเดตทุก 30 วินาที · ผู้เข้าชมและ funnel เริ่มนับตั้งแต่เปิดแดชบอร์ดนี้ ส่วนบัญชี ตัวละคร เลเวล และชั้นดันเจียนเป็นข้อมูลทั้งหมดในเกม</p>
+  <p class="foot">ข้อมูลรวมแบบไม่ระบุตัวตน · อัปเดตทุก 30 วินาที · ผู้เข้าชมและ funnel เริ่มนับตั้งแต่เปิดแดชบอร์ดนี้ ส่วนบัญชี ตัวละคร เลเวล และชั้นดันเจียนเป็นข้อมูลทั้งหมดในเกม<span id="excluded"></span></p>
 </main>
 <div id="tip" class="tip" role="status" hidden></div>
 </body>

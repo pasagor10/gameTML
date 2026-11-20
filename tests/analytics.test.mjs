@@ -6,7 +6,7 @@ import path from "node:path";
 const dir = mkdtempSync(path.join(tmpdir(), "tml-analytics-"));
 process.env.DB_PATH = path.join(dir, "test.sqlite");
 const { db } = await import("../server/database.js");
-const { track, dashboardStats, dayOf, STEPS } = await import("../server/analytics.js");
+const { track, trackFloor1Exit, dashboardStats, dayOf, STEPS } = await import("../server/analytics.js");
 
 const vid = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 const headers = (n, ua = "Mozilla/5.0") => ({ cookie: `a=1; tml_vid=${vid(n)}`, "user-agent": ua });
@@ -49,6 +49,36 @@ test("funnel counts each visitor once per step and skips bots", () => {
   assert.equal(dashboardStats({ days: 0, now }).funnel[0].count, 12);
   // Aggregates only: no names or ids leak into the public payload.
   assert.doesNotMatch(JSON.stringify(s), /Hero|guest-u1|0000-4000/);
+
+  // Floor-1 detail, D1 return and the team-account exclusion.
+  const DAY = 86400000;
+  track(headers(1), "dungeon", null, now - 600);
+  track(headers(1), "stage2", "u1", now - 500);
+  track(headers(2), "dungeon", null, now - 600);
+  trackFloor1Exit(headers(2), null, 1, "death", now - 400);
+  trackFloor1Exit(headers(2), null, 1, "death", now - 300);
+  trackFloor1Exit(headers(1), null, 3, "leave", now - 300);
+  trackFloor1Exit(headers(1), null, 3, "nope", now - 300);
+  trackFloor1Exit(headers(98, "curl/8"), null, 2, "leave", now - 300);
+  track(headers(30), "join", null, now - 2 * DAY);
+  track(headers(30), "visit", null, now - DAY);
+  track(headers(31), "join", null, now - 2 * DAY);
+  const t = dashboardStats({ days: 7, now });
+  const f = Object.fromEntries(t.funnel.map((x) => [x.id, x.count]));
+  assert.equal(f.stage2, 1);
+  assert.equal(f.dungeon, 2);
+  assert.deepEqual(t.floor1Exits.map((r) => [r.death, r.leave, r.disconnect, r.total]), [[2, 0, 0, 2], [0, 0, 0, 0], [0, 1, 0, 1]]);
+  assert.equal(t.exitPeople, 2);
+  assert.deepEqual(t.d1, { players: 2, returned: 1 });
+  // Excluding u1 drops its hero and the visitor that played on it.
+  db.prepare("INSERT INTO analytics_exclude VALUES('u1')").run();
+  const e = dashboardStats({ days: 7, now });
+  assert.equal(e.totals.characters, 0);
+  assert.equal(e.totals.accounts, 0);
+  assert.equal(e.totals.excludedAccounts, 1);
+  assert.equal(e.funnel.find((x) => x.id === "stage2").count, 0);
+  assert.equal(e.floor1Exits[2].total, 0);
+  assert.equal(e.totals.visitors, t.totals.visitors - 1);
   db.close();
   rmSync(dir, { recursive: true, force: true });
 });
