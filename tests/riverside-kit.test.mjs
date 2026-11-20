@@ -4,8 +4,8 @@ import {existsSync,readFileSync} from 'node:fs';
 import {RIVER_LAYOUT,RIVER_PIECES,RIVER_DOCKS} from '../shared/riverside-layout.js';
 import {WORLD} from '../shared/config.js';
 import {TRAVEL_GATE} from '../shared/towns.js';
-test('riverside uses twelve separate pieces aligned with existing NPC services and portals',()=>{
- assert.equal(Object.keys(RIVER_PIECES).length,12);
+test('riverside uses separate town and riverfront pieces aligned with existing NPC services and portals',()=>{
+ assert.equal(Object.keys(RIVER_PIECES).length,15);
  const manifest=JSON.parse(readFileSync(new URL('../public/assets/river-kit/kit.json',import.meta.url)));
  assert.deepEqual(manifest,RIVER_PIECES);
  for(const [name,size] of Object.entries(RIVER_PIECES)){

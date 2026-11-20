@@ -4,6 +4,7 @@ import { tileStrip } from '/tile-strip.js';
 
 export function preloadRiverside(scene) {
  for (const name of Object.keys(RIVER_PIECES)) scene.load.image(`river-${name}`,`/assets/river-kit/${name}.webp?v=1`);
+ scene.load.image('river-water-v3','/assets/river-kit/water-v3.webp?v=3');
  scene.load.image('river-far','/assets/river-kit/far-nangnon-v2.webp?v=2');
 }
 export function createRiversideMap(scene) {
@@ -20,17 +21,25 @@ export function createRiversideMap(scene) {
  const far=scene.add.image(-250,-300,'river-far','__BASE').setOrigin(0).setDisplaySize(width,1200).setScrollFactor(.78,1).setDepth(-34);
  parts.push(far);
  parts.push(tileStrip(scene,-100,TOWN_STREET_Y,TOWN_WIDTH+200,80,'town-street').setOrigin(0).setDepth(-31));
- const edge=scene.add.graphics().setDepth(-29);
- edge.fillStyle(0x64462e).fillRect(0,632,TOWN_WIDTH,20);
- edge.lineStyle(3,0xc49c63,.8).lineBetween(0,633,TOWN_WIDTH,633);
- for(let x=20;x<TOWN_WIDTH;x+=160){
-  edge.fillStyle(0x493827).fillRect(x,638,12,100);
-  edge.fillStyle(0xae8955).fillRect(x-2,637,16,8);
+ const water=tileStrip(scene,0,640,TOWN_WIDTH,1000,'river-water-v3').setOrigin(0).setTileScale(1.5).setTint(0xa4c2bf).setDepth(-32);
+ parts.push(water);
+ const bank=RIVER_PIECES.stonebank;
+ for(let x=-40,i=0;x<TOWN_WIDTH+40;x+=bank.w-22,i++)
+  parts.push(scene.add.image(x,632,'river-stonebank').setOrigin(0).setFlipX(i%2===1).setDepth(-29));
+ const boatRigs=[];
+ for(const entry of RIVER_LAYOUT.filter(p=>p.piece==='boat')){
+  const size=RIVER_PIECES.landing;
+  parts.push(scene.add.image(entry.x-170,entry.y+5,'river-landing').setOrigin(.5,1).setDisplaySize(size.w,size.h).setDepth(-27));
  }
- parts.push(edge);
+ for(const x of [170,1160,2060,2820,3660,4490]){
+  const size=RIVER_PIECES.reeds;
+  parts.push(scene.add.image(x,738,'river-reeds').setOrigin(.5,1).setDisplaySize(size.w,size.h).setDepth(-26));
+ }
  for(const entry of RIVER_LAYOUT){
   const size=RIVER_PIECES[entry.piece];
-  parts.push(scene.add.image(entry.x,entry.y,`river-${entry.piece}`).setOrigin(.5,1).setDisplaySize(size.w*(entry.scale||1),size.h*(entry.scale||1)).setFlipX(!!entry.flip).setDepth(entry.depth??-28));
+  const image=scene.add.image(entry.x,entry.y,`river-${entry.piece}`).setOrigin(.5,1).setDisplaySize(size.w*(entry.scale||1),size.h*(entry.scale||1)).setFlipX(!!entry.flip).setDepth(entry.depth??-28);
+  parts.push(image);
+  if(entry.piece==='boat')boatRigs.push({image,entry,width:size.w});
  }
  for(const dock of RIVER_DOCKS)
   parts.push(scene.add.image(dock.x+dock.w/2,600,'river-dock').setOrigin(.5,1).setDisplaySize(dock.w,(600-dock.y)/(1-RIVER_PIECES.dock.surfaceRatio)).setDepth(-7));
@@ -43,10 +52,13 @@ export function createRiversideMap(scene) {
   setVisible(value){visible=value;parts.forEach(p=>p.setVisible(value));},
   update(time){
    if(!visible)return;
-   ripples.clear().lineStyle(2,0x9ce4cf,.14);
-   for(let i=0;i<36;i++){
-    const x=(i*173+Math.sin((scene.reducedMotion?0:time*.00035)+i)*24)%TOWN_WIDTH,y=680+(i%6)*65;
-    ripples.lineBetween(x,y,x+30+(i%4)*15,y);
+   ripples.clear();
+   const t=scene.reducedMotion?0:time*.001;
+   for(const [i,boat] of boatRigs.entries()){
+    const y=boat.entry.y-8;
+    ripples.fillStyle(0x082e34,.23).fillEllipse(boat.entry.x,y,boat.width*.88,12);
+    ripples.lineStyle(1.4,0xa8ded0,.20).strokeEllipse(boat.entry.x,y+3,boat.width*(1.06+Math.sin(t+i)*.025),18);
+    boat.image.setY(boat.entry.y+Math.sin(t*.8+i)*1.2);
    }
   },
  };

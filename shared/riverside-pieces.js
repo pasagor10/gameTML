@@ -48,5 +48,17 @@ export const RIVER_PIECES = {
   "stilt-house": {
     "w": 340,
     "h": 253
+  },
+  "stonebank": {
+    "w": 443,
+    "h": 105
+  },
+  "landing": {
+    "w": 320,
+    "h": 133
+  },
+  "reeds": {
+    "w": 204,
+    "h": 120
   }
 };
