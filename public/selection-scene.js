@@ -3,7 +3,7 @@ import {
   createSpriteRegistry,
   playSpriteSet,
   playLayers,
-} from "/sprite-sets.js?v=0.22.1";
+} from "/sprite-sets.js?v=0.23.0";
 import { gearDress } from "/hero-gear.js?v=6";
 
 // The hero-select stage: the same sprite sets, costume layers and held
@@ -37,6 +37,9 @@ export function createSelectionPreview({ onPick } = {}) {
 
   class SelectionScene extends Phaser.Scene {
     preload() {
+      // Pixel heroes get a 4x finer EPX copy here: the stage shows them far
+      // larger than town does, where plain enlarged pixels look blocky.
+      this.pixelDetail = 4;
       queueSpriteSets(this);
     }
     create() {
@@ -113,7 +116,7 @@ export function createSelectionPreview({ onPick } = {}) {
           : Math.max(w < 700 ? 0.45 : 0.55, h / 1150),
         front = [...this.slots.values()].find((s) => s.index === selected),
         set = front?.entry.skins.map((s) => this.sprites.heroes.get(s)).find(Boolean),
-        body = set?.clips.idle?.bodyPx,
+        body = set?.clips.idle && set.clips.idle.bodyPx / (set.clips.idle.detail || 1),
         // Largest zoom: the front hero fills at most 72% of the stage height
         // and the middle 440 world units fit across (neighbours may crop).
         most = Math.min(cw / 440, (ch * 0.72) / ((set?.height || 83) * SIZE[0]));

@@ -64,27 +64,89 @@ function stamp(scene) {
   return v ? `?v=${v}` : "";
 }
 
+// Scale2x/EPX with a colour tolerance: doubles pixel art, rounding the
+// stair-steps of diagonal edges instead of just enlarging them.
+function epx(src, w, h) {
+  const out = new Uint8ClampedArray(w * h * 16),
+    near = (i, j) =>
+      Math.abs(src[i] - src[j]) + Math.abs(src[i + 1] - src[j + 1]) +
+        Math.abs(src[i + 2] - src[j + 2]) + 2 * Math.abs(src[i + 3] - src[j + 3]) <= 40,
+    put = (x, y, i) => out.set(src.subarray(i, i + 4), (y * w * 2 + x) * 4);
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const at = (xx, yy) => (Math.min(h - 1, Math.max(0, yy)) * w + Math.min(w - 1, Math.max(0, xx))) * 4,
+        P = at(x, y), A = at(x, y - 1), B = at(x + 1, y), C = at(x - 1, y), D = at(x, y + 1);
+      put(2 * x, 2 * y, near(C, A) && !near(C, D) && !near(A, B) ? A : P);
+      put(2 * x + 1, 2 * y, near(A, B) && !near(A, C) && !near(B, D) ? B : P);
+      put(2 * x, 2 * y + 1, near(D, C) && !near(D, B) && !near(C, A) ? C : P);
+      put(2 * x + 1, 2 * y + 1, near(B, D) && !near(B, A) && !near(D, C) ? D : P);
+    }
+  return out;
+}
+
+// A finer copy of a pixel-art page (scene.pixelDetail times, by repeated
+// EPX), drawn with smooth filtering. Used by the hero-select stage, where
+// heroes are shown far larger than in town. Returns [key, factor].
+// Largest power-of-two factor up to `want` that keeps the page within 4096px.
+function detailFactor(scene, texKey, want) {
+  const img = scene.textures.get(texKey).getSourceImage();
+  let f = 1;
+  while (f < want && img.width * f * 2 <= 4096 && img.height * f * 2 <= 4096) f *= 2;
+  return f;
+}
+function detailPage(scene, texKey, f) {
+  if (f === 1) return texKey;
+  const img = scene.textures.get(texKey).getSourceImage();
+  const hdKey = `${texKey}@x${f}`;
+  if (!scene.textures.exists(hdKey)) {
+    const read = document.createElement("canvas");
+    read.width = img.width;
+    read.height = img.height;
+    const rc = read.getContext("2d", { willReadFrequently: true });
+    rc.drawImage(img, 0, 0);
+    let px = rc.getImageData(0, 0, img.width, img.height).data, w = img.width, h = img.height;
+    for (let k = 1; k < f; k *= 2, w *= 2, h *= 2) px = epx(px, w, h);
+    const out = document.createElement("canvas");
+    out.width = w;
+    out.height = h;
+    out.getContext("2d").putImageData(new ImageData(px, w, h), 0, 0);
+    scene.textures.addCanvas(hdKey, out);
+  }
+  return hdKey;
+}
+
 function clipFrom(scene, key, manifest) {
   const fb = manifest?.fallback;
   if (!fb?.pages?.length) return null;
-  const [cw, ch] = fb.cellSize,
+  const pixel = manifest.sampling === "nearest",
+    pages = [...fb.pages].sort((a, b) => a.firstFrame - b.firstFrame),
     frames = [];
-  for (const page of [...fb.pages].sort(
-    (a, b) => a.firstFrame - b.firstFrame,
-  )) {
-    const texKey = `${key}:${page.file}`;
-    if (!scene.textures.exists(texKey)) return null;
-    const tex = scene.textures.get(texKey);
-    // Pixel-art sets keep hard pixel edges when scaled up.
-    if (manifest.sampling === "nearest") tex.setFilter(1);
+  if (pages.some((page) => !scene.textures.exists(`${key}:${page.file}`))) return null;
+  let [cw, ch] = fb.cellSize;
+  // One upscale factor for the whole clip (the smallest any page allows).
+  const detail = pixel && scene.pixelDetail > 1
+    ? Math.min(...pages.map((page) => detailFactor(scene, `${key}:${page.file}`, scene.pixelDetail)))
+    : 1;
+  for (const page of pages) {
+    const texKey = detailPage(scene, `${key}:${page.file}`, detail),
+      tex = scene.textures.get(texKey),
+      dw = cw * detail,
+      dh = ch * detail;
+    // Pixel-art sets keep hard pixel edges when scaled up; finer EPX copies
+    // are drawn smooth.
+    if (pixel && detail === 1) tex.setFilter(1);
     for (let k = 0; k < page.frameCount; k++) {
       const name = `f${page.firstFrame + k}`,
         col = k % page.columns,
         row = Math.floor(k / page.columns);
-      if (!tex.has(name)) tex.add(name, 0, col * cw, row * ch, cw, ch);
+      if (!tex.has(name)) tex.add(name, 0, col * dw, row * dh, dw, dh);
       frames.push({ key: texKey, frame: name });
     }
   }
+  // Below, sizes are in the (possibly finer) cell pixels.
+  const [sw0, sh0] = manifest.sourceSize || [cw, ch];
+  cw *= detail;
+  ch *= detail;
   const n = frames.length,
     durations =
       manifest.durationsMs?.length === n
@@ -94,9 +156,9 @@ function clipFrom(scene, key, manifest) {
           ),
     total = durations.reduce((a, b) => a + b, 0),
     // Atlas cells hold encoded frames; map the root into cell pixels.
-    [sw, sh] = manifest.sourceSize || [cw, ch],
+    [sw, sh] = [sw0, sh0],
     anchor =
-      manifest.encodedAnchor ||
+      (manifest.encodedAnchor && manifest.encodedAnchor.map((v) => v * detail)) ||
       (manifest.sourceAnchor
         ? [
             (manifest.sourceAnchor[0] * cw) / sw,
@@ -118,7 +180,12 @@ function clipFrom(scene, key, manifest) {
     bodyPx,
     hitMs: hit?.atMs ?? manifest.impactMs ?? null,
     // Per-frame attachment points, e.g. hand: [[x, y, degrees], …] in cell px.
-    sockets: manifest.sockets || null,
+    sockets: manifest.sockets && detail > 1
+      ? Object.fromEntries(Object.entries(manifest.sockets).map(([k, list]) =>
+          [k, list.map((s) => s && [s[0] * detail, s[1] * detail, ...s.slice(2)])]))
+      : manifest.sockets || null,
+    // Cell pixels per original art pixel (pixelDetail upscaling).
+    detail,
   };
 }
 
@@ -583,11 +650,13 @@ export function playLayers(scene, holder, image, set, dress, registry) {
       im.setOrigin(flip ? 1 - gx : gx, gy)
         .setPosition(image.x + lx * Math.cos(r) - ly * Math.sin(r), image.y + lx * Math.sin(r) + ly * Math.cos(r))
         .setScale(
-          w.upright
+          // Body scale per original art pixel (finer EPX copies shrink scaleY).
+          (w.upright
             ? (w.length
                 ? w.length / tex.height
                 : Math.min(1, (w.maxWidth || Infinity) / tex.width)) * Math.abs(image.scaleY)
-            : (w.length * Math.abs(image.scaleY)) / (tex.width * 0.8 * Math.SQRT2),
+            : (w.length * Math.abs(image.scaleY)) / (tex.width * 0.8 * Math.SQRT2)) *
+            (image._clip?.clip?.detail || 1),
         )
         .setFlip(flip, false)
         .setAngle((flip ? -deg : deg) + image.angle);

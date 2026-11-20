@@ -54,7 +54,7 @@ import {
   ENHANCE_BREAK_LEVEL,
   ADVANCE_LEVEL,
 } from "/shared/rpg.js";
-import { createTownNpcs, footGlow, createRim } from "/town-npcs.js?v=11";
+import { createTownNpcs, footGlow, createRim } from "/town-npcs.js?v=12";
 import { updateEnhanceAura, updateSetGlow, AURA_LEVEL } from "/enhance-aura.js?v=7";
 import { marketHtml, shopManagerHtml, marketState } from "/market-ui.js?v=11";
 import { sampleMotion } from "/shared/smoothing.js";
@@ -85,7 +85,7 @@ import {
   animateSlime,
   monsterDeath,
 } from "/combat-visuals.js?v=0.3.1";
-import { createSelectionPreview } from "/selection-scene.js?v=0.19.0";
+import { createSelectionPreview } from "/selection-scene.js?v=0.20.0";
 import {
   CLASSES,
   ITEMS,
@@ -127,7 +127,7 @@ import {
   playMonsterSet,
   playMonsterDeath,
   playLayers,
-} from "/sprite-sets.js?v=0.22.1";
+} from "/sprite-sets.js?v=0.23.0";
 import { gearDress } from "/hero-gear.js?v=6";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
