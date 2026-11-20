@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "jump",
+  "artSource": "pixel sheet swordsman-female-maple-v2-empty.png",
+  "sourceSize": [
+    102,
+    118
+  ],
+  "encodedAnchor": [
+    53,
+    114
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    120,
+    120,
+    120,
+    120
+  ],
+  "durationSeconds": 0.48,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      102,
+      118
+    ],
+    "pages": [
+      {
+        "file": "jump-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        75.75,
+        91.19,
+        -50
+      ],
+      [
+        76.69,
+        69.82,
+        -70
+      ],
+      [
+        78.23,
+        60.45,
+        -80
+      ],
+      [
+        76.81,
+        91.82,
+        -45
+      ]
+    ]
+  }
+}

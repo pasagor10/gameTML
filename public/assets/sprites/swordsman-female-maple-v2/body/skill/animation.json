@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "3.0",
+  "name": "skill",
+  "artSource": "pixel sheet swordsman-female-maple-v2-empty.png",
+  "sourceSize": [
+    102,
+    118
+  ],
+  "encodedAnchor": [
+    53,
+    114
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    90,
+    110,
+    120,
+    170
+  ],
+  "durationSeconds": 0.49,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 200
+    }
+  ],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      102,
+      118
+    ],
+    "pages": [
+      {
+        "file": "skill-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        74.3,
+        109.21,
+        -30
+      ],
+      [
+        73.93,
+        84.46,
+        -160
+      ],
+      [
+        82.23,
+        62.94,
+        -95
+      ],
+      [
+        75.01,
+        88.38,
+        -50
+      ]
+    ]
+  }
+}
