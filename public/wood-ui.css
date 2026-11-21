@@ -133,3 +133,9 @@ html body #modal[data-panel]:has(#open-account-link) #open-account-link {
 /* Close button: some windows kept a -50% vertical shift after their top was
    pinned to 12px, which pushed the ✕ half onto the frame line. */
 html body #modal[data-panel] #modal-close { translate: none !important; top: 12px !important; bottom: auto !important; }
+/* Character window on wide screens pinned the ✕ to the screen corner, where
+   it sat on the frame's corner; keep it inside the header like the rest. */
+html body #modal[data-panel] > .modal-box > header { position: relative !important; }
+html body #modal[data-panel] > .modal-box > header #modal-close {
+  position: absolute !important; top: 12px !important; right: 12px !important; left: auto !important; bottom: auto !important;
+}
