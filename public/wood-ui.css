@@ -1,0 +1,131 @@
+/* Dark wood and gold for every window (#modal), matching the hero screen
+   (lobby-hud.css). Loaded last; recolours modern-ui.css without touching
+   layout. Item rarity rims stay. */
+html body #modal {
+  --ui-line: #c99a4a40;
+  --ui-text: #f1e4c8;
+  --ui-muted: #a8906a;
+  --ui-accent: #ffd46b;
+  --gold: #e9c27a; --gold-hi: #ffe9a8;
+  --hud-gold: #e9c27a; --hud-gold-hi: #ffe9a8; --hud-gold-lo: #7a5a32;
+  --hud-navy: #1a100a; --hud-navy-2: #2b1b11; --hud-text: #f1e4c8;
+  --card-bg: linear-gradient(180deg, #2b1b11f2, #1a100af5);
+  --card-line: #c99a4a;
+  --tile: #120b07;
+  --tile-line: #5e4126;
+  --gold-a: #ffe08a; --gold-b: #f0ac3c; --gold-c: #b8701a;
+  color: var(--ui-text);
+}
+html body #modal[data-panel] { background: #0a0604c4 !important; }
+html body #modal[data-panel] > .modal-box {
+  background: linear-gradient(180deg, #24170ef8, #140c07fa) !important;
+  border: 1.5px solid var(--card-line) !important; border-radius: 16px !important;
+  box-shadow: 0 18px 50px #000c, inset 0 1px 0 #ffffff12 !important;
+}
+html body #modal[data-panel] > .modal-box > header { background: #ffffff04 !important; border-bottom-color: #c99a4a40 !important; }
+html body #modal[data-panel] > .modal-box > header h2 { color: #ffe9a8 !important; -webkit-text-fill-color: #ffe9a8 !important; }
+html body #modal[data-panel] > .modal-box > header small { color: #a8906a !important; }
+html body #modal[data-panel] #modal-close {
+  background: var(--tile) !important; border: 1.5px solid var(--tile-line) !important; color: #f6d98e !important;
+}
+html body #modal[data-panel] #modal-close:hover { border-color: var(--gold-a) !important; }
+html body #modal[data-panel] #modal-body { scrollbar-color: #7a5a32 #1a100a; }
+html body #modal[data-panel] :is(h3, h4) { color: #ffe9a8; }
+html body #modal[data-panel] :is(p, small, .hint) { color: inherit; }
+
+/* Tabs (character window, quests, market, dungeon list) */
+html body #modal[data-panel] :is(.rpg-tabs, .inv-tabs, .daily-tabs, .market-tabs, .dg-tabs) button {
+  background: transparent !important; border: 1px solid transparent !important; color: #cdb48c !important; box-shadow: none !important;
+}
+html body #modal[data-panel] :is(.daily-tabs, .market-tabs, .dg-tabs) button { background: var(--tile) !important; border-color: var(--tile-line) !important; }
+html body #modal[data-panel] :is(.rpg-tabs, .inv-tabs, .daily-tabs, .market-tabs, .dg-tabs) button.active {
+  background: linear-gradient(180deg, var(--gold-a), var(--gold-b)) !important; border-color: #fff0b8 !important; color: #3a1d05 !important;
+}
+html body #modal[data-panel] :is(.rpg-tabs, .inv-tabs) button { border-radius: 999px !important; }
+html body #modal[data-panel] kbd { background: #1f150d !important; border-color: #7a5a32 !important; color: #f6d98e !important; box-shadow: none !important; }
+html body #modal[data-panel] .rpg-tabs button.active kbd { background: #3a2410 !important; border-color: #6d3c0c !important; }
+
+/* Big panels */
+html body #modal[data-panel] :is(.inv-hero, .inv-bag, .inv-detail, .cls-hero, .cls-path, .cls-skills, .stat-alloc, .stat-derived,
+  .party-card, .quest-card, .market-card, .account-card, .slot-panel, .trade-panel, .trade-box, .market-summary, .book-summary, .stat-totals, .stat-preview) {
+  background: var(--card-bg) !important; border: 1.5px solid #c99a4a80 !important; border-radius: 14px !important;
+  box-shadow: inset 0 1px 0 #ffffff0d !important; color: var(--ui-text) !important;
+}
+html body #modal[data-panel] :is(.cls-figure, .inv-stage) { background: radial-gradient(ellipse at 50% 70%, #ffc04a26, transparent 65%) !important; }
+html body #modal[data-panel] .inv-detail-art { background: radial-gradient(ellipse, #ffc04a1f, transparent 70%) !important; }
+
+/* Rows and tiles */
+html body #modal[data-panel] :is(.cls-role, .path-info, .inv-power, .inv-versus, .stat-row, .wardrobe-card, .cls-skills article, .path-node,
+  .quest-row, .daily-card, .daily-row, .dungeon-card, .dungeon-floor, .dg-card, .mon-card, .party-member, .market-item, .market-listing,
+  .shop-gear, .status-card, .stat-card, .item-row, .player-row, .inv-stats > div) {
+  background: var(--tile) !important; border: 1px solid var(--tile-line) !important; border-radius: 12px !important;
+  box-shadow: none !important; color: var(--ui-text) !important;
+}
+html body #modal[data-panel] :is(.inv-pills span, select, input:not([type="range"]):not([type="checkbox"])) {
+  background: var(--tile) !important; border: 1px solid var(--tile-line) !important; color: #f1e4c8 !important;
+}
+html body #modal[data-panel] :is(input, select):focus { border-color: var(--gold-a) !important; outline: none !important; }
+html body #modal[data-panel] input[type="range"] { accent-color: #f0ac3c; }
+html body #modal[data-panel] :is(.inv-pills, .inv-reqs, .inv-versus, .inv-detail-stats) { border-color: #c99a4a40 !important; }
+html body #modal[data-panel] :is(.inv-cell, .inv-slot) {
+  background: radial-gradient(ellipse at 50% 100%, color-mix(in srgb, var(--rarity) 13%, transparent), transparent 80%), var(--tile) !important;
+}
+html body #modal[data-panel] :is(.inv-cell, .inv-slot):not([class*="rarity-"]) { --rarity: #7a5a32; border-color: var(--tile-line) !important; }
+html body #modal[data-panel] :is(.inv-cell, .inv-slot).selected { border-color: var(--gold-a) !important; box-shadow: 0 0 0 2px #ffd46b55, 0 0 10px #ffc04a44 !important; }
+html body #modal[data-panel] .inv-cell.blank { border-bottom-color: var(--tile-line) !important; }
+html body #modal[data-panel] :is(.sk-icon, .cls-role > span, .inv-crest) { background: #1f150d !important; border-color: #7a5a32 !important; }
+html body #modal[data-panel] :is(.path-node.current, .wardrobe-card.worn) {
+  background: linear-gradient(180deg, #6a4116, #33200d) !important; border-color: var(--gold-a) !important;
+  box-shadow: 0 0 0 1px #ffd46b40, 0 0 12px #ffc04a44 !important;
+}
+html body #modal[data-panel] .path-node.picked:not(.current) { border-color: var(--card-line) !important; }
+html body #modal[data-panel] .path-node.locked { opacity: .7; }
+html body #modal[data-panel] :is(.inv-lore, .wardrobe-note, .cls-role small, .inv-stats span) { color: #b8a07a !important; }
+html body #modal[data-panel] :is(.inv-detail h3, .inv-power strong, .cls-path h3, .cls-skills h3) { color: #ffe9a8 !important; }
+html body #modal[data-panel] .inv-bag > header h3 { color: #e9c98a !important; }
+html body #modal[data-panel] .inv-bag > footer label { background: #ffffff05 !important; }
+
+/* Buttons */
+html body #modal[data-panel] :is(.inv-action, .primary-button, .pause-main, .stat-btn, .stat-actions button) {
+  background: linear-gradient(180deg, var(--gold-a), var(--gold-b) 55%, var(--gold-c)) !important;
+  border: 1.5px solid #fff0b8 !important; color: #3a1d05 !important; border-radius: 12px !important;
+  box-shadow: 0 2px 0 #6d3c0c, inset 0 1px 0 #fff8 !important; text-shadow: none !important;
+}
+html body #modal[data-panel] :is(.inv-action, .primary-button, .pause-main, .stat-btn, .stat-actions button):hover:not(:disabled) { filter: brightness(1.06); }
+html body #modal[data-panel] :is(.inv-action, .primary-button, .pause-main, .stat-btn, .stat-actions button):disabled {
+  background: #2a1c12 !important; border-color: var(--tile-line) !important; color: #8f7a5c !important; box-shadow: none !important;
+}
+html body #modal[data-panel] :is(.text-button, .stat-reset, .inv-discard) {
+  background: #ffffff08 !important; color: #f6d98e !important; border: 1.5px solid #c99a4a99 !important; box-shadow: none !important;
+}
+html body #modal[data-panel] button:focus-visible { outline-color: var(--gold-a) !important; }
+
+@media (max-width: 700px) {
+  html body #modal[data-panel] .rpg-tabs button { border-radius: 10px !important; padding: 5px 6px !important; font-size: 12px !important; line-height: 1.25 !important; }
+  html body #modal[data-panel] .rpg-tabs kbd { display: none !important; }
+}
+
+/* Leftovers in quests, market, ranking and settings */
+html body #modal[data-panel] #modal-body { color: var(--ui-text) !important; }
+html body #modal[data-panel] :is(.hint, .quest-intro, .ranking-summary, .reset) { color: #a8906a !important; }
+html body #modal[data-panel] :is(.secondary-button, .market-filters button, .ranking-tabs button, .quest-tabs button, .quality-picker button) {
+  background: var(--tile) !important; border: 1px solid var(--tile-line) !important; color: #e9d3a8 !important; box-shadow: none !important;
+}
+html body #modal[data-panel] :is(.market-filters button, .ranking-tabs button, .quest-tabs button, .quality-picker button).active {
+  background: linear-gradient(180deg, var(--gold-a), var(--gold-b)) !important; border-color: #fff0b8 !important; color: #3a1d05 !important;
+}
+html body #modal[data-panel] .secondary-button { border-color: #c99a4a99 !important; color: #f6d98e !important; }
+html body #modal[data-panel] :is(.daily-chest, .market-empty) { background: var(--tile) !important; border: 1px solid var(--tile-line) !important; }
+html body #modal[data-panel] :is(.daily-art, .chest-art) { background: #1f150d !important; border-color: #7a5a32 !important; }
+html body #modal[data-panel] .chip, html body #modal[data-panel] b.chip { background: #2a1c12 !important; border-color: #5e4126 !important; color: #e9d3a8 !important; }
+html body #modal[data-panel] .ranking-table :is(th, thead td) { color: #e9c27a !important; }
+html body #modal[data-panel] .ranking-table td { border-color: #5e412666 !important; }
+html body #modal[data-panel] .ranking-table .ranking-self td { background: #6a41163a !important; }
+/* Settings: one gold button is a call to action; a column of them is a wall. */
+html body #modal[data-panel]:has(#open-account-link) .primary-button {
+  background: var(--tile) !important; border: 1px solid var(--tile-line) !important; color: #f1e4c8 !important; box-shadow: none !important;
+}
+html body #modal[data-panel]:has(#open-account-link) .primary-button:hover { border-color: var(--card-line) !important; filter: none !important; }
+html body #modal[data-panel]:has(#open-account-link) #open-account-link {
+  background: linear-gradient(180deg, var(--gold-a), var(--gold-b) 55%, var(--gold-c)) !important; border-color: #fff0b8 !important; color: #3a1d05 !important;
+}
