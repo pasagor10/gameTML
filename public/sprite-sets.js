@@ -623,8 +623,17 @@ export function playLayers(scene, holder, image, set, dress, registry) {
           if (parts.includes(part))
             place(`${slot}:${part}`, registry.layer(set.name, `${slot}/${look}/${part}`), dress.tints?.[slot]?.[part]);
     }
+    // A finer body (2x remakes, the select stage's EPX copies) holds the
+    // matching finer copy of an upright pixel weapon (items/held2x, held4x),
+    // falling back to the plain one while it loads.
     const sock = image._clip?.clip?.sockets?.hand?.[index],
-      icon = dress?.weapon && sock ? registry.image(dress.weapon.url) : null;
+      bodyDetail = image._clip?.clip?.detail || 1,
+      wantDetail = dress?.weapon?.upright && !dress.weapon.length ? (bodyDetail >= 4 ? 4 : bodyDetail >= 2 ? 2 : 1) : 1,
+      fine = dress?.weapon && sock && wantDetail > 1
+        ? registry.image(dress.weapon.url.replace("/held/", `/held${wantDetail}x/`))
+        : null,
+      icon = fine || (dress?.weapon && sock ? registry.image(dress.weapon.url) : null),
+      heldDetail = fine ? wantDetail : 1;
     if (icon) {
       // The weapon's item picture: butt bottom-left, tip top-right, so it
       // points at -45° unrotated. Upright pixel pictures (tip up) point at
@@ -643,7 +652,9 @@ export function playLayers(scene, holder, image, set, dress, registry) {
         gx = w.upright ? (w.gripX ?? 0.5) : 0.1 + 0.8 * w.grip,
         gy = w.upright ? w.grip : 0.9 - 0.8 * w.grip,
         deg = w.upright ? (sock[2] + 90) * (w.tilt ?? 1) : sock[2] + 45;
-      if (w.upright && texture._pixel !== true) {
+      // Hard pixel edges, except finer copies on the select stage, where
+      // bodies are smooth EPX copies.
+      if (w.upright && texture._pixel !== true && !(heldDetail > 1 && scene.pixelDetail > 1)) {
         texture.setFilter(1);
         texture._pixel = true;
       }
@@ -657,7 +668,7 @@ export function playLayers(scene, holder, image, set, dress, registry) {
           (w.upright
             ? (w.length
                 ? w.length / tex.height
-                : Math.min(1, (w.maxWidth || Infinity) / tex.width)) * Math.abs(image.scaleY)
+                : Math.min(1, ((w.maxWidth || Infinity) * heldDetail) / tex.width) / heldDetail) * Math.abs(image.scaleY)
             : (w.length * Math.abs(image.scaleY)) / (tex.width * 0.8 * Math.SQRT2)) *
             (image._clip?.clip?.detail || 1),
         )

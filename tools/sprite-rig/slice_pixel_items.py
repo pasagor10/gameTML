@@ -13,9 +13,13 @@ median item is HEIGHT px tall) and colour reduced, then written as
   public/assets/items/px/<group>-N.webp    icon: square, 4x nearest
   public/assets/items/held/<group>-N.webp  weapons only: true pixels,
                                            held upright in the hero's fist
+  public/assets/items/held{2,4}x/<group>-N.webp  the same at 2x / 4x the
+      pixel count, for finer bodies (2x remakes, the hero-select stage)
 
   python3 tools/sprite-rig/slice_pixel_items.py
+  python3 tools/sprite-rig/slice_pixel_items.py --held-detail 2 4   # finer held copies only
 """
+import argparse
 from pathlib import Path
 
 from PIL import Image
@@ -64,14 +68,15 @@ def boxes_of(im):
     return boxes
 
 
-def slice_group(group, sheet, height, held):
+def slice_group(group, sheet, height, held, detail=1):
+    """detail > 1: only write held<detail>x/, detail times finer."""
     im = Image.open(SOURCE / sheet).convert("RGB")
     boxes = boxes_of(im)
     missing = [i for i in range(GRID * GRID) if i not in boxes]
     if missing:
         raise SystemExit(f"{sheet}: items not found: {missing}")
     heights = sorted(b[3] - b[1] for b in boxes.values())
-    k = height / heights[len(heights) // 2]
+    k = height * detail / heights[len(heights) // 2]
     for i, b in sorted(boxes.items()):
         crop = keyed(im.crop(b))
         sw, sh = max(1, round(crop.width * k)), max(1, round(crop.height * k))
@@ -80,6 +85,9 @@ def slice_group(group, sheet, height, held):
         q = small.convert("RGB").quantize(colors=COLOURS, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).convert("RGBA")
         q.putalpha(alpha)
         q = q.crop(q.getbbox())
+        if detail > 1:
+            q.save(ITEMS / f"held{detail}x" / f"{group}-{i}.webp", "WEBP", lossless=True)
+            continue
         if held:
             q.save(ITEMS / "held" / f"{group}-{i}.webp", "WEBP", lossless=True)
         side = max(q.width, q.height) + 2
@@ -91,6 +99,16 @@ def slice_group(group, sheet, height, held):
 
 
 def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--held-detail", type=int, nargs="*", default=None)
+    a = ap.parse_args()
+    if a.held_detail:
+        for d in a.held_detail:
+            (ITEMS / f"held{d}x").mkdir(parents=True, exist_ok=True)
+            for group, (sheet, height, held) in GROUPS.items():
+                if held:
+                    slice_group(group, sheet, height, held, d)
+        return
     (ITEMS / "px").mkdir(parents=True, exist_ok=True)
     (ITEMS / "held").mkdir(parents=True, exist_ok=True)
     for group, (sheet, height, held) in GROUPS.items():
