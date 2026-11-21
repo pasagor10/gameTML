@@ -36,6 +36,26 @@ export function hitsFor(p, enemies, skill, range, dir) {
   );
 }
 
+// Flyers and jumping monsters are not exactly on a platform's foot height.
+// Route to a nearby surface from which the attack can reach their altitude.
+function combatClimb(actor, target, platforms) {
+  if (target.y >= actor.y || platforms.some(p => Math.abs(target.y-p.y)<8 && target.x>=p.x && target.x<=p.x+p.w))
+    return climbStep(actor, target, platforms);
+  const options = platforms.filter(p => p.y < actor.y-65 && Math.abs(p.y-target.y) <= REACH_Y-8);
+  const gap = p => Math.max(p.x-target.x, target.x-p.x-p.w, 0);
+  const score = p => gap(p)*3 + Math.abs(p.y-target.y);
+  const ledge = options.reduce((best,p) => !best || score(p)<score(best) ? p : best, null);
+  if (!ledge) return climbStep(actor, target, platforms);
+  return climbStep(actor, { x:Math.max(ledge.x+8, Math.min(ledge.x+ledge.w-8,target.x)), y:ledge.y }, platforms);
+}
+function followClimb(p, plan) {
+  const step = p.climbX;
+  const dx = step.x-p.x, vx = p.vx || 0;
+  const stop = Math.sign(vx)===Math.sign(dx) ? vx*vx/1800 + Math.abs(vx)*.05 : 0;
+  plan.input = Math.abs(dx)>Math.max(2,stop) ? Math.sign(dx) : 0;
+  plan.jump = p.grounded && step.jump;
+}
+
 // Anything about to land where we stand? Crystal eruptions and boss slams
 // only hurt on the ground, so hop if it lands soon, otherwise walk clear.
 function threat(p, i, t) {
@@ -118,6 +138,7 @@ export function autoBrain(p, i, t, { range, mpMax, platforms, aspd = 1 }) {
   }
   if (!target) {
     target = best;
+    if (p.autoTarget !== best.id) { p.climbX = undefined; p.autoClimbing = false; }
     p.autoTarget = best.id;
     p.autoBestDist = Infinity;
     p.autoProgressAt = t;
@@ -131,21 +152,29 @@ export function autoBrain(p, i, t, { range, mpMax, platforms, aspd = 1 }) {
 
   // 3. Position: ranged heroes keep their distance (and back off when crowded),
   //    melee closes in. Different height: climb the stairs or drop down.
+  let navigating = false;
   if (!danger) {
-    if (!sameLevel && target.y < p.y && !flying(target)) {
-      if (p.grounded || p.climbX === undefined)
-        p.climbX = climbStep(p, target, platforms);
-      plan.input = Math.sign(p.climbX.x - p.x);
-      plan.jump = p.grounded && p.climbX.jump;
-    } else if (!sameLevel && target.y > p.y) {
-      plan.input = dir; // walk off the ledge toward it
+    if (!p.grounded && p.autoClimbing && p.climbX) {
+      // Keep the landing point through the whole jump, even when the enemy
+      // enters attack height mid-air. Casting here can abort the landing.
+      followClimb(p, plan);
+      navigating = true;
+    } else if (!sameLevel || (target.y < p.y - 65 && Math.abs(dx) > range)) {
+      p.climbX = combatClimb(p, target, platforms);
+      p.autoClimbing = true;
+      followClimb(p, plan);
+      navigating = true;
     } else {
+      p.autoClimbing = false;
+      p.climbX = undefined;
       const ideal = ranged ? range * 0.7 : range * 0.6,
         gap = Math.abs(dx);
       if (gap > ideal) plan.input = dir;
       else if (ranged && gap < 90 && p.x > 120 && p.x < 2280) plan.input = -dir;
     }
   }
+
+  if (navigating && (plan.jump || !p.grounded)) return plan;
 
   // 4. Attack only when something is really in reach, with the right tool.
   const mp = p.mp,

@@ -114,3 +114,32 @@ test('auto escapes danger instead of casting, even with no enemies left', () => 
   i.enemies = [];
   assert.equal(autoBrain(p, i, 100, ctx()).jump, true);
 });
+
+test('auto routes toward a high flyer instead of waiting directly underneath', async () => {
+  const { dungeonPlatforms } = await import('../shared/dungeons.js');
+  const p = hero({ class:'swordsman', x:1400, y:600, mp:0 });
+  const plan = autoBrain(p, { enemies:[mob('high-bat',1400,{type:'bat',y:315})] },100,
+    { ...ctx(), platforms:dungeonPlatforms(2,1) });
+  assert.ok(plan.input !== 0 || plan.jump, 'must walk toward stairs or jump, not stand still');
+});
+test('auto steps off the supporting ledge to reach a monster directly below', () => {
+  const p=hero({x:1200,y:315,mp:0,class:'swordsman'});
+  const plan=autoBrain(p,{enemies:[mob('below',1200)]},100,
+    {...ctx(),platforms:[{x:1000,y:315,w:400}]});
+  assert.ok(plan.input !== 0);
+  assert.ok(p.climbX?.x < 1000 || p.climbX?.x > 1400, 'walk beyond a ledge edge instead of chasing x back and forth');
+});
+
+test('auto climbs the last step when the enemy is one tier up but outside horizontal reach', async () => {
+  const {dungeonPlatforms}=await import('../shared/dungeons.js');
+  const p=hero({class:'swordsman',x:1230,y:410,mp:0});
+  autoBrain(p,{enemies:[mob('third-tier',1400,{y:315})]},100,{...ctx(),platforms:dungeonPlatforms(2,1)});
+  assert.equal(p.autoClimbing,true,'do not walk off the intermediate stair toward a target still out of reach');
+});
+
+test('auto does not choose a lower resting ledge as its final goal for a high flyer',()=>{
+  const p=hero({class:'swordsman',x:1100,y:600,mp:0});
+  const plan=autoBrain(p,{enemies:[mob('hover',1100,{type:'bat',y:450})]},100,
+    {...ctx(),platforms:[{x:1000,y:540,w:400},{x:1300,y:430,w:200}]});
+  assert.ok(plan.jump || plan.input!==0,'must progress toward a higher firing ledge');
+});
