@@ -74,8 +74,8 @@ test("service worker keeps live game and account traffic out of its cache", asyn
   await work;
   assert.deepEqual(Array.from(saved), [
     "/offline.html",
-    "/assets/app/icon-192.png",
-    "/assets/app/icon-512.png",
+    "/assets/app/icon-portal-192.png",
+    "/assets/app/icon-portal-512.png",
   ]);
   listeners.activate({ waitUntil: (p) => (work = p) });
   await work;
