@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "3.0",
+  "name": "skill",
+  "artSource": "pixel sheet swordsman-female-knight-v1-empty.png",
+  "sourceSize": [
+    120,
+    103
+  ],
+  "encodedAnchor": [
+    59,
+    100
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    90,
+    110,
+    120,
+    170
+  ],
+  "durationSeconds": 0.49,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 200
+    }
+  ],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      120,
+      103
+    ],
+    "pages": [
+      {
+        "file": "skill-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        42.0,
+        71.0,
+        26
+      ],
+      [
+        48.0,
+        75.0,
+        65
+      ],
+      [
+        41.0,
+        75.0,
+        65
+      ],
+      [
+        33.0,
+        83.0,
+        65
+      ]
+    ]
+  }
+}
