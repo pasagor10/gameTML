@@ -94,6 +94,24 @@ for (const button of document.querySelectorAll('[data-play-now]'))
     playNow(button, box);
   };
 setMode(mode);
-api('me').then(({ user }) => showAccount(user)).catch(() => {
+// Straight into the game: a plain visit to the front page (no #account link,
+// no ?account / ?home) goes to /play, making a guest account for a new
+// visitor first. Crawlers and automated browsers stay on the page.
+const params = new URLSearchParams(location.search);
+const autoEnter = !location.hash && !params.has('account') && !params.has('home') &&
+  !navigator.webdriver && !/bot|crawl|spider|slurp|preview|facebookexternalhit|lighthouse|headless/i.test(navigator.userAgent);
+const entering = (on) => document.documentElement.classList.toggle('entering', on);
+entering(autoEnter);
+api('me').then(async ({ user }) => {
+  if (autoEnter) {
+    try {
+      if (!user) await api('auth/guest', {});
+      location.replace('/play');
+      return;
+    } catch { entering(false); }
+  }
+  showAccount(user);
+}).catch(() => {
+  entering(false);
   showAccount(null); $('#auth-error').textContent = 'ยังเชื่อมต่อเซิร์ฟเวอร์ไม่ได้ กรุณาลองเข้าสู่ระบบอีกครั้ง';
 });

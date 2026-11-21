@@ -65,7 +65,7 @@
     <link rel="stylesheet" href="/modern-ui.css?v=27" />
     <link rel="stylesheet" href="/hero-lobby-v2.css?v=7" />
     <link rel="stylesheet" href="/ultimate-ui.css?v=4" />
-    <link rel="stylesheet" href="/lobby-hud.css?v=6" />
+    <link rel="stylesheet" href="/lobby-hud.css?v=7" />
     <script src="/install.js?v=3" defer></script>
   </head>
   <body>
@@ -113,6 +113,7 @@
           <label class="hl-name"><span id="identity-label">ชื่อผู้กล้าใหม่</span>
             <span class="hl-name-row"><input id="character-name" maxlength="20" placeholder="ตั้งชื่อผู้กล้า (2–20 ตัวอักษร)" autocomplete="off" /><small id="name-count">0/20</small><button id="random-name" type="button" aria-label="สุ่มชื่อ" title="สุ่มชื่อ">สุ่ม</button></span></label>
           <button id="start" class="hl-start" type="button"><span id="start-label">สร้างผู้กล้า</span></button>
+          <button id="quick-start" class="hl-quick" type="button" hidden>🎲 เริ่มเลย · สุ่มตัวละครให้</button>
         </div>
         <footer class="hl-foot">
           <span id="entry-title">พร้อมออกเดินทาง</span>
@@ -464,7 +465,7 @@
     </div>
     <script src="/vendor/phaser.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <script type="module" src="/game.js?v=0.73.0"></script>
+    <script type="module" src="/game.js?v=0.74.0"></script>
     <script type="module" src="/orientation.js?v=3"></script>
     <script type="module" src="/screen-awake.js?v=1"></script>
   </body>

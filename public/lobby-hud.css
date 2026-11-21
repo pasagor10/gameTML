@@ -320,3 +320,14 @@ html body #landing.hero-lobby .hl-slot-new .hl-slot-icon { display: grid !import
   html body #landing.hero-lobby #hero-stats { max-height: none; }
 }
 html body #landing.hero-lobby #hero-stats .stats-heading span { color: #5a3a1a !important; font-size: 13px !important; font-weight: 700 !important; }
+
+/* Quick start for new players: under the main button, a lighter gold one. */
+html body #landing.hero-lobby .hl-quick {
+  width: min(100%, 400px); min-height: 46px; padding: 8px 16px;
+  font: 700 17px/1.2 'Noto Sans Thai', sans-serif; color: #3a2208;
+  background: linear-gradient(180deg, #fff1c4, #f2cf7a); border: 2px solid #b57a22; border-radius: 10px;
+  box-shadow: inset 0 2px 0 #fffb, 0 3px 0 #7a4a10; cursor: pointer;
+}
+html body #landing.hero-lobby .hl-quick:not(:disabled):hover { filter: brightness(1.06); }
+html body #landing.hero-lobby .hl-quick:disabled { filter: grayscale(.6); cursor: wait; }
+html body #landing.hero-lobby .hl-quick[hidden] { display: none !important; }

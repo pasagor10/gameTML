@@ -19,3 +19,4 @@ button.nav-play span{margin-left:12px}
 @media(max-width:800px){.footer-play{display:none}}
 @media(max-width:480px){.play-now{width:100%;min-height:60px;font-size:18px}.hero .watch-link{width:100%;text-align:center}}
 @media(prefers-reduced-motion:reduce){.play-now{animation:none}}
+html.entering body>*{visibility:hidden}html.entering body::after{content:'กำลังเข้าเกม…';position:fixed;inset:0;display:grid;place-items:center;color:#e5c68c;font-size:18px;visibility:visible}

@@ -358,6 +358,8 @@ function renderCards() {
     ? "ผู้กล้าที่เลือก <small>พร้อมเดินทางต่อ</small>"
     : "ชื่อผู้กล้าใหม่ <small>2–20 ตัวอักษร</small>";
   $("#start-label").textContent = saved ? "เข้าเกม" : "สร้างผู้กล้า";
+  // New players can skip choosing: a random class, look and name.
+  $("#quick-start").hidden = lobbyMode !== "create" || characters.length >= 3;
   $("#start").disabled = !saved && characters.length >= 3;
   $$("[data-resume]").forEach((b) => {
     b.classList.toggle("active", b.dataset.resume === lobbyCharacterId);
@@ -491,6 +493,20 @@ $$("[data-preview]").forEach(
   (b) => (b.onclick = () => selectionPreview?.preview(b.dataset.preview)),
 );
 refreshAccount().catch(() => toast("เซิร์ฟเวอร์ยังไม่พร้อม กรุณาลองใหม่", true));
+// Quick start: pick class, gender and (unless typed) name at random, then
+// create the hero exactly as the main button would.
+$("#quick-start").onclick = () => {
+  if ($("#start").disabled || $("#quick-start").disabled) return;
+  const jobs = JOBS.filter((name) => CLASSES[name]);
+  job = jobs[Math.floor(Math.random() * jobs.length)];
+  gender = Math.random() < 0.5 ? "male" : "female";
+  $$("[data-gender]").forEach((x) => x.classList.toggle("active", x.dataset.gender === gender));
+  if ([...$("#character-name").value.trim()].length < 2) $("#random-name").click();
+  renderCards();
+  $("#quick-start").disabled = true;
+  $("#start").click();
+  setTimeout(() => ($("#quick-start").disabled = false), 1500);
+};
 $("#start").onclick = async () => {
   const b = $("#start");
   b.disabled = true;
