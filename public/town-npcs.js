@@ -91,19 +91,21 @@ export function createTownNpcs(scene, definitions, sprites) {
     const label = scene.add
       .text(n.x, (n.y ?? 600) - 146, `${n.name}\n${n.role}`, {
         fontFamily: "Noto Sans Thai",
-        fontSize: "15px",
+        fontSize: "18px",
+        backgroundColor: "#10202a",
+        padding: { x: 7, y: 4 },
         fontStyle: "bold",
         color: "#ffe6ac",
         align: "center",
         lineSpacing: -2,
         stroke: "#10202a",
-        strokeThickness: 5,
-        shadow: { offsetX: 0, offsetY: 2, color: "#000", blur: 6, fill: true, stroke: true },
+        strokeThickness: 1,
+        shadow: { offsetX: 0, offsetY: 1, color: "#000", blur: 0, fill: true, stroke: false },
       })
       .setOrigin(0.5, 0)
       .setDepth(15);
     objects.push(root, label);
-    rigs.push({ n, g, image, rim });
+    rigs.push({ n, g, image, rim, label });
   }
   function draw({ n, g }, time) {
     const t = time / 1000,
@@ -362,6 +364,8 @@ export function createTownNpcs(scene, definitions, sprites) {
     update(time, visible, reducedMotion, self) {
       if (!visible) return;
       for (const rig of rigs) {
+        const zoom = scene.cameras.main.zoom / (scene.renderScale?.() || 1);
+        rig.label.setScale(Math.max(1, 0.9 / zoom));
         const set = sprites?.npcs.get(rig.n.id);
         if (!set) {
           // A painted set is on its way: show only the shadow meanwhile, so

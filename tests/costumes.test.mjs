@@ -56,3 +56,16 @@ test("each browser module is imported under one URL (no duplicate copies)", asyn
   for (const [path, specs] of seen)
     assert.equal(specs.size, 1, `${path} imported as ${[...specs].join(", ")}`);
 });
+
+test("beach costume keeps its idle weapon at the palm instead of jumping to the head", async () => {
+  const path = "female-costume-1-maple-v1/body/";
+  const clip = JSON.parse(await readFile(new URL(path + "idle/animation.json", root)));
+  const palms = clip.sockets.hand;
+  assert.equal(palms.length, clip.frameCount);
+  for (const [x, y] of palms) {
+    assert.ok(x >= 74 && x <= 82, "weapon stays at the forward fist");
+    assert.ok(y >= 82 && y <= 91, "weapon cannot attach to the head or ear");
+  }
+  for (let i = 1; i < palms.length; i++)
+    assert.ok(Math.hypot(palms[i][0] - palms[i-1][0], palms[i][1] - palms[i-1][1]) < 6);
+});

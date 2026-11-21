@@ -2741,10 +2741,14 @@ class Adventure extends Phaser.Scene {
     // Each label is its own texture; at 3x it holds 9x the pixels, so the
     // graphics preset caps it (Low 1.5x, Medium 2x, High 3x).
     const addText = this.add.text.bind(this.add);
-    this.add.text = (...args) =>
-      addText(...args).setResolution(
-        Math.max(2, Math.min(preset().textRes, Math.ceil((devicePixelRatio || 1) * 1.5))),
+    this.add.text = (...args) => {
+      const label = addText(...args).setResolution(
+        Math.max(3, Math.min(4, Math.ceil((devicePixelRatio || 1) * 2))),
       );
+      // Text needs smooth sampling even when character art uses nearest pixels.
+      label.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
+      return label;
+    };
     this.knightAtlas = registerMotionAtlas(this, "knight-motion", 8);
     this.sprites = createSpriteRegistry(this);
     // Warm the chosen hero and enemies before joining the live world.
@@ -2869,7 +2873,7 @@ class Adventure extends Phaser.Scene {
       if (!this.load.isLoading()) this.load.start();
     }
     const slotLabel = this.add.text(SLOT_MACHINE.x, WORLD.ground - 195, "ตู้สมบัติจันทรา\n1,000 ทอง / ครั้ง", {
-      fontFamily: "Noto Sans Thai", fontSize: "12px", align: "center", color: "#ffe3a1", stroke: "#102829", strokeThickness: 2,
+      fontFamily: "Noto Sans Thai", fontSize: "16px", fontStyle: "bold", align: "center", color: "#fff2ce", backgroundColor: "#10202a", padding: { x: 7, y: 4 }, stroke: "#10202a", strokeThickness: 1,
     }).setOrigin(0.5).setDepth(14);
     this.npcs.push(slotGlow, slotImage, slotLabel);
     this.hotspots.push(this.hotspot(SLOT_MACHINE.x, WORLD.ground, 150, 185, () => openTown("slots")));
@@ -3014,7 +3018,9 @@ class Adventure extends Phaser.Scene {
         label = this.add
           .text(p.x, p.y - 142, p.name, {
             fontFamily: "Noto Sans Thai",
-            fontSize: "14px",
+            fontSize: "17px",
+            backgroundColor: "#10202a",
+            padding: { x: 6, y: 3 },
             fontStyle: "bold",
             color: p.id === state.self.id ? "#fff0b5" : "#e4fff6",
             stroke: "#193c51",
@@ -3246,7 +3252,9 @@ class Adventure extends Phaser.Scene {
         const label = this.add
           .text(shop.x, WORLD.ground - 141, shop.name, {
             fontFamily: "Noto Sans Thai",
-            fontSize: "12px",
+            fontSize: "16px",
+            backgroundColor: "#10202a",
+            padding: { x: 6, y: 3 },
             fontStyle: "bold",
             align: "center",
             wordWrap: { width: 138 },
