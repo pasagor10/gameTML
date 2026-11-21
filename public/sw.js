@@ -1,6 +1,6 @@
 // Only the install/offline screen is cached. Game code, accounts, API data and
 // Socket.IO always use the live server so installing cannot freeze a release.
-const CACHE = "tml-install-v1";
+const CACHE = "tml-install-v2";
 const OFFLINE = "/offline.html";
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -9,6 +9,9 @@ self.addEventListener("install", (event) => {
       .then((cache) =>
         cache.addAll([
           OFFLINE,
+          "/loading-art.css",
+          "/loading-art.js",
+          "/assets/loading/tml-adventure.webp",
           "/assets/app/icon-192.png",
           "/assets/app/icon-512.png",
         ]),
