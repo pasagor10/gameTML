@@ -1273,6 +1273,7 @@ function spawnTraining(i) {
 function spawnStage(i) {
   i.clear = false;
   i.clearedAt = 0;
+  i.advanceBlocked = false;
   i.stageAt = now();
   i.enemies = [];
   i.hazards = [];
@@ -1407,10 +1408,11 @@ function releaseReserve(i, t) {
   i.nextHazardAt = t + 6;
   i.clear = false;
   i.clearedAt = 0;
+  i.advanceBlocked = false;
 }
 // After the last monster falls, auto waits this long before moving on so the
 // death animation and loot drops are actually seen.
-export const CLEAR_LINGER = 2.6;
+export const CLEAR_LINGER = 10;
 export function nextStage(p) {
   const i = instances.get(p.instance);
   if (!i || !i.clear) throw Error("กำจัดมอนสเตอร์ให้หมดก่อน");
@@ -2022,7 +2024,6 @@ function checkClear(i, t, p) {
           const m = live(id);
           if (m?.auto) autoOnClear.push(id);
           if (m) {
-            m.auto = false;
             m.input = 0;
             m.pending = null;
             m.action = null;
@@ -2585,14 +2586,6 @@ export function tick(dt, t = now()) {
         }
       } else if (autoCollect(p, i, t, dungeonPlatforms(i.floor, i.stage, i.training))) {
         // Walking to (or opening) a supply chest / rune before moving on.
-      } else if (
-        i.clear &&
-        !i.completed &&
-        t - (i.clearedAt || 0) > CLEAR_LINGER &&
-        t - (p.nextAt || 0) > 2
-      ) {
-        p.nextAt = t;
-        nextStage(p);
       }
     }
     resolveAttack(p, t);
@@ -2611,6 +2604,15 @@ export function tick(dt, t = now()) {
         i.replay.left--;
         i.replay.at = 0;
         restartFloor(i);
+      }
+    }
+    if (i.clear && !i.training && !(i.replay?.left > 0) &&
+        (!i.completed || i.results) && t >= (i.clearedAt || t) + CLEAR_LINGER) {
+      const members = i.members.map(live).filter(Boolean);
+      const leader = members.find((m) => parties.get(m.party)?.leader === m.id) || members[0];
+      if (leader && members.every((m) => m.hp > 0) && !i.advanceBlocked) {
+        try { nextStage(leader); }
+        catch { i.advanceBlocked = true; }
       }
     }
     i.events = i.events.filter((e) => t - e.at < 1.2);
@@ -2901,6 +2903,8 @@ export function snapshot(p) {
           stage: i.stage,
           clear: i.clear,
           completed: i.completed,
+          nextIn: i.clear && !i.training && !i.advanceBlocked && !(i.replay?.left > 0)
+            ? Math.max(0, Math.ceil((i.clearedAt || t) + CLEAR_LINGER - t)) : null,
           result: i.results?.[p.id] || null,
           replay: i.replay
             ? {

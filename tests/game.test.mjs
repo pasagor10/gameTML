@@ -1372,3 +1372,29 @@ test("auto climbs to every stage-two rune on every cave layout", async () => {
     world.players.delete(p.id);
   }
 });
+
+test("cleared floors advance after ten seconds and preserve AUTO, but stop on death", () => {
+  const p = create("continuous-auto");
+  world.beginDungeon(p, 1);
+  const i = world.instances.get(p.instance);
+  p.auto = true;
+  i.stage = 3;
+  i.clear = true;
+  i.completed = true;
+  i.results = {};
+  i.enemies = [];
+  i.clearedAt = i.stageAt + 3;
+  p.unlocked = 2;
+  world.tick(0.05, i.clearedAt + 9);
+  assert.equal(i.floor, 1);
+  world.tick(0.05, i.clearedAt + 10.1);
+  assert.equal(i.floor, 2);
+  assert.equal(p.auto, true);
+  i.clear = true;
+  i.enemies = [];
+  i.clearedAt = i.stageAt + 3;
+  p.hp = 0;
+  world.tick(0.05, i.clearedAt + 11);
+  assert.equal(i.stage, 1);
+  world.returnTown(p);
+});

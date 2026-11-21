@@ -1,3 +1,4 @@
+import { townWanderers, wandererPose } from "/shared/town-wanderers.js";
 import { preloadRiverside } from "/riverside-map.js";
 import { RIVER_DOCKS } from "/shared/riverside-layout.js";
 import { TOWNS, townOf, TRAVEL_GATE, MINE_INFO } from "/shared/towns.js";
@@ -1434,12 +1435,17 @@ function updateHUD() {
   const result = d?.completed ? d.result : null;
   $("#stage-clear").classList.toggle(
     "hidden",
-    !d?.clear || d?.training || p.hp <= 0 || p.auto || !!result,
+    !d?.clear || d?.training || p.hp <= 0 || !!result,
   );
   showFloorResult(result);
   showReplayStatus(d);
   $("#next-stage").textContent =
     d?.stage === 3 ? "รับชัยชนะ · กลับเมือง ➜" : "เข้าสู่ด่านต่อไป ➜";
+  if (d?.nextIn != null && p.hp > 0) {
+    const label = `ไป${d.stage === 3 ? "ชั้น" : "ด่าน"}ถัดไปใน ${d.nextIn} วิ ➜`;
+    setText($("#next-stage"), label);
+    if (result) setText($("#result-next"), result.hasNext ? label : `กลับเมืองใน ${d.nextIn} วิ`);
+  }
   $("#death").classList.toggle("hidden", p.hp > 0);
   // Stage clear and defeat stingers, once per change.
   const cleared = !!(d?.clear && !d.training);
@@ -1824,6 +1830,18 @@ function showFloorResult(r) {
     : "รับชัยชนะ · กลับเมือง";
   if (["SSS", "SS", "S"].includes(r.rank)) sfx("levelUp", null, 0);
 }
+let forgeDestination = null;
+async function prepareAfterDeath(panel) {
+  if (!await emit("dungeon:leave")) return;
+  if (panel === "inventory") showPanel("inventory");
+  else {
+    closeModal();
+    forgeDestination = WORLD.npcs.find((n) => n.id === "forge");
+    toast("กำลังวิ่งไปหาช่างตีบวก");
+  }
+}
+$("#death-equip").onclick = () => prepareAfterDeath("inventory");
+$("#death-forge").onclick = () => prepareAfterDeath("forge");
 $("#revive").onclick = () => emit("dungeon:leave");
 $("#town-return").onclick = () => {
   if (state?.area === "town") {
@@ -2612,6 +2630,16 @@ const typing = () =>
   ["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName);
 function sendInput(heartbeat = false) {
   if (!state || !socket?.connected) return;
+  if (forgeDestination && state.area === "town") {
+    const dx = forgeDestination.x - state.self.x;
+    if (Math.abs(dx) < 65) {
+      forgeDestination = null;
+      showPanel("forge");
+    } else if (!activePanel && !typing() && !touchDirection && !keys.size) {
+      socket.emit("player:input", { direction: Math.sign(dx), seq: ++seq, jump: false, running: true });
+      return;
+    } else forgeDestination = null;
+  }
   const direction =
       activePanel || typing()
         ? 0
@@ -3032,7 +3060,7 @@ class Adventure extends Phaser.Scene {
         wasGrounded: p.grounded,
         footstepAt: 0,
       };
-      if (p.id !== state.self.id) {
+      if (p.id !== state.self.id && !p.ambient) {
         image.setInteractive({ useHandCursor: true });
         image.on("pointerdown", (pointer) => {
           if (!isWorldPointer(pointer, this.game.canvas) || activePanel || state.area !== "town") return;
@@ -3095,7 +3123,13 @@ class Adventure extends Phaser.Scene {
       });
     }
     this.showDungeonSigns(area, s.dungeon?.signs || []);
-    const all = [s.self, ...s.players],
+    const townId = townOf(s.self).id;
+    if (this.wandererTown !== townId) {
+      this.wandererTown = townId;
+      this.wanderers = townWanderers(townId, WORLD.ground);
+    }
+    const ambient = s.area === "town" ? this.wanderers : [];
+    const all = [s.self, ...s.players, ...ambient],
       ids = new Set(all.map((p) => p.id));
     for (const p of all) this.actor(p, s.time, areaChanged);
     for (const [id, a] of this.actors)
@@ -3766,9 +3800,10 @@ class Adventure extends Phaser.Scene {
       state.self,
     );
     for (const [id, a] of this.actors) {
-      const p = a.target,
-        // Specialization costume when its art exists, else the class look.
-        skin = a.skins.find((key) => this.spriteSets.has(key)),
+      const p = a.target;
+      if (p.ambient) Object.assign(p, wandererPose(p, serverTime));
+      // Specialization costume when its art exists, else the class look.
+      const skin = a.skins.find((key) => this.spriteSets.has(key)),
         spriteSet = this.spriteSets.get(skin),
         pose = animateHero(a.image, p, serverTime, this.knightAtlas && !spriteSet);
       // Heroes with painted sets stay hidden until the set arrives, so the old
@@ -3783,7 +3818,7 @@ class Adventure extends Phaser.Scene {
         if (!a.image._spriteStill) a.image.setAngle(0);
         if (spriteSet.facing < 0) a.image.toggleFlipX();
       }
-      const point = sampleMotion(
+      const point = p.ambient ? p : sampleMotion(
         a.history,
         serverTime - (id === state.self.id ? 0.05 : 0.08),
       );
