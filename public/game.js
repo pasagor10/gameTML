@@ -1,3 +1,4 @@
+import { openPvpPanel, updatePvpUi, setPvpLoading } from "/pvp-ui.js";
 import { createWorldLabels } from "/world-labels.js";
 import { townWanderers, wandererPose } from "/shared/town-wanderers.js";
 import { preloadRiverside } from "/riverside-map.js";
@@ -151,7 +152,7 @@ const firstRunShown = new Set();
 let townSince = 0;
 // Floor data for the current dungeon; the night cave stands in for a floor.
 const floorInfo = (d) =>
-  d?.world
+  d?.pvp ? { name: `สนามประลอง PvP ${d.pvp.mode}`, boss: "ผู้กล้าฝ่ายตรงข้าม", color: 0x243c68, tint: 0xffffff, prefix: "คู่ต่อสู้" } : d?.world
     ? worldInfo(d.world)
     : d?.night
       ? nightInfo(d.night)
@@ -675,6 +676,7 @@ const TIPS = [
 const loader = { shownAt: 0, arrived: false, timers: [] };
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 function showLoading() {
+  setPvpLoading(state?.pvp?.match?.mode || null);
   const el = $("#area-loading");
   loader.timers.forEach(clearTimeout);
   loader.timers = [];
@@ -714,6 +716,11 @@ function loadingArrived(s) {
     set(".loading-kicker", "กลับสู่ความปลอดภัย");
     set(".loading-title", townOf(s.self).name);
     set(".loading-sub", "พักฟื้น ซื้อของ และเตรียมตัวลงถ้ำอีกครั้ง");
+  } else if (d?.pvp) {
+    setPvpLoading(d.pvp.mode);
+    set(".loading-kicker", "สนามประลองผู้กล้า");
+    set(".loading-title", `PvP ${d.pvp.mode}`);
+    set(".loading-sub", "ทีมที่ยืนหยัดถึงท้ายสุดเป็นผู้ชนะ");
   } else if (d?.training) {
     set(".loading-kicker", "ลานฝึกซ้อม");
     set(".loading-title", "สนามฝึก");
@@ -1274,7 +1281,7 @@ function updateHUD() {
     : d
       ? floorInfo(d).name
       : townOf(p).name);
-  setText($("#stage-label"), d?.training
+  setText($("#stage-label"), d?.pvp ? `PvP ${d.pvp.mode} · ไม่ใช้ยาและ AUTO` : d?.training
     ? "สนามฝึก · ไม่มีรางวัล · สไลม์เกิดใหม่อัตโนมัติ"
     : d?.mine
       ? `เหมือง · ด่าน ${d.stage} / 3`
@@ -1285,7 +1292,7 @@ function updateHUD() {
       : d
       ? `ชั้น ${d.floor} / ${FLOORS.length} · ด่าน ${d.stage} / 3 · ${d.stage === 3 ? "BOSS STAGE" : d.stage === 2 ? "ELITE STAGE" : "MONSTER STAGE"}`
       : "เมืองกลาง · CH.1 · เขตปลอดภัย");
-  setText($("#map-title"), d?.training
+  setText($("#map-title"), d?.pvp ? `สนาม PvP ${d.pvp.mode}` : d?.training
     ? "สนามฝึกผู้พิทักษ์"
     : d?.world
       ? "ลานบอสโลก"
@@ -1369,11 +1376,13 @@ function updateHUD() {
   // starts on AUTO; steering the joystick hands control back (see below).
   const area = !d ? "town" : d.training ? "training" : "dungeon";
   $("#game-screen").dataset.area = area;
+  $("#game-screen").dataset.pvp = String(!!d?.pvp);
+  updatePvpUi(state);
   if (area !== "town" && activePanel === "first-run") closeModal();
   $("#game-screen").classList.toggle("auto-on", !!p.auto);
   if (area === "dungeon" && d.instanceId !== autoInstance) {
     autoInstance = d.instanceId;
-    if (!p.auto && p.hp > 0 && !tutorialRoom(d)) emit("player:auto", { enabled: true });
+    if (!d.pvp && !p.auto && p.hp > 0 && !tutorialRoom(d)) emit("player:auto", { enabled: true });
   }
   if (area === "town") autoInstance = null;
   const newcomer = isNewcomer(p);
@@ -1387,8 +1396,8 @@ function updateHUD() {
     firstRunShown.add(p.id);
     showFirstRun();
   }
-  setText($("#floor-chip"), d?.mine ? `เหมือง ชั้น ${d.floor} · ${d.stage}/3` : d?.world ? "บอสโลก" : d?.night ? "ถ้ำลึกลับ" : d ? `ชั้น ${d.floor} · ${d.stage}/3${d.replay?.total > 1 ? ` · รอบ ${d.replay.run}/${d.replay.total}` : ""}` : "");
-  setText($("#quest-description"), d?.training
+  setText($("#floor-chip"), d?.pvp ? `PvP ${d.pvp.mode}` : d?.mine ? `เหมือง ชั้น ${d.floor} · ${d.stage}/3` : d?.world ? "บอสโลก" : d?.night ? "ถ้ำลึกลับ" : d ? `ชั้น ${d.floor} · ${d.stage}/3${d.replay?.total > 1 ? ` · รอบ ${d.replay.run}/${d.replay.total}` : ""}` : "");
+  setText($("#quest-description"), d?.pvp ? "ปราบผู้กล้าฝ่ายตรงข้ามให้ครบทีม · หมดเวลาตัดสินจาก HP รวม" : d?.training
     ? "ฝึกเดิน กระโดด ฟัน และ Q/W/E · หลบเมื่อสไลม์ขึ้นวงเตือน"
     : d
       ? d.clear
@@ -1406,7 +1415,7 @@ function updateHUD() {
       ? ` · ต่อเนื่อง ×${d.streak}`
       : "";
   $("#quest-counter").textContent =
-    d && !d.training
+    d?.pvp ? "A/D เดิน · SPACE กระโดด · J โจมตี · Q/W/E/R สกิล" : d && !d.training
       ? `กำจัด ${d.defeated} / ${d.totalEnemies}${streak} · SPACE หลบพื้นเตือน`
       : `ดันเจียนที่พิชิต ${p.quest} / ${FLOORS.length}`;
   const trackerHash = JSON.stringify(p.daily);
@@ -1451,7 +1460,7 @@ function updateHUD() {
     setText($("#next-stage"), label);
     if (result) setText($("#result-next"), result.hasNext ? label : `กลับเมืองใน ${d.nextIn} วิ`);
   }
-  $("#death").classList.toggle("hidden", p.hp > 0);
+  $("#death").classList.toggle("hidden", p.hp > 0 || !!d?.pvp);
   // Stage clear and defeat stingers, once per change.
   const cleared = !!(d?.clear && !d.training);
   if (cleared && !wasCleared) sfx("clear", null, 0);
@@ -1848,6 +1857,7 @@ async function prepareAfterDeath(panel) {
 $("#death-equip").onclick = () => prepareAfterDeath("inventory");
 $("#death-forge").onclick = () => prepareAfterDeath("forge");
 $("#revive").onclick = () => emit("dungeon:leave");
+$("#pvp-exit").onclick = () => emit("dungeon:leave");
 $("#town-return").onclick = () => {
   if (state?.area === "town") {
     emit("player:heal");
@@ -1991,6 +2001,7 @@ function bindMarket(panel) {
 function showPanel(panel) {
   if (!state) return;
   const p = state.self;
+  if (panel === "pvp") return openPvpPanel({ state, modal, emit, escape, close: closeModal });
   if (communityPanel(panel, { modal, escape, self: p, open: showPanel, worldBoss: state.worldBoss, join: joinWorldBoss })) return;
   const row = (icon, name, desc, button) =>
     `<div class="item-row"><span>${icon}</span><div><strong>${escape(name)}</strong><small>${escape(desc)}</small></div>${button || ""}</div>`;
@@ -3082,6 +3093,7 @@ class Adventure extends Phaser.Scene {
       this.actors.set(p.id, a);
     }
     a.target = p;
+    a.label.setColor(p.pvpTeam != null ? (p.pvpTeam ? "#ffb6ab" : "#99d9ff") : p.id === state.self.id ? "#fff0b5" : "#e4fff6");
     a.skins = skins;
     if (reset || !a.history) a.history = [];
     a.history.push({ time: stamp, x: p.x, y: p.y, vx: p.vx || 0 });
@@ -3100,6 +3112,7 @@ class Adventure extends Phaser.Scene {
           s.dungeon.stage;
     const areaChanged = area !== this.lastArea;
     if (areaChanged) {
+      if (s.dungeon?.pvp) closeModal();
       loadingArrived(s);
       const fromTown = this.lastArea?.startsWith("town:");
       this.lastArea = area;

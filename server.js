@@ -347,6 +347,7 @@ io.on("connection", (socket) => {
   // Round-trip probe for the on-screen FPS/ping readout.
   execute("net:ping", () => ({}), 5);
   execute("player:auto", (p, d) => {
+    if (world.instances.get(p.instance)?.pvp) throw Error("สนาม PvP ต้องควบคุมเอง ไม่ใช้ AUTO");
     if (p.area !== "dungeon") throw Error("Auto เปิดได้เฉพาะในดันเจียน");
     if (p.hp <= 0) throw Error("ใช้ AUTO ไม่ได้ขณะตัวละครล้ม");
     p.auto = !!d.enabled;
@@ -365,6 +366,8 @@ io.on("connection", (socket) => {
   execute("training:enter", (p) => world.beginTraining(p), 2);
   execute("dungeon:enter", (p, d) => world.beginDungeon(p, d.floor));
   execute("night:enter", (p) => world.beginNightCave(p), 2);
+  execute("pvp:join", (p, d) => world.joinPvp(p, d.mode), 2);
+  execute("pvp:cancel", (p) => world.cancelPvp(p), 2);
   execute("worldboss:join", (p) => world.joinWorldBoss(p), 2);
   execute("dungeon:next", (p) => world.nextStage(p));
   execute("dungeon:replay", (p, d) => world.replayFloor(p, d.runs ?? 1));

@@ -1,0 +1,18 @@
+.pvp-panel > p { line-height: 1.7; }
+.pvp-schedule,.pvp-last { color: #ffe6a1; font-weight: 700; }
+.pvp-choices { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
+.pvp-banner { overflow: hidden; border: 1px solid #b18a46; border-radius: 12px; background: #101b30; }
+.pvp-banner picture { display: block; }
+.pvp-banner img { display: block; width: 100%; height: auto; object-fit: contain; }
+.pvp-choice-actions { padding: 12px; display: grid; gap: 10px; }
+.pvp-choice-actions button { width: 100%; }
+#pvp-hud { position: absolute; z-index: 25; top: 105px; left: 50%; transform: translateX(-50%); width: min(430px,90vw); padding: 8px 12px; border: 1px solid #c99a4a88; background: #111724e8; color: #fff3d0; font: 13px/1.5 'Noto Sans Thai',sans-serif; border-radius: 10px; text-align: center; }
+#pvp-hud[hidden] { display: none; }
+#pvp-hud [data-pvp-roster] { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+#pvp-hud [data-pvp-roster] span { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 11px; }
+#pvp-hud .blue { color: #99d9ff; } #pvp-hud .red { color: #ffb6ab; }
+#pvp-hud button { font-size: 11px; padding: 4px 10px; margin-top: 4px; }
+#game-screen[data-pvp="true"] #auto-button { display: none !important; }
+#game-screen[data-pvp="true"] #dungeon-explore { display: none !important; }
+#modal[data-panel="poster"] .pvp-choices { padding: 12px; }
+@media (max-width:600px) { .pvp-choices { grid-template-columns: 1fr; } #pvp-hud { top: 100px; width: min(360px,88vw); } }

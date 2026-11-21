@@ -1,7 +1,8 @@
+import { pvpBanner } from "/pvp-ui.js";
 const labels = { level: "เลเวล", dungeon: "ชั้นที่พิชิต", gold: "ทอง" };
 const jobs = { swordsman: "นักดาบ", archer: "นักธนู", mage: "จอมเวท", priest: "พระ" };
 // Patch news: the Lv.60 update and the 20:00 grand boss, as two banners.
-export const NEWS_ID = "patch-celestial-relics-1";
+export const NEWS_ID = "patch-pvp-20261121";
 const hms = (s) => {
   s = Math.max(0, Math.round(s));
   const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
@@ -13,6 +14,7 @@ function newsPanel({ modal, worldBoss, join }) {
     target = Date.now() + (worldBoss?.grandIn || 0) * 1000,
     when = () => (live ? "🔥 สนามเปิดอยู่ตอนนี้! เข้าร่วมก่อนบอสหนี" : `เริ่มในอีก ${hms((target - Date.now()) / 1000)}`);
   modal("ข่าวอัปเดต · TML ONLINE", `<div class="news">
+<article class="news-banner patch"><h3>เปิดสนามประลอง PvP 1v1 และ 3v3</h3><p>รอบละ 30 นาที · รับสมัคร :20 และ :50 เป็นเวลา 5 นาที · ต่อสู้ไม่เกิน 3 นาที จบก่อนบอสโลก · เข้าร่วมได้จากเมนู PvP</p></article>
 <article class="news-banner patch">
   <span class="nb-tag">CELESTIAL RELICS</span>
   <img src="/assets/items/divine/armor.webp" alt="เกราะเทพพิทักษ์ดารา" width="96" height="96">
@@ -59,8 +61,8 @@ export function communityPanel(panel, { modal, escape, self, open, worldBoss, jo
     return true;
   }
   if (panel === "poster") {
-    modal("TML ONLINE · รวมพลผู้กล้า", `<div class="game-poster"><img src="/assets/poster-tml.webp?v=1" alt="โปสเตอร์ TML ONLINE นักธนูใต้แสงจันทร์"><button class="primary-button" id="poster-ranking">🏆 ดูอันดับผู้กล้า</button></div>`, "poster");
-    document.querySelector("#poster-ranking").onclick = () => open("ranking");
+    modal("TML ONLINE · สนามประลองผู้กล้า", `<div class="pvp-choices">${['1v1','3v3'].map(mode => pvpBanner(mode, `<div class="pvp-choice-actions"><button class="primary-button" data-poster-pvp="${mode}">เข้าสนาม PvP ${mode}</button></div>`)).join('')}</div><p class="hint">เปิดทุก 30 นาที · :20 และ :50 · จบก่อนบอสโลก</p>`, "poster");
+    document.querySelectorAll('[data-poster-pvp]').forEach(b => b.onclick = () => open("pvp"));
     return true;
   }
   if (panel !== "ranking") return false;

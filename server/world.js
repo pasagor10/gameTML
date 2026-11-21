@@ -1,3 +1,4 @@
+import { createPvpSystem } from "./pvp.js";
 import { RIVER_DOCKS } from "../shared/riverside-layout.js";
 import { TOWNS, townOf, TRAVEL_GATE } from "../shared/towns.js";
 import { BOSSES } from "../shared/bosses.js";
@@ -140,6 +141,16 @@ export const players = new Map(),
   parties = new Map(),
   trades = new Map();
 const now = () => Date.now() / 1000;
+export const pvp = createPvpSystem({ players, instances, enter: enterInstance, returnTown, maxHp,
+  eligible(p) {
+    ensureTown(p);
+    if ([...trades.values()].some(tr => tr.members.includes(p.id))) throw Error("จบการแลกเปลี่ยนก่อนเข้าคิว PvP");
+  },
+  notify(p, message) { p.socket?.emit?.("toast", { message }); },
+});
+export const joinPvp = (p, mode) => pvp.join(p, mode, now());
+export const cancelPvp = (p) => pvp.cancel(p);
+
 // Snapshots go out 20×/s per player; shops change only via the shop actions below.
 let shopCache = null;
 export function shopList() {
@@ -1010,6 +1021,7 @@ function autoCollect(p, i, t, platforms) {
 // `type` is a potion id. With `auto` (R / G keys, auto-play) it names a kind
 // ("hp" / "mp") and the best-fitting size the hero owns is drunk.
 export function potion(p, type = "hp", t = now(), auto = false) {
+  if (instances.get(p.instance)?.pvp) throw Error("สนาม PvP ไม่อนุญาตให้ใช้ยา");
   if (!Object.hasOwn(POTIONS, type) || p.hp <= 0) throw Error("ยังใช้ยาไม่ได้");
   const kind = POTIONS[type].kind;
   p.potionCd ??= {};
@@ -1415,6 +1427,7 @@ function releaseReserve(i, t) {
 export const CLEAR_LINGER = 10;
 export function nextStage(p) {
   const i = instances.get(p.instance);
+  if (i?.pvp) throw Error("สนาม PvP ไม่มีด่านถัดไป");
   if (!i || !i.clear) throw Error("กำจัดมอนสเตอร์ให้หมดก่อน");
   if (i.training) {
     spawnTraining(i);
@@ -1456,7 +1469,7 @@ function resetFloor(i) {
 }
 // Floor 1 of the main cave, for a hero who has never cleared it.
 const firstFloorRun = (i, m) =>
-  i && m && i.floor === 1 && !i.training && !i.night && !i.world && !i.mine && !(m.quest >= 1);
+  i && m && i.floor === 1 && !i.pvp && !i.training && !i.night && !i.world && !i.mine && !(m.quest >= 1);
 function enterStage(i) {
   i.stage++;
   spawnStage(i);
@@ -1513,6 +1526,7 @@ function restartFloor(i) {
   return run;
 }
 export function returnTown(p) {
+  pvp.leave(p, now());
   if (p.instance) {
     const i = instances.get(p.instance);
     if (i) {
@@ -1606,6 +1620,7 @@ export function attack(p, skill = 0, t = now()) {
     cooldown = spec.cooldown / tempo;
   if (
     !i ||
+    !pvp.canFight(p, t) ||
     i.clear ||
     t - (p.cooldowns[skill] || 0) < cooldown ||
     p.mp < spec.mp
@@ -1647,7 +1662,7 @@ function resolveAttack(p, t) {
   const i = instances.get(p.instance),
     c = CLASSES[p.class],
     skill = a.skill;
-  if (!i || i.clear || p.hp <= 0 || controlled(p, t)) return;
+  if (!i || i.clear || !pvp.canFight(p, t) || p.hp <= 0 || controlled(p, t)) return;
   // Archer AGI: a basic shot may loose a second arrow (double strafe).
   const twin = combatStats(p).double,
     double = !skill && twin > 0 && Math.random() < twin;
@@ -1695,6 +1710,21 @@ function resolveAttack(p, t) {
   const stats = combatStats(p),
     critChance = stats.crit + (buffActive(p, "focus", t) ? BUFFS.focus.crit : 0),
     rage = buffActive(p, "rage", t) ? 1 + BUFFS.rage.damage : 1;
+  if (i.pvp) {
+    let hits = 0;
+    for (const id of i.members) {
+      const target = live(id);
+      if (!target || target.hp <= 0 || target.instance !== i.id || pvp.team(target,i) === pvp.team(p,i)) continue;
+      if (skill !== 5 && (Math.abs(target.x - p.x) > range || Math.abs(target.y - p.y) > 130 || ((target.x - p.x) * a.direction < -35 && skill !== 3))) continue;
+      if ((p.class === "archer" || p.class === "priest") && skill < 2 && hits) continue;
+      const amount = Math.max(1, Math.min(maxHp(target) * .2, damage(stats.atk, combatStats(target).def, kit.power) * kit.hits * .55 * rage));
+      const status = kit.status ? { ...kit.status, duration: Math.min(1.2, kit.status.duration || 1) } : null;
+      dealDungeonDamage(i, target, Math.ceil(amount * (100 + combatStats(target).def) / 100), p.id, a.direction, t, status);
+      hits++;
+    }
+    if (kit.heal) healParty(i, Math.min(.2, kit.heal * (1 + stats.heal)), t, p);
+    return;
+  }
   let hits = 0,
     anyCrit = false;
   for (const e of i.enemies) {
@@ -1777,6 +1807,7 @@ function resolveAttack(p, t) {
 }
 // Shared bosses can contain strangers; buffs and healing stay within the party.
 function partyTargets(p, i) {
+  if (i.pvp) return pvp.allies(p, i);
   const ids = p.party ? parties.get(p.party)?.members || [p.id] : [p.id];
   return [...new Set([p.id, ...ids])].map(live)
     .filter(m => m && m.hp > 0 && m.instance === i.id && i.members.includes(m.id));
@@ -1899,6 +1930,7 @@ function enemyDown(i, e, t) {
 }
 // The last monster fell: clear the stage, and finish the run after a boss.
 function checkClear(i, t, p) {
+  if (i.pvp) return;
   if (i.world && !i.enemies.some((e) => e.boss && e.hp > 0)) {
     i.bossMaxHp ??= i.enemies.find((e) => e.boss)?.maxHp;
     i.enemies = [];
@@ -2484,7 +2516,7 @@ function updateBossMechanics(i, t) {
 }
 function updateCrystalHazards(i, t) {
   // Boss fights use the boss mechanics instead of crystal eruptions.
-  if (i.training || i.clear || bossFight(i) || (i.floor === 1 && ease(i) < 1)) {
+  if (i.pvp || i.training || i.clear || bossFight(i) || (i.floor === 1 && ease(i) < 1)) {
     i.hazards = [];
     return;
   }
@@ -2528,6 +2560,7 @@ function updateCrystalHazards(i, t) {
   }
 }
 export function tick(dt, t = now()) {
+  pvp.update(t);
   for (const p of players.values()) {
     if (p.hp <= 0) {
       p.input = 0;
@@ -2549,6 +2582,10 @@ export function tick(dt, t = now()) {
       }
     }
     if (controlled(p, t)) { p.input = 0; p.pending = null; p.action = null; }
+    if (i?.pvp) {
+      p.auto = false;
+      if (!pvp.canFight(p, t)) { p.input = 0; p.pending = null; p.action = null; }
+    }
     if (p.auto && i) {
       // Supplies work while repositioning, during stage intros and between waves.
       // Heal before choosing an attack so low resources never starve the brain.
@@ -2606,7 +2643,7 @@ export function tick(dt, t = now()) {
         restartFloor(i);
       }
     }
-    if (i.clear && !i.training && !(i.replay?.left > 0) &&
+    if (i.clear && !i.pvp && !i.training && !(i.replay?.left > 0) &&
         (!i.completed || i.results) && t >= (i.clearedAt || t) + CLEAR_LINGER) {
       const members = i.members.map(live).filter(Boolean);
       const leader = members.find((m) => parties.get(m.party)?.leader === m.id) || members[0];
@@ -2829,6 +2866,7 @@ export function snapshot(p) {
     id: m.id,
     name: m.name,
     townId: townOf(m).id,
+    pvpTeam: m.pvpTeam ?? null,
     class: m.class,
     gender: m.gender,
     specialization: m.specialization || null,
@@ -2900,6 +2938,7 @@ export function snapshot(p) {
       ? {
           floor: i.floor,
           mine: !!i.mine,
+          pvp: i.pvp ? { mode: i.pvp.mode } : null,
           stage: i.stage,
           clear: i.clear,
           completed: i.completed,
@@ -2936,6 +2975,7 @@ export function snapshot(p) {
       : null,
     sky: skyNow(),
     worldBoss: worldBossView(p),
+    pvp: pvp.view(p, t),
     nightCleared: p.nightClear,
     shops: shopList(),
     party: party
