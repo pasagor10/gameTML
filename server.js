@@ -206,7 +206,8 @@ app.post("/api/characters", (req, res) => {
         class: job,
         gender,
         gold: 120,
-        inventory: { hp: 5, mp: 3, ore: 3 },
+        // 20 small HP potions so a new player can learn without dying.
+        inventory: { hp_s: 20, hp: 5, mp: 3, ore: 3 },
         upgrade: 0,
         weapon: false,
         armor: false,

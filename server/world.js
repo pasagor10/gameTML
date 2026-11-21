@@ -437,6 +437,10 @@ function nightRewards(i, m, t) {
 // pays this much more so a run still earns about the same.
 const MONSTER_HP = 2.5,
   KILL_PAY = 1.8;
+// The first floors are gentler (monster HP and hits), ramping to full by
+// floor 3. Night, world and mine runs are unchanged.
+const EASE = { 1: 0.6, 2: 0.8 };
+const ease = (i) => (i.night || i.world || i.mine || i.training ? 1 : EASE[i.floor] || 1);
 // Daily quests use the real calendar even when combat runs on a test clock.
 const wallClock = () => Date.now() / 1000;
 
@@ -1299,7 +1303,7 @@ function spawnStage(i) {
               (i.night ? NIGHT_BOSS.hp : 1),
           )
         : (55 + pf * 24 + i.stage * 14) * MONSTER_HP,
-      max = Math.round(base * (elite ? 2.2 : 1) * (mods.hp || 1)),
+      max = Math.round(base * (elite ? 2.2 : 1) * (mods.hp || 1) * ease(i)),
       spot = dungeonSpawn(i.floor, i.stage, slot, boss, count);
     i.enemies.push({
       id: randomUUID(),
@@ -2468,8 +2472,9 @@ function updateBossMechanics(i, t) {
   if (!i.mechAt) i.mechAt = t + 5;
   if (i.mech && t >= i.mech.endsAt) i.mech = null;
   if (!i.mech && t >= i.mechAt) {
-    const list = mechanicsOf(i),
-      kind = list[(i.mechCount || 0) % list.length];
+    const list = mechanicsOf(i);
+    if (!list.length) return; // floor 1: the boss has no arena mechanic
+    const kind = list[(i.mechCount || 0) % list.length];
     i.mechCount = (i.mechCount || 0) + 1;
     i.mech = startMechanic(kind, i, heroes, floor, t);
     i.mechAt = i.mech.endsAt + mechanicGap(floor, boss.hp <= boss.maxHp * 0.5);
@@ -2478,7 +2483,7 @@ function updateBossMechanics(i, t) {
 }
 function updateCrystalHazards(i, t) {
   // Boss fights use the boss mechanics instead of crystal eruptions.
-  if (i.training || i.clear || bossFight(i)) {
+  if (i.training || i.clear || bossFight(i) || (i.floor === 1 && ease(i) < 1)) {
     i.hazards = [];
     return;
   }
@@ -2694,10 +2699,10 @@ export function tick(dt, t = now()) {
                 dealDungeonDamage(
                   i,
                   target,
-                  Math.max(
+                  Math.round(ease(i) * Math.max(
                     Math.round((30 + i.floor * 6) * (e.power || 1)),
                     e.boss ? pctBase(target, BOSS_SLAM_PCT * (i.world ? WORLD_HIT_SCALE : 1)) : 0,
-                  ),
+                  )),
                   e.id,
                   a.direction,
                   t,
@@ -2725,15 +2730,16 @@ export function tick(dt, t = now()) {
               i.training
                 ? 18
                 : e.boss
-                  ? Math.max(
+                  ? Math.round(ease(i) * Math.max(
                       Math.round((28 + powerFloor(i.floor) * 6) * (e.power || 1)),
                       pctBase(p, BOSS_HIT_PCT * (i.world ? WORLD_HIT_SCALE : 1)),
-                    )
+                    ))
                   : Math.round(
                       (15 + powerFloor(i.floor) * 4) *
                         (e.elite ? 1.5 : 1) *
                         (mods.damage || 1) *
-                        (frenzied ? 1.3 : 1),
+                        (frenzied ? 1.3 : 1) *
+                        ease(i),
                     ),
               e.id,
               a.direction,

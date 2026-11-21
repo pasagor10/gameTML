@@ -34,8 +34,12 @@ const COMBOS = [
   ["rocks", "flood", "spikes"],
   ["rocks", "flood", "spikes", "lightning"],
 ];
+// The first floors add one mechanic at a time, ground ones first: nothing on
+// floor 1, then spikes, lightning, falling rocks, and the flood from floor 5.
+const EARLY = [[], ["spikes"], ["lightning"], ["rocks"], ["flood"]];
 export function bossMechanics(floor = 1) {
   const f = Math.max(1, Math.floor(floor) || 1);
+  if (f <= EARLY.length) return EARLY[f - 1];
   return f <= COMBOS.length ? COMBOS[f - 1] : COMBOS[4 + ((f - 16) % (COMBOS.length - 4))];
 }
 // The world boss is tanky rather than brutal: only the dodgeable ones, softer.

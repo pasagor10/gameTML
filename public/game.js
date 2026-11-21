@@ -67,7 +67,7 @@ import {
   trackerHtml,
   claimable,
 } from "/quest-ui.js?v=4";
-import { dungeonPanelHtml } from "/dungeon-ui.js?v=44";
+import { dungeonPanelHtml } from "/dungeon-ui.js?v=45";
 import { createNightSky } from "/night-sky.js?v=3";
 import {
   nightInfo,
