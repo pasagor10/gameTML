@@ -110,7 +110,7 @@ import { createParallax } from "/parallax.js?v=0.12.1";
 import { PRESETS, CHOICES, autoLevel, createAutoTuner } from "/graphics-quality.js";
 import { createPerfOverlay, logEvent, readLog, textureStats } from "/perf-overlay.js";
 import { updateHudFx, enterHud } from "/hud-fx.js?v=0.6.7";
-import { createCombatFx } from "/combat-fx.js?v=0.15.1";
+import { createCombatFx } from "/combat-fx.js?v=0.15.2";
 import { activeEffects, effectTint, effectRow, hudEffects } from "/status-ui.js?v=1";
 import { STATUSES, BUFFS } from "/shared/skills.js";
 import { worldInfo } from "/shared/world-boss.js";
@@ -1067,7 +1067,9 @@ async function enterGame() {
         seen = localStorage.getItem("tml-news") === NEWS_ID;
         localStorage.setItem("tml-news", NEWS_ID);
       } catch {}
-      showPanel(seen ? "poster" : "news");
+      // A new player gets one clear goal (the first floor), not patch news.
+      if (isNewcomer(state.self)) showFirstRun();
+      else showPanel(seen ? "poster" : "news");
     }
     if (scene?.ready) scene.applySnapshot(packet);
   });
@@ -1566,10 +1568,10 @@ function openTown(id) {
 const NPC_TALK = {
   elder: {
     title: "ผู้ใหญ่บ้าน",
-    line: (p) => p.hp < p.maxHp * 0.5
-      ? "สภาพแบบนี้ยังจะลงถ้ำอีกรึ ผู้กล้า ไปหามีราเติมยาก่อนเถอะ แล้วค่อยมารับภารกิจ"
+    line: (p) => p.hp < p.maxHp * 0.5 || p.mp < p.maxMp * 0.5
+      ? "สภาพแบบนี้ยังจะลงถ้ำอีกรึ ผู้กล้า นั่งพักฟื้นตรงนี้ก่อนเถอะ แล้วค่อยมารับภารกิจ"
       : "มาแล้วรึ ผู้กล้า หมู่บ้านเรายังมีงานรอให้เจ้าช่วยอีกมาก ดูภารกิจก่อนไหม",
-    choices: [["ภารกิจผู้กล้า", "quest"]],
+    choices: [["ภารกิจผู้กล้า", "quest"], ["พักฟื้น HP / MP", elderHeal]],
     chat: [
       "ถ้ำหลวงลึกกว่าที่ใครคิด ยิ่งลงลึก ของที่ได้ก็ยิ่งดี แต่ก็ยิ่งอันตราย",
       "สมัยข้ายังหนุ่ม แร่จันทราหาง่ายกว่านี้เยอะ เดี๋ยวนี้ต้องลงไปถึงชั้นล่าง ๆ",
@@ -1626,6 +1628,21 @@ const NPC_TALK = {
     ],
   },
 };
+// The elder's rest: free, in town only. Coming back to town already refills
+// HP / MP, so say so plainly when there is nothing to restore.
+async function elderHeal(talk) {
+  const p = state?.self;
+  if (!p) return;
+  if (p.hp >= p.maxHp && p.mp >= p.maxMp) {
+    if (talk) talk.say("ร่างกายเจ้ายังแข็งแรงดี HP กับ MP เต็มอยู่แล้ว ไม่ต้องพักหรอก");
+    else toast("HP / MP เต็มอยู่แล้ว");
+    return;
+  }
+  const r = await emit("player:heal");
+  if (!r) return;
+  sfx("potion");
+  talk?.say("นั่งพักใต้ต้นไม้ใหญ่สักครู่… เอาล่ะ หายเหนื่อยแล้ว HP กับ MP เต็มเหมือนเดิม");
+}
 let npcChatTurn = 0;
 function talkTo(id) {
   const npc = WORLD.npcs.find((n) => n.id === id),
@@ -1646,7 +1663,10 @@ function talkTo(id) {
     showPanel(panel);
   };
   const choices = [
-    ...script.choices.map(([label, panel]) => ({ label, run: open(panel) })),
+    ...script.choices.map(([label, panel]) => ({
+      label,
+      run: typeof panel === "function" ? panel : open(panel),
+    })),
     {
       label: "คุยเล่น",
       run: (talk) => talk.say(script.chat[npcChatTurn++ % script.chat.length]),
@@ -1669,7 +1689,10 @@ function action(name) {
     emit("player:attack", { skill: Number(name.slice(-1)) });
   else if (name === "hp" || name === "mp")
     emit("player:potion", { type: name, auto: true }).then((r) => r && sfx("potion"));
-  else if (name === "auto") emit("player:auto", { enabled: !state.self.auto });
+  else if (name === "auto") {
+    if (state.self.hp <= 0) return toast("ใช้ AUTO ไม่ได้ขณะตัวละครล้ม", true);
+    emit("player:auto", { enabled: !state.self.auto });
+  }
 }
 $$("[data-action]").forEach(
   (b) => (b.onclick = () => action(b.dataset.action)),
@@ -2134,7 +2157,7 @@ function showPanel(panel) {
           else b.disabled = false;
         }),
     );
-    if ($("#elder-heal")) $("#elder-heal").onclick = () => emit("player:heal");
+    if ($("#elder-heal")) $("#elder-heal").onclick = () => elderHeal();
   } else if (panel === "nightcave") {
     const sky = state.sky;
     if (!sky?.night) {
@@ -2617,8 +2640,12 @@ class Adventure extends Phaser.Scene {
   preload() {
     // Fewer concurrent decodes on Low keeps memory spikes down while loading.
     this.load.maxParallelDownloads = preset().renderScale < 1 ? 3 : 6;
+    // Files queued mid-load (sprite atlases after their JSON) pull Phaser's
+    // fraction back; the number shown only ever goes up.
+    let shown = 0;
     this.load.on("progress", (value) => {
-      $("#connection-state").textContent = `กำลังโหลดทรัพยากร ${Math.round(value * 100)}%`;
+      shown = Math.max(shown, Math.min(99, Math.round(value * 100)));
+      $("#connection-state").textContent = `กำลังโหลดทรัพยากร ${shown}%`;
     });
     queueSpriteSets(this);
     preloadRiverside(this);

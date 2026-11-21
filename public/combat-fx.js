@@ -1022,10 +1022,15 @@ export function createCombatFx(scene) {
     const now = scene.time.now,
       hurt = amount < 0,
       tick = !!opts.tick,
-      lines = opts.lines?.length ? opts.lines : [{ amount: Math.abs(amount), crit }];
+      raw = opts.lines?.length ? opts.lines : [{ amount: Math.abs(amount), crit }],
+      // Many hits at once (multi-hit skills): one total, not a tall column
+      // that covers the hero and the ground.
+      lines = raw.length > 3
+        ? [{ amount: raw.reduce((s, l) => s + Math.abs(l.amount), 0), crit: raw.some((l) => l.crit), hits: raw.length }]
+        : raw;
     // Start above a stack that is still on screen for this target.
     const prev = stacks.get(targetId),
-      step = tick ? 0 : 56,
+      step = tick ? 0 : 42,
       ceiling = scene.cameras.main.worldView.y + 80,
       base = Math.max(ceiling + (lines.length - 1) * step,
         prev && now < prev.until ? prev.top - 10 : y),
@@ -1049,12 +1054,12 @@ export function createCombatFx(scene) {
             : line.crit
               ? "crit"
               : "hit",
-        size = tick ? 24 : line.crit ? 66 : hurt ? 34 : 54,
+        size = tick ? 22 : line.crit ? 48 : hurt ? 30 : 40,
         lx = x + jitter + (tick ? 38 : 0) + (line.crit ? 6 : 0),
         ly = base - n * step;
       if (line.crit) crits++;
       scene.time.delayedCall(n * 80, () => {
-        const text = String(Math.abs(line.amount)),
+        const text = String(Math.abs(line.amount)) + (line.hits ? ` ×${line.hits}` : ""),
           main = digits(lx, ly, text, style, size, line.crit),
           outline = !hurt && !tick ? pooledText(lx, ly, text, {
             fontFamily: "Arial Black, Tahoma, sans-serif", fontStyle: "bold",
@@ -1064,7 +1069,7 @@ export function createCombatFx(scene) {
           parts = outline ? [outline, main] : [main];
         if (line.crit) {
           // Burst behind, a white flash copy on top, a star badge, and a kick.
-          const burst = sprite("cfx-glow", lx, ly, 0xffc66a, 41).setDisplaySize(main.width * 1.6, 90);
+          const burst = sprite("cfx-glow", lx, ly, 0xffc66a, 41).setDisplaySize(main.width * 1.5, 70);
           const flash = pooledText(lx, ly, text, {
               fontFamily: "Arial Black, Tahoma, sans-serif",
               fontStyle: "bold",
@@ -1083,10 +1088,10 @@ export function createCombatFx(scene) {
             duration: 360,
             onComplete: () => burst.destroy(),
           });
-          const badge = sprite("cfx-glow", lx - main.width / 2 - 14, ly, 0x78e5dc, 43).setDisplaySize(44, 44);
+          const badge = sprite("cfx-glow", lx - main.width / 2 - 14, ly, 0x78e5dc, 43).setDisplaySize(34, 34);
           const star = pooledText(badge.x, ly, "❖", {
               fontFamily: "Noto Sans Thai",
-              fontSize: "32px",
+              fontSize: "24px",
               color: "#c6fff3",
               stroke: "#123c48",
               strokeThickness: 2,

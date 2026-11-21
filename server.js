@@ -332,7 +332,8 @@ io.on("connection", (socket) => {
       p.input = d.direction;
       p.running = d.running === true;
       p.jump = !!d.jump;
-      if (d.direction || d.jump) p.auto = false;
+      // Walking takes over from AUTO; a jump (to dodge) leaves it running.
+      if (d.direction) p.auto = false;
     },
     // A shaky connection delivers queued inputs in bursts; a tight cap
     // dropped the newest one (the press the player just made).
@@ -342,8 +343,8 @@ io.on("connection", (socket) => {
   // Round-trip probe for the on-screen FPS/ping readout.
   execute("net:ping", () => ({}), 5);
   execute("player:auto", (p, d) => {
-    if (p.area !== "dungeon" || p.hp <= 0)
-      throw Error("Auto เปิดได้เฉพาะในดันเจียน");
+    if (p.area !== "dungeon") throw Error("Auto เปิดได้เฉพาะในดันเจียน");
+    if (p.hp <= 0) throw Error("ใช้ AUTO ไม่ได้ขณะตัวละครล้ม");
     p.auto = !!d.enabled;
   });
   execute("player:autoCfg", (p, d) => world.setAutoConfig(p, d), 5);
