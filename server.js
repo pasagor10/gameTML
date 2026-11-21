@@ -7,7 +7,7 @@ import { randomUUID, randomBytes, createHash } from "node:crypto";
 import argon2 from "argon2";
 import path from "node:path";
 import { mkdirSync, readdirSync, unlinkSync } from "node:fs";
-import { db, loadCharacter, persist } from "./server/database.js";
+import { db, loadCharacter, persist, markGiftsReceived } from "./server/database.js";
 import { CLASSES, maxHp, maxMp } from "./shared/config.js";
 import * as world from "./server/world.js";
 import { releaseStamp } from "./server/release-stamp.js";
@@ -222,6 +222,7 @@ app.post("/api/characters", (req, res) => {
       name,
       JSON.stringify(state),
     );
+    markGiftsReceived(id); // the starter kit already has the gifted potions
     track(req.headers, "character", user.id);
     res.json({ id, ...state, name });
   } catch (e) {

@@ -43,6 +43,37 @@ db.transaction(() => {
     db.prepare("UPDATE shops SET qty=0 WHERE id=?").run(s.id);
   }
 })();
+// One-time gifts to every hero that exists when the server starts (before any
+// player is loaded, so no live state overwrites it). gifts_applied records
+// who got which, so each hero gets each gift once; heroes created later are
+// marked at creation (markGiftsReceived) since the starter kit includes it.
+export const GIFTS = [{ id: "hp_s-20-2026-11-21", items: { hp_s: 20 } }];
+db.exec("CREATE TABLE IF NOT EXISTS gifts_applied(gift TEXT NOT NULL,character TEXT NOT NULL,created INTEGER,PRIMARY KEY(gift,character))");
+db.transaction(() => {
+  for (const gift of GIFTS) {
+    const rows = db
+      .prepare("SELECT id,state FROM characters WHERE id NOT IN (SELECT character FROM gifts_applied WHERE gift=?)")
+      .all(gift.id);
+    for (const row of rows) {
+      const state = JSON.parse(row.state);
+      // Made from the new starter kit just before this ran: already has it.
+      const fresh = state.level === 1 && !state.exp &&
+        Object.entries(gift.items).every(([item, n]) => state.inventory?.[item] === n);
+      if (!fresh) {
+        state.inventory = { ...(state.inventory || {}) };
+        for (const [item, n] of Object.entries(gift.items))
+          state.inventory[item] = (state.inventory[item] || 0) + n;
+        db.prepare("UPDATE characters SET state=? WHERE id=?").run(JSON.stringify(state), row.id);
+      }
+      db.prepare("INSERT INTO gifts_applied VALUES(?,?,?)").run(gift.id, row.id, Date.now());
+    }
+    if (rows.length) console.log(`gift ${gift.id}: ${rows.length} heroes`);
+  }
+})();
+export function markGiftsReceived(characterId) {
+  for (const gift of GIFTS)
+    db.prepare("INSERT OR IGNORE INTO gifts_applied VALUES(?,?,?)").run(gift.id, characterId, Date.now());
+}
 export function loadCharacter(id) {
   const row = db.prepare("SELECT * FROM characters WHERE id=?").get(id);
   return row
