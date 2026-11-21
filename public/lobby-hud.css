@@ -474,3 +474,121 @@ html body #landing.hero-lobby .hl-quick[hidden] { display: none !important; }
   html body #landing.hero-lobby .hl-slot-text small { font-size: 10.5px !important; margin-top: 0 !important; }
   html body #landing.hero-lobby .hl-slot-new > b { font-size: 20px !important; line-height: 1 !important; }
 }
+
+/* ---------- Computers and tablets: the same dark-wood cards as phones ----------
+   Same palette and shapes; only the layout differs (class list left,
+   info right, name and buttons centre, saved heroes along the bottom). */
+@media (min-width: 701px) {
+  html body #landing.hero-lobby {
+    --card-bg: linear-gradient(180deg, #2b1b11f2, #1a100af5);
+    --card-line: #c99a4a;
+    --tile: #120b07;
+    --tile-line: #5e4126;
+    --gold-a: #ffe08a; --gold-b: #f0ac3c; --gold-c: #b8701a;
+  }
+  /* Cards */
+  html body #landing.hero-lobby .hl-class-col,
+  html body #landing.hero-lobby #hero-stats,
+  html body #landing.hero-lobby .hl-entry {
+    background: var(--card-bg) !important; border: 1.5px solid var(--card-line) !important; border-image: none !important;
+    border-radius: 16px !important; box-shadow: 0 10px 26px #000a, inset 0 1px 0 #ffffff12 !important; filter: none !important;
+  }
+  html body #landing.hero-lobby .hl-class-col { padding: 12px !important; gap: 8px !important; }
+  html body #landing.hero-lobby .hl-class-col::before,
+  html body #landing.hero-lobby .hl-class-col::after { display: none !important; }
+  /* Gender pill */
+  html body #landing.hero-lobby .hl-class-col .hl-gender { margin: 0 0 2px !important; padding: 3px !important; gap: 2px !important; background: var(--tile) !important; border: 1px solid var(--tile-line) !important; }
+  html body #landing.hero-lobby .hl-gender button { background: transparent !important; color: #cdb48c !important; border: 0 !important; box-shadow: none !important; font-weight: 700 !important; }
+  html body #landing.hero-lobby .hl-gender button.active { background: linear-gradient(180deg, var(--gold-a), var(--gold-b)) !important; color: #3a1d05 !important; }
+  /* Class rows and saved-hero tiles */
+  html body #landing.hero-lobby .hl-class,
+  html body #landing.hero-lobby .hl-slot {
+    background: var(--tile) !important; border: 1.5px solid var(--tile-line) !important; border-radius: 12px !important;
+    box-shadow: inset 0 1px 0 #ffffff0d !important; transform: none !important;
+  }
+  html body #landing.hero-lobby .hl-class { min-height: 56px !important; }
+  html body #landing.hero-lobby .hl-class .hl-class-icon {
+    width: 40px !important; height: 40px !important; border-radius: 50% !important;
+    background: #1f150d !important; border: 1px solid #7a5a32 !important;
+  }
+  html body #landing.hero-lobby .hl-class .hl-class-icon svg { width: 26px; height: 26px; }
+  html body #landing.hero-lobby .hl-class strong { font-size: 17px !important; color: #ecdcbc !important; text-shadow: none !important; }
+  html body #landing.hero-lobby .hl-class small { color: #a8906a !important; font-size: 11px !important; }
+  html body #landing.hero-lobby .hl-class.active,
+  html body #landing.hero-lobby .hl-slot.active {
+    background: linear-gradient(180deg, #6a4116, #33200d) !important; border-color: var(--gold-a) !important;
+    box-shadow: 0 0 0 1px #ffd46b40, 0 0 12px #ffc04a44, inset 0 1px 0 #fff3 !important;
+  }
+  html body #landing.hero-lobby .hl-class.active .hl-class-icon { border-color: var(--gold-a) !important; background: #3a2410 !important; }
+  html body #landing.hero-lobby .hl-class.active strong { color: #ffe9a8 !important; }
+  html body #landing.hero-lobby .hl-class.active small { color: #e9c98a !important; }
+  html body #landing.hero-lobby .hl-slot-new { border-style: dashed !important; border-color: #8a7a5a !important; }
+  html body #landing.hero-lobby .hl-slot-text strong { font-size: 16px !important; color: #ecdcbc !important; }
+  html body #landing.hero-lobby .hl-slot.active .hl-slot-text strong { color: #ffe9a8 !important; }
+  html body #landing.hero-lobby .hl-slot-text small { font-size: 12px !important; color: #a8906a !important; }
+  html body #landing.hero-lobby .hl-slot-face { width: 52px !important; height: 52px !important; }
+  html body #landing.hero-lobby .hl-slot { min-height: 62px !important; }
+  /* Saved-hero strip along the bottom */
+  html body #landing.hero-lobby #saved-characters {
+    background: linear-gradient(180deg, #1f140ce6, #120b07f2) !important;
+    border-top: 1.5px solid var(--card-line) !important; box-shadow: 0 -8px 20px #0007 !important;
+  }
+  /* Info card (right): dark instead of parchment */
+  html body #landing.hero-lobby #hero-stats { color: #ecdcbc !important; padding: 14px 16px 12px !important; }
+  html body #landing.hero-lobby #hero-stats .class-identity { background: linear-gradient(90deg, #4a2c14, #2b1b11 80%) !important; border-radius: 10px !important; }
+  html body #landing.hero-lobby #hero-stats .class-identity > span {
+    clip-path: none !important; border-radius: 10px !important; border: 1.5px solid var(--gold-a) !important;
+    background: linear-gradient(180deg, #a03228, #5e1610) !important; width: 44px !important; height: 44px !important; font-size: 22px !important;
+  }
+  html body #landing.hero-lobby #hero-stats .class-identity h3 { color: #ffe9a8 !important; }
+  html body #landing.hero-lobby #hero-stats .class-eng { color: #c9a874 !important; }
+  html body #landing.hero-lobby #hero-stats .class-lore { color: #cdb894 !important; }
+  html body #landing.hero-lobby #hero-stats .stats-heading { border-top: 1px solid #5e4126 !important; }
+  html body #landing.hero-lobby #hero-stats .stats-heading span { color: #f6d98e !important; }
+  html body #landing.hero-lobby #hero-stats .stats-heading small { color: #8f7a5c !important; }
+  html body #landing.hero-lobby #hero-stats .attribute span b,
+  html body #landing.hero-lobby #hero-stats .attribute strong { color: #ecdcbc !important; }
+  html body #landing.hero-lobby #hero-stats .attribute-track { background: #0c0704 !important; box-shadow: inset 0 1px 2px #000a !important; }
+  html body #landing.hero-lobby #hero-stats [data-lobby-skill] {
+    background: var(--tile) !important; border: 1.5px solid var(--tile-line) !important; border-radius: 12px !important; box-shadow: none !important;
+  }
+  html body #landing.hero-lobby #hero-stats [data-lobby-skill]:hover { border-color: var(--gold-a) !important; }
+  /* Centre: name and buttons in one card */
+  html body #landing.hero-lobby .hl-entry { width: min(100%, 440px) !important; padding: 12px !important; gap: 8px !important; }
+  html body #landing.hero-lobby .hl-name {
+    clip-path: none !important; background: none !important; border: 0 !important; box-shadow: none !important; padding: 0 !important; gap: 10px !important;
+  }
+  html body #landing.hero-lobby .hl-name::before, html body #landing.hero-lobby .hl-name::after { display: none !important; }
+  html body #landing.hero-lobby #identity-label::before { color: #c9a874; font-size: 14px !important; }
+  html body #landing.hero-lobby #character-name {
+    height: 40px !important; border-radius: 10px !important; background: var(--tile) !important;
+    border: 1.5px solid var(--tile-line) !important; color: #fff6e0 !important; box-shadow: inset 0 2px 4px #0008 !important;
+  }
+  html body #landing.hero-lobby #character-name:focus { border-color: var(--gold-a) !important; }
+  html body #landing.hero-lobby #random-name {
+    width: 40px !important; height: 40px !important; border-radius: 10px !important;
+    background: #2a1a10 !important; border: 1.5px solid var(--card-line) !important; box-shadow: none !important;
+  }
+  html body #landing.hero-lobby .hl-start,
+  html body #landing.hero-lobby[data-lobby-mode="roster"] .hl-start {
+    width: 100% !important; height: 56px !important; margin: 0 !important; border-radius: 12px !important; clip-path: none !important;
+    background: linear-gradient(180deg, var(--gold-a), var(--gold-b) 55%, var(--gold-c)) !important;
+    border: 1.5px solid #fff0b8 !important; box-shadow: 0 3px 0 #6d3c0c, 0 8px 18px #000a, inset 0 1px 0 #fff8 !important;
+  }
+  html body #landing.hero-lobby .hl-start:hover { filter: brightness(1.06); }
+  html body #landing.hero-lobby .hl-start:active { transform: translateY(2px); box-shadow: 0 1px 0 #6d3c0c, 0 4px 10px #000a !important; }
+  html body #landing.hero-lobby .hl-start::before { display: none !important; }
+  html body #landing.hero-lobby #start-label { color: #3a1d05 !important; font-size: 24px !important; text-shadow: 0 1px 0 #fff6 !important; }
+  html body #landing.hero-lobby .hl-start::after { color: #5a3410 !important; opacity: .8; font-size: 11px !important; text-shadow: none !important; }
+  html body #landing.hero-lobby .hl-quick {
+    width: 100% !important; min-height: 38px !important; border-radius: 12px !important;
+    background: #ffffff08 !important; border: 1.5px solid #c99a4a99 !important; color: #f6d98e !important; box-shadow: none !important;
+  }
+  html body #landing.hero-lobby .hl-quick:hover { background: #ffffff12 !important; border-color: var(--card-line) !important; }
+  /* Small buttons: new hero / delete */
+  html body #landing.hero-lobby :is(#new-hero, #delete-hero) {
+    border-radius: 999px !important; background: #1a100af0 !important; border: 1.5px solid #c99a4a99 !important;
+    color: #f6d98e !important; box-shadow: 0 4px 10px #0008 !important; text-shadow: none !important;
+  }
+  html body #landing.hero-lobby #delete-hero { color: #d9a08c !important; border-color: #7a4a3a !important; }
+}
