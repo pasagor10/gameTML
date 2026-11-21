@@ -380,18 +380,18 @@ function renderCards() {
   $("#selected-lore").textContent = detail.lore;
   $(".hero-fallback").style.cssText = lobbyHeroStyle(job, gender, saved);
   $("#hero-stats").innerHTML =
-    `<div class="class-identity"><span>${c.icon}</span><div><h3>${c.name}</h3><small class="class-eng">${eng[JOBS.indexOf(job)] || ""}</small><p class="class-role">${detail.role}</p></div><i class="class-face" aria-hidden="true" style="${heroStyle(job, gender, saved)}"></i></div><p class="class-lore">${detail.lore}</p><div class="stats-heading"><span>${saved ? "ค่าสถานะปัจจุบัน" : "ค่าสถานะเริ่มต้น"}</span><small>ATTRIBUTES</small></div>${[
-      ["HP", "พลังชีวิต", c.hp, saved ? c.hp : 180],
-      ["MP", "พลังเวท", c.mp, saved ? c.mp : 150],
-      ["ATK", "พลังโจมตี", c.atk, saved ? Math.max(35, c.atk) : 35],
-      ["DEF", "พลังป้องกัน", c.def, saved ? Math.max(12, c.def) : 12],
+    `<div class="class-identity"><span>${c.icon}</span><div><h3>${saved ? `${escape(saved.name)} · ${c.name} Lv.${saved.level}` : c.name}</h3><small class="class-eng">${eng[JOBS.indexOf(job)] || ""}</small><p class="class-role">${detail.role}</p></div><i class="class-face" aria-hidden="true" style="${heroStyle(job, gender, saved)}"></i></div><p class="class-lore">${detail.lore}</p><div class="stats-heading"><span>${saved ? "ค่าสถานะปัจจุบัน" : "ค่าสถานะเริ่มต้น"}</span><small>ATTRIBUTES</small></div><div class="lobby-attributes">${[
+      ["HP", "พลังชีวิต", c.hp],
+      ["MP", "พลังเวท", c.mp],
+      ["ATK", "พลังโจมตี", c.atk],
+      ["DEF", "พลังป้องกัน", c.def],
     ]
       .map(
-        ([key, label, value, max]) =>
-          `<div class="attribute" data-stat="${key}"><div><span><b>${key}</b> <small>${label}</small></span><strong>${value}</strong></div><div class="attribute-track"><i style="width:${Math.min(100, (value / max) * 100)}%"></i></div></div>`,
+        ([key, label, value]) =>
+          `<div class="attribute" data-stat="${key}"><div><span><b>${key}</b> <small>${label}</small></span><strong>${value}</strong></div></div>`,
       )
       .join("")}
-  <div class="stats-heading skill-heading"><span>สกิลประจำคลาส</span><small>SKILL PREVIEW</small></div><div class="lobby-skills">${CLASS_SKILLS[job].map((skill, i) => `<button data-lobby-skill="${i}" title="${skill.name} · ${skill.detail} · ${ACTIONS[i + 1].mp} MP"><span>${skillIcon(job, i + 1)}</span><div><strong>${skill.name}</strong><small>${ACTIONS[i + 1].mp} MP · ${ACTIONS[i + 1].cooldown} วินาที</small></div><b>${["Q", "W", "E", "S"][i]}</b></button>`).join("")}</div>`;
+  </div><div class="stats-heading skill-heading"><span>สกิลประจำคลาส</span><small>SKILL PREVIEW</small></div><div class="lobby-skills">${CLASS_SKILLS[job].map((skill, i) => `<button data-lobby-skill="${i}" title="${skill.name} · ${skill.detail} · ${ACTIONS[i + 1].mp} MP"><span>${skillIcon(job, i + 1)}</span><div><strong>${skill.name}</strong><small>${ACTIONS[i + 1].mp} MP · ${ACTIONS[i + 1].cooldown} วินาที</small></div><b>${["Q", "W", "E", "S"][i]}</b></button>`).join("")}</div>`;
   $$("[data-lobby-skill]").forEach(
     (b) =>
       (b.onclick = () => {

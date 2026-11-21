@@ -146,7 +146,8 @@ export function createSelectionPreview({ onPick } = {}) {
       this.frameKey = key;
       this.z = z;
       this.r = r;
-      const feet = Math.round((ch * FEET) / H);
+      const desktop = w >= 1000 && w > h;
+      const feet = Math.round(ch * (desktop ? 0.98 : FEET / H));
       this.cameras.main.setZoom(z).centerOn(W / 2, FEET - (feet - ch / 2) / z);
     }
     update(time, delta) {
