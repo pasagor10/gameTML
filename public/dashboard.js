@@ -286,6 +286,33 @@ function exits(rows, people) {
   table($("#exits-table"), ["ด่าน", ...REASONS.map((r) => r.label), "รวม"], rows.map((r) => [r.label, ...REASONS.map((x) => fmt(r[x.key])), fmt(r.total)]));
 }
 
+// --- Where visitors came from / on what: visitors bar, hero-made overlay -------
+function origin(host, tableHost, rows) {
+  const top = Math.max(1, ...rows.map((r) => r.visitors));
+  host.innerHTML = rows.length
+    ? rows
+        .map(
+          (r, k) => `<div class="hbar${r.id === "unknown" ? " unknown" : ""}" data-k="${k}"><span title="${esc(r.label)}">${esc(r.label)}</span><div class="track"><div class="bar" style="width:${(r.visitors / top) * 100}%"></div><div class="bar hero" style="width:${(r.hero / top) * 100}%"></div></div><span class="nums">${fmt(r.visitors)} · ${pct(r.hero, r.visitors)}%</span></div>`,
+        )
+        .join("")
+    : `<p class="empty">ยังไม่มีข้อมูลในช่วงนี้</p>`;
+  for (const el of host.querySelectorAll(".hbar")) {
+    const r = rows[Number(el.dataset.k)];
+    el.onmousemove = (e) =>
+      showTip(
+        `<b>${esc(r.label)}</b><br>เข้าชม ${fmt(r.visitors)} คน<br>กดเล่น ${fmt(r.played)} (${pct(r.played, r.visitors)}%)<br>สร้างตัวละคร ${fmt(r.hero)} (${pct(r.hero, r.visitors)}%)<br>เข้าเมือง ${fmt(r.town)} (${pct(r.town, r.visitors)}%)`,
+        e.clientX,
+        e.clientY,
+      );
+    el.onmouseleave = hideTip;
+  }
+  table(
+    tableHost,
+    ["ที่มา", "เข้าชม", "กดเล่น", "สร้างตัวละคร", "เข้าเมือง"],
+    rows.map((r) => [r.label, fmt(r.visitors), `${fmt(r.played)} (${pct(r.played, r.visitors)}%)`, `${fmt(r.hero)} (${pct(r.hero, r.visitors)}%)`, `${fmt(r.town)} (${pct(r.town, r.visitors)}%)`]),
+  );
+}
+
 function retention(rows) {
   const shown = rows.filter((r) => r.players);
   $("#retention").innerHTML = shown.length
@@ -326,6 +353,8 @@ let last = null;
 const render = (data) => {
   kpis(data.totals, data.d1);
   funnel(data.funnel);
+  origin($("#sources"), $("#sources-table"), data.sources || []);
+  origin($("#devices"), $("#devices-table"), data.devices || []);
   exits(data.floor1Exits || [], data.exitPeople || 0);
   retention(data.retention || []);
   $("#excluded").textContent = data.totals.excludedAccounts ? ` · ไม่นับบัญชีทีมพัฒนา ${fmt(data.totals.excludedAccounts)} บัญชี` : "";

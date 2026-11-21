@@ -10,8 +10,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="/dashboard.css?v=3">
-<script type="module" src="/dashboard.js?v=2"></script>
+<link rel="stylesheet" href="/dashboard.css?v=4">
+<script type="module" src="/dashboard.js?v=3"></script>
 </head>
 <body>
 <main class="viz-root">
@@ -38,6 +38,19 @@
     <p class="insight" id="insight"></p>
     <div id="funnel" class="funnel"></div>
   </section>
+
+  <div class="grid">
+    <section class="card">
+      <div class="card-head"><h2>เข้ามาจากไหน</h2><p class="hint">ที่มาตอนเข้าเว็บครั้งแรก · ตัวเลข = ผู้เข้าชม · % = สร้างตัวละครแล้ว (ส่วนเข้ม) · "ไม่มีที่มา" คือพิมพ์เอง บุ๊กมาร์ก หรือลิงก์ที่แชร์ในแชท · ติด ?utm_source=ชื่อ ในลิงก์เพื่อแยกช่องทาง</p></div>
+      <div id="sources" class="hbars origin"></div>
+      <details><summary>ดูเป็นตาราง</summary><div id="sources-table"></div></details>
+    </section>
+    <section class="card">
+      <div class="card-head"><h2>เข้าด้วยอุปกรณ์อะไร</h2><p class="hint">อุปกรณ์ตอนเข้าเว็บครั้งแรก · ตัวเลข = ผู้เข้าชม · % = สร้างตัวละครแล้ว (ส่วนเข้ม)</p></div>
+      <div id="devices" class="hbars origin"></div>
+      <details><summary>ดูเป็นตาราง</summary><div id="devices-table"></div></details>
+    </section>
+  </div>
 
   <div class="grid">
     <section class="card">

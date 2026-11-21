@@ -139,3 +139,12 @@ td:not(:first-child), th:not(:first-child) { text-align: right; }
 #retention .hbar { grid-template-columns: 52px 1fr minmax(70px, auto); }
 #retention .nums, .hbar.stack .nums { white-space: nowrap; }
 #exits-note { margin: 0 0 10px; }
+
+/* Where visitors came from: wide label column, hero-made share drawn darker on top. */
+.hbars.origin .hbar { grid-template-columns: minmax(0, 150px) minmax(0, 1fr) auto; }
+.hbars.origin .hbar > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hbars.origin .bar { opacity: .35; }
+.hbars.origin .bar.hero { opacity: 1; }
+.hbars.origin .unknown { color: var(--text-muted); }
+.hbars.origin .nums { white-space: nowrap; }
+@media (max-width: 560px) { .hbars.origin .hbar { grid-template-columns: minmax(0, 96px) minmax(0, 1fr) auto; gap: 8px; } .grid > .card { min-width: 0; } }

@@ -11,7 +11,8 @@ CREATE TABLE IF NOT EXISTS visits(vid TEXT NOT NULL,day TEXT NOT NULL,PRIMARY KE
 CREATE TABLE IF NOT EXISTS vid_users(vid TEXT NOT NULL,user_id TEXT NOT NULL,PRIMARY KEY(vid,user_id));
 CREATE TABLE IF NOT EXISTS analytics_exclude(user_id TEXT PRIMARY KEY);
 CREATE TABLE IF NOT EXISTS f1_exits(vid TEXT NOT NULL,stage INTEGER NOT NULL,reason TEXT NOT NULL,at INTEGER NOT NULL);
-CREATE INDEX IF NOT EXISTS f1_exits_at ON f1_exits(at);`);
+CREATE INDEX IF NOT EXISTS f1_exits_at ON f1_exits(at);
+CREATE TABLE IF NOT EXISTS origins(vid TEXT PRIMARY KEY,source TEXT NOT NULL,device TEXT NOT NULL,landing TEXT NOT NULL,at INTEGER NOT NULL);`);
 // Keys (visitor ids or "u:<user>") of the team's own accounts, left out of
 // every number so test heroes do not inflate levels, floors or the funnel.
 const EXCLUDED = `SELECT vid FROM vid_users WHERE user_id IN (SELECT user_id FROM analytics_exclude)
@@ -80,6 +81,68 @@ export function trackFloor1Exit(headers, userId, stage, reason, at = Date.now())
   try { insertExit.run(key, stage, reason, at); } catch { /* never break gameplay */ }
 }
 
+// First touch: where a visitor came from and on what, recorded once.
+export const SOURCES = {
+  facebook: "Facebook",
+  line: "LINE",
+  instagram: "Instagram",
+  tiktok: "TikTok",
+  youtube: "YouTube",
+  twitter: "X / Twitter",
+  discord: "Discord",
+  google: "ค้นหา (Google ฯลฯ)",
+  homescreen: "ไอคอนบนหน้าจอ",
+  other: "เว็บอื่น",
+  direct: "ไม่มีที่มา",
+};
+export const DEVICES = { mobile: "มือถือ", tablet: "แท็บเล็ต", desktop: "คอม" };
+const HOSTS = [
+  [/(^|\.)(facebook\.com|fb\.com|fb\.me|messenger\.com)$/, "facebook"],
+  [/(^|\.)(line\.me|line-apps\.com|lin\.ee)$/, "line"],
+  [/(^|\.)instagram\.com$/, "instagram"],
+  [/(^|\.)tiktok\.com$/, "tiktok"],
+  [/(^|\.)(youtube\.com|youtu\.be)$/, "youtube"],
+  [/(^|\.)(twitter\.com|x\.com|t\.co)$/, "twitter"],
+  [/(^|\.)discord(app)?\.com$/, "discord"],
+  [/(^|\.)(google\.[a-z.]+|bing\.com|duckduckgo\.com|yahoo\.com|search\.brave\.com)$/, "google"],
+];
+export function originOf(headers = {}, query = {}, ownHost = "") {
+  const ua = headers["user-agent"] || "";
+  const device = /iPad|Tablet|Android(?!.*Mobile)/i.test(ua) ? "tablet" : /Mobi|iPhone|iPod|Android/i.test(ua) ? "mobile" : "desktop";
+  const q = (k) => String(query[k] ?? "").toLowerCase().slice(0, 40);
+  let source = null;
+  // 1. A tagged link: ?utm_source=line, ?source=homescreen.
+  const tag = q("utm_source") || q("source");
+  if (tag) {
+    const known = Object.keys(SOURCES).find((k) => tag === k || (k === "facebook" && /^(fb|ig_fb|meta)$/.test(tag)) || (k === "twitter" && tag === "x"));
+    source = known || (/^[a-z0-9_-]{1,24}$/.test(tag) ? "tag:" + tag : null);
+  }
+  // 2. An in-app browser says where the link was tapped even with no referrer.
+  if (!source) {
+    if (/FBAN|FBAV|FB_IAB|FBIOS|Messenger/i.test(ua) || query.fbclid) source = "facebook";
+    else if (/\bLine\//.test(ua)) source = "line";
+    else if (/Instagram/i.test(ua)) source = "instagram";
+    else if (/musical_ly|BytedanceWebview|TikTok/i.test(ua)) source = "tiktok";
+  }
+  // 3. The referring site.
+  if (!source) {
+    let host = "";
+    try { host = new URL(headers.referer || "").hostname.toLowerCase(); } catch { /* none */ }
+    if (host && host !== ownHost) source = HOSTS.find(([rx]) => rx.test(host))?.[1] || "other";
+  }
+  return { source: source || "direct", device };
+}
+const insertOrigin = db.prepare("INSERT OR IGNORE INTO origins VALUES(?,?,?,?,?)");
+export function trackOrigin(req, landing) {
+  const vid = visitorOf(req.headers);
+  if (!vid || BOT.test(req.headers["user-agent"] || "")) return;
+  try {
+    const { source, device } = originOf(req.headers, req.query || {}, String(req.hostname || "").toLowerCase());
+    insertOrigin.run(vid, source, device, landing, Date.now());
+  } catch { /* never break the page */ }
+}
+const sourceLabel = (id) => SOURCES[id] || (id?.startsWith("tag:") ? "ลิงก์ติดแท็ก: " + id.slice(4) : "ก่อนเริ่มเก็บข้อมูล");
+
 const LEVEL_BUCKETS = [[1, 1], [2, 4], [5, 9], [10, 19], [20, 29], [30, 39], [40, 49], [50, MAX_LEVEL]];
 
 export function dashboardStats({ days = 30, online = 0, now = Date.now() } = {}) {
@@ -99,6 +162,27 @@ export function dashboardStats({ days = 30, online = 0, now = Date.now() } = {})
     if (k > (furthest.get(r.vid) ?? -1)) furthest.set(r.vid, k);
   }
   const reached = [...furthest.values()];
+  // Each cohort visitor by first-touch source and device: how far they got.
+  const originRows = new Map(
+    db.prepare("SELECT vid, source, device FROM origins").all().map((r) => [r.vid, r]),
+  );
+  const [PLAY, HERO, TOWN] = ["account", "character", "join"].map((id) => STEP_INDEX[id]);
+  const groupBy = (pick, label) => {
+    const g = new Map();
+    for (const [vid, n] of furthest) {
+      const id = pick(originRows.get(vid)) || "unknown",
+        row = g.get(id) || { id, label: label(id), visitors: 0, played: 0, hero: 0, town: 0 };
+      row.visitors++;
+      if (n >= PLAY) row.played++;
+      if (n >= HERO) row.hero++;
+      if (n >= TOWN) row.town++;
+      g.set(id, row);
+    }
+    // Unknown (visitors from before origins were recorded) always last.
+    return [...g.values()].sort((a, b) => (a.id === "unknown") - (b.id === "unknown") || b.visitors - a.visitors);
+  };
+  const sources = groupBy((o) => o?.source, sourceLabel);
+  const devices = groupBy((o) => o?.device, (id) => DEVICES[id] || "ก่อนเริ่มเก็บข้อมูล");
   const funnel = STEPS.map((s, k) => ({ ...s, count: reached.filter((n) => n >= k).length }));
   // All-time visitors who only ever saw the landing page.
   const visitOnly = db
@@ -188,6 +272,8 @@ export function dashboardStats({ days = 30, online = 0, now = Date.now() } = {})
       online,
     },
     funnel,
+    sources,
+    devices,
     floor1Exits,
     exitPeople,
     retention,

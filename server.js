@@ -11,7 +11,7 @@ import { db, loadCharacter, persist, markGiftsReceived } from "./server/database
 import { CLASSES, maxHp, maxMp } from "./shared/config.js";
 import * as world from "./server/world.js";
 import { releaseStamp } from "./server/release-stamp.js";
-import { dashboardStats, ensureVisitor, track } from "./server/analytics.js";
+import { dashboardStats, ensureVisitor, track, trackOrigin } from "./server/analytics.js";
 import { createSnapshotMemo, packSnapshot, SNAPSHOT_PROTOCOL } from "./shared/snapshot-delta.js";
 const app = express(),
   server = http.createServer(app),
@@ -264,10 +264,12 @@ app.use((req, res, next) => {
   if (!["GET", "HEAD"].includes(req.method)) return next();
   if (req.path === "/") {
     ensureVisitor(req, res);
+    trackOrigin(req, "/");
     track(req.headers, "visit");
     req.url = "/welcome.html";
   } else if (["/play", "/play/", "/index.html"].includes(req.path)) {
     ensureVisitor(req, res);
+    trackOrigin(req, "/play");
     const user = sessions(req);
     if (!user) return res.redirect("/?account=login#account");
     track(req.headers, "lobby", user.id);
