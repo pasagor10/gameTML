@@ -7,7 +7,7 @@
 // public/sprite-sets.js playLayers() draws it.
 import { GEAR } from "/shared/rpg.js";
 import { heroLooks } from "/shared/appearance.js";
-import { itemArtPath, heldArtPath } from "/item-art.js";
+import { itemArtPath, heldArtPath } from "/item-art.js?v=2";
 
 const palette = await fetch("/assets/items/palette.json?v=2")
   .then((r) => (r.ok ? r.json() : {}))

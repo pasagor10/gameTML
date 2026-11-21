@@ -16,11 +16,11 @@ import { showWorldHeroPreview } from "/hero-preview.js";
 import { observeHudLayout } from "/hud-layout.js?v=2";
 import { isWorldPointer } from "/world-input.js";
 import { SLOT_MACHINE } from "/shared/slots.js";
-import { slotPanelHtml, bindSlotPanel } from "/slots-ui.js?v=2";
+import { slotPanelHtml, bindSlotPanel } from "/slots-ui.js?v=3";
 import { heroPortraitStyle } from "/hero-appearance.js?v=4";
 import { skillIcon, potionIcon, manaPotionIcon, autoIcon } from "/skill-icons.js?v=5";
 import { dungeonPlatforms, withinDungeonSign } from "/shared/dungeons.js";
-import { supplyArt, itemArtPath, costumeArtPath } from "/item-art.js";
+import { supplyArt, itemArtPath, costumeArtPath } from "/item-art.js?v=2";
 import { COSTUME_ITEMS } from "/shared/costumes.js";
 import {
   sfx,
@@ -37,7 +37,7 @@ import {
   rpgPanel,
   bindRpgPanel,
   gearShop,
-} from "/rpg-ui.js?v=20";
+} from "/rpg-ui.js?v=21";
 import {
   GEAR,
   RARITIES,
@@ -56,7 +56,7 @@ import {
 } from "/shared/rpg.js";
 import { createTownNpcs, footGlow, createRim } from "/town-npcs.js?v=14";
 import { updateEnhanceAura, updateSetGlow, AURA_LEVEL } from "/enhance-aura.js?v=7";
-import { marketHtml, shopManagerHtml, marketState } from "/market-ui.js?v=11";
+import { marketHtml, shopManagerHtml, marketState } from "/market-ui.js?v=12";
 import { sampleMotion } from "/shared/smoothing.js";
 import { mergeSnapshot, SNAPSHOT_PROTOCOL } from "/shared/snapshot-delta.js?v=1";
 import {
@@ -66,7 +66,7 @@ import {
   trackerHtml,
   claimable,
 } from "/quest-ui.js?v=4";
-import { dungeonPanelHtml } from "/dungeon-ui.js?v=43";
+import { dungeonPanelHtml } from "/dungeon-ui.js?v=44";
 import { createNightSky } from "/night-sky.js?v=3";
 import {
   nightInfo,
@@ -85,7 +85,7 @@ import {
   animateSlime,
   monsterDeath,
 } from "/combat-visuals.js?v=0.3.1";
-import { createSelectionPreview } from "/selection-scene.js?v=0.23.0";
+import { createSelectionPreview } from "/selection-scene.js?v=0.24.0";
 import {
   CLASSES,
   ITEMS,
@@ -128,7 +128,7 @@ import {
   playMonsterDeath,
   playLayers,
 } from "/sprite-sets.js?v=0.25.0";
-import { gearDress } from "/hero-gear.js?v=6";
+import { gearDress } from "/hero-gear.js?v=7";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 observeHudLayout($("#game-screen"));

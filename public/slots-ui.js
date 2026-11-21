@@ -1,6 +1,6 @@
 import { SLOT_COST, SLOT_COOLDOWN_MS, SLOT_REWARDS, SLOT_TOTAL_WEIGHT } from "/shared/slots.js";
 import { GEAR, RARITIES } from "/shared/rpg.js";
-import { itemArt, supplyArt } from "/item-art.js";
+import { itemArt, supplyArt } from "/item-art.js?v=2";
 const results = new Map();
 let busy = false;
 const keyFor = (id) => "tml-slot-pending:" + id;

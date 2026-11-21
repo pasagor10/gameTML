@@ -1197,3 +1197,5 @@ img.item-art[src*="/items/px/"] { object-fit: contain; image-rendering: pixelate
 /* High enhance stone: the blessed stone art recoloured cyan. */
 .item-art.art-high-stone { filter: hue-rotate(150deg) saturate(1.4) drop-shadow(0 0 6px #5fe3ff99); }
 .high-stone-button { background: linear-gradient(145deg, #1d6f8c, #2ab3c9) !important; color: #f2fdff !important; }
+/* Fine item icons (items/icons, 160px) are drawn smooth at any size. */
+img.item-art[src*="/items/icons/"] { object-fit: contain; image-rendering: auto !important; }

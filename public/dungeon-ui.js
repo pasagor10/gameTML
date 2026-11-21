@@ -11,7 +11,7 @@ import {
 import { rosterEntry, TRAITS } from "/shared/dungeons.js";
 import { FLOOR_LOOT, GEAR, GRAND_BOSS_RELICS } from "/shared/rpg.js";
 import { MONSTERS } from "/shared/quests.js";
-import { itemArt, supplyArt } from "/item-art.js";
+import { itemArt, supplyArt } from "/item-art.js?v=2";
 import { portrait } from "/quest-ui.js?v=4";
 
 const esc = (s) =>

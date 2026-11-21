@@ -36,6 +36,20 @@ const floorIndex = {
   boots: [8, 7, 13, 18, 6, 12, 28, 29, 22, 26],
   charm: [24, 3, 9, 33, 31, 20, 34, 10, 35, 5],
 };
+// Floors 11+ pick by the theme in the item's name (the sheets' rows), each
+// floor a different design of that row, instead of repeating floors 1..10.
+// First match wins: "ธารพิษ" is poison, "มงกุฎเหมันต์" is ice.
+const THEMES = [
+  [3, ["พิษ", "สารหนู", "ปนเปื้อน", "ราก", "พฤกษา", "บึง"]], // nature / poison
+  [2, ["น้ำแข็ง", "หิมะ", "เหมันต์", "เยือก", "คราม", "น้ำ", "ธาร", "ผลึก"]], // water / ice
+  [4, ["จันทรา", "ดารา", "อัสนี", "พายุ", "เมฆา", "วิญญาณ", "ฝัน", "ลืมเลือน"]], // moon / star / storm
+  [1, ["ลาวา", "เพลิง", "เถ้า", "หลอม", "สนิม", "เงา", "รัตติกาล", "มรณะ", "อสูร", "สาป", "สูญสิ้น", "วิปลาส"]], // fire / dark
+  [5, ["สุริยะ", "ราชัน", "มงกุฎ", "แกนแร่"]], // gold / sun
+];
+function themeIndex(item) {
+  const row = THEMES.find(([, words]) => words.some((w) => item.name?.includes(w)))?.[0] ?? 0;
+  return row * 6 + (item.floor % 6);
+}
 // [group, index] of an item; a classless weapon takes the holder's class.
 function artOf(id, item, heroClass) {
   if (!item) return null;
@@ -43,7 +57,8 @@ function artOf(id, item, heroClass) {
     item.slot === "weapon" ? CLASS_GROUP[item.class || heroClass] || "sword" : item.slot;
   const index = id?.startsWith("starter_")
     ? 0
-    : artIndex[id] ?? floorIndex[item.slot]?.[(item.floor - 1) % FLOOR.length];
+    : artIndex[id] ??
+      (item.floor > FLOOR.length ? themeIndex(item) : floorIndex[item.slot]?.[(item.floor - 1) % FLOOR.length]);
   return group && index !== undefined ? [group, index] : null;
 }
 const escape = (value) =>
@@ -54,11 +69,13 @@ const escape = (value) =>
         c
       ],
   );
+// The star relics (celestial_*) have their own large divine pictures.
+const RELICS = new Set(["celestial_guard_armor", "celestial_heart_charm", "celestial_wing_boots"]);
+// Icons: fine 160px copies (slice_pixel_items.py --fine-icons), drawn smooth.
 export function itemArtPath(id, item) {
-  if (item?.rarity === 'divine' && ['armor','charm','boots'].includes(item.slot))
-    return `/assets/items/divine/${item.slot}.webp`;
+  if (RELICS.has(id)) return `/assets/items/divine/${item.slot}.webp`;
   const art = artOf(id, item);
-  return art ? `/assets/items/px/${art[0]}-${art[1]}.webp` : null;
+  return art ? `/assets/items/icons/${art[0]}-${art[1]}.webp` : null;
 }
 // The weapon's small upright pixel picture, held in the hero's fist.
 export function heldArtPath(id, item, heroClass) {
@@ -66,7 +83,7 @@ export function heldArtPath(id, item, heroClass) {
   return art ? `/assets/items/held/${art[0]}-${art[1]}.webp` : null;
 }
 function image([group, index], name) {
-  return `<img class="item-art" src="/assets/items/${group === "supply" ? "" : "px/"}${group}-${index}.webp" alt="${escape(name)}" width="80" height="80" loading="lazy" decoding="async">`;
+  return `<img class="item-art" src="/assets/items/${group === "supply" ? "" : "icons/"}${group}-${index}.webp" alt="${escape(name)}" width="80" height="80" loading="lazy" decoding="async">`;
 }
 // A costume item shows the costume's own pixel portrait.
 export const costumeArtPath = (id) =>
