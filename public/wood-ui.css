@@ -139,3 +139,183 @@ html body #modal[data-panel] > .modal-box > header { position: relative !importa
 html body #modal[data-panel] > .modal-box > header #modal-close {
   position: absolute !important; top: 12px !important; right: 12px !important; left: auto !important; bottom: auto !important;
 }
+
+/* ---------- Phone portrait · character window "อุปกรณ์ & กระเป๋า" fits one screen ----------
+   Hero with the four worn slots as one strip on top, the bag fills the middle
+   (only its grid scrolls), the selected item is a compact card at the bottom. */
+@media (max-width: 600px) and (min-height: 501px) {
+  html body #modal#modal[data-panel="inventory"] #modal-body { display: flex !important; flex-direction: column !important; overflow: hidden !important; padding: 6px 8px 8px !important; }
+  html body #modal#modal[data-panel="inventory"] .rpg-tabs { flex: 0 0 auto !important; padding-bottom: 0 !important; margin: 0 0 6px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv2 { flex: 1 1 auto !important; min-height: 0 !important; display: flex !important; flex-direction: column !important; gap: 6px !important; }
+
+  /* Hero strip */
+  html body #modal#modal[data-panel="inventory"] .inv-hero { display: grid !important; flex: 0 0 auto !important; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "stage power"; align-items: center; gap: 6px; padding: 4px 8px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-hero > header,
+  html body #modal#modal[data-panel="inventory"] .inv-nameplate,
+  html body #modal#modal[data-panel="inventory"] .inv-stats { display: none !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-stage { grid-area: stage; display: grid !important; grid-template-columns: auto 64px auto; justify-content: start; align-items: center; gap: 6px; margin: 0 !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-slots { display: flex !important; flex-direction: row !important; gap: 4px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-slot { width: 38px !important; height: 38px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-slot b img { max-width: 30px; max-height: 30px; }
+  html body #modal#modal[data-panel="inventory"] .inv-figure { height: 72px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-hero-art { height: 68px !important; margin-bottom: 4px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-pedestal { height: 12px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-power { grid-area: power; display: grid !important; grid-template-columns: auto; justify-items: end; gap: 0; padding: 0 !important; margin: 0 !important; background: none !important; border: 0 !important; box-shadow: none !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-power > span { display: none !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-power small { font-size: 10px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-power strong { font-size: 17px !important; line-height: 1.1; }
+
+  /* Bag: grid takes the rest and scrolls on its own */
+  html body #modal#modal[data-panel="inventory"] .inv-bag { flex: 1 1 auto !important; min-height: 120px !important; display: flex !important; flex-direction: column !important; overflow: hidden !important; padding: 6px 8px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-bag > header { margin-bottom: 4px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-bag > header strong { font-size: 13px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-tabs { flex: 0 0 auto !important; margin-bottom: 6px !important; padding-bottom: 0 !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-tabs button { padding: 5px 8px !important; min-height: 30px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-grid { flex: 1 1 auto !important; min-height: 0 !important; max-height: none !important; gap: 5px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-bag > footer { flex: 0 0 auto !important; margin-top: 4px !important; padding: 0 !important; min-height: 0 !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-bag > footer label { padding: 2px 6px !important; min-height: 0 !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-bag > footer select { height: 26px !important; font-size: 11px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-bag > footer > span { font-size: 10px !important; white-space: nowrap; }
+
+  /* Selected item: compact card */
+  html body #modal#modal[data-panel="inventory"] .inv-detail { flex: 0 0 auto !important; max-height: 36% !important; overflow-y: auto !important; display: grid !important; grid-template-columns: 44px minmax(0, 1fr); column-gap: 8px; row-gap: 4px; align-items: center; padding: 6px 8px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-detail > * { grid-column: 1 / -1; margin: 0 !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-detail-art { grid-column: 1; grid-row: 1 / span 2; width: 44px !important; height: 44px !important; flex: none !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-detail-art img { width: 36px !important; height: 36px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-detail > h3 { grid-column: 2; font-size: 13px !important; text-align: left !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-detail > .inv-pills { grid-column: 2; justify-content: flex-start !important; gap: 3px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-pills span { font-size: 9px !important; padding: 1px 5px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-detail :is(h4, .inv-lore, .inv-versus, .inv-reqs) { display: none !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-detail-stats { display: flex !important; flex-wrap: wrap; gap: 3px 10px !important; padding: 0 !important; border: 0 !important; background: none !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-detail-stats > div { display: flex !important; gap: 3px; align-items: center; font-size: 11px !important; width: auto !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-compare { font-size: 11px !important; padding: 3px 6px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-detail-actions { display: flex !important; gap: 6px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-detail-actions > button { flex: 1 1 0; min-height: 34px !important; padding: 4px 6px !important; font-size: 12px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-detail.empty { display: block !important; text-align: center; font-size: 11px; }
+}
+
+/* ---------- Phone portrait · the other character tabs fit one screen too ---------- */
+@media (max-width: 600px) and (min-height: 501px) {
+  html body #modal#modal:is([data-panel="class"], [data-panel="status"], [data-panel="wardrobe"]) #modal-body { padding: 6px 8px 8px !important; overflow-x: hidden !important; }
+  html body #modal#modal:is([data-panel="class"], [data-panel="status"], [data-panel="wardrobe"]) .rpg-tabs { margin: 0 0 6px !important; padding-bottom: 0 !important; }
+
+  /* คลาส & สกิล */
+  html body #modal#modal[data-panel="class"] .cls2 { display: flex !important; flex-direction: column !important; gap: 6px !important; }
+  html body #modal#modal[data-panel="class"] :is(.cls-hero, .cls-path, .cls-skills) { padding: 6px 8px !important; margin: 0 !important; }
+  html body #modal#modal[data-panel="class"] .cls-hero { display: grid !important; grid-template-columns: 54px minmax(0, 1fr) !important; align-items: center; gap: 8px !important; min-height: 0 !important; }
+  html body #modal#modal[data-panel="class"] .cls-figure { width: 54px !important; height: 58px !important; grid-row: 1 / span 2; }
+  html body #modal#modal[data-panel="class"] .cls-hero-art { height: 54px !important; }
+  html body #modal#modal[data-panel="class"] .cls-figure .inv-pedestal { height: 10px !important; }
+  html body #modal#modal[data-panel="class"] .cls-hero .inv-nameplate { margin: 0 !important; padding: 2px 8px !important; font-size: 12px !important; justify-self: start; }
+  html body #modal#modal[data-panel="class"] .cls-role { padding: 0 !important; margin: 0 !important; background: none !important; border: 0 !important; min-height: 0 !important; }
+  html body #modal#modal[data-panel="class"] .cls-role > span,
+  html body #modal#modal[data-panel="class"] .cls-role strong { display: none !important; }
+  html body #modal#modal[data-panel="class"] .cls-role small { font-size: 10px !important; line-height: 1.3 !important; }
+  html body #modal#modal[data-panel="class"] .cls-path > header { padding: 0 0 4px !important; margin: 0 0 4px !important; min-height: 0 !important; }
+  html body #modal#modal[data-panel="class"] .cls-path > header > span,
+  html body #modal#modal[data-panel="class"] .cls-path > header small { display: none !important; }
+  html body #modal#modal[data-panel="class"] .cls-path > header h3 { font-size: 13px !important; }
+  html body #modal#modal[data-panel="class"] .cls-tier { font-size: 10px !important; padding: 2px 6px !important; height: auto !important; }
+  html body #modal#modal[data-panel="class"] .path-tree { min-height: 0 !important; height: auto !important; padding: 2px 0 !important; margin: 0 !important; }
+  html body #modal#modal[data-panel="class"] .path-col { gap: 6px !important; }
+  html body #modal#modal[data-panel="class"] .path-node { min-height: 0 !important; height: auto !important; padding: 4px 3px !important; gap: 1px !important; }
+  html body #modal#modal[data-panel="class"] .path-node .path-emblem { width: 34px !important; height: 34px !important; font-size: 16px !important; margin: 0 auto !important; }
+  html body #modal#modal[data-panel="class"] .path-node strong { font-size: 10px !important; line-height: 1.2 !important; }
+  html body #modal#modal[data-panel="class"] .path-node small { font-size: 9px !important; padding: 0 4px !important; }
+  html body #modal#modal[data-panel="class"] .path-info { font-size: 11px !important; padding: 4px 6px !important; margin: 4px 0 0 !important; }
+  html body #modal#modal[data-panel="class"] .path-info.empty { display: none !important; }
+  html body #modal#modal[data-panel="class"] .cls-path > footer { margin: 4px 0 0 !important; padding: 0 !important; gap: 2px !important; }
+  html body #modal#modal[data-panel="class"] .cls-path > footer small { display: none !important; }
+  html body #modal#modal[data-panel="class"] .cls-confirm { min-height: 36px !important; padding: 4px 8px !important; font-size: 13px !important; }
+  html body #modal#modal[data-panel="class"] .cls-skills > header { padding: 0 0 4px !important; margin: 0 0 4px !important; min-height: 0 !important; }
+  html body #modal#modal[data-panel="class"] .cls-skills > header > span { display: none !important; }
+  html body #modal#modal[data-panel="class"] .cls-skills > header h3 { font-size: 13px !important; }
+  html body #modal#modal[data-panel="class"] .cls-skills { display: flex !important; flex-direction: column !important; gap: 4px !important; }
+  html body #modal#modal[data-panel="class"] .cls-skills article { display: grid !important; grid-template-columns: 30px minmax(0, 1fr) !important; align-items: center; gap: 8px !important; padding: 3px 6px !important; min-height: 0 !important; margin: 0 !important; }
+  html body #modal#modal[data-panel="class"] .cls-skills .sk-icon { width: 30px !important; height: 30px !important; padding: 2px !important; }
+  html body #modal#modal[data-panel="class"] .cls-skills .sk-icon svg { width: 24px !important; height: 24px !important; }
+  html body #modal#modal[data-panel="class"] .cls-skills article > div { display: grid !important; grid-template-columns: auto 1fr; column-gap: 6px; align-items: baseline; }
+  html body #modal#modal[data-panel="class"] .cls-skills article h4 { font-size: 12px !important; margin: 0 !important; white-space: nowrap; }
+  html body #modal#modal[data-panel="class"] .cls-skills article small { font-size: 9px !important; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  html body #modal#modal[data-panel="class"] .cls-skills article p { grid-column: 1 / -1; font-size: 10px !important; line-height: 1.25 !important; margin: 0 !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  html body #modal#modal[data-panel="class"] .cls-skills article kbd { display: none !important; }
+
+  /* สเตตัส */
+  html body #modal#modal[data-panel="status"] .stat-win { display: flex !important; flex-direction: column !important; gap: 6px !important; }
+  html body #modal#modal[data-panel="status"] :is(.stat-alloc, .stat-derived) { padding: 6px 8px !important; margin: 0 !important; }
+  html body #modal#modal[data-panel="status"] .stat-points { padding: 2px 0 4px !important; margin: 0 0 4px !important; min-height: 0 !important; align-items: center !important; }
+  html body #modal#modal[data-panel="status"] .stat-points > div:first-child { display: flex !important; align-items: baseline; gap: 6px; }
+  html body #modal#modal[data-panel="status"] .stat-points > div:first-child small { font-size: 10px !important; white-space: nowrap; }
+  html body #modal#modal[data-panel="status"] .stat-points > div:first-child small::after { content: ":"; }
+  html body #modal#modal[data-panel="status"] .stat-points { display: flex !important; justify-content: space-between !important; gap: 6px !important; }
+  html body #modal#modal[data-panel="status"] .stat-points > div { min-width: 0; width: auto !important; flex: 0 1 auto; }
+  html body #modal#modal[data-panel="status"] .stat-build { text-align: right; min-width: 0; overflow: hidden; }
+  html body #modal#modal[data-panel="status"] .stat-build > * { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  html body #modal#modal[data-panel="status"] .stat-points > div:first-child span { white-space: nowrap; }
+  html body #modal#modal[data-panel="status"] .stat-points > div:first-child strong { font-size: 18px !important; line-height: 1 !important; }
+  html body #modal#modal[data-panel="status"] .stat-points > div:first-child span { font-size: 10px !important; }
+  html body #modal#modal[data-panel="status"] .stat-build { padding: 2px 6px !important; }
+  html body #modal#modal[data-panel="status"] .stat-build small { font-size: 9px !important; }
+  html body #modal#modal[data-panel="status"] .stat-build b { font-size: 11px !important; }
+  html body #modal#modal[data-panel="status"] .stat-rows { gap: 4px !important; }
+  html body #modal#modal[data-panel="status"] .stat-row { min-height: 0 !important; padding: 3px 6px !important; gap: 6px !important; }
+  html body #modal#modal[data-panel="status"] .stat-row .stat-icon { width: 24px !important; height: 24px !important; font-size: 13px !important; }
+  html body #modal#modal[data-panel="status"] .stat-name { display: flex !important; align-items: center; gap: 4px; flex-wrap: nowrap; }
+  html body #modal#modal[data-panel="status"] .stat-name small { display: none !important; }
+  html body #modal#modal[data-panel="status"] .stat-name strong { font-size: 13px !important; }
+  html body #modal#modal[data-panel="status"] .stat-tag { font-size: 9px !important; padding: 0 4px !important; white-space: nowrap; }
+  html body #modal#modal[data-panel="status"] .stat-help { display: none !important; }
+  html body #modal#modal[data-panel="status"] .stat-value b { font-size: 16px !important; }
+  html body #modal#modal[data-panel="status"] .stat-btn { width: 30px !important; height: 30px !important; min-height: 0 !important; }
+  html body #modal#modal[data-panel="status"] .stat-actions { margin: 6px 0 0 !important; gap: 6px !important; }
+  html body #modal#modal[data-panel="status"] .stat-actions button { min-height: 32px !important; padding: 4px 8px !important; font-size: 12px !important; }
+  html body #modal#modal[data-panel="status"] .stat-hint { display: none !important; }
+  html body #modal#modal[data-panel="status"] .stat-derived h4 { font-size: 12px !important; margin: 0 0 4px !important; }
+  html body #modal#modal[data-panel="status"] .stat-derived ul { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 3px !important; margin: 0 !important; }
+  html body #modal#modal[data-panel="status"] .stat-derived li { padding: 2px 5px !important; font-size: 10px !important; min-height: 0 !important; gap: 4px; }
+  html body #modal#modal[data-panel="status"] .stat-derived li b { font-size: 11px !important; }
+  html body #modal#modal[data-panel="status"] .stat-note { font-size: 10px !important; margin: 4px 0 0 !important; padding: 3px 6px !important; line-height: 1.3 !important; }
+  html body #modal#modal[data-panel="status"] .stat-reset { min-height: 30px !important; margin: 4px 0 0 !important; padding: 3px 8px !important; font-size: 11px !important; }
+
+  /* ตู้ชุด */
+  html body #modal#modal[data-panel="wardrobe"] .wardrobe-note { font-size: 10px !important; line-height: 1.35 !important; padding: 4px 6px !important; margin: 0 0 6px !important; }
+  html body #modal#modal[data-panel="wardrobe"] .wardrobe-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 6px !important; }
+  html body #modal#modal[data-panel="wardrobe"] .wardrobe-card { min-height: 0 !important; height: auto !important; padding: 4px 3px !important; gap: 1px !important; }
+  html body #modal#modal[data-panel="wardrobe"] .wardrobe-card > i { width: 56px !important; height: 70px !important; margin: 0 auto !important; }
+  html body #modal#modal[data-panel="wardrobe"] .wardrobe-card > b { font-size: 10px !important; line-height: 1.2 !important; }
+  html body #modal#modal[data-panel="wardrobe"] .wardrobe-card > small { font-size: 8.5px !important; line-height: 1.2 !important; }
+}
+
+/* Shorter phones (browser bar showing): skills become a two-column icon list,
+   stat rows thinner, nothing that only explains. */
+@media (max-width: 600px) and (min-height: 501px) and (max-height: 760px) {
+  html body #modal#modal[data-panel="class"] .cls-role { display: none !important; }
+  html body #modal#modal[data-panel="class"] .cls-hero .inv-nameplate { grid-row: 1 / span 2; align-self: center; }
+  html body #modal#modal[data-panel="class"] .cls-hero { grid-template-columns: 40px minmax(0, 1fr) !important; padding: 3px 8px !important; }
+  html body #modal#modal[data-panel="class"] .cls-figure { width: 40px !important; height: 42px !important; }
+  html body #modal#modal[data-panel="class"] .cls-hero-art { height: 40px !important; }
+  html body #modal#modal[data-panel="class"] .path-node .path-emblem { width: 28px !important; height: 28px !important; font-size: 14px !important; }
+  html body #modal#modal[data-panel="class"] .path-node small { display: none !important; }
+  html body #modal#modal[data-panel="class"] .cls-skills { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  html body #modal#modal[data-panel="class"] .cls-skills > header { grid-column: 1 / -1; }
+  html body #modal#modal[data-panel="class"] .cls-skills article { grid-template-columns: 26px minmax(0, 1fr) !important; gap: 5px !important; padding: 3px 5px !important; }
+  html body #modal#modal[data-panel="class"] .cls-skills .sk-icon { width: 26px !important; height: 26px !important; }
+  html body #modal#modal[data-panel="class"] .cls-skills .sk-icon svg { width: 20px !important; height: 20px !important; }
+  html body #modal#modal[data-panel="class"] .cls-skills article > div { grid-template-columns: 1fr; }
+  html body #modal#modal[data-panel="class"] .cls-skills article h4 { font-size: 11px !important; overflow: hidden; text-overflow: ellipsis; }
+  html body #modal#modal[data-panel="class"] .cls-skills article small { text-align: left; }
+  html body #modal#modal[data-panel="class"] .cls-skills article p { display: none !important; }
+
+  html body #modal#modal[data-panel="status"] .stat-row { padding: 2px 6px !important; }
+  html body #modal#modal[data-panel="status"] .stat-btn { width: 28px !important; height: 26px !important; }
+  html body #modal#modal[data-panel="status"] .stat-rows { gap: 3px !important; }
+  html body #modal#modal[data-panel="status"] .stat-derived h4,
+  html body #modal#modal[data-panel="status"] .stat-note { display: none !important; }
+  html body #modal#modal[data-panel="status"] .stat-win { gap: 4px !important; }
+  html body #modal#modal[data-panel="status"] :is(.stat-alloc, .stat-derived) { padding: 4px 6px !important; }
+  html body #modal#modal[data-panel="status"] .stat-points { padding: 0 0 2px !important; margin: 0 0 3px !important; }
+  html body #modal#modal[data-panel="status"] .stat-actions { margin-top: 4px !important; }
+  html body #modal#modal[data-panel="status"] .stat-actions button { min-height: 28px !important; padding: 2px 8px !important; }
+  html body #modal#modal[data-panel="status"] .stat-derived li { padding: 1px 5px !important; }
+  html body #modal#modal[data-panel="status"] .stat-reset { min-height: 26px !important; padding: 2px 8px !important; }
+}
