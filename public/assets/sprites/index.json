@@ -603,11 +603,11 @@
       }
     },
     "swordsman-male-guardian-2": {
-      "dir": "swordsman-male-guardian-2-maple-v1",
+      "dir": "swordsman-male-guardian-2-knight-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
+      "source": "User's knight sheet (swordsman-male-knight-v1.png), drawn-in sword erased; shield kept; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -1714,7 +1714,7 @@
       }
     }
   },
-  "version": "remakes-1795222958847335000",
+  "version": 1795258213855601000,
   "npcs": {
     "elder": {
       "dir": "npcs/elder",
