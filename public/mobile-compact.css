@@ -263,3 +263,11 @@
 @media (pointer: coarse) { #announcement-popup { width: min(420px, 44vw); font-size: 11px; } }
 /* Phones upright: under the profile and quest tracker, full width. */
 @media (max-width: 700px) { #announcement-popup { top: calc(156px + env(safe-area-inset-top, 0px)); width: calc(100vw - 24px); font-size: 13px; } }
+/* Phones: the open ☰ menu drops its buttons down the right edge, over the
+   quest tracker and the announcement. While it is open, those two step aside;
+   they come back as soon as the menu closes. */
+@media (max-width: 700px) {
+  #game-screen:has(#top-menu.open) #announcement-popup,
+  #game-screen:has(#top-menu.open) #quests,
+  #game-screen:has(#top-menu.open) #world-boss { visibility: hidden !important; }
+}
