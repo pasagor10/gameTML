@@ -591,4 +591,36 @@ html body #landing.hero-lobby .hl-quick[hidden] { display: none !important; }
     color: #f6d98e !important; box-shadow: 0 4px 10px #0008 !important; text-shadow: none !important;
   }
   html body #landing.hero-lobby #delete-hero { color: #d9a08c !important; border-color: #7a4a3a !important; }
+  /* One rhythm: both side cards the same width and height, centre card
+     no wider than its buttons need. */
+  html body #landing.hero-lobby { grid-template-columns: 280px minmax(0, 1fr) 280px !important; }
+  html body #landing.hero-lobby .hl-class-col,
+  html body #landing.hero-lobby #hero-stats { align-self: center !important; height: min(340px, 100%) !important; box-sizing: border-box !important; }
+  html body #landing.hero-lobby .hl-class-col { display: flex !important; flex-direction: column !important; }
+  html body #landing.hero-lobby #class-cards { flex: 1 1 auto !important; grid-auto-rows: 1fr !important; }
+  html body #landing.hero-lobby .hl-class { min-height: 0 !important; padding: 6px 10px !important; column-gap: 10px !important; grid-template: auto auto / 40px 1fr !important; }
+  html body #landing.hero-lobby .hl-class strong { font-size: 16px !important; }
+  html body #landing.hero-lobby #hero-stats { padding: 12px 14px !important; overflow: hidden !important; }
+  html body #landing.hero-lobby #hero-stats .class-identity { grid-template-columns: 44px 1fr 60px !important; margin: 0 0 8px !important; }
+  html body #landing.hero-lobby #hero-stats .class-identity h3 { font-size: 19px !important; }
+  html body #landing.hero-lobby #hero-stats .class-face { width: 60px !important; height: 60px !important; margin: -8px 0 -6px !important; }
+  html body #landing.hero-lobby #hero-stats .class-lore { font-size: 12px !important; margin: 0 0 6px !important; }
+  html body #landing.hero-lobby #hero-stats .attribute { margin: 3px 0 !important; }
+  html body #landing.hero-lobby #hero-stats .attribute-track { height: 10px !important; }
+  html body #landing.hero-lobby #hero-stats .lobby-skills { gap: 6px !important; }
+  html body #landing.hero-lobby .hl-entry { width: min(100%, 380px) !important; padding: 10px !important; gap: 7px !important; }
+  html body #landing.hero-lobby #character-name, html body #landing.hero-lobby #random-name { height: 36px !important; }
+  html body #landing.hero-lobby #random-name { width: 36px !important; }
+  html body #landing.hero-lobby .hl-start,
+  html body #landing.hero-lobby[data-lobby-mode="roster"] .hl-start { height: 46px !important; }
+  html body #landing.hero-lobby #start-label { font-size: 19px !important; }
+  html body #landing.hero-lobby .hl-start::after { font-size: 10px !important; }
+  html body #landing.hero-lobby .hl-quick { min-height: 32px !important; font-size: 13px !important; }
+  html body #landing.hero-lobby .hl-slot { min-height: 54px !important; }
+  html body #landing.hero-lobby .hl-slot-face { width: 44px !important; height: 44px !important; }
+}
+@media (min-width: 701px) and (max-width: 1100px) {
+  html body #landing.hero-lobby { grid-template-columns: 230px minmax(0, 1fr) 250px !important; }
+  html body #landing.hero-lobby .hl-class small { display: block !important; font-size: 10px !important; }
+  html body #landing.hero-lobby #hero-stats .class-eng { white-space: nowrap; font-size: 11px !important; }
 }
