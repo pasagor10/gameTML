@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "hurt",
+  "artSource": "pixel sheet female-costume-crimson-maple-v1-empty.png",
+  "sourceSize": [
+    99,
+    107
+  ],
+  "encodedAnchor": [
+    50,
+    104
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    70,
+    90,
+    90,
+    110
+  ],
+  "durationSeconds": 0.36,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      99,
+      107
+    ],
+    "pages": [
+      {
+        "file": "hurt-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        77.9,
+        64.16,
+        -95
+      ],
+      [
+        79.37,
+        59.98,
+        -110
+      ],
+      [
+        72.48,
+        81.2,
+        -90
+      ],
+      [
+        77.39,
+        81.25,
+        -70
+      ]
+    ]
+  }
+}

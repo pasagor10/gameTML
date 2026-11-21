@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "hurt",
+  "artSource": "pixel sheet male-costume-mhunter-maple-v1-empty.png",
+  "sourceSize": [
+    101,
+    107
+  ],
+  "encodedAnchor": [
+    49,
+    104
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    70,
+    90,
+    90,
+    110
+  ],
+  "durationSeconds": 0.36,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      101,
+      107
+    ],
+    "pages": [
+      {
+        "file": "hurt-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        80.19,
+        62.88,
+        -95
+      ],
+      [
+        77.68,
+        54.66,
+        -110
+      ],
+      [
+        70.97,
+        78.23,
+        -90
+      ],
+      [
+        73.94,
+        66.04,
+        -70
+      ]
+    ]
+  }
+}

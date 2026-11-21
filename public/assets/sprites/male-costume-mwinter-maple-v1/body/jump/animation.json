@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "jump",
+  "artSource": "pixel sheet male-costume-mwinter-maple-v1-empty.png",
+  "sourceSize": [
+    99,
+    110
+  ],
+  "encodedAnchor": [
+    50,
+    107
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    120,
+    120,
+    120,
+    120
+  ],
+  "durationSeconds": 0.48,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      99,
+      110
+    ],
+    "pages": [
+      {
+        "file": "jump-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        71.36,
+        84.76,
+        -50
+      ],
+      [
+        74.89,
+        65.72,
+        -70
+      ],
+      [
+        74.88,
+        57.44,
+        -80
+      ],
+      [
+        72.1,
+        84.71,
+        -45
+      ]
+    ]
+  }
+}

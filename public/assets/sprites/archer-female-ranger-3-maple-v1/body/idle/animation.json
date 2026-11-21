@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "idle",
+  "artSource": "pixel sheet archer-female-ranger-3-maple-v1-empty.png",
+  "sourceSize": [
+    104,
+    107
+  ],
+  "encodedAnchor": [
+    50,
+    104
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    220,
+    220,
+    220,
+    220
+  ],
+  "durationSeconds": 0.88,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      104,
+      107
+    ],
+    "pages": [
+      {
+        "file": "idle-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        80.96,
+        51.21,
+        -62
+      ],
+      [
+        82.63,
+        74.33,
+        -64
+      ],
+      [
+        85.26,
+        75.85,
+        -62
+      ],
+      [
+        82.22,
+        78.44,
+        -60
+      ]
+    ]
+  }
+}

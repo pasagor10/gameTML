@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "idle",
+  "artSource": "pixel sheet priest-male-bishop-2-maple-v1-empty.png",
+  "sourceSize": [
+    97,
+    112
+  ],
+  "encodedAnchor": [
+    50,
+    109
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    220,
+    220,
+    220,
+    220
+  ],
+  "durationSeconds": 0.88,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      97,
+      112
+    ],
+    "pages": [
+      {
+        "file": "idle-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        74.21,
+        85.7,
+        -62
+      ],
+      [
+        74.08,
+        82.85,
+        -64
+      ],
+      [
+        73.78,
+        82.26,
+        -62
+      ],
+      [
+        73.85,
+        85.42,
+        -60
+      ]
+    ]
+  }
+}

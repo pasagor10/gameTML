@@ -1,10 +1,10 @@
 {
   "sets": {
     "mage-male-select": {
-      "dir": "mage-male-select",
-      "height": 112,
+      "dir": "mage-male-maple-v1",
+      "height": 96,
       "facing": 1,
-      "source": "full-resolution painted mage (before pixelation), shown only on the hero-select stage",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "walk": "walk",
         "run": "run",
@@ -13,13 +13,21 @@
         "idle": "idle",
         "attack": "attack",
         "skill": "skill"
+      },
+      "pixel": true,
+      "portrait": "portrait.webp",
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
       }
     },
     "mage-female-select": {
-      "dir": "mage-female-select",
-      "height": 112,
+      "dir": "mage-female-maple-v1",
+      "height": 96,
       "facing": 1,
-      "source": "full-resolution painted mage (before pixelation), shown only on the hero-select stage",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "walk": "walk",
         "run": "run",
@@ -28,14 +36,22 @@
         "idle": "idle",
         "attack": "attack",
         "skill": "skill"
+      },
+      "pixel": true,
+      "portrait": "portrait.webp",
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
       }
     },
     "archer-male": {
-      "dir": "archer-male",
+      "dir": "archer-male-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (archer-male-tier1.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -54,11 +70,11 @@
       }
     },
     "archer-female": {
-      "dir": "archer-female",
+      "dir": "archer-female-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (archer-female-tier1.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -77,10 +93,10 @@
       }
     },
     "mage-male": {
-      "dir": "mage-male-painted",
-      "height": 112,
+      "dir": "mage-male-maple-v1",
+      "height": 96,
       "facing": 1,
-      "source": "supplied painted sheets; states without frames use procedural motion on idle; pixelated (pixelate_sprites.py)",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "walk": "walk",
         "run": "run",
@@ -90,13 +106,20 @@
         "attack": "attack",
         "skill": "skill"
       },
-      "pixel": true
+      "pixel": true,
+      "portrait": "portrait.webp",
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "mage-female": {
-      "dir": "mage-female-painted",
-      "height": 112,
+      "dir": "mage-female-maple-v1",
+      "height": 96,
       "facing": 1,
-      "source": "supplied painted sheets; states without frames use procedural motion on idle; pixelated (pixelate_sprites.py)",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "walk": "walk",
         "run": "run",
@@ -106,7 +129,14 @@
         "attack": "attack",
         "skill": "skill"
       },
-      "pixel": true
+      "pixel": true,
+      "portrait": "portrait.webp",
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "swordsman-male": {
       "dir": "swordsman-male-maple-v1",
@@ -155,11 +185,11 @@
       }
     },
     "archer-male-ranger-2": {
-      "dir": "archer-male-ranger-2",
+      "dir": "archer-male-ranger-2-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (archer-male-tier2.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -178,11 +208,11 @@
       }
     },
     "archer-male-scout-2": {
-      "dir": "archer-male-scout-2",
+      "dir": "archer-male-scout-2-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (archer-male-tier2.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -201,11 +231,11 @@
       }
     },
     "archer-male-ranger-3": {
-      "dir": "archer-male-ranger-3",
+      "dir": "archer-male-ranger-3-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (archer-male-tier3.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -224,11 +254,11 @@
       }
     },
     "archer-male-scout-3": {
-      "dir": "archer-male-scout-3",
+      "dir": "archer-male-scout-3-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (archer-male-tier3.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -247,11 +277,11 @@
       }
     },
     "archer-female-ranger-2": {
-      "dir": "archer-female-ranger-2",
+      "dir": "archer-female-ranger-2-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (archer-female-tier2.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -270,11 +300,11 @@
       }
     },
     "archer-female-scout-2": {
-      "dir": "archer-female-scout-2",
+      "dir": "archer-female-scout-2-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (archer-female-tier2.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -293,11 +323,11 @@
       }
     },
     "archer-female-ranger-3": {
-      "dir": "archer-female-ranger-3",
+      "dir": "archer-female-ranger-3-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (archer-female-tier3.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -316,11 +346,11 @@
       }
     },
     "archer-female-scout-3": {
-      "dir": "archer-female-scout-3",
+      "dir": "archer-female-scout-3-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (archer-female-tier3.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -339,11 +369,11 @@
       }
     },
     "swordsman-female-duelist-2": {
-      "dir": "swordsman-female-duelist-2",
+      "dir": "swordsman-female-duelist-2-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (swordsman-female-tier2.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -362,11 +392,11 @@
       }
     },
     "swordsman-female-duelist-3": {
-      "dir": "swordsman-female-duelist-3",
+      "dir": "swordsman-female-duelist-3-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (swordsman-female-tier3.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -385,11 +415,11 @@
       }
     },
     "swordsman-female-guardian-2": {
-      "dir": "swordsman-female-guardian-2",
+      "dir": "swordsman-female-guardian-2-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (swordsman-female-tier2.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -408,11 +438,11 @@
       }
     },
     "swordsman-female-guardian-3": {
-      "dir": "swordsman-female-guardian-3",
+      "dir": "swordsman-female-guardian-3-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (swordsman-female-tier3.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -431,10 +461,10 @@
       }
     },
     "mage-female-arcanist-2": {
-      "dir": "mage-female-arcanist-2",
-      "height": 112,
+      "dir": "mage-female-arcanist-2-maple-v1",
+      "height": 96,
       "facing": 1,
-      "source": "4x8 sheet mage-female-arcanist-2.png; pixelated (pixelate_sprites.py)",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "portrait": "portrait.webp",
       "actions": {
         "idle": "idle",
@@ -446,13 +476,19 @@
         "hit": "hurt",
         "death": "death"
       },
-      "pixel": true
+      "pixel": true,
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "mage-female-arcanist-3": {
-      "dir": "mage-female-arcanist-3",
-      "height": 112,
+      "dir": "mage-female-arcanist-3-maple-v1",
+      "height": 96,
       "facing": 1,
-      "source": "4x8 sheet mage-female-arcanist-3.png; pixelated (pixelate_sprites.py)",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "portrait": "portrait.webp",
       "actions": {
         "idle": "idle",
@@ -464,13 +500,19 @@
         "hit": "hurt",
         "death": "death"
       },
-      "pixel": true
+      "pixel": true,
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "mage-female-oracle-2": {
-      "dir": "mage-female-oracle-2",
-      "height": 112,
+      "dir": "mage-female-oracle-2-maple-v1",
+      "height": 96,
       "facing": 1,
-      "source": "4x8 sheet mage-female-oracle-2.png; pixelated (pixelate_sprites.py)",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "portrait": "portrait.webp",
       "actions": {
         "idle": "idle",
@@ -482,13 +524,19 @@
         "hit": "hurt",
         "death": "death"
       },
-      "pixel": true
+      "pixel": true,
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "mage-female-oracle-3": {
-      "dir": "mage-female-oracle-3",
-      "height": 112,
+      "dir": "mage-female-oracle-3-maple-v1",
+      "height": 96,
       "facing": 1,
-      "source": "4x8 sheet mage-female-oracle-3.png; pixelated (pixelate_sprites.py)",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "portrait": "portrait.webp",
       "actions": {
         "idle": "idle",
@@ -500,14 +548,20 @@
         "hit": "hurt",
         "death": "death"
       },
-      "pixel": true
+      "pixel": true,
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "swordsman-male-duelist-2": {
-      "dir": "swordsman-male-duelist-2",
+      "dir": "swordsman-male-duelist-2-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (swordsman-male-tier2.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -526,11 +580,11 @@
       }
     },
     "swordsman-male-duelist-3": {
-      "dir": "swordsman-male-duelist-3",
+      "dir": "swordsman-male-duelist-3-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (swordsman-male-tier3.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -549,11 +603,11 @@
       }
     },
     "swordsman-male-guardian-2": {
-      "dir": "swordsman-male-guardian-2",
+      "dir": "swordsman-male-guardian-2-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (swordsman-male-tier2.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -572,11 +626,11 @@
       }
     },
     "swordsman-male-guardian-3": {
-      "dir": "swordsman-male-guardian-3",
+      "dir": "swordsman-male-guardian-3-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (swordsman-male-tier3.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -595,10 +649,10 @@
       }
     },
     "mage-male-oracle-2": {
-      "dir": "mage-male-oracle-2",
-      "height": 112,
+      "dir": "mage-male-oracle-2-maple-v1",
+      "height": 96,
       "facing": 1,
-      "source": "4x8 sheet mage-male-oracle-2.png; pixelated (pixelate_sprites.py)",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "portrait": "portrait.webp",
       "actions": {
         "idle": "idle",
@@ -610,13 +664,19 @@
         "hit": "hurt",
         "death": "death"
       },
-      "pixel": true
+      "pixel": true,
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "mage-male-oracle-3": {
-      "dir": "mage-male-oracle-3",
-      "height": 112,
+      "dir": "mage-male-oracle-3-maple-v1",
+      "height": 96,
       "facing": 1,
-      "source": "4x8 sheet mage-male-oracle-3.png; pixelated (pixelate_sprites.py)",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "portrait": "portrait.webp",
       "actions": {
         "idle": "idle",
@@ -628,13 +688,19 @@
         "hit": "hurt",
         "death": "death"
       },
-      "pixel": true
+      "pixel": true,
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "mage-male-arcanist-2": {
-      "dir": "mage-male-arcanist-2",
-      "height": 112,
+      "dir": "mage-male-arcanist-2-maple-v1",
+      "height": 96,
       "facing": 1,
-      "source": "4x8 sheet mage-male-arcanist-2.png; pixelated (pixelate_sprites.py)",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "portrait": "portrait.webp",
       "actions": {
         "idle": "idle",
@@ -646,13 +712,19 @@
         "hit": "hurt",
         "death": "death"
       },
-      "pixel": true
+      "pixel": true,
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "mage-male-arcanist-3": {
-      "dir": "mage-male-arcanist-3",
-      "height": 112,
+      "dir": "mage-male-arcanist-3-maple-v1",
+      "height": 96,
       "facing": 1,
-      "source": "4x8 sheet mage-male-arcanist-3.png; pixelated (pixelate_sprites.py)",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "portrait": "portrait.webp",
       "actions": {
         "idle": "idle",
@@ -664,14 +736,20 @@
         "hit": "hurt",
         "death": "death"
       },
-      "pixel": true
+      "pixel": true,
+      "layers": {
+        "looks": {},
+        "hand": "hand",
+        "pixel": true,
+        "heldArt": "pixel"
+      }
     },
     "priest-male": {
-      "dir": "priest-male",
+      "dir": "priest-male-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (priest-male-tier1.webp), empty hands (monks hold no weapon)",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -685,15 +763,16 @@
       "layers": {
         "looks": {},
         "hand": "hand",
-        "pixel": true
+        "pixel": true,
+        "heldArt": "pixel"
       }
     },
     "priest-female": {
-      "dir": "priest-female",
+      "dir": "priest-female-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (priest-female-tier1.webp), empty hands (monks hold no weapon)",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -707,15 +786,16 @@
       "layers": {
         "looks": {},
         "hand": "hand",
-        "pixel": true
+        "pixel": true,
+        "heldArt": "pixel"
       }
     },
     "priest-male-bishop-2": {
-      "dir": "priest-male-bishop-2",
+      "dir": "priest-male-bishop-2-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (priest-male-tier2.webp), empty hands (monks hold no weapon)",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -729,15 +809,16 @@
       "layers": {
         "looks": {},
         "hand": "hand",
-        "pixel": true
+        "pixel": true,
+        "heldArt": "pixel"
       }
     },
     "priest-male-bishop-3": {
-      "dir": "priest-male-bishop-3",
+      "dir": "priest-male-bishop-3-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (priest-male-tier3.webp), empty hands (monks hold no weapon)",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -751,15 +832,16 @@
       "layers": {
         "looks": {},
         "hand": "hand",
-        "pixel": true
+        "pixel": true,
+        "heldArt": "pixel"
       }
     },
     "priest-male-templar-2": {
-      "dir": "priest-male-templar-2",
+      "dir": "priest-male-templar-2-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (priest-male-tier2.webp), empty hands (monks hold no weapon)",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -773,15 +855,16 @@
       "layers": {
         "looks": {},
         "hand": "hand",
-        "pixel": true
+        "pixel": true,
+        "heldArt": "pixel"
       }
     },
     "priest-male-templar-3": {
-      "dir": "priest-male-templar-3",
+      "dir": "priest-male-templar-3-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (priest-male-tier3.webp), empty hands (monks hold no weapon)",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -795,15 +878,16 @@
       "layers": {
         "looks": {},
         "hand": "hand",
-        "pixel": true
+        "pixel": true,
+        "heldArt": "pixel"
       }
     },
     "priest-female-bishop-2": {
-      "dir": "priest-female-bishop-2",
+      "dir": "priest-female-bishop-2-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (priest-female-tier2.webp), empty hands (monks hold no weapon)",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -817,15 +901,16 @@
       "layers": {
         "looks": {},
         "hand": "hand",
-        "pixel": true
+        "pixel": true,
+        "heldArt": "pixel"
       }
     },
     "priest-female-bishop-3": {
-      "dir": "priest-female-bishop-3",
+      "dir": "priest-female-bishop-3-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (priest-female-tier3.webp), empty hands (monks hold no weapon)",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -839,15 +924,16 @@
       "layers": {
         "looks": {},
         "hand": "hand",
-        "pixel": true
+        "pixel": true,
+        "heldArt": "pixel"
       }
     },
     "priest-female-templar-2": {
-      "dir": "priest-female-templar-2",
+      "dir": "priest-female-templar-2-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (priest-female-tier2.webp), empty hands (monks hold no weapon)",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -861,15 +947,16 @@
       "layers": {
         "looks": {},
         "hand": "hand",
-        "pixel": true
+        "pixel": true,
+        "heldArt": "pixel"
       }
     },
     "priest-female-templar-3": {
-      "dir": "priest-female-templar-3",
+      "dir": "priest-female-templar-3-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (priest-female-tier3.webp), empty hands (monks hold no weapon)",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -883,15 +970,16 @@
       "layers": {
         "looks": {},
         "hand": "hand",
-        "pixel": true
+        "pixel": true,
+        "heldArt": "pixel"
       }
     },
     "female-costume-crimson": {
-      "dir": "female-costume-crimson",
+      "dir": "female-costume-crimson-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (swordsman-female-tier1.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -910,11 +998,11 @@
       }
     },
     "female-costume-1": {
-      "dir": "female-costume-1",
+      "dir": "female-costume-1-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (costume-1.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -933,11 +1021,11 @@
       }
     },
     "female-costume-2": {
-      "dir": "female-costume-2",
+      "dir": "female-costume-2-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (costume-2.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -956,11 +1044,11 @@
       }
     },
     "female-costume-3": {
-      "dir": "female-costume-3",
+      "dir": "female-costume-3-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (costume-3.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -979,11 +1067,11 @@
       }
     },
     "female-costume-4": {
-      "dir": "female-costume-4",
+      "dir": "female-costume-4-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (costume-4.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -1002,11 +1090,11 @@
       }
     },
     "female-costume-5": {
-      "dir": "female-costume-5",
+      "dir": "female-costume-5-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (costume-5.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -1025,11 +1113,11 @@
       }
     },
     "female-costume-6": {
-      "dir": "female-costume-6",
+      "dir": "female-costume-6-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (costume-6.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -1048,11 +1136,11 @@
       }
     },
     "female-costume-7": {
-      "dir": "female-costume-7",
+      "dir": "female-costume-7-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (costume-7.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -1071,11 +1159,11 @@
       }
     },
     "male-costume-mcrimson": {
-      "dir": "male-costume-mcrimson",
+      "dir": "male-costume-mcrimson-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (swordsman-male-tier1.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -1094,11 +1182,11 @@
       }
     },
     "male-costume-mnoble": {
-      "dir": "male-costume-mnoble",
+      "dir": "male-costume-mnoble-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (male-costume-mnoble.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -1117,11 +1205,11 @@
       }
     },
     "male-costume-mmohom": {
-      "dir": "male-costume-mmohom",
+      "dir": "male-costume-mmohom-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (male-costume-mmohom.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -1140,11 +1228,11 @@
       }
     },
     "male-costume-mstreet": {
-      "dir": "male-costume-mstreet",
+      "dir": "male-costume-mstreet-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (male-costume-mstreet.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -1163,11 +1251,11 @@
       }
     },
     "male-costume-mtang": {
-      "dir": "male-costume-mtang",
+      "dir": "male-costume-mtang-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (male-costume-mtang.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -1186,11 +1274,11 @@
       }
     },
     "male-costume-mbeach": {
-      "dir": "male-costume-mbeach",
+      "dir": "male-costume-mbeach-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (male-costume-mbeach.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -1209,11 +1297,11 @@
       }
     },
     "male-costume-mwinter": {
-      "dir": "male-costume-mwinter",
+      "dir": "male-costume-mwinter-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (male-costume-mwinter.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -1232,11 +1320,11 @@
       }
     },
     "male-costume-mhunter": {
-      "dir": "male-costume-mhunter",
+      "dir": "male-costume-mhunter-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (archer-male-tier1.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -1255,11 +1343,11 @@
       }
     },
     "female-costume-hunter": {
-      "dir": "female-costume-hunter",
+      "dir": "female-costume-hunter-maple-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "pixel art sheet (archer-female-tier1.webp), weapon drawn in the front fist",
+      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -1626,7 +1714,7 @@
       }
     }
   },
-  "version": 1795152510211881000,
+  "version": "remakes-1795222958847335000",
   "npcs": {
     "elder": {
       "dir": "npcs/elder",

@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "idle",
+  "artSource": "pixel sheet male-costume-mwinter-maple-v1-empty.png",
+  "sourceSize": [
+    99,
+    110
+  ],
+  "encodedAnchor": [
+    50,
+    107
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    220,
+    220,
+    220,
+    220
+  ],
+  "durationSeconds": 0.88,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      99,
+      110
+    ],
+    "pages": [
+      {
+        "file": "idle-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        72.32,
+        82.81,
+        -62
+      ],
+      [
+        71.78,
+        79.62,
+        -64
+      ],
+      [
+        71.61,
+        78.9,
+        -62
+      ],
+      [
+        72.62,
+        83.92,
+        -60
+      ]
+    ]
+  }
+}

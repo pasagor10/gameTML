@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "death",
+  "artSource": "pixel sheet mage-female-oracle-3-maple-v1-empty.png",
+  "sourceSize": [
+    104,
+    110
+  ],
+  "encodedAnchor": [
+    54,
+    107
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    140,
+    160,
+    180,
+    400
+  ],
+  "durationSeconds": 0.88,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      104,
+      110
+    ],
+    "pages": [
+      {
+        "file": "death-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        79.53,
+        68.58,
+        -40
+      ],
+      [
+        73.29,
+        62.07,
+        -10
+      ],
+      [
+        83.77,
+        54.76,
+        5
+      ],
+      [
+        96.51,
+        88.27,
+        0
+      ]
+    ]
+  }
+}

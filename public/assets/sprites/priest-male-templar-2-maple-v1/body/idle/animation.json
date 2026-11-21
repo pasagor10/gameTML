@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "idle",
+  "artSource": "pixel sheet priest-male-templar-2-maple-v1-empty.png",
+  "sourceSize": [
+    102,
+    111
+  ],
+  "encodedAnchor": [
+    51,
+    107
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    220,
+    220,
+    220,
+    220
+  ],
+  "durationSeconds": 0.88,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      102,
+      111
+    ],
+    "pages": [
+      {
+        "file": "idle-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        75.31,
+        82.98,
+        -62
+      ],
+      [
+        73.98,
+        79.36,
+        -64
+      ],
+      [
+        72.17,
+        75.9,
+        -62
+      ],
+      [
+        74.75,
+        82.89,
+        -60
+      ]
+    ]
+  }
+}

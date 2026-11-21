@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "3.0",
+  "name": "skill",
+  "artSource": "pixel sheet female-costume-5-maple-v1-empty.png",
+  "sourceSize": [
+    104,
+    109
+  ],
+  "encodedAnchor": [
+    50,
+    106
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    90,
+    110,
+    120,
+    170
+  ],
+  "durationSeconds": 0.49,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 200
+    }
+  ],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      104,
+      109
+    ],
+    "pages": [
+      {
+        "file": "skill-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        63.11,
+        69.61,
+        -30
+      ],
+      [
+        81.08,
+        58.34,
+        -160
+      ],
+      [
+        79.16,
+        66.87,
+        -95
+      ],
+      [
+        72.59,
+        82.4,
+        -50
+      ]
+    ]
+  }
+}

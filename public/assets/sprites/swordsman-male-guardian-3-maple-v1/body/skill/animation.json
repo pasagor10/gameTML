@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "3.0",
+  "name": "skill",
+  "artSource": "pixel sheet swordsman-male-guardian-3-maple-v1-empty.png",
+  "sourceSize": [
+    99,
+    106
+  ],
+  "encodedAnchor": [
+    53,
+    103
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    90,
+    110,
+    120,
+    170
+  ],
+  "durationSeconds": 0.49,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 200
+    }
+  ],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      99,
+      106
+    ],
+    "pages": [
+      {
+        "file": "skill-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        75.04,
+        97.7,
+        -30
+      ],
+      [
+        89.14,
+        67.06,
+        -160
+      ],
+      [
+        88.62,
+        66.0,
+        -95
+      ],
+      [
+        74.81,
+        96.19,
+        -50
+      ]
+    ]
+  }
+}

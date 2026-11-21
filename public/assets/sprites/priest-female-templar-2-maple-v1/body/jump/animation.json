@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "jump",
+  "artSource": "pixel sheet priest-female-templar-2-maple-v1-empty.png",
+  "sourceSize": [
+    97,
+    111
+  ],
+  "encodedAnchor": [
+    54,
+    108
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    120,
+    120,
+    120,
+    120
+  ],
+  "durationSeconds": 0.48,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      97,
+      111
+    ],
+    "pages": [
+      {
+        "file": "jump-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        70.77,
+        89.38,
+        -50
+      ],
+      [
+        74.6,
+        38.94,
+        -70
+      ],
+      [
+        76.11,
+        53.39,
+        -80
+      ],
+      [
+        68.16,
+        87.79,
+        -45
+      ]
+    ]
+  }
+}

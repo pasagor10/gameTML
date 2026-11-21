@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "walk",
+  "artSource": "pixel sheet priest-female-bishop-2-maple-v1-empty.png",
+  "sourceSize": [
+    102,
+    115
+  ],
+  "encodedAnchor": [
+    54,
+    111
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    140,
+    140,
+    140,
+    140
+  ],
+  "durationSeconds": 0.56,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      102,
+      115
+    ],
+    "pages": [
+      {
+        "file": "walk-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        78.13,
+        80.36,
+        -58
+      ],
+      [
+        75.03,
+        76.08,
+        -64
+      ],
+      [
+        73.76,
+        75.69,
+        -58
+      ],
+      [
+        72.45,
+        75.3,
+        -64
+      ]
+    ]
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "hurt",
+  "artSource": "pixel sheet archer-male-ranger-2-maple-v1-empty.png",
+  "sourceSize": [
+    106,
+    109
+  ],
+  "encodedAnchor": [
+    49,
+    106
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    70,
+    90,
+    90,
+    110
+  ],
+  "durationSeconds": 0.36,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      106,
+      109
+    ],
+    "pages": [
+      {
+        "file": "hurt-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        79.48,
+        73.34,
+        -95
+      ],
+      [
+        76.82,
+        66.11,
+        -110
+      ],
+      [
+        71.9,
+        79.74,
+        -90
+      ],
+      [
+        78.68,
+        82.8,
+        -70
+      ]
+    ]
+  }
+}

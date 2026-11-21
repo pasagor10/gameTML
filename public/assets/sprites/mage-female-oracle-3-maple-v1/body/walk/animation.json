@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "walk",
+  "artSource": "pixel sheet mage-female-oracle-3-maple-v1-empty.png",
+  "sourceSize": [
+    104,
+    110
+  ],
+  "encodedAnchor": [
+    54,
+    107
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    140,
+    140,
+    140,
+    140
+  ],
+  "durationSeconds": 0.56,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      104,
+      110
+    ],
+    "pages": [
+      {
+        "file": "walk-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        76.03,
+        59.68,
+        -58
+      ],
+      [
+        81.6,
+        72.42,
+        -64
+      ],
+      [
+        77.54,
+        59.25,
+        -58
+      ],
+      [
+        76.31,
+        80.61,
+        -64
+      ]
+    ]
+  }
+}

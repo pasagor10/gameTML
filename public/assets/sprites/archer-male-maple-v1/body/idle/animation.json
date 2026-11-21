@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "idle",
+  "artSource": "pixel sheet archer-male-maple-v1-empty.png",
+  "sourceSize": [
+    110,
+    110
+  ],
+  "encodedAnchor": [
+    54,
+    107
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    220,
+    220,
+    220,
+    220
+  ],
+  "durationSeconds": 0.88,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      110,
+      110
+    ],
+    "pages": [
+      {
+        "file": "idle-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        84.17,
+        82.4,
+        -62
+      ],
+      [
+        84.56,
+        80.46,
+        -64
+      ],
+      [
+        84.92,
+        78.98,
+        -62
+      ],
+      [
+        83.85,
+        82.6,
+        -60
+      ]
+    ]
+  }
+}

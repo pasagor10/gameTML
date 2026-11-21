@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "walk",
+  "artSource": "pixel sheet priest-female-templar-2-maple-v1-empty.png",
+  "sourceSize": [
+    97,
+    111
+  ],
+  "encodedAnchor": [
+    54,
+    108
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    140,
+    140,
+    140,
+    140
+  ],
+  "durationSeconds": 0.56,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      97,
+      111
+    ],
+    "pages": [
+      {
+        "file": "walk-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        72.49,
+        82.13,
+        -58
+      ],
+      [
+        74.38,
+        72.57,
+        -64
+      ],
+      [
+        71.66,
+        80.43,
+        -58
+      ],
+      [
+        71.75,
+        80.58,
+        -64
+      ]
+    ]
+  }
+}

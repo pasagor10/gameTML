@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "jump",
+  "artSource": "pixel sheet mage-male-oracle-3-maple-v1-empty.png",
+  "sourceSize": [
+    99,
+    109
+  ],
+  "encodedAnchor": [
+    48,
+    105
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    120,
+    120,
+    120,
+    120
+  ],
+  "durationSeconds": 0.48,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      99,
+      109
+    ],
+    "pages": [
+      {
+        "file": "jump-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        67.74,
+        91.09,
+        -50
+      ],
+      [
+        71.53,
+        68.47,
+        -70
+      ],
+      [
+        71.88,
+        55.55,
+        -80
+      ],
+      [
+        68.7,
+        61.38,
+        -45
+      ]
+    ]
+  }
+}

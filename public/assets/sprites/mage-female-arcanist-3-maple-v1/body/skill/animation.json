@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "3.0",
+  "name": "skill",
+  "artSource": "pixel sheet mage-female-arcanist-3-maple-v1-empty.png",
+  "sourceSize": [
+    99,
+    111
+  ],
+  "encodedAnchor": [
+    47,
+    107
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    90,
+    110,
+    120,
+    170
+  ],
+  "durationSeconds": 0.49,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 200
+    }
+  ],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      99,
+      111
+    ],
+    "pages": [
+      {
+        "file": "skill-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        75.33,
+        73.99,
+        -30
+      ],
+      [
+        86.57,
+        62.18,
+        -160
+      ],
+      [
+        82.28,
+        60.94,
+        -95
+      ],
+      [
+        74.69,
+        79.38,
+        -50
+      ]
+    ]
+  }
+}

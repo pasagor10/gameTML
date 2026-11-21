@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "idle",
+  "artSource": "pixel sheet priest-female-bishop-3-maple-v1-empty.png",
+  "sourceSize": [
+    103,
+    111
+  ],
+  "encodedAnchor": [
+    51,
+    108
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    220,
+    220,
+    220,
+    220
+  ],
+  "durationSeconds": 0.88,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      103,
+      111
+    ],
+    "pages": [
+      {
+        "file": "idle-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        47.22,
+        79.72,
+        -62
+      ],
+      [
+        77.89,
+        84.8,
+        -64
+      ],
+      [
+        76.71,
+        83.05,
+        -62
+      ],
+      [
+        72.63,
+        36.47,
+        -60
+      ]
+    ]
+  }
+}

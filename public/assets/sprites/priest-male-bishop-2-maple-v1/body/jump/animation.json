@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "jump",
+  "artSource": "pixel sheet priest-male-bishop-2-maple-v1-empty.png",
+  "sourceSize": [
+    97,
+    112
+  ],
+  "encodedAnchor": [
+    50,
+    109
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    120,
+    120,
+    120,
+    120
+  ],
+  "durationSeconds": 0.48,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      97,
+      112
+    ],
+    "pages": [
+      {
+        "file": "jump-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        71.28,
+        85.71,
+        -50
+      ],
+      [
+        71.61,
+        67.75,
+        -70
+      ],
+      [
+        72.37,
+        58.16,
+        -80
+      ],
+      [
+        73.8,
+        83.76,
+        -45
+      ]
+    ]
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "death",
+  "artSource": "pixel sheet male-costume-mcrimson-maple-v1-empty.png",
+  "sourceSize": [
+    107,
+    110
+  ],
+  "encodedAnchor": [
+    51,
+    107
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    140,
+    160,
+    180,
+    400
+  ],
+  "durationSeconds": 0.88,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      107,
+      110
+    ],
+    "pages": [
+      {
+        "file": "death-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        81.89,
+        65.28,
+        -40
+      ],
+      [
+        73.75,
+        48.25,
+        -10
+      ],
+      [
+        81.06,
+        65.0,
+        5
+      ],
+      [
+        86.85,
+        82.35,
+        0
+      ]
+    ]
+  }
+}

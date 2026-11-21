@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "hurt",
+  "artSource": "pixel sheet mage-female-arcanist-3-maple-v1-empty.png",
+  "sourceSize": [
+    99,
+    111
+  ],
+  "encodedAnchor": [
+    47,
+    107
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    70,
+    90,
+    90,
+    110
+  ],
+  "durationSeconds": 0.36,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      99,
+      111
+    ],
+    "pages": [
+      {
+        "file": "hurt-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        74.97,
+        80.74,
+        -95
+      ],
+      [
+        78.02,
+        69.2,
+        -110
+      ],
+      [
+        66.67,
+        54.32,
+        -90
+      ],
+      [
+        69.75,
+        52.26,
+        -70
+      ]
+    ]
+  }
+}

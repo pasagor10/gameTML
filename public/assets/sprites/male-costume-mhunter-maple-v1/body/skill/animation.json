@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "3.0",
+  "name": "skill",
+  "artSource": "pixel sheet male-costume-mhunter-maple-v1-empty.png",
+  "sourceSize": [
+    101,
+    107
+  ],
+  "encodedAnchor": [
+    49,
+    104
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    90,
+    110,
+    120,
+    170
+  ],
+  "durationSeconds": 0.49,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 200
+    }
+  ],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      101,
+      107
+    ],
+    "pages": [
+      {
+        "file": "skill-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        74.54,
+        81.14,
+        -30
+      ],
+      [
+        88.49,
+        61.92,
+        -160
+      ],
+      [
+        85.51,
+        63.03,
+        -95
+      ],
+      [
+        75.56,
+        97.16,
+        -50
+      ]
+    ]
+  }
+}

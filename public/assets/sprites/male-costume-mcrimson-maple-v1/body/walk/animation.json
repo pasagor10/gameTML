@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "walk",
+  "artSource": "pixel sheet male-costume-mcrimson-maple-v1-empty.png",
+  "sourceSize": [
+    107,
+    110
+  ],
+  "encodedAnchor": [
+    51,
+    107
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    140,
+    140,
+    140,
+    140
+  ],
+  "durationSeconds": 0.56,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      107,
+      110
+    ],
+    "pages": [
+      {
+        "file": "walk-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        73.81,
+        77.49,
+        -58
+      ],
+      [
+        71.57,
+        80.81,
+        -64
+      ],
+      [
+        76.24,
+        75.8,
+        -58
+      ],
+      [
+        74.5,
+        27.86,
+        -64
+      ]
+    ]
+  }
+}

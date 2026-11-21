@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "3.0",
+  "name": "skill",
+  "artSource": "pixel sheet male-costume-mmohom-maple-v1-empty.png",
+  "sourceSize": [
+    104,
+    110
+  ],
+  "encodedAnchor": [
+    51,
+    107
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    90,
+    110,
+    120,
+    170
+  ],
+  "durationSeconds": 0.49,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 200
+    }
+  ],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      104,
+      110
+    ],
+    "pages": [
+      {
+        "file": "skill-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        71.37,
+        64.54,
+        -30
+      ],
+      [
+        79.53,
+        62.36,
+        -160
+      ],
+      [
+        76.45,
+        70.39,
+        -95
+      ],
+      [
+        71.02,
+        75.78,
+        -50
+      ]
+    ]
+  }
+}

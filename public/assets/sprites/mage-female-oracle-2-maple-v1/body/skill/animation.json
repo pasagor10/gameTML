@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "3.0",
+  "name": "skill",
+  "artSource": "pixel sheet mage-female-oracle-2-maple-v1-empty.png",
+  "sourceSize": [
+    105,
+    113
+  ],
+  "encodedAnchor": [
+    52,
+    110
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    90,
+    110,
+    120,
+    170
+  ],
+  "durationSeconds": 0.49,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 200
+    }
+  ],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      105,
+      113
+    ],
+    "pages": [
+      {
+        "file": "skill-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        74.24,
+        26.51,
+        -30
+      ],
+      [
+        86.86,
+        58.95,
+        -160
+      ],
+      [
+        87.52,
+        65.41,
+        -95
+      ],
+      [
+        73.78,
+        25.95,
+        -50
+      ]
+    ]
+  }
+}

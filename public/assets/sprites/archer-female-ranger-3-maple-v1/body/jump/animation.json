@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "jump",
+  "artSource": "pixel sheet archer-female-ranger-3-maple-v1-empty.png",
+  "sourceSize": [
+    104,
+    107
+  ],
+  "encodedAnchor": [
+    50,
+    104
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    120,
+    120,
+    120,
+    120
+  ],
+  "durationSeconds": 0.48,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      104,
+      107
+    ],
+    "pages": [
+      {
+        "file": "jump-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        81.26,
+        66.5,
+        -50
+      ],
+      [
+        82.53,
+        63.42,
+        -70
+      ],
+      [
+        83.67,
+        52.8,
+        -80
+      ],
+      [
+        83.39,
+        47.62,
+        -45
+      ]
+    ]
+  }
+}

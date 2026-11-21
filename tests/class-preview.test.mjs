@@ -13,7 +13,7 @@ test("picking a class previews its character; confirmation and character changes
     .replace('"/shared/rpg.js"', JSON.stringify(url("../shared/rpg.js")));
   let source = readFileSync(new URL("../public/rpg-ui.js", import.meta.url), "utf8")
     .replace(/"\/hero-appearance\.js(\?v=[^"]*)?"/, JSON.stringify(asModule(portraitSource)));
-  for (const [from, to] of [["/item-art.js", "../public/item-art.js"],
+  for (const [from, to] of [["/item-art.js?v=2", "../public/item-art.js"],
     ["/shared/rpg.js", "../shared/rpg.js"], ["/shared/config.js", "../shared/config.js"],
     ["/shared/motion.js", "../shared/motion.js"], ["/shared/costumes.js", "../shared/costumes.js"], ["/shared/stats.js", "../shared/stats.js"], ["/skill-icons.js?v=5", "../public/skill-icons.js"]])
     source = source.replace(JSON.stringify(from), JSON.stringify(url(to)));
@@ -27,7 +27,7 @@ test("picking a class previews its character; confirmation and character changes
     gold: 120, inventory: {}, specialization: null, advanced: false });
   p.stats = combatStats(p);
   let html = ui.rpgPanel(p, "town", "class");
-  assert.match(html, /priest-female\/portrait\.webp/);
+  assert.ok(html.includes(`${index.sets['priest-female'].dir}/portrait.webp`));
   const pick = id => {
     const button = { dataset: { pickSpec: id } };
     ui.bindRpgPanel({ querySelectorAll: selector => selector === "[data-pick-spec]" ? [button] : [] }, p,
@@ -35,7 +35,7 @@ test("picking a class previews its character; confirmation and character changes
     button.onclick();
   };
   pick("bishop");
-  assert.match(html, /priest-female-bishop-2\/portrait\.webp/);
+  assert.ok(html.includes(`${index.sets['priest-female-bishop-2'].dir}/portrait.webp`));
   assert.match(html, /data-spec="bishop"/);
   assert.match(html, /ภาพตัวอย่าง/);
   assert.equal(p.specialization, null);
@@ -44,11 +44,11 @@ test("picking a class previews its character; confirmation and character changes
   assert.doesNotMatch(html, /cls-preview-note/);
   p.advanced = true;
   html = ui.rpgPanel(p, "town", "class");
-  assert.match(html, /priest-female-bishop-3\/portrait\.webp/);
+  assert.ok(html.includes(`${index.sets['priest-female-bishop-3'].dir}/portrait.webp`));
   pick("templar");
-  assert.match(html, /priest-female-templar-3\/portrait\.webp/);
+  assert.ok(html.includes(`${index.sets['priest-female-templar-3'].dir}/portrait.webp`));
   const other = { ...p, id: "another-hero", specialization: null, advanced: false };
   html = ui.rpgPanel(other, "town", "class");
-  assert.match(html, /priest-female\/portrait\.webp/);
+  assert.ok(html.includes(`${index.sets['priest-female'].dir}/portrait.webp`));
   assert.doesNotMatch(html, /cls-preview-note/);
 });

@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "3.0",
+  "name": "skill",
+  "artSource": "pixel sheet priest-female-maple-v1-empty.png",
+  "sourceSize": [
+    98,
+    111
+  ],
+  "encodedAnchor": [
+    54,
+    108
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    90,
+    110,
+    120,
+    170
+  ],
+  "durationSeconds": 0.49,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 200
+    }
+  ],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      98,
+      111
+    ],
+    "pages": [
+      {
+        "file": "skill-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        67.67,
+        49.39,
+        -30
+      ],
+      [
+        72.0,
+        57.15,
+        -160
+      ],
+      [
+        79.28,
+        59.98,
+        -95
+      ],
+      [
+        69.16,
+        79.08,
+        -50
+      ]
+    ]
+  }
+}

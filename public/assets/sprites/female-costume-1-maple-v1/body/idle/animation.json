@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "idle",
+  "artSource": "pixel sheet female-costume-1-maple-v1-empty.png",
+  "sourceSize": [
+    102,
+    113
+  ],
+  "encodedAnchor": [
+    53,
+    110
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    220,
+    220,
+    220,
+    220
+  ],
+  "durationSeconds": 0.88,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      102,
+      113
+    ],
+    "pages": [
+      {
+        "file": "idle-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        74.0,
+        43.12,
+        -62
+      ],
+      [
+        79.79,
+        85.2,
+        -64
+      ],
+      [
+        79.13,
+        85.38,
+        -62
+      ],
+      [
+        68.59,
+        83.09,
+        -60
+      ]
+    ]
+  }
+}

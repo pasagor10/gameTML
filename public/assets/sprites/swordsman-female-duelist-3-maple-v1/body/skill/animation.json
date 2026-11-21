@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "3.0",
+  "name": "skill",
+  "artSource": "pixel sheet swordsman-female-duelist-3-maple-v1-empty.png",
+  "sourceSize": [
+    106,
+    109
+  ],
+  "encodedAnchor": [
+    53,
+    106
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    90,
+    110,
+    120,
+    170
+  ],
+  "durationSeconds": 0.49,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 200
+    }
+  ],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      106,
+      109
+    ],
+    "pages": [
+      {
+        "file": "skill-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        75.92,
+        75.14,
+        -30
+      ],
+      [
+        84.32,
+        63.28,
+        -160
+      ],
+      [
+        94.07,
+        58.53,
+        -95
+      ],
+      [
+        79.78,
+        74.56,
+        -50
+      ]
+    ]
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "walk",
+  "artSource": "pixel sheet female-costume-6-maple-v1-empty.png",
+  "sourceSize": [
+    100,
+    113
+  ],
+  "encodedAnchor": [
+    52,
+    109
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    140,
+    140,
+    140,
+    140
+  ],
+  "durationSeconds": 0.56,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      100,
+      113
+    ],
+    "pages": [
+      {
+        "file": "walk-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        74.12,
+        41.25,
+        -58
+      ],
+      [
+        75.87,
+        75.94,
+        -64
+      ],
+      [
+        58.74,
+        56.08,
+        -58
+      ],
+      [
+        70.72,
+        79.42,
+        -64
+      ]
+    ]
+  }
+}

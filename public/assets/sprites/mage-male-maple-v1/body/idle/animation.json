@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "idle",
+  "artSource": "pixel sheet mage-male-maple-v1-empty.png",
+  "sourceSize": [
+    102,
+    112
+  ],
+  "encodedAnchor": [
+    48,
+    108
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    220,
+    220,
+    220,
+    220
+  ],
+  "durationSeconds": 0.88,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      102,
+      112
+    ],
+    "pages": [
+      {
+        "file": "idle-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        71.96,
+        33.5,
+        -62
+      ],
+      [
+        71.05,
+        31.76,
+        -64
+      ],
+      [
+        71.72,
+        28.54,
+        -62
+      ],
+      [
+        70.02,
+        81.7,
+        -60
+      ]
+    ]
+  }
+}

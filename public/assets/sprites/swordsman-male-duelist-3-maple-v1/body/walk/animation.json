@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "walk",
+  "artSource": "pixel sheet swordsman-male-duelist-3-maple-v1-empty.png",
+  "sourceSize": [
+    107,
+    111
+  ],
+  "encodedAnchor": [
+    47,
+    108
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    140,
+    140,
+    140,
+    140
+  ],
+  "durationSeconds": 0.56,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      107,
+      111
+    ],
+    "pages": [
+      {
+        "file": "walk-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        64.17,
+        80.06,
+        -58
+      ],
+      [
+        76.78,
+        79.94,
+        -64
+      ],
+      [
+        75.93,
+        80.02,
+        -58
+      ],
+      [
+        74.0,
+        40.43,
+        -64
+      ]
+    ]
+  }
+}

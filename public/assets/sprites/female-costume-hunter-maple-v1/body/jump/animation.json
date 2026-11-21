@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "jump",
+  "artSource": "pixel sheet female-costume-hunter-maple-v1-empty.png",
+  "sourceSize": [
+    106,
+    112
+  ],
+  "encodedAnchor": [
+    59,
+    109
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    120,
+    120,
+    120,
+    120
+  ],
+  "durationSeconds": 0.48,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      106,
+      112
+    ],
+    "pages": [
+      {
+        "file": "jump-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        82.67,
+        90.27,
+        -50
+      ],
+      [
+        90.92,
+        65.89,
+        -70
+      ],
+      [
+        92.41,
+        52.44,
+        -80
+      ],
+      [
+        84.04,
+        90.61,
+        -45
+      ]
+    ]
+  }
+}

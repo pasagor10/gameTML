@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "jump",
+  "artSource": "pixel sheet swordsman-male-guardian-3-maple-v1-empty.png",
+  "sourceSize": [
+    99,
+    106
+  ],
+  "encodedAnchor": [
+    53,
+    103
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    120,
+    120,
+    120,
+    120
+  ],
+  "durationSeconds": 0.48,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      99,
+      106
+    ],
+    "pages": [
+      {
+        "file": "jump-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        75.21,
+        80.47,
+        -50
+      ],
+      [
+        82.15,
+        57.31,
+        -70
+      ],
+      [
+        81.97,
+        48.49,
+        -80
+      ],
+      [
+        80.26,
+        75.4,
+        -45
+      ]
+    ]
+  }
+}

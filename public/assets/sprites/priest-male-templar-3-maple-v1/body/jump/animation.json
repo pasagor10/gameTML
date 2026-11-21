@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "jump",
+  "artSource": "pixel sheet priest-male-templar-3-maple-v1-empty.png",
+  "sourceSize": [
+    97,
+    114
+  ],
+  "encodedAnchor": [
+    49,
+    111
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    120,
+    120,
+    120,
+    120
+  ],
+  "durationSeconds": 0.48,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      97,
+      114
+    ],
+    "pages": [
+      {
+        "file": "jump-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        68.11,
+        92.07,
+        -50
+      ],
+      [
+        74.33,
+        60.41,
+        -70
+      ],
+      [
+        74.06,
+        48.77,
+        -80
+      ],
+      [
+        69.24,
+        85.53,
+        -45
+      ]
+    ]
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "run",
+  "artSource": "pixel sheet archer-male-scout-3-maple-v1-empty.png",
+  "sourceSize": [
+    108,
+    112
+  ],
+  "encodedAnchor": [
+    54,
+    109
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    100,
+    100,
+    100,
+    100
+  ],
+  "durationSeconds": 0.4,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      108,
+      112
+    ],
+    "pages": [
+      {
+        "file": "run-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        85.87,
+        74.66,
+        -24
+      ],
+      [
+        86.86,
+        40.21,
+        -30
+      ],
+      [
+        76.94,
+        74.13,
+        -24
+      ],
+      [
+        81.97,
+        83.67,
+        -30
+      ]
+    ]
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "walk",
+  "artSource": "pixel sheet swordsman-female-guardian-3-maple-v1-empty.png",
+  "sourceSize": [
+    103,
+    114
+  ],
+  "encodedAnchor": [
+    52,
+    111
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    140,
+    140,
+    140,
+    140
+  ],
+  "durationSeconds": 0.56,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      103,
+      114
+    ],
+    "pages": [
+      {
+        "file": "walk-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        79.49,
+        79.2,
+        -58
+      ],
+      [
+        78.12,
+        85.62,
+        -64
+      ],
+      [
+        82.09,
+        81.68,
+        -58
+      ],
+      [
+        77.49,
+        85.25,
+        -64
+      ]
+    ]
+  }
+}

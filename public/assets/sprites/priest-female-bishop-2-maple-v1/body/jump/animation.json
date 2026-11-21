@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "jump",
+  "artSource": "pixel sheet priest-female-bishop-2-maple-v1-empty.png",
+  "sourceSize": [
+    102,
+    115
+  ],
+  "encodedAnchor": [
+    54,
+    111
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    120,
+    120,
+    120,
+    120
+  ],
+  "durationSeconds": 0.48,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      102,
+      115
+    ],
+    "pages": [
+      {
+        "file": "jump-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        75.49,
+        88.36,
+        -50
+      ],
+      [
+        74.82,
+        64.3,
+        -70
+      ],
+      [
+        78.17,
+        52.78,
+        -80
+      ],
+      [
+        74.96,
+        81.04,
+        -45
+      ]
+    ]
+  }
+}

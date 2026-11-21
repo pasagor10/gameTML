@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "hurt",
+  "artSource": "pixel sheet archer-female-ranger-2-maple-v1-empty.png",
+  "sourceSize": [
+    103,
+    110
+  ],
+  "encodedAnchor": [
+    52,
+    107
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    70,
+    90,
+    90,
+    110
+  ],
+  "durationSeconds": 0.36,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      103,
+      110
+    ],
+    "pages": [
+      {
+        "file": "hurt-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        78.58,
+        68.44,
+        -95
+      ],
+      [
+        79.3,
+        79.71,
+        -110
+      ],
+      [
+        73.17,
+        78.25,
+        -90
+      ],
+      [
+        74.85,
+        79.93,
+        -70
+      ]
+    ]
+  }
+}

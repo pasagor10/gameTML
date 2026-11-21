@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "hurt",
+  "artSource": "pixel sheet swordsman-male-duelist-3-maple-v1-empty.png",
+  "sourceSize": [
+    107,
+    111
+  ],
+  "encodedAnchor": [
+    47,
+    108
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    70,
+    90,
+    90,
+    110
+  ],
+  "durationSeconds": 0.36,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      107,
+      111
+    ],
+    "pages": [
+      {
+        "file": "hurt-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        74.47,
+        63.85,
+        -95
+      ],
+      [
+        69.79,
+        63.21,
+        -110
+      ],
+      [
+        52.4,
+        77.1,
+        -90
+      ],
+      [
+        59.79,
+        29.42,
+        -70
+      ]
+    ]
+  }
+}

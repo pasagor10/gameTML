@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "death",
+  "artSource": "pixel sheet female-costume-7-maple-v1-empty.png",
+  "sourceSize": [
+    100,
+    111
+  ],
+  "encodedAnchor": [
+    50,
+    108
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    140,
+    160,
+    180,
+    400
+  ],
+  "durationSeconds": 0.88,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      100,
+      111
+    ],
+    "pages": [
+      {
+        "file": "death-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        78.53,
+        83.93,
+        -40
+      ],
+      [
+        71.03,
+        57.58,
+        -10
+      ],
+      [
+        61.09,
+        63.43,
+        5
+      ],
+      [
+        91.45,
+        94.32,
+        0
+      ]
+    ]
+  }
+}

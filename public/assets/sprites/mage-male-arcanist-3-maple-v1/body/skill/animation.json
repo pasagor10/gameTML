@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "3.0",
+  "name": "skill",
+  "artSource": "pixel sheet mage-male-arcanist-3-maple-v1-empty.png",
+  "sourceSize": [
+    94,
+    112
+  ],
+  "encodedAnchor": [
+    43,
+    109
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    90,
+    110,
+    120,
+    170
+  ],
+  "durationSeconds": 0.49,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 200
+    }
+  ],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      94,
+      112
+    ],
+    "pages": [
+      {
+        "file": "skill-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        66.39,
+        77.28,
+        -30
+      ],
+      [
+        78.24,
+        53.52,
+        -160
+      ],
+      [
+        77.2,
+        46.75,
+        -95
+      ],
+      [
+        66.84,
+        81.42,
+        -50
+      ]
+    ]
+  }
+}

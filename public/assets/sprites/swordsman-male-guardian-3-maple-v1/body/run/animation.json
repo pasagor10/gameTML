@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "run",
+  "artSource": "pixel sheet swordsman-male-guardian-3-maple-v1-empty.png",
+  "sourceSize": [
+    99,
+    106
+  ],
+  "encodedAnchor": [
+    53,
+    103
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    100,
+    100,
+    100,
+    100
+  ],
+  "durationSeconds": 0.4,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      99,
+      106
+    ],
+    "pages": [
+      {
+        "file": "run-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        78.43,
+        67.97,
+        -24
+      ],
+      [
+        75.83,
+        71.28,
+        -30
+      ],
+      [
+        69.72,
+        78.13,
+        -24
+      ],
+      [
+        71.32,
+        79.59,
+        -30
+      ]
+    ]
+  }
+}

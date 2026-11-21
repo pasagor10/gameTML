@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "3.0",
+  "name": "skill",
+  "artSource": "pixel sheet priest-male-templar-2-maple-v1-empty.png",
+  "sourceSize": [
+    102,
+    111
+  ],
+  "encodedAnchor": [
+    51,
+    107
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    90,
+    110,
+    120,
+    170
+  ],
+  "durationSeconds": 0.49,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 200
+    }
+  ],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      102,
+      111
+    ],
+    "pages": [
+      {
+        "file": "skill-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        71.7,
+        61.0,
+        -30
+      ],
+      [
+        78.82,
+        54.21,
+        -160
+      ],
+      [
+        75.17,
+        65.33,
+        -95
+      ],
+      [
+        74.65,
+        81.39,
+        -50
+      ]
+    ]
+  }
+}

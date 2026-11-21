@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "death",
+  "artSource": "pixel sheet mage-male-maple-v1-empty.png",
+  "sourceSize": [
+    102,
+    112
+  ],
+  "encodedAnchor": [
+    48,
+    108
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    140,
+    160,
+    180,
+    400
+  ],
+  "durationSeconds": 0.88,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      102,
+      112
+    ],
+    "pages": [
+      {
+        "file": "death-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        73.45,
+        63.02,
+        -40
+      ],
+      [
+        75.38,
+        42.43,
+        -10
+      ],
+      [
+        80.07,
+        64.49,
+        5
+      ],
+      [
+        88.86,
+        82.0,
+        0
+      ]
+    ]
+  }
+}

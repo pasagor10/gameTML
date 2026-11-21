@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "3.0",
+  "name": "skill",
+  "artSource": "pixel sheet swordsman-female-guardian-2-maple-v1-empty.png",
+  "sourceSize": [
+    107,
+    107
+  ],
+  "encodedAnchor": [
+    58,
+    104
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    90,
+    110,
+    120,
+    170
+  ],
+  "durationSeconds": 0.49,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 200
+    }
+  ],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      107,
+      107
+    ],
+    "pages": [
+      {
+        "file": "skill-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        75.62,
+        97.6,
+        -30
+      ],
+      [
+        91.46,
+        60.97,
+        -160
+      ],
+      [
+        89.56,
+        66.62,
+        -95
+      ],
+      [
+        83.77,
+        76.01,
+        -50
+      ]
+    ]
+  }
+}

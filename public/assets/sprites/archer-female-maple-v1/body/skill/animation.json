@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "3.0",
+  "name": "skill",
+  "artSource": "pixel sheet archer-female-maple-v1-empty.png",
+  "sourceSize": [
+    97,
+    112
+  ],
+  "encodedAnchor": [
+    49,
+    108
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    90,
+    110,
+    120,
+    170
+  ],
+  "durationSeconds": 0.49,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 200
+    }
+  ],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      97,
+      112
+    ],
+    "pages": [
+      {
+        "file": "skill-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        75.26,
+        67.06,
+        -30
+      ],
+      [
+        81.47,
+        52.23,
+        -160
+      ],
+      [
+        87.74,
+        57.46,
+        -95
+      ],
+      [
+        71.35,
+        101.68,
+        -50
+      ]
+    ]
+  }
+}

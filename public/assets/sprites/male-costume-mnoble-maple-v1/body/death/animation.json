@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "death",
+  "artSource": "pixel sheet male-costume-mnoble-maple-v1-empty.png",
+  "sourceSize": [
+    110,
+    113
+  ],
+  "encodedAnchor": [
+    60,
+    110
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    140,
+    160,
+    180,
+    400
+  ],
+  "durationSeconds": 0.88,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      110,
+      113
+    ],
+    "pages": [
+      {
+        "file": "death-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        86.95,
+        65.73,
+        -40
+      ],
+      [
+        67.44,
+        63.27,
+        -10
+      ],
+      [
+        71.01,
+        85.35,
+        5
+      ],
+      [
+        83.99,
+        104.83,
+        0
+      ]
+    ]
+  }
+}

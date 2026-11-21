@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "idle",
+  "artSource": "pixel sheet swordsman-male-duelist-3-maple-v1-empty.png",
+  "sourceSize": [
+    107,
+    111
+  ],
+  "encodedAnchor": [
+    47,
+    108
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    220,
+    220,
+    220,
+    220
+  ],
+  "durationSeconds": 0.88,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      107,
+      111
+    ],
+    "pages": [
+      {
+        "file": "idle-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        58.3,
+        67.8,
+        -62
+      ],
+      [
+        76.65,
+        82.21,
+        -64
+      ],
+      [
+        75.52,
+        81.92,
+        -62
+      ],
+      [
+        69.06,
+        60.75,
+        -60
+      ]
+    ]
+  }
+}

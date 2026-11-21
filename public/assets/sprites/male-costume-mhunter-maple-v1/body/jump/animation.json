@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "jump",
+  "artSource": "pixel sheet male-costume-mhunter-maple-v1-empty.png",
+  "sourceSize": [
+    101,
+    107
+  ],
+  "encodedAnchor": [
+    49,
+    104
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    120,
+    120,
+    120,
+    120
+  ],
+  "durationSeconds": 0.48,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      101,
+      107
+    ],
+    "pages": [
+      {
+        "file": "jump-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        77.17,
+        83.76,
+        -50
+      ],
+      [
+        79.78,
+        62.01,
+        -70
+      ],
+      [
+        79.9,
+        48.34,
+        -80
+      ],
+      [
+        74.62,
+        54.35,
+        -45
+      ]
+    ]
+  }
+}

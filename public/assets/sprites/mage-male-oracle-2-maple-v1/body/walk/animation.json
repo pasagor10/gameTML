@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "walk",
+  "artSource": "pixel sheet mage-male-oracle-2-maple-v1-empty.png",
+  "sourceSize": [
+    103,
+    117
+  ],
+  "encodedAnchor": [
+    53,
+    113
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    140,
+    140,
+    140,
+    140
+  ],
+  "durationSeconds": 0.56,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      103,
+      117
+    ],
+    "pages": [
+      {
+        "file": "walk-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        72.81,
+        80.6,
+        -58
+      ],
+      [
+        74.91,
+        74.48,
+        -64
+      ],
+      [
+        73.27,
+        39.5,
+        -58
+      ],
+      [
+        70.42,
+        77.58,
+        -64
+      ]
+    ]
+  }
+}

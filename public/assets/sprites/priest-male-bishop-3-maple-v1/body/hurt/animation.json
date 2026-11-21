@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "hurt",
+  "artSource": "pixel sheet priest-male-bishop-3-maple-v1-empty.png",
+  "sourceSize": [
+    99,
+    111
+  ],
+  "encodedAnchor": [
+    51,
+    108
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    70,
+    90,
+    90,
+    110
+  ],
+  "durationSeconds": 0.36,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      99,
+      111
+    ],
+    "pages": [
+      {
+        "file": "hurt-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        80.53,
+        75.19,
+        -95
+      ],
+      [
+        81.3,
+        66.62,
+        -110
+      ],
+      [
+        80.24,
+        80.44,
+        -90
+      ],
+      [
+        76.38,
+        84.11,
+        -70
+      ]
+    ]
+  }
+}

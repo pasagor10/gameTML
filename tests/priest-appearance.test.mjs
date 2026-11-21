@@ -11,14 +11,14 @@ const index = JSON.parse(readFileSync(new URL("index.json", root)));
 const painted = JSON.parse(readFileSync(new URL("../tests/fixtures/painted-priest.json", import.meta.url)));
 const digest = (path) => createHash("sha256").update(readFileSync(new URL(path, root))).digest("hex");
 
-test("monks are pixel art with empty hands, one look per vocation and advancement", () => {
+test("monks have empty base sprites with item weapons, one look per vocation and advancement", () => {
   for (const gender of ["male", "female"]) {
   const dirs = new Set();
   for (const specialization of [null, "bishop", "templar"])
     for (const advanced of specialization ? [false, true] : [false]) {
       const set = index.sets[heroSkins({ class: "priest", gender, specialization, advanced })[0]];
       assert.equal(set.layers.pixel, true);
-      assert.equal(set.layers.heldArt, undefined, "monks hold no weapon");
+      assert.equal(set.layers.heldArt, "pixel", "the equipped item supplies the weapon");
       readFileSync(new URL(`${set.dir}/body/idle/idle-atlas-00.webp`, root));
       dirs.add(set.dir);
     }
@@ -37,7 +37,7 @@ test("class and advancement preserve the equipped weapon tier and player costume
 test("painted priest holds its own drawn staff glowing in the item's colour and washes the outfit in the armour colour", async () => {
   let source = readFileSync(new URL("../public/hero-gear.js", import.meta.url), "utf8");
   for (const [from, to] of [["/shared/rpg.js", "../shared/rpg.js"],
-    ["/shared/appearance.js", "../shared/appearance.js"], ["/item-art.js", "../public/item-art.js"]])
+    ["/shared/appearance.js", "../shared/appearance.js"], ["/item-art.js?v=2", "../public/item-art.js"]])
     source = source.replace(`"${from}"`, JSON.stringify(new URL(to, import.meta.url).href));
   const originalFetch = globalThis.fetch;
   let gearDress;

@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "hurt",
+  "artSource": "pixel sheet male-costume-mtang-maple-v1-empty.png",
+  "sourceSize": [
+    101,
+    109
+  ],
+  "encodedAnchor": [
+    51,
+    106
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    70,
+    90,
+    90,
+    110
+  ],
+  "durationSeconds": 0.36,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      101,
+      109
+    ],
+    "pages": [
+      {
+        "file": "hurt-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        68.38,
+        72.1,
+        -95
+      ],
+      [
+        70.59,
+        63.87,
+        -110
+      ],
+      [
+        64.5,
+        82.69,
+        -90
+      ],
+      [
+        69.92,
+        83.31,
+        -70
+      ]
+    ]
+  }
+}

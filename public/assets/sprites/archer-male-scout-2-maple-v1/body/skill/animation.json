@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "3.0",
+  "name": "skill",
+  "artSource": "pixel sheet archer-male-scout-2-maple-v1-empty.png",
+  "sourceSize": [
+    103,
+    107
+  ],
+  "encodedAnchor": [
+    53,
+    104
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    90,
+    110,
+    120,
+    170
+  ],
+  "durationSeconds": 0.49,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 200
+    }
+  ],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      103,
+      107
+    ],
+    "pages": [
+      {
+        "file": "skill-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        74.98,
+        70.42,
+        -30
+      ],
+      [
+        84.96,
+        54.43,
+        -160
+      ],
+      [
+        86.4,
+        57.71,
+        -95
+      ],
+      [
+        79.34,
+        65.38,
+        -50
+      ]
+    ]
+  }
+}

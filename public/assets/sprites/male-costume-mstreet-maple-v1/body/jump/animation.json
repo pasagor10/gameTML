@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "jump",
+  "artSource": "pixel sheet male-costume-mstreet-maple-v1-empty.png",
+  "sourceSize": [
+    103,
+    110
+  ],
+  "encodedAnchor": [
+    52,
+    107
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    120,
+    120,
+    120,
+    120
+  ],
+  "durationSeconds": 0.48,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      103,
+      110
+    ],
+    "pages": [
+      {
+        "file": "jump-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        73.41,
+        52.51,
+        -50
+      ],
+      [
+        72.31,
+        67.6,
+        -70
+      ],
+      [
+        73.78,
+        54.43,
+        -80
+      ],
+      [
+        70.38,
+        50.51,
+        -45
+      ]
+    ]
+  }
+}

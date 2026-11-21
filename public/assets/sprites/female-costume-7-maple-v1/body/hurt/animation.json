@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "hurt",
+  "artSource": "pixel sheet female-costume-7-maple-v1-empty.png",
+  "sourceSize": [
+    100,
+    111
+  ],
+  "encodedAnchor": [
+    50,
+    108
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    70,
+    90,
+    90,
+    110
+  ],
+  "durationSeconds": 0.36,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      100,
+      111
+    ],
+    "pages": [
+      {
+        "file": "hurt-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        75.17,
+        77.58,
+        -95
+      ],
+      [
+        80.89,
+        76.34,
+        -110
+      ],
+      [
+        79.0,
+        86.96,
+        -90
+      ],
+      [
+        78.9,
+        84.63,
+        -70
+      ]
+    ]
+  }
+}

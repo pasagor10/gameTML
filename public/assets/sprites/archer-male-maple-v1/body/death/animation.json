@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "death",
+  "artSource": "pixel sheet archer-male-maple-v1-empty.png",
+  "sourceSize": [
+    110,
+    110
+  ],
+  "encodedAnchor": [
+    54,
+    107
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    140,
+    160,
+    180,
+    400
+  ],
+  "durationSeconds": 0.88,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      110,
+      110
+    ],
+    "pages": [
+      {
+        "file": "death-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        83.61,
+        62.04,
+        -40
+      ],
+      [
+        69.93,
+        29.46,
+        -10
+      ],
+      [
+        77.42,
+        76.33,
+        5
+      ],
+      [
+        92.64,
+        75.41,
+        0
+      ]
+    ]
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "idle",
+  "artSource": "pixel sheet male-costume-mhunter-maple-v1-empty.png",
+  "sourceSize": [
+    101,
+    107
+  ],
+  "encodedAnchor": [
+    49,
+    104
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    220,
+    220,
+    220,
+    220
+  ],
+  "durationSeconds": 0.88,
+  "loop": true,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      101,
+      107
+    ],
+    "pages": [
+      {
+        "file": "idle-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        75.07,
+        65.75,
+        -62
+      ],
+      [
+        81.21,
+        80.85,
+        -64
+      ],
+      [
+        81.31,
+        79.25,
+        -62
+      ],
+      [
+        74.4,
+        65.13,
+        -60
+      ]
+    ]
+  }
+}

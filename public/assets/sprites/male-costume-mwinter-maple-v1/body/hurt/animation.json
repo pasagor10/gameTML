@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "3.0",
+  "name": "hurt",
+  "artSource": "pixel sheet male-costume-mwinter-maple-v1-empty.png",
+  "sourceSize": [
+    99,
+    110
+  ],
+  "encodedAnchor": [
+    50,
+    107
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    70,
+    90,
+    90,
+    110
+  ],
+  "durationSeconds": 0.36,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      99,
+      110
+    ],
+    "pages": [
+      {
+        "file": "hurt-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        77.66,
+        75.44,
+        -95
+      ],
+      [
+        81.04,
+        67.2,
+        -110
+      ],
+      [
+        71.78,
+        78.21,
+        -90
+      ],
+      [
+        72.62,
+        80.87,
+        -70
+      ]
+    ]
+  }
+}
