@@ -2873,7 +2873,7 @@ class Adventure extends Phaser.Scene {
       if (!this.load.isLoading()) this.load.start();
     }
     const slotLabel = this.add.text(SLOT_MACHINE.x, WORLD.ground - 195, "ตู้สมบัติจันทรา\n1,000 ทอง / ครั้ง", {
-      fontFamily: "Noto Sans Thai", fontSize: "16px", fontStyle: "bold", align: "center", color: "#fff2ce", backgroundColor: "#10202a", padding: { x: 7, y: 4 }, stroke: "#10202a", strokeThickness: 1,
+      fontFamily: "Noto Sans Thai", fontSize: "12px", fontStyle: "bold", align: "center", color: "#fff2ce", stroke: "#10202a", strokeThickness: 1,
     }).setOrigin(0.5).setDepth(14);
     this.npcs.push(slotGlow, slotImage, slotLabel);
     this.hotspots.push(this.hotspot(SLOT_MACHINE.x, WORLD.ground, 150, 185, () => openTown("slots")));
@@ -3018,9 +3018,7 @@ class Adventure extends Phaser.Scene {
         label = this.add
           .text(p.x, p.y - 142, p.name, {
             fontFamily: "Noto Sans Thai",
-            fontSize: "17px",
-            backgroundColor: "#10202a",
-            padding: { x: 6, y: 3 },
+            fontSize: "14px",
             fontStyle: "bold",
             color: p.id === state.self.id ? "#fff0b5" : "#e4fff6",
             stroke: "#193c51",
@@ -3252,9 +3250,7 @@ class Adventure extends Phaser.Scene {
         const label = this.add
           .text(shop.x, WORLD.ground - 141, shop.name, {
             fontFamily: "Noto Sans Thai",
-            fontSize: "16px",
-            backgroundColor: "#10202a",
-            padding: { x: 6, y: 3 },
+            fontSize: "12px",
             fontStyle: "bold",
             align: "center",
             wordWrap: { width: 138 },
