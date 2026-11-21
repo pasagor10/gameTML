@@ -7,6 +7,9 @@ import { MAX_LEVEL } from "../shared/config.js";
 
 db.exec(`CREATE TABLE IF NOT EXISTS funnel(vid TEXT NOT NULL,step TEXT NOT NULL,at INTEGER NOT NULL,PRIMARY KEY(vid,step));
 CREATE INDEX IF NOT EXISTS funnel_step_at ON funnel(step,at);
+CREATE TABLE IF NOT EXISTS funnel_daily(vid TEXT NOT NULL,day TEXT NOT NULL,step TEXT NOT NULL,at INTEGER NOT NULL,PRIMARY KEY(vid,day,step));
+CREATE INDEX IF NOT EXISTS funnel_daily_at ON funnel_daily(at);
+CREATE TABLE IF NOT EXISTS character_births(character TEXT PRIMARY KEY,at INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS visits(vid TEXT NOT NULL,day TEXT NOT NULL,PRIMARY KEY(vid,day));
 CREATE TABLE IF NOT EXISTS vid_users(vid TEXT NOT NULL,user_id TEXT NOT NULL,PRIMARY KEY(vid,user_id));
 CREATE TABLE IF NOT EXISTS analytics_exclude(user_id TEXT PRIMARY KEY);
@@ -55,6 +58,15 @@ export function ensureVisitor(req, res) {
   return vid;
 }
 
+export const DASHBOARD_FROM = "2026-11-22";
+const dashboardEpoch = Date.parse(DASHBOARD_FROM + "T00:00:00+07:00");
+// Preserve the historical funnel and copy only events actually recorded in
+// the new measurement period. No historical visitor is assigned a new date.
+db.prepare("INSERT OR IGNORE INTO funnel_daily SELECT vid,date(at/1000,'unixepoch','+7 hours'),step,at FROM funnel WHERE at>=?").run(dashboardEpoch);
+const insertDailyStep = db.prepare("INSERT OR IGNORE INTO funnel_daily VALUES(?,?,?,?)");
+export function trackCharacterCreated(id, at = Date.now()) {
+  try { db.prepare("INSERT OR IGNORE INTO character_births VALUES(?,?)").run(id, at); } catch { /* analytics cannot interrupt creation */ }
+}
 const insertStep = db.prepare("INSERT OR IGNORE INTO funnel VALUES(?,?,?)"),
   insertVisit = db.prepare("INSERT OR IGNORE INTO visits VALUES(?,?)"),
   insertOwner = db.prepare("INSERT OR IGNORE INTO vid_users VALUES(?,?)"),
@@ -67,6 +79,7 @@ export function track(headers, step, userId = null, at = Date.now()) {
   if (!key) return;
   try {
     insertStep.run(key, step, at);
+    insertDailyStep.run(key, dayOf(at), step, at);
     insertVisit.run(key, dayOf(at));
     if (userId && !key.startsWith("u:")) insertOwner.run(key, String(userId));
   } catch { /* Analytics must never break gameplay. */ }
@@ -283,4 +296,60 @@ export function dashboardStats({ days = 30, online = 0, now = Date.now() } = {})
     floors,
     classes,
   };
+}
+
+// Public measurement window: Bangkok calendar days, never before the reset
+// date. Kept separate from the historical aggregate reader for compatibility.
+export function dashboardPeriodStats({ days = 1, online = 0, now = Date.now() } = {}) {
+  const today = dayOf(now), midnight = Date.parse(today + 'T00:00:00+07:00');
+  const since = Math.max(dashboardEpoch, days > 0 ? midnight - (days-1)*DAY_MS : dashboardEpoch);
+  const from = dayOf(since), to = today;
+  const rows = (sql,...args) => db.prepare(sql).all(...args);
+  const count = (sql,...args) => db.prepare(sql).get(...args).n;
+  const activity = rows(`SELECT vid,step,min(at) at FROM funnel_daily WHERE at>=? AND at<=? AND vid NOT IN (${EXCLUDED}) GROUP BY vid,step`,since,now);
+  const furthest = new Map();
+  for(const r of activity) furthest.set(r.vid,Math.max(furthest.get(r.vid) ?? -1,STEP_INDEX[r.step]));
+  const reached = [...furthest.values()];
+  const funnel = STEPS.map((s,k)=>({...s,count:reached.filter(n=>n>=k).length}));
+  const originRows = new Map(rows('SELECT vid,source,device FROM origins').map(r=>[r.vid,r]));
+  const group = (field,label) => {
+    const out = new Map();
+    for(const [vid,n] of furthest) {
+      const id=originRows.get(vid)?.[field] || 'unknown';
+      const r=out.get(id) || {id,label:label(id),visitors:0,played:0,hero:0,town:0};
+      r.visitors++;r.played+=n>=STEP_INDEX.account;r.hero+=n>=STEP_INDEX.character;r.town+=n>=STEP_INDEX.join;out.set(id,r);
+    }
+    return [...out.values()].sort((a,b)=>b.visitors-a.visitors);
+  };
+  const newUsers=rows('SELECT id,created,password IS NOT NULL registered FROM users WHERE created>=? AND created<=? AND id NOT IN (SELECT user_id FROM analytics_exclude)',since,now);
+  const births=rows(`SELECT b.at,c.state FROM character_births b JOIN characters c ON c.id=b.character WHERE b.at>=? AND b.at<=? AND c.user_id NOT IN (SELECT user_id FROM analytics_exclude)`,since,now);
+  const chars=births.map(r=>{try{return JSON.parse(r.state);}catch{return {};}});
+  const dayCount=Math.max(1,Math.min(14,Math.floor((midnight-since)/DAY_MS)+1));
+  const dayKeys=Array.from({length:dayCount},(_,k)=>dayOf(midnight-(dayCount-1-k)*DAY_MS));
+  const visits=rows(`SELECT day,count(*) n FROM visits WHERE day>=? AND day<=? AND vid NOT IN (${EXCLUDED}) GROUP BY day`,from,to);
+  const daily=dayKeys.map(day=>({day,visitors:visits.find(r=>r.day===day)?.n || 0,accounts:newUsers.filter(r=>dayOf(r.created)===day).length,characters:births.filter(r=>dayOf(r.at)===day).length}));
+  const joins=rows(`SELECT vid,min(at) at FROM funnel_daily WHERE step='join' AND at>=? AND at<=? AND vid NOT IN (${EXCLUDED}) GROUP BY vid`,dashboardEpoch,now);
+  const retention=dayKeys.filter(day=>day<today).map(day=>{
+    const next=dayOf(Date.parse(day+'T00:00:00+07:00')+DAY_MS),cohort=joins.filter(r=>dayOf(r.at)===day);
+    const back=db.prepare('SELECT 1 FROM visits WHERE vid=? AND day=?');
+    return {day,players:cohort.length,returned:cohort.filter(r=>back.get(r.vid,next)).length};
+  });
+  const d1=retention.reduce((a,r)=>({players:a.players+r.players,returned:a.returned+r.returned}),{players:0,returned:0});
+  const exits=rows(`SELECT stage,reason,count(*) n FROM f1_exits WHERE at>=? AND at<=? AND vid NOT IN (${EXCLUDED}) GROUP BY stage,reason`,since,now);
+  const floor1Exits=[1,2,3].map(stage=>{
+    const r={stage,label:stage===3?'ด่านบอส':`ด่าน ${stage}`,total:0};
+    for(const reason of Object.keys(EXIT_REASONS)) {r[reason]=exits.find(e=>e.stage===stage&&e.reason===reason)?.n || 0;r.total+=r[reason];}return r;
+  });
+  return {generatedAt:now,days,measurementFrom:DASHBOARD_FROM,from,to,
+    totals:{visitors:count(`SELECT count(DISTINCT vid) n FROM visits WHERE day>=? AND day<=? AND vid NOT IN (${EXCLUDED})`,from,to),
+      visitorsToday:count(`SELECT count(*) n FROM visits WHERE day=? AND vid NOT IN (${EXCLUDED})`,today),
+      visitOnly:reached.filter(n=>n===STEP_INDEX.visit).length,accounts:newUsers.length,registered:newUsers.filter(r=>r.registered).length,characters:chars.length,
+      noCharacter:count('SELECT count(*) n FROM users u WHERE created>=? AND created<=? AND id NOT IN (SELECT user_id FROM analytics_exclude) AND NOT EXISTS(SELECT 1 FROM characters c WHERE c.user_id=u.id)',since,now),
+      excludedAccounts:count('SELECT count(*) n FROM analytics_exclude'),online},
+    funnel,sources:group('source',sourceLabel),devices:group('device',id=>DEVICES[id] || 'ไม่ทราบอุปกรณ์'),floor1Exits,
+    exitPeople:count(`SELECT count(DISTINCT vid) n FROM f1_exits WHERE at>=? AND at<=? AND vid NOT IN (${EXCLUDED})`,since,now),
+    retention,d1,daily,
+    levels:LEVEL_BUCKETS.map(([lo,hi])=>({label:lo===hi?`Lv.${lo}`:`Lv.${lo}–${hi}`,count:chars.filter(c=>(c.level||1)>=lo&&(c.level||1)<=hi).length})),
+    floors:Array.from({length:Math.max(10,...chars.map(c=>c.quest||0))+1},(_,f)=>({label:f===0?'ยังไม่ผ่าน':`ชั้น ${f}`,count:chars.filter(c=>(c.quest||0)===f).length})),
+    classes:Object.entries({swordsman:'นักดาบ',archer:'นักธนู',mage:'จอมเวท',priest:'พระ'}).map(([id,label])=>({label,count:chars.filter(c=>c.class===id).length}))};
 }

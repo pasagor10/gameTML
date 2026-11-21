@@ -11,7 +11,7 @@ import { db, loadCharacter, persist, markGiftsReceived } from "./server/database
 import { CLASSES, maxHp, maxMp } from "./shared/config.js";
 import * as world from "./server/world.js";
 import { releaseStamp } from "./server/release-stamp.js";
-import { dashboardStats, ensureVisitor, track, trackOrigin } from "./server/analytics.js";
+import { dashboardPeriodStats, DASHBOARD_FROM, dayOf, trackCharacterCreated, ensureVisitor, track, trackOrigin } from "./server/analytics.js";
 import { createSnapshotMemo, packSnapshot, SNAPSHOT_PROTOCOL } from "./shared/snapshot-delta.js";
 const app = express(),
   server = http.createServer(app),
@@ -82,9 +82,10 @@ app.get("/api/health", (req, res) =>
 let dashCache = { key: "", at: 0, data: null };
 app.get("/api/dashboard", (req, res) => {
   res.setHeader("Cache-Control", "no-store");
-  const days = [7, 30, 0].includes(Number(req.query.days)) ? Number(req.query.days) : 30;
-  if (dashCache.key !== String(days) || Date.now() - dashCache.at > 30000)
-    dashCache = { key: String(days), at: Date.now(), data: dashboardStats({ days, online: world.players.size }) };
+  const days = [1, 7, 30, 0].includes(Number(req.query.days)) ? Number(req.query.days) : 1;
+  const key = `${DASHBOARD_FROM}:${dayOf(Date.now())}:${days}`;
+  if (dashCache.key !== key || Date.now() - dashCache.at > 30000)
+    dashCache = { key, at: Date.now(), data: dashboardPeriodStats({ days, online: world.players.size }) };
   res.json(dashCache.data);
 });
 app.get("/api/ranking", (req, res) => {
@@ -222,6 +223,7 @@ app.post("/api/characters", (req, res) => {
       name,
       JSON.stringify(state),
     );
+    trackCharacterCreated(id);
     markGiftsReceived(id); // the starter kit already has the gifted potions
     track(req.headers, "character", user.id);
     res.json({ id, ...state, name });

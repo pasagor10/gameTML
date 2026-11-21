@@ -10,9 +10,9 @@ const svg = (tag, attrs = {}, text) => {
   if (text !== undefined) el.textContent = text;
   return el;
 };
-let days = 30;
-try { days = Number(localStorage.getItem("tml-dash-days") ?? 30); } catch { /* storage blocked */ }
-if (![7, 30, 0].includes(days)) days = 30;
+let days = 1;
+try { days = Number(localStorage.getItem("tml-dash-days-v2") ?? 1); } catch { /* storage blocked */ }
+if (![1, 7, 30, 0].includes(days)) days = 1;
 
 // --- Tooltip ---------------------------------------------------------------
 const tip = $("#tip");
@@ -44,17 +44,17 @@ function table(el, head, rows) {
 // --- KPI tiles ---------------------------------------------------------------
 function kpis(t, d1) {
   const tiles = [
-    ["ผู้เข้าชมทั้งหมด", fmt(t.visitors), `วันนี้ ${fmt(t.visitorsToday)} คน`],
+    ["ผู้เข้าชมในช่วงนี้", fmt(t.visitors), `วันนี้ ${fmt(t.visitorsToday)} คน`],
     ["เข้าเว็บอย่างเดียว", fmt(t.visitOnly), `${pct(t.visitOnly, t.visitors)}% ของผู้เข้าชม ไม่กดเล่น`],
-    ["บัญชี", fmt(t.accounts), `สมัครจริง ${fmt(t.registered)} · ผู้มาเยือน ${fmt(t.accounts - t.registered)}`],
-    ["ตัวละคร", fmt(t.characters), `บัญชีที่ยังไม่สร้างตัวละคร ${fmt(t.noCharacter)}`],
+    ["บัญชีใหม่", fmt(t.accounts), `สมัครจริง ${fmt(t.registered)} · ผู้มาเยือน ${fmt(t.accounts - t.registered)}`],
+    ["ตัวละครใหม่", fmt(t.characters), `บัญชีที่ยังไม่สร้างตัวละคร ${fmt(t.noCharacter)}`],
     ["ออนไลน์ตอนนี้", fmt(t.online), "ผู้เล่นในเกมขณะนี้"],
   ];
   if (d1)
     tiles.splice(4, 0, [
       "กลับมาวันถัดไป (D1)",
       d1.players ? pct(d1.returned, d1.players) + "%" : "–",
-      d1.players ? `${fmt(d1.returned)} จาก ${fmt(d1.players)} คน · 13 วันล่าสุด` : "ยังไม่มีข้อมูล",
+      d1.players ? `${fmt(d1.returned)} จาก ${fmt(d1.players)} คน · ในช่วงที่เลือก` : "ยังไม่มีข้อมูล",
     ]);
   $("#kpis").innerHTML = tiles
     .map(([l, v, s]) => `<div class="kpi"><small>${l}</small><strong>${v}</strong><span>${s}</span></div>`)
@@ -327,26 +327,30 @@ function retention(rows) {
 }
 
 // --- Load ----------------------------------------------------------------------
+let loadSeq = 0;
 async function load() {
+  const request = ++loadSeq;
   for (const b of document.querySelectorAll("[data-days]")) b.classList.toggle("active", Number(b.dataset.days) === days);
   try {
     const data = await fetch(`/api/dashboard?days=${days}`).then((r) => {
       if (!r.ok) throw Error(r.status);
       return r.json();
     });
+    if (request !== loadSeq) return;
     last = data;
     render(data);
     $("#updated").textContent = `อัปเดต ${new Date(data.generatedAt).toLocaleString("th-TH", { timeZone: "Asia/Bangkok" })} · funnel ${
-      days ? `${days} วันล่าสุด` : "ทั้งหมด"
-    }`;
+      days === 1 ? "วันนี้ · 1 วัน (เวลาไทย)" : days ? `${days} วันล่าสุด` : "ตั้งแต่เริ่มวัดผลใหม่"
+    } · แสดงข้อมูลตั้งแต่ ${data.measurementFrom}`;
   } catch {
+    if (request !== loadSeq) return;
     $("#updated").textContent = "โหลดข้อมูลไม่สำเร็จ · จะลองใหม่อัตโนมัติ";
   }
 }
 for (const b of document.querySelectorAll("[data-days]"))
   b.onclick = () => {
     days = Number(b.dataset.days);
-    try { localStorage.setItem("tml-dash-days", String(days)); } catch { /* storage blocked */ }
+    try { localStorage.setItem("tml-dash-days-v2", String(days)); } catch { /* storage blocked */ }
     load();
   };
 let last = null;
