@@ -978,6 +978,8 @@ let resolveAdventureLoaded;
 async function enterGame() {
   if (enteringGame) return;
   enteringGame = true;
+  showLoading();
+  $("#area-loading .loading-title").textContent = "กำลังเตรียมโลกของผู้กล้า…";
   enteredAt = Date.now();
   try { if (selectedId) localStorage.setItem("tml-last-hero", selectedId); } catch {}
   $("#prologue").classList.add("hidden");
@@ -986,7 +988,7 @@ async function enterGame() {
   selectionPreview?.destroy();
   selectionPreview = null;
   enterHud();
-  $("#connection-state").classList.remove("hidden");
+  $("#connection-state").classList.add("hidden");
   closeModal();
   if (!phaser) {
     adventureLoaded = new Promise((resolve) => { resolveAdventureLoaded = resolve; });
@@ -1029,7 +1031,9 @@ async function enterGame() {
   socket.on("connect", () => {
     socket.emit("player:join", { id: selectedId }, (result) => {
       if (!result.ok) {
+        hideLoading();
         toast(result.error, true);
+        $("#connection-state").classList.remove("hidden");
         $("#connection-state").textContent = result.error;
         return;
       }
@@ -1041,6 +1045,7 @@ async function enterGame() {
     });
   });
   socket.on("connect_error", (e) => {
+    hideLoading();
     toast("เชื่อมต่อไม่ได้: " + e.message, true);
   });
   socket.on("disconnect", () => {
@@ -2671,13 +2676,6 @@ class Adventure extends Phaser.Scene {
   preload() {
     // Fewer concurrent decodes on Low keeps memory spikes down while loading.
     this.load.maxParallelDownloads = preset().renderScale < 1 ? 3 : 6;
-    // Files queued mid-load (sprite atlases after their JSON) pull Phaser's
-    // fraction back; the number shown only ever goes up.
-    let shown = 0;
-    this.load.on("progress", (value) => {
-      shown = Math.max(shown, Math.min(99, Math.round(value * 100)));
-      $("#connection-state").textContent = `กำลังโหลดทรัพยากร ${shown}%`;
-    });
     queueSpriteSets(this);
     preloadRiverside(this);
     this.load.image("rare-earth-mine", "/assets/regions/rare-earth-mine.webp?v=1");
