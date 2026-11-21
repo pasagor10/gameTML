@@ -624,3 +624,28 @@ html body #landing.hero-lobby .hl-quick[hidden] { display: none !important; }
   html body #landing.hero-lobby .hl-class small { display: block !important; font-size: 10px !important; }
   html body #landing.hero-lobby #hero-stats .class-eng { white-space: nowrap; font-size: 11px !important; }
 }
+
+/* ---------- Portrait tablets (iPad upright, 701px+ wide, taller than wide) ----------
+   Three columns leave the hero a 230px strip. Stack instead: hero across the
+   top, class list and info side by side under it, then name and buttons. */
+@media (min-width: 701px) and (orientation: portrait) {
+  html body #landing.hero-lobby {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    grid-template-rows: 82px minmax(0, 1fr) auto auto auto auto 22px !important;
+    grid-template-areas:
+      "top top"
+      "stage stage"
+      "cls info"
+      "entry entry"
+      "shead sfoot"
+      "slots slots"
+      "gfoot gfoot" !important;
+    gap: 12px 16px !important; padding: 0 18px !important;
+  }
+  html body #landing.hero-lobby .hl-class-col,
+  html body #landing.hero-lobby #hero-stats { height: auto !important; align-self: stretch !important; max-height: none !important; }
+  html body #landing.hero-lobby .hl-class { min-height: 54px !important; }
+  html body #landing.hero-lobby .hl-entry { justify-self: center !important; width: min(100%, 460px) !important; }
+  html body #landing.hero-lobby .hl-cycle.prev { left: 8% !important; }
+  html body #landing.hero-lobby .hl-cycle.next { right: 8% !important; }
+}
