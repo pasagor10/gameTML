@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "3.0",
+  "name": "skill",
+  "artSource": "pixel sheet swordsman-male-knight-3-v1-empty.png",
+  "sourceSize": [
+    128,
+    108
+  ],
+  "encodedAnchor": [
+    62,
+    104
+  ],
+  "bodyHeightPx": 96,
+  "pixelDetail": 2.0,
+  "frameCount": 4,
+  "durationsMs": [
+    90,
+    110,
+    120,
+    170
+  ],
+  "durationSeconds": 0.49,
+  "loop": false,
+  "sampling": "nearest",
+  "events": [
+    {
+      "name": "hit",
+      "atMs": 200
+    }
+  ],
+  "fallback": {
+    "type": "png-atlas",
+    "cellSize": [
+      128,
+      108
+    ],
+    "pages": [
+      {
+        "file": "skill-atlas-00.webp",
+        "firstFrame": 0,
+        "frameCount": 4,
+        "columns": 4
+      }
+    ]
+  },
+  "sockets": {
+    "hand": [
+      [
+        35.97,
+        76.43,
+        26
+      ],
+      [
+        63.58,
+        60.23,
+        65
+      ],
+      [
+        57.42,
+        66.39,
+        65
+      ],
+      [
+        49.97,
+        66.29,
+        65
+      ]
+    ]
+  }
+}

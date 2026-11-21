@@ -415,7 +415,7 @@
       }
     },
     "swordsman-female-guardian-2": {
-      "dir": "swordsman-female-guardian-2-maple-v1",
+      "dir": "swordsman-female-guardian-2-knight-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
@@ -626,11 +626,11 @@
       }
     },
     "swordsman-male-guardian-3": {
-      "dir": "swordsman-male-guardian-3-maple-v1",
+      "dir": "swordsman-male-guardian-3-knight-v1",
       "height": 96,
       "facing": 1,
       "portrait": "portrait.webp",
-      "source": "Built-in imagegen remake; 4x8 empty-handed sheet; separately equipped item weapon",
+      "source": "Knight sheet recoloured for tier 3 (swordsman-male-knight-3-v1-empty.png); separately equipped item weapon",
       "actions": {
         "idle": "idle",
         "walk": "walk",
@@ -1714,7 +1714,7 @@
       }
     }
   },
-  "version": 1795258213855601000,
+  "version": 1795259819555761000,
   "npcs": {
     "elder": {
       "dir": "npcs/elder",

@@ -1,0 +1,8 @@
+Reference: public/assets/heroes-src/remakes/swordsman-male-knight-v1.png (match this sheet exactly in style, size, layout and poses)
+
+Production 2D game sprite sheet: the FEMALE counterpart of the reference knight, same art style, same chibi proportions (large head about 45% of height), same polished painted-pixel look and dark outlines. She wears the same set: silver-gold plate armour with gold trim, the blue-green ornate cape, the dark navy kite shield with the gold temple emblem on her front arm, steel greaves. Female identity: long brown hair in a high ponytail, gentle but determined face.
+
+EXACT FOUR columns x EIGHT rows, 32 frames, equal cells, canvas ratio 1:2. Flat solid #FF00FF background, no text, no grid lines, no scenery, no shadows. One full character per cell with padding, no overlaps, facing RIGHT three-quarter side view, consistent size. Feet on the same baseline per cell except jump and death.
+Row 1 idle breathing; row 2 walk; row 3 run; row 4 jump anticipation, rise, apex, landing; row 5 attack windup, impact, follow-through, recovery; row 6 shield skill windup, cast, burst, recovery; row 7 hurt recoil and recovery; row 8 death recoil, kneel, fall, lying.
+
+CRITICAL: the sword hand is EMPTY, a clean closed fist in every frame (no sword, hilt or handle); the game draws the equipped weapon there. Keep the shield.
