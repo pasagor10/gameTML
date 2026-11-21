@@ -492,7 +492,22 @@ renderCards();
 $$("[data-preview]").forEach(
   (b) => (b.onclick = () => selectionPreview?.preview(b.dataset.preview)),
 );
-refreshAccount().catch(() => toast("เซิร์ฟเวอร์ยังไม่พร้อม กรุณาลองใหม่", true));
+// Arriving from the front page (/play?auto=1): a player who already has a
+// hero goes straight into the game with the one played last; a new player
+// stays on hero creation. The select screen is still in the in-game menu.
+function autoResume() {
+  if (!new URLSearchParams(location.search).has("auto")) return;
+  history.replaceState(null, "", "/play");
+  if (!characters.length) return;
+  let last = null;
+  try { last = localStorage.getItem("tml-last-hero"); } catch {}
+  const id = characters.some((c) => c.id === last) ? last : characters[0].id;
+  $(`[data-resume="${id}"]`)?.click();
+  if (lobbyCharacterId === id) $("#start").click();
+}
+refreshAccount()
+  .then(autoResume)
+  .catch(() => toast("เซิร์ฟเวอร์ยังไม่พร้อม กรุณาลองใหม่", true));
 // Quick start: pick class, gender and (unless typed) name at random, then
 // create the hero exactly as the main button would.
 $("#quick-start").onclick = () => {
@@ -960,6 +975,7 @@ async function enterGame() {
   if (enteringGame) return;
   enteringGame = true;
   enteredAt = Date.now();
+  try { if (selectedId) localStorage.setItem("tml-last-hero", selectedId); } catch {}
   $("#prologue").classList.add("hidden");
   $("#landing").classList.add("hidden");
   $("#game-screen").classList.remove("hidden");

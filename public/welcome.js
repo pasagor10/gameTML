@@ -106,7 +106,8 @@ api('me').then(async ({ user }) => {
   if (autoEnter) {
     try {
       if (!user) await api('auth/guest', {});
-      location.replace('/play');
+      // ?auto: a returning player goes on into the game (game.js).
+      location.replace('/play?auto=1');
       return;
     } catch { entering(false); }
   }
