@@ -271,3 +271,14 @@
   #game-screen:has(#top-menu.open) #quests,
   #game-screen:has(#top-menu.open) #world-boss { visibility: hidden !important; }
 }
+/* Touch, outside town: the action prompt ("เข้าสู่ด่านต่อไป", talk, open)
+   used to land on the skill cluster and the potions. Lift it above the
+   ultimate button, the top of that cluster. */
+@media (pointer: coarse) {
+  html body #game-screen:not([data-area="town"]) #mobile-interact {
+    bottom: calc(var(--pad-b, 0px) + 290px) !important; right: var(--hud-edge-r, 10px) !important;
+  }
+  /* Ultimate cooling down: the countdown replaces the "อัลติ" label instead
+     of being printed over it. */
+  html body #game-screen#game-screen .hud-bottom .skillbar .skill.ultimate:has(> i[style*="grid"]) > small { visibility: hidden !important; }
+}

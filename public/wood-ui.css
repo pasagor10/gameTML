@@ -129,3 +129,7 @@ html body #modal[data-panel]:has(#open-account-link) .primary-button:hover { bor
 html body #modal[data-panel]:has(#open-account-link) #open-account-link {
   background: linear-gradient(180deg, var(--gold-a), var(--gold-b) 55%, var(--gold-c)) !important; border-color: #fff0b8 !important; color: #3a1d05 !important;
 }
+
+/* Close button: some windows kept a -50% vertical shift after their top was
+   pinned to 12px, which pushed the ✕ half onto the frame line. */
+html body #modal[data-panel] #modal-close { translate: none !important; top: 12px !important; bottom: auto !important; }
