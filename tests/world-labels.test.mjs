@@ -6,7 +6,7 @@ test('world labels use browser text independently of canvas scale and clean up o
   const elements = [];
   const previous = globalThis.document;
   globalThis.document = { createElement() {
-    const el = { style: {}, append(child) { this.child = child; }, remove() { this.removed = true; } };
+    const el = { style: { setProperty(key, value) { this[key] = value; } }, append(child) { this.child = child; }, remove() { this.removed = true; } };
     elements.push(el); return el;
   } };
   try {

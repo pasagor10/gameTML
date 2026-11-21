@@ -7,6 +7,8 @@ export function createWorldLabels(scene, host) {
   function register(label) {
     const el = document.createElement("div");
     Object.assign(el.style, { position: "absolute", whiteSpace: "pre", fontFamily: '"Noto Sans Thai", sans-serif', fontWeight: "600", lineHeight: "1.35", textAlign: "center", textShadow: "0 1px 2px #10202a, 1px 0 1px #10202a, -1px 0 1px #10202a", background: "none" });
+    // The HUD pixel theme uses !important; names explicitly keep a normal font.
+    el.style.setProperty("font-family", '"Noto Sans Thai", sans-serif', "important");
     layer.append(el);
     label.setAlpha(0);
     labels.set(label, el);
