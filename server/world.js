@@ -146,6 +146,13 @@ export const pvp = createPvpSystem({ players, instances, enter: enterInstance, r
     ensureTown(p);
     if ([...trades.values()].some(tr => tr.members.includes(p.id))) throw Error("จบการแลกเปลี่ยนก่อนเข้าคิว PvP");
   },
+  createBot(model, id, number) {
+    const character = structuredClone(stored(model));
+    Object.assign(character, { id, userId: null, name: `คู่ซ้อม ${number} · บอท`, gold: 0, inventory: {}, skin: null });
+    const bot = makeRuntime(character, { emit() {} });
+    bot.isPvpBot = true;
+    return bot;
+  },
   notify(p, message) { p.socket?.emit?.("toast", { message }); },
 });
 export const joinPvp = (p, mode) => pvp.join(p, mode, now());
@@ -181,7 +188,7 @@ export function invalidateShops() {
   shopCache = null;
 }
 export function live(id) {
-  return [...players.values()].find((p) => p.id === id);
+  return [...players.values()].find((p) => p.id === id) || pvp.bots.get(id);
 }
 // A worn costume comes off once its last copy is sold, traded or thrown away.
 function dropUnownedSkin(c) {
@@ -1111,6 +1118,7 @@ export function stored(p) {
   };
 }
 export function savePlayer(p) {
+  if (p.isPvpBot) return;
   persist(stored(p));
 }
 function dungeonEnergy(p, t) {
@@ -1525,8 +1533,8 @@ function restartFloor(i) {
   }
   return run;
 }
-export function returnTown(p) {
-  pvp.leave(p, now());
+export function returnTown(p, t = now()) {
+  pvp.leave(p, t);
   if (p.instance) {
     const i = instances.get(p.instance);
     if (i) {
@@ -2561,7 +2569,7 @@ function updateCrystalHazards(i, t) {
 }
 export function tick(dt, t = now()) {
   pvp.update(t);
-  for (const p of players.values()) {
+  for (const p of [...players.values(), ...pvp.bots.values()]) {
     if (p.hp <= 0) {
       p.input = 0;
       p.pending = null;
@@ -2585,6 +2593,19 @@ export function tick(dt, t = now()) {
     if (i?.pvp) {
       p.auto = false;
       if (!pvp.canFight(p, t)) { p.input = 0; p.pending = null; p.action = null; }
+      else if (p.isPvpBot && !controlled(p, t)) {
+        const stats = combatStats(p);
+        const enemies = i.members.map(live).filter(m => m?.hp > 0 && m.instance === i.id && pvp.team(m,i) !== pvp.team(p,i))
+          .map(m => ({ ...m, type: "hero", maxHp: maxHp(m), elite: true, aggro: true }));
+        const plan = autoBrain(p, { ...i, enemies }, t, { range: stats.range, mpMax: maxMp(p), aspd: stats.aspd,
+          platforms: dungeonPlatforms(i.floor, i.stage) });
+        p.input = plan.input;
+        p.running = true;
+        p.jump = plan.jump;
+        p.lastInput = t;
+        if (!p.action || t >= p.action.endsAt) p.direction = plan.direction;
+        if (plan.skill !== null) attack(p, plan.skill, t);
+      }
     }
     if (p.auto && i) {
       // Supplies work while repositioning, during stage intros and between waves.
@@ -2867,6 +2888,7 @@ export function snapshot(p) {
     name: m.name,
     townId: townOf(m).id,
     pvpTeam: m.pvpTeam ?? null,
+    isPvpBot: !!m.isPvpBot,
     class: m.class,
     gender: m.gender,
     specialization: m.specialization || null,
@@ -2929,7 +2951,7 @@ export function snapshot(p) {
     },
     area: p.area,
     town: townOf(p),
-    players: [...players.values()]
+    players: [...players.values(), ...pvp.bots.values()]
       .filter(
         (m) => m.id !== p.id && m.area === p.area && m.instance === p.instance && (p.area !== "town" || townOf(m).id === townOf(p).id),
       )

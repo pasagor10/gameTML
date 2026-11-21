@@ -9,7 +9,7 @@ export function openPvpPanel({ state, modal, emit, escape, close }) {
   modal('สนามประลอง · PvP', `<div class="pvp-panel">
     <p class="pvp-schedule" data-pvp-schedule></p>
     <p>ทุก 30 นาที เวลา :20 และ :50 · รับสมัคร 5 นาที · แข่งไม่เกิน 3 นาที จบก่อนบอสโลก</p>
-    <p class="hint">เข้าคิวในเมือง ไม่เสียพลังงานหรือค่าสมัคร · 3v3 แบ่งทีมอัตโนมัติ · ควบคุมเอง ไม่ใช้ AUTO หรือยา · ล้มแล้วรอจบแมตช์ · ออกจากสนามหรือหลุดการเชื่อมต่อถือว่าสละสิทธิ์ · ไม่มีรางวัลไอเทมในรอบนี้</p>
+    <p class="hint">เข้าคิวในเมือง ไม่เสียพลังงานหรือค่าสมัคร · 3v3 แบ่งทีมอัตโนมัติ · คนไม่ครบเติมบอทเลเวลเท่ากับผู้เล่นเมื่อปิดรับสมัคร · ควบคุมเอง ไม่ใช้ AUTO หรือยา · ล้มแล้วรอจบแมตช์ · ออกจากสนามหรือหลุดการเชื่อมต่อถือว่าสละสิทธิ์ · ไม่มีรางวัลไอเทมในรอบนี้</p>
     ${p.result ? `<p class="pvp-last">ผลล่าสุด ${escape(p.result.mode)} · ${escape(p.result.outcome)} · ${escape(p.result.reason)}</p>` : ''}
     <div class="pvp-choices">${['1v1','3v3'].map(mode => pvpBanner(mode, `<div class="pvp-choice-actions"><span>${mode === '1v1' ? 'ดวลเดี่ยว' : 'ศึกทีม 3 คน'} · ในคิว <b data-pvp-count="${mode}">${p.counts[mode]}</b> คน</span><button class="primary-button" data-pvp-join="${mode}">เข้าคิว ${mode}</button></div>`)).join('')}</div>
     <p data-pvp-queued></p><button id="pvp-cancel" class="ghost-button">ยกเลิกคิว</button>
@@ -50,7 +50,7 @@ export function updatePvpUi(state) {
     const col = document.createElement('div'); col.className = n ? 'red' : 'blue';
     for (const hero of team) {
       const row = document.createElement('span');
-      row.textContent = `${hero.hp > 0 ? '●' : '✕'} ${hero.name} ${Math.ceil(100*hero.hp/hero.maxHp)}%`;
+      row.textContent = `${hero.hp > 0 ? '●' : '✕'} ${hero.name} Lv.${hero.level} ${Math.ceil(100*hero.hp/hero.maxHp)}%`;
       col.append(row);
     }
     return col;

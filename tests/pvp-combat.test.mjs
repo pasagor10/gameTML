@@ -11,7 +11,7 @@ const {maxHp}=await import('../shared/config.js');
 function create(id,job='swordsman') {
   db.prepare('INSERT INTO users VALUES(?,?,?,?)').run(id,id,null,Date.now());
   db.prepare('INSERT INTO characters VALUES(?,?,?,?)').run(id,id,id,JSON.stringify({class:job,gender:'female',level:10,exp:0,gold:100,inventory:{hp:5,mp:5,ore:0},quest:1,unlocked:2}));
-  const p=world.makeRuntime(loadCharacter(id),{emit(){}});world.players.set(id,p);return p;
+  const p=world.makeRuntime(loadCharacter(id),{emit(){}});world.players.set("socket:"+id,p);return p;
 }
 const start=Math.floor(Date.now()/1000/1800)*1800+1200;
 test('PvP uses authoritative windup, directional reach and no friendly fire or dungeon rewards', () => {
@@ -42,5 +42,49 @@ test('a PvP kill stops actions and resolves the winner without awarding dungeon 
   world.tick(.01,start+2106);assert.equal(i.pvp.done,true);assert.equal(i.pvp.winner,world.pvp.team(a,i));
   world.tick(.01,start+2115);assert.equal(a.area,'town');assert.equal(b.hp,maxHp(b));assert.equal(a.gold,gold);
   assert.equal(world.pvp.view(a,start+2115).result.outcome,'ชนะ');
+});
+test('a solo entrant gets a same-level bot that moves, attacks, and stays out of accounts and online counts', () => {
+  const a=create('solo-bot');a.level=27;
+  const round=start+3600;
+  const count=db.prepare('SELECT count(*) n FROM characters').get().n;
+  const online=world.players.size;
+  world.pvp.join(a,'1v1',round+1);world.tick(.01,round+300);
+  const i=world.instances.get(a.instance), bot=[...world.pvp.bots.values()][0];
+  assert.ok(bot);assert.equal(bot.level,a.level);assert.equal(bot.hp,maxHp(bot));
+  assert.equal(world.players.size,online);
+  assert.equal(db.prepare('SELECT count(*) n FROM characters').get().n,count);
+  assert.ok(!world.onlineRoster().some(p=>p.id===bot.id));
+  assert.ok(world.snapshot(a).players.some(p=>p.id===bot.id && p.isPvpBot));
+  assert.notEqual(bot.equipment,a.equipment);
+  const initialX=bot.x, initialHp=a.hp;
+  let attacked=false;
+  for(let step=0;step<800 && a.hp>0;step++) {
+    const t=round+303+step*.05;
+    world.tick(.05,t);
+    attacked ||= i.events.some(e=>e.kind==='attack' && e.actorId===bot.id);
+  }
+  assert.notEqual(bot.x,initialX,'bot closes distance using server movement');
+  assert.ok(attacked,'bot uses the real combat windup and attack events');
+  assert.ok(a.hp<initialHp,'bot damages the real player');
+  world.savePlayer(bot);
+  assert.equal(db.prepare('SELECT count(*) n FROM characters').get().n,count);
+  world.returnTown(a);world.pvp.update(round+350);
+  assert.equal(world.pvp.bots.size,0);assert.equal(world.instances.has(i.id),false);
+});
+test('one human can enter 3v3 with five equal-level bots, all removed after the result', () => {
+  const a=create('solo-team-bot');a.level=42;
+  const round=start+5400;
+  world.pvp.join(a,'3v3',round+1);world.tick(.01,round+300);
+  const i=world.instances.get(a.instance);
+  assert.deepEqual(i.pvp.teams.map(team=>team.length),[3,3]);
+  assert.equal(world.pvp.bots.size,5);
+  assert.ok([...world.pvp.bots.values()].every(bot=>bot.level===42));
+  const enemyTeam=1-world.pvp.team(a,i);
+  for(const id of i.pvp.teams[enemyTeam]) world.live(id).hp=0;
+  world.tick(.01,round+305);assert.equal(i.pvp.done,true);
+  world.tick(.01,round+314);
+  assert.equal(a.area,'town');assert.equal(world.pvp.bots.size,0);
+  assert.equal(world.instances.has(i.id),false);
+  assert.equal(world.pvp.view(a,round+314).result.outcome,'ชนะ');
 });
 test.after(()=>{db.close();rmSync(dir,{recursive:true,force:true});});
