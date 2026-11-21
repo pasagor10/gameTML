@@ -3,15 +3,20 @@ const ROSTERS = {
   cave: ["ขุนกล้า", "มะลิ", "สายลม", "บัวแก้ว", "อินทร์"],
   riverside: ["คำปัน", "ดาวเหนือ", "ไผ่", "น้ำใส", "เมฆา"],
 };
+const OUTFITS = {
+  cave: ["mnoble", "6", "mhunter", "7", "mtang"],
+  riverside: ["mmohom", "2", "mbeach", "5", "mwinter"],
+};
 const JOBS = ["swordsman", "mage", "archer", "priest", "swordsman"];
 export function townWanderers(townId, ground = 600) {
   const town = ROSTERS[townId] ? townId : "cave";
   return ROSTERS[town].map((name, index) => ({
     id: `npc-wanderer:${town}:${index}`,
-    name: `${name} · NPC`,
+    name,
     ambient: true,
     class: JOBS[index],
     gender: index % 2 ? "female" : "male",
+    skin: OUTFITS[town][index],
     x: 260 + index * 430,
     y: ground,
     homeX: 260 + index * 430,

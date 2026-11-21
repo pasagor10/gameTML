@@ -1,14 +1,20 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { costumeSet } from "../shared/costumes.js";
+import { readFileSync } from "node:fs";
 import { townWanderers, wandererPose } from "../shared/town-wanderers.js";
 
 test("each town has five distinct cosmetic NPCs", () => {
   const cave = townWanderers("cave");
   const river = townWanderers("riverside");
+  const index = JSON.parse(readFileSync(new URL("../public/assets/sprites/index.json", import.meta.url)));
+  const outfits = [...cave, ...river].map((n) => costumeSet(n));
+  assert.equal(new Set(outfits).size, 10);
+  assert.ok(outfits.every((set) => set && index.sets[set]), "every outfit has usable artwork");
   assert.equal(cave.length, 5);
   assert.equal(river.length, 5);
   assert.equal(new Set([...cave, ...river].map((n) => n.id)).size, 10);
-  assert.ok([...cave, ...river].every((n) => n.ambient && n.name.endsWith("NPC")));
+  assert.ok([...cave, ...river].every((n) => n.ambient && !n.name.includes("NPC")));
 });
 
 test("strolls stay on the ground inside the map and include rests and both directions", () => {
