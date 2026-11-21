@@ -1,0 +1,236 @@
+/* NPC conversation: portrait on the right over the world, dialogue box along
+   the bottom with a name tag, the line on the left and numbered choices on
+   the right. Phones (portrait) stack the choices under the line. */
+#npc-talk {
+  --talk-gold: #d9b566;
+  --talk-gold-hi: #ffe3a1;
+  --talk-ink: #0c171e;
+  --talk-text: #eef3f1;
+  --talk-box-h: 178px;
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  font-family: "Noto Sans Thai", "Trebuchet MS", sans-serif;
+  color: var(--talk-text);
+  background: linear-gradient(to top, #050c11b8 0, #050c1160 30%, transparent 55%);
+  animation: npc-talk-fade 0.18s ease-out;
+}
+#npc-talk.hidden { display: none; }
+@keyframes npc-talk-fade { from { opacity: 0; } }
+@keyframes npc-talk-rise { from { opacity: 0; transform: translateY(18px); } }
+
+/* Portrait: bust crop of the NPC's pixel sprite, scaled up crisply. */
+#npc-talk .npc-talk-portrait {
+  position: absolute;
+  right: max(calc(50% - 470px), 24px);
+  bottom: calc(max(16px, env(safe-area-inset-bottom)) + var(--box-real-h, var(--talk-box-h)) - 6px);
+  height: min(46vh, 380px);
+  aspect-ratio: var(--aspect, 3 / 4);
+  max-width: 42vw;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  filter: drop-shadow(0 0 1px #0d1a22) drop-shadow(0 10px 22px #000a);
+}
+#npc-talk .npc-talk-portrait.ready { opacity: 1; animation: npc-talk-rise 0.26s ease-out; }
+#npc-talk .npc-talk-portrait::before {
+  content: "";
+  position: absolute;
+  inset: 12% -18% -6%;
+  background: radial-gradient(closest-side, #ffe2a038, transparent);
+  z-index: -1;
+}
+#npc-talk .npc-talk-portrait canvas {
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Dialogue box */
+#npc-talk .npc-talk-box {
+  position: absolute;
+  left: 50%;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  translate: -50% 0;
+  width: min(980px, calc(100vw - 32px));
+  min-height: var(--talk-box-h);
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
+  gap: 0 22px;
+  padding: 26px 22px 18px 26px;
+  background: linear-gradient(180deg, #13232cf2, #0b161df5);
+  border: 1px solid var(--talk-gold);
+  border-radius: 6px;
+  box-shadow: 0 0 0 3px #0a141acc, inset 0 0 0 1px #ffffff0d, 0 18px 50px #000a;
+  animation: npc-talk-rise 0.2s ease-out;
+}
+#npc-talk .npc-talk-tag {
+  position: absolute;
+  left: 18px;
+  top: -15px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 4px 14px 5px;
+  background: #0d1a21;
+  border: 1px solid var(--talk-gold);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px #0008;
+  max-width: calc(100% - 80px);
+}
+#npc-talk .npc-talk-tag strong {
+  color: var(--talk-gold-hi);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+#npc-talk .npc-talk-tag small {
+  color: #c9b98f;
+  font-size: 12.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#npc-talk .npc-talk-close {
+  position: absolute;
+  right: 8px;
+  top: -14px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--talk-gold);
+  background: #0d1a21;
+  color: var(--talk-gold-hi);
+  font-size: 14px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+#npc-talk .npc-talk-close:hover { background: #1c2f38; }
+
+#npc-talk .npc-talk-line {
+  position: relative;
+  padding: 4px 6px 22px 0;
+  cursor: pointer;
+}
+#npc-talk .npc-talk-line p {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.75;
+  color: var(--talk-text);
+  text-wrap: pretty;
+}
+#npc-talk .npc-talk-rest { visibility: hidden; }
+#npc-talk .npc-talk-more {
+  position: absolute;
+  left: 2px;
+  bottom: 0;
+  color: var(--talk-gold);
+  font-size: 12px;
+  animation: npc-talk-bob 0.9s ease-in-out infinite alternate;
+}
+#npc-talk.typing .npc-talk-more { visibility: hidden; }
+@keyframes npc-talk-bob { to { transform: translateY(3px); } }
+
+#npc-talk .npc-talk-choices {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 20px;
+  border-left: 1px solid #d9b56640;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+#npc-talk .npc-talk-choices button {
+  width: 100%;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--talk-text);
+  font: 600 15px/1.35 "Noto Sans Thai", "Trebuchet MS", sans-serif;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+#npc-talk .npc-talk-choices kbd {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #c8d2cf80;
+  border-radius: 3px;
+  font: 700 12px/1 "Noto Sans Thai", sans-serif;
+  color: #dfe7e4;
+  background: #ffffff08;
+}
+#npc-talk .npc-talk-choices button:is(:hover, :focus-visible) ,
+#npc-talk .npc-talk-choices li:first-child button:focus {
+  outline: none;
+  border-color: var(--talk-gold);
+  background: linear-gradient(90deg, #d9b5662e, #d9b56610);
+  color: var(--talk-gold-hi);
+}
+#npc-talk .npc-talk-choices button:is(:hover, :focus-visible, :focus) kbd {
+  border-color: var(--talk-gold);
+  color: var(--talk-gold-hi);
+}
+#npc-talk .npc-talk-choices button:active { background: #d9b56645; }
+/* Only one choice reads as selected: the hovered one wins over focus. */
+#npc-talk .npc-talk-choices:hover button:not(:hover):focus {
+  border-color: transparent;
+  background: transparent;
+  color: var(--talk-text);
+}
+
+/* Narrow screens (phones in portrait): line on top, choices below as
+   full-width tap targets, a smaller portrait standing on the box. */
+@media (max-width: 700px) {
+  #npc-talk { background: linear-gradient(to top, #050c11d0 0, #050c1170 45%, transparent 70%); }
+  #npc-talk .npc-talk-box {
+    width: calc(100vw - 16px);
+    grid-template-columns: 1fr;
+    padding: 24px 14px 12px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+  }
+  #npc-talk .npc-talk-tag { left: 12px; }
+  #npc-talk .npc-talk-tag strong { font-size: 16px; }
+  #npc-talk .npc-talk-line { padding: 0 0 18px; }
+  #npc-talk .npc-talk-line p { font-size: 15.5px; line-height: 1.65; }
+  #npc-talk .npc-talk-choices {
+    padding: 10px 0 0;
+    border-left: 0;
+    border-top: 1px solid #d9b56640;
+    gap: 4px;
+  }
+  #npc-talk .npc-talk-choices button { min-height: 44px; font-size: 15px; }
+  #npc-talk .npc-talk-portrait {
+    right: 12px;
+    bottom: calc(max(8px, env(safe-area-inset-bottom)) + var(--box-real-h, var(--talk-box-h)) - 4px);
+    height: min(30vh, 230px);
+    max-width: 62vw;
+  }
+}
+@media (max-height: 520px) and (min-width: 701px) {
+  #npc-talk .npc-talk-portrait { height: 40vh; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #npc-talk, #npc-talk .npc-talk-box, #npc-talk .npc-talk-portrait.ready, #npc-talk .npc-talk-rest { visibility: hidden; }
+#npc-talk .npc-talk-more { animation: none; }
+}

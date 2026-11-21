@@ -54,6 +54,7 @@ import {
   ENHANCE_BREAK_LEVEL,
   ADVANCE_LEVEL,
 } from "/shared/rpg.js";
+import { openNpcTalk, closeNpcTalk } from "/npc-dialogue.js?v=1";
 import { createTownNpcs, footGlow, createRim } from "/town-npcs.js?v=14";
 import { updateEnhanceAura, updateSetGlow, AURA_LEVEL } from "/enhance-aura.js?v=7";
 import { marketHtml, shopManagerHtml, marketState } from "/market-ui.js?v=12";
@@ -549,6 +550,7 @@ $("#start").onclick = async () => {
   }
 };
 function modal(title, html, panel) {
+  closeNpcTalk();
   if ($("#modal").classList.contains("hidden")) sfx("open");
   activePanel = panel || "modal";
   $("#modal").dataset.panel = activePanel;
@@ -577,6 +579,7 @@ function modal(title, html, panel) {
     socket.emit("player:input", { direction: 0, seq: ++seq, jump: false });
 }
 function closeModal() {
+  if (activePanel === "talk") closeNpcTalk();
   if (activePanel !== null || !$("#modal").classList.contains("hidden"))
     sfx("close");
   activePanel = null;
@@ -1557,7 +1560,107 @@ function openTown(id) {
     return showPanel("market");
   }
   sfx("talk");
-  showPanel(id);
+  talkTo(id);
+}
+// Town NPCs open a conversation first; each choice leads to the old panel.
+const NPC_TALK = {
+  elder: {
+    title: "ผู้ใหญ่บ้าน",
+    line: (p) => p.hp < p.maxHp * 0.5
+      ? "สภาพแบบนี้ยังจะลงถ้ำอีกรึ ผู้กล้า ไปหามีราเติมยาก่อนเถอะ แล้วค่อยมารับภารกิจ"
+      : "มาแล้วรึ ผู้กล้า หมู่บ้านเรายังมีงานรอให้เจ้าช่วยอีกมาก ดูภารกิจก่อนไหม",
+    choices: [["ภารกิจผู้กล้า", "quest"]],
+    chat: [
+      "ถ้ำหลวงลึกกว่าที่ใครคิด ยิ่งลงลึก ของที่ได้ก็ยิ่งดี แต่ก็ยิ่งอันตราย",
+      "สมัยข้ายังหนุ่ม แร่จันทราหาง่ายกว่านี้เยอะ เดี๋ยวนี้ต้องลงไปถึงชั้นล่าง ๆ",
+      "เพื่อนร่วมทางสำคัญนัก ชวนกันลงถ้ำเป็นปาร์ตี้ จะรอดกลับมามากกว่า",
+    ],
+  },
+  potion: {
+    title: "นักปรุงยา",
+    line: (p) => p.hp < p.maxHp * 0.5
+      ? "แผลแบบนี้ยังเดินมาเองได้ แปลว่ายังไม่หนักเท่าไหร่ ดีแล้ว รับยาสักขวดไหม"
+      : "ยินดีต้อนรับสู่ร้านปรุงยา ยาแดงยาฟ้าเพิ่งปรุงเสร็จเมื่อเช้านี้เอง",
+    choices: [["ขอซื้อยา", "potion"]],
+    chat: [
+      "ยาขวดใหญ่คุ้มกว่าถ้าจะลงถ้ำนาน ๆ อย่าลืมพกไปเผื่อด้วยล่ะ",
+      "สมุนไพรริมน้ำสายช่วงนี้งามมาก ยารอบนี้เลยแรงกว่าปกติ",
+      "ปุ่ม R กับ G ใช้ยาได้ทันที เลือกขนาดที่เหมาะให้เองด้วยนะ",
+    ],
+  },
+  weapon: {
+    title: "ช่างอาวุธ",
+    line: () => "อาวุธดีคือเพื่อนที่ไว้ใจได้ที่สุดในถ้ำ มาเลือกดูของในคลังกันเถอะ",
+    choices: [["ดูคลังอาวุธ", "weapon"]],
+    chat: [
+      "ของแต่ละชิ้นเหมาะกับแต่ละอาชีพ เลือกให้ตรงกับเส้นทางของเจ้า",
+      "อาวุธใหม่แล้วอย่าลืมไปให้ลุงเหล็กตีบวกต่อ จะคมขึ้นอีกเยอะ",
+    ],
+  },
+  forge: {
+    title: "ช่างตีเหล็ก",
+    line: () => "เตาร้อนพอดีเลย เอาอุปกรณ์มา เดี๋ยวลุงตีบวกให้ แค่เตรียมทองกับแร่มาให้พอ",
+    choices: [["ตีบวกอุปกรณ์", "forge"]],
+    chat: [
+      `ตั้งแต่ +${ENHANCE_BREAK_LEVEL} ขึ้นไปถ้าพลาด ของจะกลับเป็น +0 ใช้หินตีบวกจะปลอดภัยกว่า`,
+      "แร่จันทราหาได้จากถ้ำหลวง ยิ่งชั้นลึก ยิ่งได้เยอะ",
+      "อาวุธ +11 ขึ้นไปจะมีแสงวิ่งรอบตัว สวยจนคนหันมามองทั้งเมือง",
+    ],
+  },
+  trainer: {
+    title: "อาจารย์ฝึกอาชีพ",
+    line: () => "พลังของเจ้ายังไปได้อีกไกล พร้อมจะก้าวสู่เส้นทางใหม่แล้วหรือยัง",
+    choices: [["เส้นทางอาชีพ", "class"]],
+    chat: [
+      "แต่ละสายอาชีพมีจุดแข็งต่างกัน ลองอ่านให้ดีก่อนตัดสินใจ",
+      "เลเวลสูงขึ้นเมื่อไหร่ จะเปิดขั้นอาชีพถัดไปให้ได้",
+    ],
+  },
+  stones: {
+    title: "ร้านหินตีบวก",
+    line: () => "หินตีบวกร้อยเปอร์เซ็นต์ของที่นี่ ไม่มีวันทำให้อุปกรณ์ของเจ้าแตก",
+    choices: [["ซื้อหินตีบวก", "stones"]],
+    chat: [
+      `หินตีบวกขั้นสูงใช้ได้ตั้งแต่ +${HIGH_STONE_FROM} เก็บไว้ใช้ตอนเสี่ยงที่สุดดีกว่า`,
+      "แร่ก็มีขายนะ ถ้าขาดอีกนิดเดียวก็แวะมาได้",
+    ],
+  },
+};
+let npcChatTurn = 0;
+function talkTo(id) {
+  const npc = WORLD.npcs.find((n) => n.id === id),
+    script = NPC_TALK[id];
+  if (!npc || !script) return showPanel(id);
+  activePanel = "talk";
+  keys.clear();
+  touchDirection = 0;
+  touchAttack = false;
+  touchRun = false;
+  jumpQueued = false;
+  document.dispatchEvent(new Event("game:reset-controls"));
+  if (socket?.connected)
+    socket.emit("player:input", { direction: 0, seq: ++seq, jump: false });
+  const open = (panel) => (talk) => {
+    talk.close(true);
+    activePanel = null;
+    showPanel(panel);
+  };
+  const choices = [
+    ...script.choices.map(([label, panel]) => ({ label, run: open(panel) })),
+    {
+      label: "คุยเล่น",
+      run: (talk) => talk.say(script.chat[npcChatTurn++ % script.chat.length]),
+    },
+    { label: "ลาก่อน", run: (talk) => talk.close() },
+  ];
+  openNpcTalk(
+    { id, name: npc.name, title: script.title },
+    { line: script.line(state.self), choices },
+    () => {
+      if (activePanel === "talk") activePanel = null;
+      sfx("close");
+    },
+  );
 }
 function action(name) {
   if (!state || activePanel) return;
