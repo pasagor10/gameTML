@@ -378,7 +378,6 @@ function renderCards() {
   $("#selected-class").textContent = saved?.name || c.name;
   $("#selected-epithet").textContent = detail.title;
   $("#selected-lore").textContent = detail.lore;
-  $(".hero-fallback").style.cssText = lobbyHeroStyle(job, gender, saved);
   $("#hero-stats").innerHTML =
     `<div class="class-identity"><span>${c.icon}</span><div><h3>${saved ? `${escape(saved.name)} · ${c.name} Lv.${saved.level}` : c.name}</h3><small class="class-eng">${eng[JOBS.indexOf(job)] || ""}</small><p class="class-role">${detail.role}</p></div><i class="class-face" aria-hidden="true" style="${heroStyle(job, gender, saved)}"></i></div><p class="class-lore">${detail.lore}</p><div class="stats-heading"><span>${saved ? "ค่าสถานะปัจจุบัน" : "ค่าสถานะเริ่มต้น"}</span><small>ATTRIBUTES</small></div><div class="lobby-attributes">${[
       ["HP", "พลังชีวิต", c.hp],
@@ -4195,6 +4194,3 @@ addEventListener("keydown", (e) => {
 $("#creation-back").onclick = () => {
   if (characters.length) $("[data-resume]")?.click();
 };
-function lobbyHeroStyle(c, g, hero) {
-  return heroStyle(c, g, hero);
-}
