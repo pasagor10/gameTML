@@ -1,6 +1,6 @@
-/* Shared portrait artwork: retain the complete composition on every screen. */
+/* Match loading artwork to the screen while preserving the full composition. */
 .tml-loading-art { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: -1; background: #101a35; }
-.tml-loading-art::before { content: ""; position: absolute; inset: -4%; background: linear-gradient(#0e173344,#0e173377), url('/assets/loading/tml-adventure.webp') center / cover; filter: blur(22px); opacity: .55; }
+.tml-loading-art::before { content: ""; position: absolute; inset: -4%; background: linear-gradient(#0e173344,#0e173377), var(--tml-loading-image, url('/assets/loading/tml-adventure.webp')) center / cover; filter: blur(22px); opacity: .55; }
 .tml-loading-art img { width: 100%; height: 100%; object-fit: contain; object-position: center; animation: tml-art-breathe 9s ease-in-out infinite alternate; }
 .tml-loading-art::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 32%, #ffcc641c, transparent 48%), linear-gradient(transparent 65%, #0e1733e8); animation: tml-art-light 4s ease-in-out infinite alternate; }
 #boot-loading { position: fixed; inset: 0; z-index: 10000; isolation: isolate; display: flex; justify-content: flex-end; align-items: center; flex-direction: column; padding: 0 24px max(6vh, env(safe-area-inset-bottom)); color: #ffe9b4; background: #101a35; text-align: center; font-family: "Noto Sans Thai", sans-serif; transition: opacity .35s; }
@@ -18,3 +18,12 @@
 @keyframes tml-art-progress { from { transform: translateX(-105%); } to { transform: translateX(325%); } }
 @media (prefers-reduced-motion: reduce) { .tml-loading-art img, .tml-loading-art::after, .tml-boot-bar i { animation: none; } .tml-boot-bar i { width: 100%; } #boot-loading { transition: none; } }
 @media (orientation: landscape) and (max-height: 600px) { #area-loading { gap: 2px; padding-bottom: 12px; } #area-loading .loading-tip { display: none; } #area-loading .loading-title { margin: 0; } }
+
+.tml-loading-art picture { display: block; width: 100%; height: 100%; }
+@media (min-width: 768px) and (orientation: landscape) {
+  .tml-loading-art { --tml-loading-image: url("/assets/loading/tml-adventure-desktop.webp"); }
+  .tml-loading-art::after { background: radial-gradient(ellipse at 50% 45%, #ffcc6410, transparent 60%), linear-gradient(transparent 78%, #0e173380); }
+  #boot-loading { padding-bottom: max(2vh, env(safe-area-inset-bottom)); }
+  #boot-loading p { margin: 6px 0; }
+  #boot-loading .tml-boot-bar { height: 2px; }
+}
