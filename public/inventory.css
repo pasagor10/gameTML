@@ -1199,3 +1199,14 @@ img.item-art[src*="/items/px/"] { object-fit: contain; image-rendering: pixelate
 .high-stone-button { background: linear-gradient(145deg, #1d6f8c, #2ab3c9) !important; color: #f2fdff !important; }
 /* Fine item icons (items/icons, 160px) are drawn smooth at any size. */
 img.item-art[src*="/items/icons/"] { object-fit: contain; image-rendering: auto !important; }
+
+/* Phones: these panels use the whole screen height, so more shows at once. */
+@media (max-width: 700px) {
+  body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) .modal-box {
+    width: calc(100vw - 12px) !important; max-height: calc(100dvh - 12px) !important; height: calc(100dvh - 12px) !important;
+    display: flex !important; flex-direction: column !important;
+  }
+  body #modal:is([data-panel="inventory"],[data-panel="class"],[data-panel="status"],[data-panel="wardrobe"]) #modal-body {
+    flex: 1 1 auto !important; min-height: 0 !important; max-height: none !important; padding: 0 10px 10px !important;
+  }
+}

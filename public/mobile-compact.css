@@ -254,9 +254,12 @@
   body #game-screen .world-boss { top: calc(50px + env(safe-area-inset-top)); width: min(280px, 32vw); }
 }
 
-#announcement-popup { position: absolute; z-index: 38; left: 50%; bottom: 10px; transform: translateX(-50%); width: min(600px, 85vw); display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #152e28f5; color: #ffe3a4; border: 1px solid #d7b76f; border-radius: 5px; font-size: 11px; }
+/* Top centre, clear of the skill bar and the dock (they live at the bottom). */
+#announcement-popup { position: absolute; z-index: 38; left: 50%; top: calc(10px + env(safe-area-inset-top, 0px)); bottom: auto; transform: translateX(-50%); width: min(560px, 46vw); display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #152e28f5; color: #ffe3a4; border: 1px solid #d7b76f; border-radius: 5px; font-size: 11px; }
 #announcement-popup[hidden] { display: none; }
 #announcement-popup span { flex: 1; min-width: 0; }
 #announcement-popup button { flex: none; min-height: 36px; border: 1px solid #b79a65; border-radius: 4px; background: #263c30; color: #ffe3a4; }
 .system-notice { padding: 8px; margin-top: 6px; border-bottom: 1px solid #c5a96a55; }
-@media (pointer: coarse) { #announcement-popup { width: min(360px, 42vw); font-size: 10px; bottom: 8px; } }
+@media (pointer: coarse) { #announcement-popup { width: min(420px, 44vw); font-size: 11px; } }
+/* Phones upright: under the profile and quest tracker, full width. */
+@media (max-width: 700px) { #announcement-popup { top: calc(156px + env(safe-area-inset-top, 0px)); width: calc(100vw - 24px); font-size: 13px; } }

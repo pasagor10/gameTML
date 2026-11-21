@@ -278,15 +278,37 @@ html body #landing.hero-lobby .hl-slot-new .hl-slot-icon { display: grid !import
   html body #landing.hero-lobby #hero-stats .class-lore { display: none; }
 }
 
-/* ---------- Phones: one scrolling column ---------- */
+/* ---------- Phones: everything on one screen, no scrolling ----------
+   The hero stage takes whatever height is left; the class stats panel and
+   the decorative footer are left out (the stage caption names the class). */
 @media (max-width: 700px) {
   html body #landing.hero-lobby {
-    height: 100dvh; overflow-y: auto !important; overflow-x: hidden;
-    padding: 0 12px !important; gap: 10px !important;
+    height: 100dvh; overflow: hidden !important;
+    padding: 0 10px max(8px, env(safe-area-inset-bottom)) !important; gap: 6px !important;
     grid-template-columns: minmax(0, 1fr) !important;
-    grid-template-rows: auto 300px auto auto auto auto auto auto auto !important;
-    grid-template-areas: "top" "stage" "cls" "entry" "shead" "slots" "sfoot" "info" "gfoot" !important;
+    grid-template-rows: auto minmax(0, 1fr) auto auto auto auto !important;
+    grid-template-areas: "top" "stage" "slots" "cls" "entry" "sfoot" !important;
   }
+  html body #landing.hero-lobby #hero-stats,
+  html body #landing.hero-lobby .hl-global-footer,
+  html body #landing.hero-lobby .hl-slots-head,
+  html body #landing.hero-lobby .hl-poses { display: none !important; }
+  html body #landing.hero-lobby .hl-stage { min-height: 0 !important; height: auto !important; }
+  html body #landing.hero-lobby .hl-class-col { gap: 4px !important; padding: 0 !important; border-width: 12px !important; border-image-width: 12px !important; }
+  html body #landing.hero-lobby .hl-gender button { min-height: 30px !important; padding: 2px 16px !important; font-size: 14px !important; }
+  html body #landing.hero-lobby .hl-class small { display: none !important; }
+  html body #landing.hero-lobby .hl-class { padding: 4px 2px !important; gap: 2px !important; }
+  html body #landing.hero-lobby .hl-entry { gap: 6px !important; }
+  html body #landing.hero-lobby .hl-name { min-height: 0 !important; padding-top: 4px !important; padding-bottom: 4px !important; }
+  html body #landing.hero-lobby .hl-name input { height: 36px !important; font-size: 15px !important; }
+  html body #landing.hero-lobby .hl-quick { min-height: 38px !important; padding: 4px 12px !important; font-size: 15px !important; }
+  html body #landing.hero-lobby .hl-foot { padding: 0 !important; min-height: 0 !important; gap: 6px !important; }
+  html body #landing.hero-lobby .hl-foot #entry-title,
+  html body #landing.hero-lobby .hl-foot #account-status { display: none !important; }
+  /* Picking a saved hero: its class is fixed and the + slot creates a new one. */
+  html body #landing.hero-lobby[data-lobby-mode="roster"] .hl-class-col,
+  html body #landing.hero-lobby[data-lobby-mode="roster"] #new-hero:not(:disabled) { display: none !important; }
+  html body #landing.hero-lobby[data-lobby-mode="roster"] .hl-foot { justify-content: flex-end !important; }
   html body #landing.hero-lobby .hl-top { padding-top: 8px !important; gap: 8px; }
   html body #landing.hero-lobby .hl-logo { width: 64px !important; }
   html body #landing.hero-lobby .hl-heading { padding: 4px 18px; min-width: 0 !important; flex: 1 1 auto !important; }
@@ -303,17 +325,17 @@ html body #landing.hero-lobby .hl-slot-new .hl-slot-icon { display: grid !import
   html body #landing.hero-lobby .hl-class-col { border-width: 18px; border-image-width: 18px; padding: 2px; }
   html body #landing.hero-lobby #class-cards { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 5px !important; }
   html body #landing.hero-lobby .hl-class { grid-template: auto auto auto / 1fr; justify-items: center; text-align: center; min-height: 0; padding: 5px 2px !important; }
-  html body #landing.hero-lobby .hl-class .hl-class-icon { grid-row: auto; width: 32px !important; height: 32px !important; }
-  html body #landing.hero-lobby .hl-class .hl-class-icon svg { width: 28px; height: 28px; }
+  html body #landing.hero-lobby .hl-class .hl-class-icon { grid-row: auto; width: 26px !important; height: 26px !important; }
+  html body #landing.hero-lobby .hl-class .hl-class-icon svg { width: 22px; height: 22px; }
   html body #landing.hero-lobby .hl-class strong { font-size: 13px !important; }
   html body #landing.hero-lobby .hl-class small { font-size: 8px !important; }
   html body #landing.hero-lobby #identity-label::before { font-size: 13px; }
-  html body #landing.hero-lobby .hl-start { height: 60px !important; }
-  html body #landing.hero-lobby #start-label { font-size: 24px !important; }
-  html body #landing.hero-lobby #saved-characters { margin: 0; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 6px !important; padding: 8px; border-radius: 10px; }
+  html body #landing.hero-lobby .hl-start { height: 50px !important; min-height: 0 !important; }
+  html body #landing.hero-lobby #start-label { font-size: 21px !important; }
+  html body #landing.hero-lobby #saved-characters { margin: 0; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 6px !important; padding: 6px; border-radius: 10px; }
   html body #landing.hero-lobby .hl-slot { grid-template: auto auto / 1fr !important; justify-items: center; text-align: center; padding: 6px 4px !important; gap: 2px !important; }
   html body #landing.hero-lobby .hl-slot-face,
-  html body #landing.hero-lobby .hl-slot-new .hl-slot-icon { width: 44px !important; height: 44px !important; }
+  html body #landing.hero-lobby .hl-slot-new .hl-slot-icon { width: 36px !important; height: 36px !important; }
   html body #landing.hero-lobby .hl-slot-text strong { font-size: 13px !important; }
   html body #landing.hero-lobby .hl-slot-text small { font-size: 10px !important; }
   html body #landing.hero-lobby .hl-slots-head { justify-content: space-between; }
