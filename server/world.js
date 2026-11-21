@@ -1117,7 +1117,9 @@ export function beginDungeon(p, floor) {
     throw Error("สมาชิกต้องอยู่เมืองและปลดล็อกชั้นนี้แล้ว");
   if (party && members.some((m) => m.id !== p.id && !party.ready.has(m.id)))
     throw Error("สมาชิกทุกคนต้องกดพร้อมก่อน");
-  openInstance(members, floor, 1);
+  // Solo newcomer on floor 1: the first room teaches attack and skill.
+  const tutorial = !party && floor === 1 && !(p.quest >= 1) && !(p.unlocked > 1);
+  openInstance(members, floor, 1, tutorial ? { tutorial: true } : {});
   if (floor > 40) instances.get(p.instance).mine = true;
   for (const m of members) track(m.socket?.request?.headers, "dungeon", m.userId);
   if (party) party.ready.clear();
@@ -1330,6 +1332,17 @@ function spawnStage(i) {
     });
   }
   i.totalEnemies = i.enemies.length;
+  // A new player's first room: one monster that does not fight back, close
+  // by, so they can learn attack and skill; the rest come when it falls
+  // (or after TUTORIAL_HOLD seconds). Crystal eruptions wait too.
+  if (i.tutorial && i.stage === 1 && i.enemies.length > 1) {
+    const [first, ...rest] = i.enemies;
+    Object.assign(first, { x: 820, y: 600, homeX: 820, homeY: 600, tame: true, aggro: false, elite: false });
+    first.hp = first.maxHp = Math.min(first.maxHp, Math.round(first.maxHp * 0.8));
+    i.enemies = [first];
+    i.reserve = rest;
+    i.nextHazardAt = Infinity;
+  } else i.reserve = null;
   i.events = [];
   i.signs = dungeonSigns(i.floor, i.stage);
   i.collectedSigns = new Map();
@@ -1376,6 +1389,21 @@ export function useDungeonSign(p, data) {
 // The client shows a loading card for ~1.5 s (plus a 0.45 s fade) when the
 // stage changes, so heroes on auto and the monsters hold off until it clears.
 export const STAGE_INTRO = 2;
+export const TUTORIAL_HOLD = 45;
+// The tutorial monster fell (or time ran out): the pack arrives.
+function releaseReserve(i, t) {
+  const rest = i.reserve || [];
+  i.reserve = null;
+  for (const e of i.enemies) { e.tame = false; }
+  for (const [n, e] of rest.entries()) {
+    e.spawnAt = t + n * 0.06;
+    e.attackAt = t + 1.2;
+    i.enemies.push(e);
+  }
+  i.nextHazardAt = t + 6;
+  i.clear = false;
+  i.clearedAt = 0;
+}
 // After the last monster falls, auto waits this long before moving on so the
 // death animation and loot drops are actually seen.
 export const CLEAR_LINGER = 2.6;
@@ -1408,6 +1436,7 @@ export function nextStage(p) {
 }
 function resetFloor(i) {
   i.stage = 0;
+  i.tutorial = false; // only the very first room teaches
   i.completed = false;
   i.results = null;
   i.startedAt = now();
@@ -1705,7 +1734,7 @@ function resolveAttack(p, t) {
     if (status && e.status[status]) e.status[status].by = p.id;
     if (status && STATUSES[status].control) e.action = null;
     e.hitAt = t;
-    if (canAggro(e, p)) e.aggro = true;
+    if (canAggro(e, p) && !e.tame) e.aggro = true;
     e.hitDirection = a.direction;
     e.x = Math.max(
       70,
@@ -1869,6 +1898,7 @@ function checkClear(i, t, p) {
     i.enemies = [];
   }
   i.enemies = i.enemies.filter((e) => e.hp > 0);
+  if (!i.enemies.length && i.reserve) releaseReserve(i, t);
   if (!i.enemies.length) {
     if (!i.clear) i.clearedAt = t;
     i.clear = true;
@@ -2584,6 +2614,7 @@ export function tick(dt, t = now()) {
       if (!i.respawnAt) i.respawnAt = t + 2.5;
       if (t >= i.respawnAt) spawnTraining(i);
     }
+    if (i.reserve && t - (i.stageAt || 0) > TUTORIAL_HOLD) releaseReserve(i, t);
     updateCrystalHazards(i, t);
     updateBossMechanics(i, t);
     if (!i.clear) {
@@ -2620,14 +2651,14 @@ export function tick(dt, t = now()) {
         continue;
       }
       // Monsters guard their spot until a hero comes close, then call the pack.
-      if (!e.aggro && !i.training) {
+      if (!e.aggro && !i.training && !e.tame) {
         if (canAggro(e, p)) {
           e.aggro = true;
           for (const o of i.enemies)
             if (!o.aggro && Math.abs(o.x - e.x) < 130 && canAggro(o, p)) o.aggro = true;
         }
       }
-      if (!e.aggro && !i.training) {
+      if ((!e.aggro || e.tame) && !i.training) {
         const homeX = e.homeX ?? e.x,
           goal = homeX + Math.sin(t * 0.6 + (e.spawnAt || 0) * 7) * 55;
         enemyStep(
@@ -2887,6 +2918,7 @@ export function snapshot(p) {
             })) || [],
           defeated: i.defeated || 0,
           totalEnemies: i.totalEnemies || i.enemies.length,
+          tutorial: i.tutorial && i.stage === 1 ? (i.reserve ? 1 : 2) : 0,
           streak: i.streak || 0,
           streakUntil: i.streakUntil || 0,
           events: i.events,

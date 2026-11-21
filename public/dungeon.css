@@ -592,3 +592,25 @@ body #modal .dg-num b {
   font-weight: 800 !important;
   font-variant-numeric: tabular-nums;
 }
+
+/* First-room hints (tutorial-hints.js): a bubble above the skill bar and a
+   pulsing ring on the button it names. */
+#tutorial-hint {
+  position: fixed; left: 50%; bottom: calc(150px + env(safe-area-inset-bottom, 0px)); z-index: 60;
+  transform: translate(-50%, 12px); opacity: 0; pointer-events: none;
+  max-width: min(92vw, 460px); padding: 10px 18px; border-radius: 12px;
+  font: 700 17px/1.35 'Noto Sans Thai', sans-serif; color: #fff6dc; text-align: center;
+  background: rgba(20, 16, 10, .9); border: 2px solid #e9b949; box-shadow: 0 6px 18px #0008;
+  transition: opacity .25s, transform .25s;
+}
+#tutorial-hint.on { opacity: 1; transform: translate(-50%, 0); }
+#tutorial-hint::after {
+  content: ""; position: absolute; left: 50%; bottom: -9px; margin-left: -8px;
+  border: 8px solid transparent; border-bottom: 0; border-top-color: #e9b949;
+}
+.tut-glow { position: relative; animation: tut-pulse 1.1s ease-in-out infinite; z-index: 2; }
+@keyframes tut-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 #ffd76a00, 0 0 0 3px #ffd76a; }
+  50% { box-shadow: 0 0 0 10px #ffd76a00, 0 0 0 3px #fff1b8; }
+}
+@media (max-width: 700px) { #tutorial-hint { font-size: 15px; bottom: calc(190px + env(safe-area-inset-bottom, 0px)); } }

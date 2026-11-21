@@ -130,6 +130,7 @@ import {
   playLayers,
 } from "/sprite-sets.js?v=0.25.0";
 import { gearDress } from "/hero-gear.js?v=7";
+import { tutorialUpdate, tutorialAction, tutorialRoom } from "/tutorial-hints.js?v=2";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 observeHudLayout($("#game-screen"));
@@ -1126,6 +1127,7 @@ const setText = (el, value) => {
 function updateHUD() {
   const p = state.self,
     d = state.dungeon;
+  tutorialUpdate(state, !!activePanel);
   setText($("#player-name"), p.name);
   setText($("#player-level"), "Lv." + p.level);
   $("#player-class").textContent =
@@ -1361,10 +1363,11 @@ function updateHUD() {
   // starts on AUTO; steering the joystick hands control back (see below).
   const area = !d ? "town" : d.training ? "training" : "dungeon";
   $("#game-screen").dataset.area = area;
+  if (area !== "town" && activePanel === "first-run") closeModal();
   $("#game-screen").classList.toggle("auto-on", !!p.auto);
   if (area === "dungeon" && d.instanceId !== autoInstance) {
     autoInstance = d.instanceId;
-    if (!p.auto && p.hp > 0) emit("player:auto", { enabled: true });
+    if (!p.auto && p.hp > 0 && !tutorialRoom(d)) emit("player:auto", { enabled: true });
   }
   if (area === "town") autoInstance = null;
   const newcomer = isNewcomer(p);
@@ -1684,6 +1687,7 @@ function talkTo(id) {
 }
 function action(name) {
   if (!state || activePanel) return;
+  tutorialAction(name);
   if (name === "attack") emit("player:attack", { skill: 0 });
   else if (name.startsWith("skill"))
     emit("player:attack", { skill: Number(name.slice(-1)) });
@@ -1713,7 +1717,7 @@ async function enterFirstFloor() {
 function showFirstRun() {
   modal(
     "การผจญภัยครั้งแรก",
-    `<div class="first-run"><p class="first-run-lead">ถ้ำหลวงชั้น 1 รออยู่! ปราบมอนสเตอร์ 3 ด่านแล้วล้มบอส</p><ul><li>⚔ รอบแรกได้<b>อาวุธประจำอาชีพแน่นอน</b></li><li>🤖 เริ่มด้วยโหมด <b>AUTO</b> ตีให้อัตโนมัติ · บังคับเองเมื่อไหร่ก็ได้</li><li>⤴ เห็นวงเตือนบนพื้นให้กระโดดหรือเดินหลบ</li></ul><button id="first-run-go" class="primary-button">ลงถ้ำชั้น 1 เลย ➜</button><button id="first-run-later" class="text-button">เดินดูเมืองก่อน</button><p class="hint">กลับมาเริ่มได้ทุกเมื่อที่ปุ่ม “เริ่ม ชั้น 1” มุมล่าง</p></div>`,
+    `<div class="first-run"><p class="first-run-lead">ถ้ำหลวงชั้น 1 รออยู่! ปราบมอนสเตอร์ 3 ด่านแล้วล้มบอส</p><ul><li>⚔ รอบแรกได้<b>อาวุธประจำอาชีพแน่นอน</b></li><li>🎯 ห้องแรกฝึกกดโจมตีและสกิลกับมอนตัวเดียวก่อน แล้วค่อยเจอฝูง · มีโหมด <b>AUTO</b> ให้ตีอัตโนมัติ</li><li>⤴ เห็นวงเตือนบนพื้นให้กระโดดหรือเดินหลบ</li></ul><button id="first-run-go" class="primary-button">ลงถ้ำชั้น 1 เลย ➜</button><button id="first-run-later" class="text-button">เดินดูเมืองก่อน</button><p class="hint">กลับมาเริ่มได้ทุกเมื่อที่ปุ่ม “เริ่ม ชั้น 1” มุมล่าง</p></div>`,
     "first-run",
   );
   $("#first-run-go").onclick = enterFirstFloor;
