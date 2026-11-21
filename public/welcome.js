@@ -1,3 +1,5 @@
+import { facebookIosControls } from "/ios-controls.js";
+facebookIosControls({ device:navigator, referrer:document.referrer });
 const $ = (s) => document.querySelector(s);
 let mode = new URLSearchParams(location.search).get('account') === 'register' ? 'register' : 'login';
 let user = null, busy = false;

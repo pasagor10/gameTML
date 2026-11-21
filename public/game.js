@@ -1,3 +1,4 @@
+import { facebookIosControls, claimJoystickTouch, bindHoldMovement } from "/ios-controls.js";
 import { openPvpPanel, updatePvpUi, setPvpLoading } from "/pvp-ui.js";
 import { createWorldLabels } from "/world-labels.js";
 import { townWanderers, wandererPose } from "/shared/town-wanderers.js";
@@ -2538,6 +2539,18 @@ addEventListener("blur", () => {
 // Floating joystick (MOBA style): it appears under the thumb anywhere in the
 // zone. Tilt walks, full tilt runs, a flick upward jumps once per flick.
 let touchRun = false;
+const facebookIos = facebookIosControls({ device:navigator, referrer:document.referrer });
+$("#game-screen").dataset.facebookIos = String(facebookIos);
+$("#fb-movement").hidden = !facebookIos;
+claimJoystickTouch($("#joystick-zone"), () => !!state && !activePanel);
+bindHoldMovement({ root:$("#fb-movement"),
+  canMove:() => facebookIos && !!state && !activePanel && state.self.hp>0,
+  onMove(direction) {
+    if(state.self.auto) emit("player:auto", {enabled:false});
+    touchDirection=direction;touchRun=false;sendInput();
+  },
+  onRelease() { if(facebookIos) {touchDirection=0;touchRun=false;sendInput();} },
+});
 for (const root of [$("#mobile-controls"), $(".skillbar")])
   for (const type of ["pointerdown", "pointerup", "pointermove", "pointercancel", "click", "touchstart", "touchmove", "touchend"])
     root.addEventListener(type, (event) => event.stopPropagation());
@@ -2601,6 +2614,9 @@ for (const root of [$("#mobile-controls"), $(".skillbar")])
       e.stopPropagation();
       if (stick?.id === e.pointerId) release();
     });
+  for (const type of ["pointerup", "pointercancel"])
+    addEventListener(type, e => { if (stick?.id === e.pointerId) release(); });
+  addEventListener("pagehide", release);
   addEventListener("blur", release);
   document.addEventListener("game:reset-controls", release);
   document.addEventListener("visibilitychange", () => {
