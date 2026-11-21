@@ -1,3 +1,4 @@
+import { createWorldLabels } from "/world-labels.js";
 import { townWanderers, wandererPose } from "/shared/town-wanderers.js";
 import { preloadRiverside } from "/riverside-map.js";
 import { RIVER_DOCKS } from "/shared/riverside-layout.js";
@@ -2738,6 +2739,7 @@ class Adventure extends Phaser.Scene {
     // Render every world label at a higher resolution so it stays crisp.
     // Each label is its own texture; at 3x it holds 9x the pixels, so the
     // graphics preset caps it (Low 1.5x, Medium 2x, High 3x).
+    this.worldLabel = createWorldLabels(this, $("#game-screen"));
     const addText = this.add.text.bind(this.add);
     this.add.text = (...args) => {
       const label = addText(...args).setResolution(
@@ -2745,6 +2747,7 @@ class Adventure extends Phaser.Scene {
       );
       // Text needs smooth sampling even when character art uses nearest pixels.
       label.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
+      if (args[3]?.worldLabel) this.worldLabel(label);
       return label;
     };
     this.knightAtlas = registerMotionAtlas(this, "knight-motion", 8);
@@ -2829,6 +2832,7 @@ class Adventure extends Phaser.Scene {
     });
     this.portalLabel = this.add
       .text(WORLD.portal, WORLD.portalY - 175, "ถ้ำหลวง\nประตูสู่ดอยนางนอน", {
+        worldLabel: true,
         fontFamily: "Noto Sans Thai",
         fontSize: "15px",
         align: "center",
@@ -2839,7 +2843,7 @@ class Adventure extends Phaser.Scene {
       .setOrigin(0.5)
       .setDepth(12);
     this.travelGlow = this.add.ellipse(TRAVEL_GATE.x, WORLD.ground - 60, 76, 132, 0x53dbc0, 0.32).setDepth(4).setStrokeStyle(3, 0xf2d497, 0.9);
-    this.travelLabel = this.add.text(TRAVEL_GATE.x, WORLD.ground - 155, "ประตูวาร์ป\nชุมชนริมน้ำสาย", { fontFamily: "Noto Sans Thai", fontSize: "15px", align: "center", color: "#ecfff7", stroke: "#112d35", strokeThickness: 4 }).setOrigin(0.5).setDepth(12);
+    this.travelLabel = this.add.text(TRAVEL_GATE.x, WORLD.ground - 155, "ประตูวาร์ป\nชุมชนริมน้ำสาย", { worldLabel: true, fontFamily: "Noto Sans Thai", fontSize: "15px", align: "center", color: "#ecfff7", stroke: "#112d35", strokeThickness: 4 }).setOrigin(0.5).setDepth(12);
     this.npcs.push(this.travelGlow, this.travelLabel);
     this.tweens.add({ targets: this.travelGlow, alpha: 0.65, duration: 1300, yoyo: true, repeat: -1 });
     // Click or tap NPCs, the cave gate and stalls to open them directly.
@@ -2871,6 +2875,7 @@ class Adventure extends Phaser.Scene {
       if (!this.load.isLoading()) this.load.start();
     }
     const slotLabel = this.add.text(SLOT_MACHINE.x, WORLD.ground - 195, "ตู้สมบัติจันทรา\n1,000 ทอง / ครั้ง", {
+      worldLabel: true,
       fontFamily: "Noto Sans Thai", fontSize: "12px", fontStyle: "bold", align: "center", color: "#fff2ce", stroke: "#10202a", strokeThickness: 1,
     }).setOrigin(0.5).setDepth(14);
     this.npcs.push(slotGlow, slotImage, slotLabel);
@@ -3015,6 +3020,7 @@ class Adventure extends Phaser.Scene {
         footLight = footGlow(this, p.x, p.y, 0.34)?.setDepth(6),
         label = this.add
           .text(p.x, p.y - 142, p.name, {
+            worldLabel: true,
             fontFamily: "Noto Sans Thai",
             fontSize: "14px",
             fontStyle: "bold",
@@ -3247,6 +3253,7 @@ class Adventure extends Phaser.Scene {
           .setDepth(3);
         const label = this.add
           .text(shop.x, WORLD.ground - 141, shop.name, {
+            worldLabel: true,
             fontFamily: "Noto Sans Thai",
             fontSize: "12px",
             fontStyle: "bold",

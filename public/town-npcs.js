@@ -90,6 +90,7 @@ export function createTownNpcs(scene, definitions, sprites) {
     sprites?.want("npcs", n.id);
     const label = scene.add
       .text(n.x, (n.y ?? 600) - 146, `${n.name}\n${n.role}`, {
+        worldLabel: true,
         fontFamily: "Noto Sans Thai",
         fontSize: "15px",
         fontStyle: "bold",
