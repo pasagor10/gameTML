@@ -24,3 +24,22 @@
   html body #game-screen[data-facebook-ios="true"] #fb-movement:not([hidden]) { grid-template-columns: repeat(2,50px); gap: 6px; }
   html body #game-screen #fb-movement button { width: 50px; height: 58px; }
 }
+@media (pointer: coarse) {
+  html body #game-screen #fb-movement button,
+  html body #game-screen#game-screen .hud-bottom .skillbar #mobile-jump {
+    background: linear-gradient(145deg,#344c58 0%,#132c38 55%,#091a24 100%) !important;
+    border: 2px solid #e3bc70 !important; border-radius: 17px !important;
+    color: #fff0c8 !important;
+    box-shadow: inset 0 2px 0 #fff5c844,inset 0 -4px 0 #0005,0 4px 0 #07141d,0 6px 12px #0006 !important;
+    touch-action: none;
+  }
+  #fb-movement svg, #mobile-jump svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 2px 1px #0008); }
+  html body #game-screen#game-screen .hud-bottom .skillbar #mobile-jump b { display: grid; place-items: center; width: 100%; height: 100%; margin: 0; background: none !important; }
+  html body #game-screen #fb-movement button.pressed,
+  html body #game-screen#game-screen .hud-bottom .skillbar #mobile-jump:active {
+    background: linear-gradient(145deg,#af8746,#60431c) !important; border-color: #fff0bb !important;
+    box-shadow: inset 0 2px 6px #0006,0 1px 0 #07141d !important;
+  }
+  #tutorial-hint { box-sizing: border-box; max-width: min(calc(100vw - 24px),360px); padding: 8px 12px; font-size: 14px; }
+  #tutorial-hint::after { display: none; }
+}

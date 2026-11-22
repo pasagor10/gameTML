@@ -1,3 +1,4 @@
+import { tutorialHintTop } from "./tutorial-layout.js";
 // First-room hints for a new player (server: dungeon.tutorial). Phase 1 is
 // one monster that does not fight back: attack, then a skill. Phase 2 the
 // pack arrives: point at AUTO once, and at the potion when HP runs low.
@@ -29,11 +30,23 @@ let el = null,
   done = {},
   timer = 0;
 
+let positionedAt = -Infinity;
+function positionHint() {
+  if (!touch || !el || !current || performance.now() - positionedAt < 200) return;
+  positionedAt = performance.now();
+  const rects = [...document.querySelectorAll(".skillbar .skill, #fb-movement, #joystick-zone, #town-dock")]
+    .filter(node => node.getClientRects().length && getComputedStyle(node).visibility !== "hidden")
+    .map(node => node.getBoundingClientRect());
+  el.style.bottom = "auto";
+  el.style.top = `${tutorialHintTop(innerHeight, el.offsetHeight, rects)}px`;
+}
+addEventListener("resize", () => { positionedAt = -Infinity; positionHint(); });
 function show(step) {
   if (step === current) return;
   document.querySelectorAll(".tut-glow").forEach((b) => b.classList.remove("tut-glow"));
   clearTimeout(timer);
   current = step;
+  positionedAt = -Infinity;
   if (!el) {
     el = document.createElement("div");
     el.id = "tutorial-hint";
@@ -69,6 +82,7 @@ export function tutorialUpdate(state, blocked = false) {
   else if (!done.pack && !p.auto) want = "pack";
   if (!done.potion && p.hp < p.maxHp * 0.5) want = "potion";
   show(want);
+  positionHint();
 }
 
 // The player pressed an action button or key.

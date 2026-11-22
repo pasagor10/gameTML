@@ -1663,6 +1663,12 @@ export function attack(p, skill = 0, t = now()) {
   if (skill === 5) i.events.push({ id: randomUUID(), kind:"ultimate", actorId:p.id,
     class:p.class, gender:p.gender, x:p.x, y:p.y, at:t });
 }
+// A committed ultimate survives hit reactions and AUTO evasion, but never death.
+function interruptAttack(p) {
+  if (p.hp > 0 && p.pending?.skill === 5) return;
+  p.pending = null;
+  p.action = null;
+}
 function resolveAttack(p, t) {
   const a = p.pending;
   if (!a || t < a.impactAt) return;
@@ -1670,7 +1676,7 @@ function resolveAttack(p, t) {
   const i = instances.get(p.instance),
     c = CLASSES[p.class],
     skill = a.skill;
-  if (!i || i.clear || !pvp.canFight(p, t) || p.hp <= 0 || controlled(p, t)) return;
+  if (!i || i.clear || !pvp.canFight(p, t) || p.hp <= 0 || (skill !== 5 && controlled(p, t))) return;
   // Archer AGI: a basic shot may loose a second arrow (double strafe).
   const twin = combatStats(p).double,
     double = !skill && twin > 0 && Math.random() < twin;
@@ -2398,8 +2404,7 @@ function dealDungeonDamage(i, p, base, actorId, direction, t, status = null) {
   p.hp = Math.max(0, p.hp - amount);
   p.hitAt = t;
   p.hitDirection = direction;
-  p.pending = null;
-  p.action = null;
+  interruptAttack(p);
   i.streak = 0;
   i.streakUntil = 0;
   i.events.push({
@@ -2415,7 +2420,7 @@ function dealDungeonDamage(i, p, base, actorId, direction, t, status = null) {
   if (p.hp > 0 && status && applyStatus(p, status, amount, t)) {
     if (status.type === "stun") {
       p.input = 0;
-      p.pending = null;
+      interruptAttack(p);
     }
     i.events.push({
       id: randomUUID(),
@@ -2589,7 +2594,7 @@ export function tick(dt, t = now()) {
         i.events.push({ id: randomUUID(), kind: "heal", targetId: p.id, x: p.x, y: p.y - 110, amount, at: t });
       }
     }
-    if (controlled(p, t)) { p.input = 0; p.pending = null; p.action = null; }
+    if (controlled(p, t)) { p.input = 0; interruptAttack(p); }
     if (i?.pvp) {
       p.auto = false;
       if (!pvp.canFight(p, t)) { p.input = 0; p.pending = null; p.action = null; }
@@ -2629,7 +2634,7 @@ export function tick(dt, t = now()) {
           aspd: aspdOf(p, t),
           platforms: dungeonPlatforms(i.floor, i.stage, i.training),
         });
-        if (plan.evade) { p.action = null; p.pending = null; }
+        if (plan.evade) interruptAttack(p);
         p.input = plan.input;
         p.running = true;
         if (plan.jump && p.grounded) p.jumpBufferedAt = t;
@@ -2647,7 +2652,7 @@ export function tick(dt, t = now()) {
       }
     }
     resolveAttack(p, t);
-    if (controlled(p, t)) { p.input = 0; p.pending = null; p.action = null; }
+    if (controlled(p, t)) { p.input = 0; interruptAttack(p); }
     physics(p, dt, t);
     // VIT and INT regenerate a little HP / MP every tick.
     const fx = statEffects(p);
