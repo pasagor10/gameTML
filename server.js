@@ -273,7 +273,12 @@ app.use((req, res, next) => {
     ensureVisitor(req, res);
     trackOrigin(req, "/play");
     const user = sessions(req);
-    if (!user) return res.redirect("/?account=login#account");
+    // Recheck on our own origin: Strict cookies can be absent on an external link.
+    // The welcome bootstrap resumes an existing session before creating a guest.
+    if (!user) {
+      res.setHeader("Cache-Control", "no-store");
+      return res.redirect("/?enter=1");
+    }
     track(req.headers, "lobby", user.id);
     req.url = "/index.html";
   } else if (["/dashboard", "/dashboard/"].includes(req.path)) req.url = "/dashboard.html";

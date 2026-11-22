@@ -25,7 +25,8 @@ test('central entrance requires a session and registered accounts open the game'
   const home=await (await fetch(base+'/')).text();
   assert.match(home,/welcome.js/); assert.doesNotMatch(home,/vendor\/phaser/);
   const blocked=await fetch(base+'/play',{redirect:'manual'});
-  assert.equal(blocked.status,302); assert.match(blocked.headers.get('location'),/account=login/);
+  assert.equal(blocked.status,302); assert.equal(blocked.headers.get('location'),'/?enter=1');
+  assert.equal(blocked.headers.get('cache-control'),'no-store');
   assert.equal((await post('/api/auth/guest',{})).status,200);
   const reg=await post('/api/auth/register',{name:'entry-member',password:'EntryPassword42'});
   assert.equal(reg.status,200); const cookie=cookieOf(reg);
@@ -70,4 +71,19 @@ test('guest entry resumes the same account and original characters on repeated v
   assert.equal(play.status,200);
   const me=await (await fetch(base+'/api/me',{headers:{Cookie:cookie}})).json();
   assert.equal(me.characters[0].id,character.id);
+});
+
+test('all direct game aliases bootstrap missing sessions without forcing the login form',async()=>{
+  for(const route of ['/play','/play/','/index.html','/play?auto=1']) {
+    const response=await fetch(base+route,{redirect:'manual'});
+    assert.equal(response.status,302);
+    assert.equal(response.headers.get('location'),'/?enter=1');
+    const entry=await fetch(base+response.headers.get('location'));
+    assert.equal(entry.status,200);assert.match(await entry.text(),/welcome.js/);
+  }
+  const guest=await post('/api/auth/guest',{}),cookie=cookieOf(guest);
+  for(const route of ['/play','/play/','/index.html']) {
+    const response=await fetch(base+route,{headers:{Cookie:cookie},redirect:'manual'});
+    assert.equal(response.status,200,'existing sessions retain direct access');
+  }
 });

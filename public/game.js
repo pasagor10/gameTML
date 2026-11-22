@@ -501,7 +501,7 @@ $$("[data-preview]").forEach(
 // hero goes straight into the game with the one played last; a new player
 // stays on hero creation. The select screen is still in the in-game menu.
 function autoResume() {
-  if (!new URLSearchParams(location.search).has("auto")) return;
+  if (new URLSearchParams(location.search).has("select")) return;
   history.replaceState(null, "", "/play");
   if (!characters.length) return;
   let last = null;

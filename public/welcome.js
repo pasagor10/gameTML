@@ -13,6 +13,12 @@ async function api(path, data) {
   if (!response.ok) throw Error(result.error || 'เชื่อมต่อไม่สำเร็จ กรุณาลองอีกครั้ง');
   return result;
 }
+async function ensurePlaySession(account) {
+  if (!account) await api('auth/guest', {});
+  const verified = await api('me');
+  if (!verified.user) throw Error('เบราว์เซอร์ไม่เก็บสถานะเข้าเกม กรุณาอนุญาตคุกกี้ หรือเปิดลิงก์ใน Safari / Chrome');
+  return verified.user;
+}
 function setMode(next) {
   if (busy) return;
   mode = next;
@@ -60,7 +66,7 @@ $('#auth-form').onsubmit = async (event) => {
   for (const button of document.querySelectorAll('[data-mode]')) button.disabled = true;
   try {
     await api('auth/' + mode, { name: $('#account-name').value.trim(), password: $('#account-password').value });
-    location.assign('/play');
+    location.assign('/play?auto=1');
   } catch (error) {
     $('#auth-error').textContent = error.message;
   } finally {
@@ -80,8 +86,8 @@ async function playNow(button, errorBox) {
   if (busy) return;
   busy = true; button.disabled = true; errorBox.textContent = '';
   try {
-    if (!user) { const result = await api('auth/guest', {}); user = result.user; }
-    location.assign('/play');
+    user = await ensurePlaySession(user);
+    location.assign('/play?auto=1');
   } catch (error) {
     errorBox.textContent = error.message;
   } finally {
@@ -107,11 +113,16 @@ entering(autoEnter);
 api('me').then(async ({ user }) => {
   if (autoEnter) {
     try {
-      if (!user) await api('auth/guest', {});
+      await ensurePlaySession(user);
       // ?auto: a returning player goes on into the game (game.js).
       location.replace('/play?auto=1');
       return;
-    } catch { entering(false); }
+    } catch (error) {
+      entering(false);
+      showAccount(user);
+      $('#guest-error').textContent = error.message;
+      return;
+    }
   }
   showAccount(user);
 }).catch(() => {
