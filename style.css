@@ -74,3 +74,30 @@ body[data-screen=armory] .stats,body[data-screen=armory] footer,body[data-screen
 .loot-note{font-size:11px;color:#ffe0a1;margin-left:6px}
 @media(max-width:600px){.play-actions{bottom:78px;right:12px}.play-actions button{min-width:64px;height:38px;font-size:11px;padding:0 10px}}
 .play-actions{background:none!important;border:0!important;padding:0!important;box-shadow:none!important;border-radius:0!important}
+
+/* Bag and gear */
+.stats .gold{color:#ffd56a}
+.bag-panel{width:min(920px,100%);text-align:left}
+.bag-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.bag-head h2{margin:6px 0}.bag-gold{font:600 18px 'Chakra Petch',sans-serif;color:#ffd56a}
+.gear-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px 0 14px}
+.gear-slot{background:#0f2c3add;border:1px solid #79d6fa60;border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px;min-height:150px}
+.gear-slot header{font-size:11px;color:#9fd8e8;letter-spacing:1px}
+.gear-slot .item-name{font-size:13px;font-weight:700}.gear-slot small{font-size:11px;color:#cfe3dc;letter-spacing:0}
+.gear-slot .row{display:flex;gap:6px;margin-top:auto}
+.gear-slot button,.item-detail button{flex:1;background:#183944;border:1px solid #b3d4d166;border-radius:8px;padding:7px 6px;font-size:12px}
+.gear-slot button.gold-btn,.item-detail button.gold-btn{background:#4a3a14;border-color:#ffd56a99;color:#ffe9a8}
+.gear-slot button:disabled,.item-detail button:disabled{opacity:.45;cursor:default}
+.bag-tabs{display:flex;gap:6px;margin:6px 0}.bag-tabs button{background:#183944;border:1px solid #b3d4d166;border-radius:20px;padding:6px 12px;font-size:12px}
+.bag-tabs button[aria-pressed=true]{background:#ffe0a1;color:#243c46}
+.bag-body{display:grid;grid-template-columns:1fr 260px;gap:12px}
+.bag-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;max-height:300px;overflow-y:auto;padding:2px}
+.bag-cell{position:relative;aspect-ratio:1;border-radius:10px;border:2px solid;background:#0c1a3a;display:grid;place-items:center;padding:0;font-size:24px}
+.bag-cell canvas{width:100%;height:100%;border-radius:8px}
+.bag-cell .plus{position:absolute;right:3px;top:1px;font-size:11px;font-weight:700;color:#fff}
+.bag-cell .tag{position:absolute;left:3px;bottom:1px;font-size:10px;color:#fff;background:#00000080;border-radius:4px;padding:0 3px}
+.bag-cell[aria-pressed=true]{outline:3px solid #fff}.bag-cell.locked{opacity:.55}
+.item-detail{background:#0f2c3add;border:1px solid #79d6fa60;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px;font-size:13px}
+.item-detail .row{display:flex;gap:6px}.item-detail p{margin:0;font-size:12px;line-height:1.6}
+.bag-empty{opacity:.7;font-size:12px}
+@media(max-width:700px){.gear-row{grid-template-columns:repeat(2,1fr)}.bag-body{grid-template-columns:1fr}.bag-grid{max-height:200px}.gear-slot{min-height:120px}}

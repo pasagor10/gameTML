@@ -29,9 +29,9 @@ test('gear drops from monsters and is only worn once the hero level allows it',(
   assert.equal(r.loot.length,0);assert.equal(r.bag.length,1);assert.equal(r.weaponTier,0);assert.equal(r.lockedUpgrade().tier,2);
   r.level=REQ_LEVEL[2];r.equipBest();assert.equal(r.weaponTier,2);assert.ok(r.events.some(e=>e.type==='weapon_up'));
   // Another class's weapon never fits; armour fits anyone and adds HP and damage reduction.
-  r.bag.push({kind:'weapon',tier:5,job:'mage'},{kind:'armor',tier:1,job:null});r.equipBest();assert.equal(r.weaponTier,2);assert.equal(r.armorTier,1);assert.equal(r.maxHp,100+ARMOR[1].hp);
-  // Elites always drop; novices only find armour.
-  const drop=rollDrop('elite',1,'novice',()=>.5);assert.equal(drop.kind,'armor');assert.equal(drop.tier,1);assert.equal(rollDrop('slime',1,'knight',()=>.5),null);
+  r.addItem({kind:'weapon',tier:5,job:'mage'});r.addItem({kind:'armor',tier:1,job:null});r.equipBest();assert.equal(r.weaponTier,2);assert.equal(r.armorTier,1);assert.equal(r.maxHp,100+ARMOR[1].hp);
+  // Elites always drop; novices never find weapons.
+  const drop=rollDrop('elite',1,'novice',()=>.5);assert.notEqual(drop.kind,'weapon');assert.equal(drop.tier,1);assert.equal(rollDrop('slime',1,'knight',()=>.5),null);
   r.weaponTier=2;
   assert.ok(r.power()>1.5);assert.equal(weaponName('gunner',5),'ปืนเทพสายรุ้ง');
   const damage=[];for(const tier of [0,5]){const g=new Run(()=>.5,{job:'knight'});g.enemies=[];g.spawn=1000;g.weaponTier=tier;g.addEnemy('boss',60,0);g.update(.05);damage.push(g.enemies[0].max-g.enemies[0].hp);}
@@ -109,9 +109,22 @@ test('away from the screen, level-ups are banked and opened one by one on return
 test('auto-farming retreats instead of dying, and runs survive a save and restore',()=>{
   const r=new Run(()=>.5,{job:'knight',name:'ริว'});r.reviveOnDefeat=true;r.stage=3;r.t=500;r.p.hp=1;r.damage(50,'boss');
   assert.equal(r.state,'playing');assert.equal(r.p.hp,r.maxHp);assert.equal(r.stage,3);assert.equal(r.retreats,1);assert.equal(r.enemies.length,0);
-  r.level=17;r.skills={whirl:3};r.bag=[{kind:'armor',tier:2,job:null}];r.armorTier=2;r.pendingPicks=4;
+  r.level=17;r.skills={whirl:3};r.addItem({kind:'armor',tier:2,job:null});r.equipBest();r.gold=321;r.pendingPicks=4;
   const back=Run.restore(JSON.parse(JSON.stringify(r.serialize())));
-  for(const k of ['job','name','stage','level','pendingPicks','armorTier'])assert.deepEqual(back[k],r[k],k);
+  for(const k of ['job','name','stage','level','pendingPicks','armorTier','gold','maxHp'])assert.deepEqual(back[k],r[k],k);
   assert.deepEqual(back.skills,{whirl:3});assert.equal(back.bag.length,1);assert.equal(back.state,'playing');
   const plain=new Run(()=>.5,{job:'knight'});plain.p.hp=1;plain.damage(50,'boss');assert.equal(plain.state,'ended');
+});
+
+test('gold, bag, swapping, selling and enhancing gear',()=>{
+  const r=new Run(()=>.5,{job:'knight'});r.enemies=[];r.spawn=1000;r.level=30;
+  const old=r.addItem({kind:'helmet',tier:1}),better=r.addItem({kind:'helmet',tier:3}),ring=r.addItem({kind:'ring',tier:2});
+  assert.ok(r.equipItem(old.id));const hp1=r.maxHp;assert.ok(r.equipItem(better.id),'swap to the better helmet');assert.ok(r.maxHp>hp1);
+  assert.equal(r.sellItem(better.id),false,'worn gear cannot be sold');const price=r.sellItem(old.id);assert.ok(price>0);assert.equal(r.gold,price);
+  const base=r.power();assert.ok(r.equipItem(ring.id));assert.ok(r.power()>base);
+  assert.equal(r.enhance('ring'),false,'needs gold');r.gold=10000;assert.ok(r.enhance('ring'));assert.equal(r.gearItem('ring').plus,1);
+  assert.ok(r.unequip('ring'));assert.equal(r.power(),base);
+  // Kills drop coins that add to the wallet; gear and gold carry into the next run.
+  r.addEnemy('elite',40,0);r.enemies[0].hp=1;r.hit(r.enemies[0],5);assert.ok(r.coins.length>0);r.coins[0].x=r.p.x;r.coins[0].y=r.p.y;const before=r.gold;r.update(.05);assert.ok(r.gold>before);
+  const next=new Run(()=>.5,{job:'knight'});next.loadStash(r.stash());assert.equal(next.gold,r.gold);assert.equal(next.gearItem('helmet').tier,3);
 });

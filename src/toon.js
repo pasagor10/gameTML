@@ -37,7 +37,7 @@ const HAIR = {a: ['#f1f4fb', '#9aa6c4'], b: ['#f3e6f0', '#b49ab8']};
 export const HERO_TOON_SCALE = 1.45;
 
 export function drawToonHero(c, x, y, o = {}) {
-  const {time = 0, moving = false, job = 'novice', appearance = 'a', inv = 0, direction = 'se', distance, attacking = false, tier = 0} = o;
+  const {time = 0, moving = false, job = 'novice', appearance = 'a', inv = 0, direction = 'se', distance, attacking = false, tier = 0, pose = null, armor = 0} = o;
   const left = ['sw', 'w', 'nw'].includes(direction), back = ['n', 'ne', 'nw'].includes(direction);
   const phase = moving ? (distance !== undefined ? distance / RUN_STRIDE * Math.PI * 2 : time * 13) : 0;
   const sw = moving ? Math.sin(phase) : 0, bob = moving ? -Math.abs(Math.cos(phase)) * 3 : Math.sin(time * 3) * 1.1;
@@ -47,12 +47,25 @@ export function drawToonHero(c, x, y, o = {}) {
   E(c, 0, 1, 22, 7.5, '#10303055', null);
   c.scale(left ? -S : S, S);
   if (inv > 0 && Math.floor(inv * 15) % 2) c.globalAlpha *= .45;
-  c.translate(0, bob);
+  // Skill poses: where the hands go, how the weapon is held, and how the body leans.
+  const q = pose ? 1 - pose.life / pose.max : 0, pk = pose?.kind;
+  let ax = attacking ? 16 : 15 + sw * 2, ay = attacking ? -27 : -19, bx = -14 - sw * 4, by = -17, wr = null, lift = 0, lean = 0, squash = 1;
+  if (pk === 'raise') {ax = 13;ay = -52;bx = -13;by = -52;wr = -.15;lift = -5 * Math.sin(q * Math.PI);}
+  else if (pk === 'spin') {squash = Math.cos(q * Math.PI * 4);ax = 21;ay = -26;bx = -20;by = -26;wr = 1.45;}
+  else if (pk === 'slash') {ax = 19;ay = -36 + q * 18;wr = -2.1 + q * 3.4;lean = .14 * Math.sin(q * Math.PI);}
+  else if (pk === 'thrust') {ax = 25;ay = -27;bx = -6;by = -22;wr = 1.35;lean = .16;}
+  else if (pk === 'recoil') {ax = 13 - Math.sin(q * Math.PI) * 5;ay = -25;lean = -.12 * Math.sin(q * Math.PI);}
+  else if (pk === 'throw') {if (q < .5) {ax = 5;ay = -50;wr = -.7;} else {ax = 23;ay = -30;wr = 1.2;}lean = .1;}
+  if (wr !== null && job === 'gunner') wr -= 1.4;
+  if (pk === 'recoil') wr = -.35;
+  c.translate(0, bob + lift);c.rotate(lean);
+  if (squash !== 1) c.scale(Math.abs(squash) < .2 ? .2 * Math.sign(squash || 1) : squash, 1);
   const flutter = Math.sin(time * 7 + phase) * 3;
   const weapon = () => {
-    const hx = back ? -15 : 15, hy = attacking ? -27 : -19;
+    const hx = back ? -15 : ax, hy = back ? (attacking ? -27 : -19) : ay;
     c.save();c.translate(hx, hy);c.scale(1 / S, 1 / S);
-    if (job === 'gunner') c.rotate(attacking ? -.18 : .05);
+    if (wr !== null) c.rotate(wr);
+    else if (job === 'gunner') c.rotate(attacking ? -.18 : .05);
     else c.rotate(attacking ? (job === 'mage' ? -.25 : -1.1) : (job === 'mage' ? .08 : .35));
     drawWeapon(c, job, tier, time, {attacking});c.restore();
   };
@@ -72,7 +85,8 @@ export function drawToonHero(c, x, y, o = {}) {
     E(c, fx + 1.5, -1.5 - lift, 4.6, 3, fit.boots);
   }
   // Back arm.
-  limb(c, -10, -28, -14 - sw * 4, -17, fit.sleeve, 5);E(c, -14 - sw * 4, -16, 2.8, 2.8, SKIN);
+  limb(c, -10, -28, bx, by, fit.sleeve, 5);E(c, bx, by + 1, 2.8, 2.8, SKIN);
+  if (pk === 'raise') glowDot(c, bx, by, 9, `${accent}cc`);
   // Torso by class.
   if (job === 'mage') {
     P(c, [[-11, -31], [11, -31], [15, -7], [0, -5], [-15, -7]], fit.top);
@@ -86,6 +100,8 @@ export function drawToonHero(c, x, y, o = {}) {
     if (job === 'novice') P(c, [[-9, -31], [9, -31], [0, -24]], fit.top2, OUT, 1);
     L(c, -12, -14, 12, -14, '#5a3f2a', 3.5);E(c, 0, -14, 2.4, 2.2, accent, OUT, 1);
   }
+  // Worn armour shows as a coloured collar and shoulder trim.
+  if (armor > 0) {const ac = TIERS[armor].color;L(c, -9, -31, 9, -31, OUT, 4.4);L(c, -9, -31, 9, -31, ac, 2.6);for (const sx of [-1, 1]) E(c, sx * 11, -29, 3.4, 2.6, ac, OUT, 1);}
   // Head.
   const fx = back ? 0 : 1.5;
   E(c, 0, -46, 17, 15.5, SKIN);
@@ -120,7 +136,7 @@ export function drawToonHero(c, x, y, o = {}) {
     if (!back) for (const gx of [-7, 7]) {E(c, gx, -56, 5, 4, '#ffda80', OUT, 1);E(c, gx, -56, 3.2, 2.5, '#459fc9', null);}
   }
   // Front arm (holds the weapon).
-  const ax = attacking ? 16 : 15 + sw * 2, ay = attacking ? -27 : -19;
+  if (pk === 'raise' || pk === 'thrust') glowDot(c, ax, ay, 10, `${accent}cc`);
   if (!back) {limb(c, 10, -28, ax, ay, fit.sleeve, 5);if (!back) weapon();E(c, ax, ay, 3, 3, SKIN);}
   else limb(c, 10, -28, 14 + sw * 4, -17, fit.sleeve, 5);
   c.restore();
