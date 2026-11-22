@@ -1,9 +1,9 @@
 import {drawSpriteHero} from './sprites.js';
 // Code-native cartoon art: independent of collision sizes and combat timing.
-export function drawHero(c,x,y,{time=0,moving=false,job='novice',appearance='a',inv=0,facing=1,attacking=false,direction='se',distance}={}){
-if(drawSpriteHero(c,x,y,{time,moving,job,appearance,inv,facing,attacking,direction,distance}))return;
+export function drawHero(c,x,y,{time=0,moving=false,job='novice',appearance='a',inv=0,facing=1,attacking=false,direction='se',distance,tier=0}={}){
+if(drawSpriteHero(c,x,y,{time,moving,job,appearance,inv,facing,attacking,direction,distance,tier}))return;
 c.save();c.translate(x,y);const bob=moving?Math.sin(time*13)*2:Math.sin(time*3)*1.2;
-const metal=job==='mage'?'#c5b6ff':job==='ranger'?'#a6e3c6':'#d8eafa',trim='#ffe09a',dark='#23364f',cape=job==='mage'?'#7555b8':job==='ranger'?'#248b83':'#ce4e62';
+const metal=job==='mage'?'#c5b6ff':job==='gunner'?'#a6e3c6':'#d8eafa',trim='#ffe09a',dark='#23364f',cape=job==='mage'?'#7555b8':job==='gunner'?'#248b83':'#ce4e62';
 const ellipse=(x,y,rx,ry,color)=>{c.fillStyle=color;c.beginPath();c.ellipse(x,y,rx,ry,0,0,Math.PI*2);c.fill();};
 const shape=(p,color,stroke='#27394c')=>{c.beginPath();p.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fillStyle=color;c.fill();c.strokeStyle=stroke;c.lineWidth=1.8;c.lineJoin='round';c.stroke();};
 const line=(x,y,xx,yy,color,width)=>{c.beginPath();c.moveTo(x,y);c.lineTo(xx,yy);c.strokeStyle=color;c.lineWidth=width;c.lineCap='round';c.stroke();};

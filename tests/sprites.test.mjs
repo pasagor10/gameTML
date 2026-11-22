@@ -7,7 +7,7 @@ import {Run} from '../src/model.js';
 
 test('movement selects all eight real sheet rows and idle retains last direction',()=>{
   const vectors=[[0,-1],[1,-1],[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1]];
-  vectors.forEach(([x,y],i)=>{assert.equal(directionFor(x,y),DIRECTIONS[i]);const r=new Run();r.update(.01,{x,y});assert.equal(r.direction,DIRECTIONS[i]);assert.equal(r.moving,true);r.update(.01);assert.equal(r.direction,DIRECTIONS[i]);assert.equal(r.moving,false);});
+  vectors.forEach(([x,y],i)=>{assert.equal(directionFor(x,y),DIRECTIONS[i]);const r=new Run();r.update(.01,{x,y});assert.equal(r.direction,DIRECTIONS[i]);assert.equal(r.moving,true);for(let k=0;k<20;k++)r.update(.02);assert.equal(r.direction,DIRECTIONS[i]);assert.equal(r.moving,false);});
 });
 test('frame selection loops correctly without reading adjacent direction rows',()=>{
   assert.equal(animationFrame(0,true),0);assert.equal(animationFrame(8/12+.001,true),0);assert.equal(animationFrame(1.01,false),0);

@@ -1,4 +1,5 @@
 import { animationFrame, sourceRect, FOOT_ANCHOR, HERO_SCALE } from './sprite-layout.js';
+import { drawWeapon } from './weapons.js';
 const sheets = new Map();
 let ready = false;
 let metadata = null;
@@ -32,16 +33,17 @@ export async function loadSprites() {
 }
 export function drawSpriteHero(c, x, y, options = {}) {
   if (!ready) return false;
-  const { time = 0, moving = false, appearance = 'a', direction = 'se', inv = 0, job = 'novice', attacking = false, distance, frameIndex } = options;
+  const { time = 0, moving = false, appearance = 'a', direction = 'se', inv = 0, job = 'novice', attacking = false, distance, frameIndex, tier = 0 } = options;
   const state = moving ? 'run' : 'idle';
-  const columns = metadata.characters[appearance === 'b' ? 'female' : 'male'][state].columns;
-  const frame = Number.isInteger(frameIndex) ? Math.max(0,Math.min(columns-1,frameIndex)) : animationFrame(time, moving, columns, distance);
+  const sheet = metadata.characters[appearance === 'b' ? 'female' : 'male'][state];
+  const columns = sheet.columns;
+  const frame = Number.isInteger(frameIndex) ? Math.max(0,Math.min(columns-1,frameIndex)) : animationFrame(time, moving, columns, distance, sheet.timing?.[direction]);
   const rect = sourceRect(direction, frame, columns);
   const img = sheets.get(`${appearance === 'b' ? 'female' : 'male'}-${state}`);
   const scale = HERO_SCALE;
   const socket = metadata?.characters[appearance === 'b' ? 'female' : 'male']?.[state]?.frames[`${direction}-${frame}`]?.hand;
   const back = ['n','ne','nw'].includes(direction);
-  const equipment = () => {if(job !== 'novice')drawEquipment(c,direction,job,time,moving,attacking,socket);};
+  const equipment = () => drawEquipment(c,direction,job,time,attacking,socket,tier);
   c.save();c.translate(x, y);
   // HD artwork keeps subpixel positions: integer snapping steps visibly at wide zoom.
   c.imageSmoothingEnabled = true;c.imageSmoothingQuality = 'high';
@@ -54,23 +56,16 @@ export function drawSpriteHero(c, x, y, options = {}) {
   if(!back)equipment();
   c.restore();return true;
 }
-function drawEquipment(c, direction, job, time, moving, attacking, socket) {
+function drawEquipment(c, direction, job, time, attacking, socket, tier) {
   // Provisional socket; the sheet manifest exposes per-frame sockets for later authored equipment.
   const back = ['n','ne','nw'].includes(direction), left = ['sw','w','nw'].includes(direction);
   const x = socket ? (socket.x-FOOT_ANCHOR.x)*HERO_SCALE : left?-17:17;
   const y = socket ? (socket.y-FOOT_ANCHOR.y)*HERO_SCALE : -38;
   c.save();c.translate(x, y);
-  c.scale(left ? -1 : 1, 1);c.rotate(attacking ? -.5 : .12);
-  c.strokeStyle = '#ffe0a0';c.lineWidth = 3;c.lineCap = 'round';
+  c.scale(left ? -1 : 1, 1);
+  if (job === 'gunner') c.rotate(attacking ? -.18 : .05);
+  else c.rotate(attacking ? (job === 'mage' ? -.25 : -1.1) : (job === 'mage' ? .08 : .35));
   if (back) c.globalAlpha *= .8;
-  if (job === 'knight') {
-    c.fillStyle = '#b8f2ff';c.beginPath();c.moveTo(-3,0);c.lineTo(-1,-35);c.lineTo(4,-48);c.lineTo(8,-34);c.lineTo(5,1);c.closePath();c.fill();
-    c.beginPath();c.moveTo(-8,0);c.lineTo(10,2);c.moveTo(1,1);c.lineTo(1,12);c.stroke();
-  } else if (job === 'ranger') {
-    c.beginPath();c.ellipse(1,-14,12,28,-.1,-1.5,1.5);c.stroke();
-    c.strokeStyle = '#d4fff2';c.lineWidth = 1;c.beginPath();c.moveTo(2,-42);c.lineTo(6,14);c.stroke();
-  } else if (job === 'mage') {
-    c.beginPath();c.moveTo(0,12);c.lineTo(5,-38);c.stroke();c.fillStyle = '#b5edff';c.beginPath();c.moveTo(6,-54);c.lineTo(14,-40);c.lineTo(5,-29);c.lineTo(-3,-40);c.closePath();c.fill();
-  }
+  drawWeapon(c, job, tier, time, {attacking});
   c.restore();
 }

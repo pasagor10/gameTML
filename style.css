@@ -48,3 +48,17 @@ body[data-screen=intro] .hud,body[data-screen=intro] .objective,body[data-screen
 @media(min-width:761px){.key-art{max-width:calc(100svh - 90px);justify-self:center}}
 
 #atmosphere{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,#082f3400 35%,#082f3455 100%)}
+/* Class weapon collection + weapon HUD */
+body[data-screen=armory] .stats,body[data-screen=armory] footer,body[data-screen=armory] .camera-controls,body[data-screen=armory] #joystick,body[data-screen=armory] .hud,body[data-screen=armory] .objective{visibility:hidden}
+.weapon-tag{color:#ffe7a8;background:#14294a99;border:1px solid #8fc8ff55;border-radius:12px;padding:1px 9px}
+.armory{width:min(1080px,100%);margin:auto}
+.armory-rows{display:grid;gap:10px;margin:14px 0;text-align:left}
+.armory-row{background:linear-gradient(100deg,#1b2f5c,#0e1a36);border:1px solid #6f8fd855;border-radius:14px;padding:10px 12px}
+.armory-row header{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}.armory-row header b{color:var(--gold);font-size:17px}
+.armory-tiers{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.armory-tiers figure{margin:0;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px}
+.armory-tiers canvas{width:72px;height:72px;border-radius:10px}
+.armory-tiers figcaption b{display:block;font-size:11px;color:#fff4db}.armory-tiers figcaption span{display:block;font:600 10px 'Chakra Petch',sans-serif}.armory-tiers figcaption small{display:block;font-size:9px;letter-spacing:0;line-height:1.35}
+.tier-mythic canvas{box-shadow:0 0 14px #ff8ae088}.tier-legendary canvas{box-shadow:0 0 10px #ff4a5566}
+@media(max-width:700px){.armory-tiers{grid-template-columns:repeat(3,minmax(0,1fr))}.armory-tiers canvas{width:60px;height:60px}}
+@media(max-width:600px){.weapon-tag{display:none}}
