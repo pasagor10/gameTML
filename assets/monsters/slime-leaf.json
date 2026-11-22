@@ -1,0 +1,10 @@
+{
+  "source": "assets/generated/v1/slime-leaf.png",
+  "bounds": [
+    124,
+    65,
+    1139,
+    1104
+  ],
+  "animation": "runtime squash-and-stretch of static cutout"
+}

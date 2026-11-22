@@ -1,0 +1,53 @@
+import { ARENA_HALF, ARENA_SIZE } from './arena.js';
+const images = {};
+export const sceneStatus = { ground: false, slime: false, errors: [] };
+export async function loadSceneArt(){
+  await Promise.all(Object.entries({ground:'/assets/scenes/forest/ground.webp',slime:'/assets/monsters/slime-leaf.webp'}).map(([key,url])=>new Promise(resolve=>{
+    const image=new Image();image.onload=()=>{
+      if(key==='slime'){
+        // Downsample the large cutout once, rather than filtering it for every monster every frame.
+        const buffer=document.createElement('canvas');buffer.width=512;buffer.height=524;
+        const painter=buffer.getContext('2d');painter.imageSmoothingEnabled=true;painter.imageSmoothingQuality='high';
+        painter.drawImage(image,124,65,1015,1039,0,0,512,524);images[key]=buffer;
+      }else images[key]=image;
+      sceneStatus[key]=true;resolve();};
+    image.onerror=()=>{sceneStatus.errors.push(key);console.warn(`Scene art unavailable: ${key}`);resolve();};image.src=url;
+  })));
+}
+export function drawForest(c,time){
+  if(!sceneStatus.ground)return false;
+  c.save();c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';
+  c.drawImage(images.ground,-ARENA_HALF,-ARENA_HALF,ARENA_SIZE,ARENA_SIZE);
+  // Ambient glints remain separate from the flat background and never obscure telegraphs.
+  for(let i=0;i<18;i++){
+    const x=Math.sin(i*7.13)*780+Math.sin(time*.35+i)*18;
+    const y=Math.cos(i*3.71)*710+Math.sin(time*.5+i*2)*12;
+    c.globalAlpha=.12+(Math.sin(time*1.4+i)+1)*.13;c.fillStyle='#fff3b8';
+    c.beginPath();c.ellipse(x,y,2.2,2.2,0,0,Math.PI*2);c.fill();
+  }
+  c.restore();return true;
+}
+export function drawSlime(c,enemy,time,player){
+  if(!sceneStatus.slime||!['slime','elite','boss'].includes(enemy.type))return false;
+  const size=enemy.type==='boss'?128:enemy.type==='elite'?86:48;
+  const breath=Math.sin(time*5+enemy.id*.8),stretch=enemy.warn?1-.055*Math.sin(time*14):1+breath*.035;
+  c.save();c.translate(enemy.x,enemy.y);
+  c.fillStyle='#183e454d';c.beginPath();c.ellipse(0,3,enemy.r*1.1,enemy.r*.32,0,0,Math.PI*2);c.fill();
+  if(player.x>enemy.x)c.scale(-1,1);
+  const width=size*stretch,height=size/stretch;
+  c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';
+  c.filter=enemy.flash>0?'brightness(1.7)':enemy.type==='boss'?'hue-rotate(65deg)':enemy.type==='elite'?'hue-rotate(20deg)':'none';
+  c.drawImage(images.slime,-width/2,-height,width,height);
+  c.filter='none';
+  if(enemy.type==='boss'){
+    c.fillStyle='#ffdc86';c.strokeStyle='#886345';c.lineWidth=2;
+    c.beginPath();c.moveTo(-20,-height+24);c.lineTo(-23,-height+6);c.lineTo(-10,-height+14);c.lineTo(0,-height-1);c.lineTo(10,-height+14);c.lineTo(23,-height+6);c.lineTo(20,-height+24);c.closePath();c.fill();c.stroke();
+  }
+  c.restore();
+  if(enemy.hp<enemy.max){
+    const width=Math.min(size*.65,80),top=enemy.y-size-10;
+    c.fillStyle='#163840';c.fillRect(enemy.x-width/2,top,width,5);
+    c.fillStyle=enemy.type==='boss'?'#f6a48a':'#b9eb8e';c.fillRect(enemy.x-width/2,top,width*Math.max(0,enemy.hp/enemy.max),5);
+  }
+  return true;
+}

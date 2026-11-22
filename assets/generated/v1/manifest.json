@@ -1,0 +1,132 @@
+[
+  {
+    "file": "forest-arena.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "mode": "RGB",
+    "alpha_bbox": null,
+    "status": "integrated-v0.5"
+  },
+  {
+    "file": "fx-fire.png",
+    "size": [
+      1774,
+      887
+    ],
+    "mode": "RGBA",
+    "alpha_bbox": [
+      0,
+      26,
+      1736,
+      887
+    ],
+    "status": "ready-for-integration"
+  },
+  {
+    "file": "fx-ice.png",
+    "size": [
+      2172,
+      724
+    ],
+    "mode": "RGBA",
+    "alpha_bbox": [
+      19,
+      9,
+      2148,
+      724
+    ],
+    "status": "ready-for-integration"
+  },
+  {
+    "file": "fx-lightning.png",
+    "size": [
+      1536,
+      1024
+    ],
+    "mode": "RGBA",
+    "alpha_bbox": [
+      0,
+      0,
+      1512,
+      1024
+    ],
+    "status": "ready-for-integration"
+  },
+  {
+    "file": "fx-wind.png",
+    "size": [
+      1536,
+      1024
+    ],
+    "mode": "RGBA",
+    "alpha_bbox": [
+      23,
+      0,
+      1506,
+      1024
+    ],
+    "status": "ready-for-integration"
+  },
+  {
+    "file": "hero-female-unarmed-v2.png",
+    "size": [
+      1199,
+      1312
+    ],
+    "mode": "RGBA",
+    "alpha_bbox": [
+      25,
+      21,
+      1152,
+      1312
+    ],
+    "status": "ready-for-integration"
+  },
+  {
+    "file": "hero-female-unarmed.png",
+    "size": [
+      1199,
+      1312
+    ],
+    "mode": "RGBA",
+    "alpha_bbox": [
+      88,
+      0,
+      1161,
+      1312
+    ],
+    "status": "superseded-framing"
+  },
+  {
+    "file": "hero-male-unarmed.png",
+    "size": [
+      1199,
+      1312
+    ],
+    "mode": "RGBA",
+    "alpha_bbox": [
+      29,
+      9,
+      1179,
+      1294
+    ],
+    "status": "ready-for-integration"
+  },
+  {
+    "file": "slime-leaf.png",
+    "size": [
+      1312,
+      1199
+    ],
+    "mode": "RGBA",
+    "alpha_bbox": [
+      0,
+      0,
+      1300,
+      1199
+    ],
+    "status": "integrated-v0.5"
+  }
+]
