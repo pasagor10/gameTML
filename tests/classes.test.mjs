@@ -1,6 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {Run,SKILLS,CLASSES,choices} from '../src/model.js';
-import {TIERS,FORGE_COST,tierForForge,weaponName} from '../src/weapons.js';
+import {Run,SKILLS,CLASSES,choices,cleanHeroName,randomHeroName} from '../src/model.js';
+import {rollDrop,ARMOR} from '../src/loot.js';
+import {TIERS,REQ_LEVEL,weaponName} from '../src/weapons.js';
 import {directionFor,animationFrame} from '../src/sprite-layout.js';
 const advance=(r,seconds)=>{for(let i=0;i<seconds*20&&r.state==='playing';i++)r.update(.05);};
 
@@ -20,9 +21,18 @@ test('every class skill damages enemies',()=>{
     assert.ok(e.hp<hp,s.id);
   }
 });
-test('weapon climbs six tiers from levels, elites and bosses and grows damage',()=>{
-  assert.equal(TIERS.length,6);assert.equal(tierForForge(0),0);assert.equal(tierForForge(FORGE_COST[5]),5);
-  const r=new Run(()=>.5,{job:'gunner'});r.addForge(FORGE_COST[2],'test');assert.equal(r.weaponTier,2);assert.equal(r.events.at(-1).type,'weapon_up');
+test('gear drops from monsters and is only worn once the hero level allows it',()=>{
+  assert.equal(TIERS.length,6);assert.equal(REQ_LEVEL.length,6);assert.equal(REQ_LEVEL[0],1);
+  const r=new Run(()=>.5,{job:'gunner'});assert.equal(r.weaponTier,0);
+  // A Rare gun needs Lv.12: picked up at Lv.1 it waits in the bag.
+  r.loot.push({kind:'weapon',tier:2,job:'gunner',x:r.p.x,y:r.p.y,id:999});r.enemies=[];r.spawn=1000;r.update(.05);
+  assert.equal(r.loot.length,0);assert.equal(r.bag.length,1);assert.equal(r.weaponTier,0);assert.equal(r.lockedUpgrade().tier,2);
+  r.level=REQ_LEVEL[2];r.equipBest();assert.equal(r.weaponTier,2);assert.ok(r.events.some(e=>e.type==='weapon_up'));
+  // Another class's weapon never fits; armour fits anyone and adds HP and damage reduction.
+  r.bag.push({kind:'weapon',tier:5,job:'mage'},{kind:'armor',tier:1,job:null});r.equipBest();assert.equal(r.weaponTier,2);assert.equal(r.armorTier,1);assert.equal(r.maxHp,100+ARMOR[1].hp);
+  // Elites always drop; novices only find armour.
+  const drop=rollDrop('elite',1,'novice',()=>.5);assert.equal(drop.kind,'armor');assert.equal(drop.tier,1);assert.equal(rollDrop('slime',1,'knight',()=>.5),null);
+  r.weaponTier=2;
   assert.ok(r.power()>1.5);assert.equal(weaponName('gunner',5),'ปืนเทพสายรุ้ง');
   const damage=[];for(const tier of [0,5]){const g=new Run(()=>.5,{job:'knight'});g.enemies=[];g.spawn=1000;g.weaponTier=tier;g.addEnemy('boss',60,0);g.update(.05);damage.push(g.enemies[0].max-g.enemies[0].hp);}
   assert.ok(damage[1]>damage[0]*2);
@@ -71,4 +81,18 @@ test('combat emits sound cues for attacks, kills and boss arrival; enemies remem
   let killed=false;for(let i=0;i<20;i++){r.update(.05);killed||=r.cues.some(c=>c.name==='kill');r.cues.length=0;}assert.ok(killed);
   const b=new Run();b.t=240;b.update(.05);assert.ok(b.cues.some(c=>c.name==='roar'));assert.equal(b.enemies[0].stage,1);
   assert.ok(r.cues.length<=48,'cue queue is bounded');
+});
+
+test('magnet pulls every crystal once a minute; auto mode moves, dodges and picks upgrades',()=>{
+  const r=new Run(()=>.5,{job:'mage'});r.enemies=[];r.spawn=1000;r.gems=[{x:600,y:0,value:1},{x:-600,y:300,value:1}];
+  assert.ok(r.magnet());assert.equal(r.magnet(),false,'cooldown');for(let i=0;i<40;i++)r.update(.05);assert.equal(r.gems.length,0);
+  assert.ok(r.magnetClock>55);
+  const a=new Run(()=>.5,{job:'gunner'});a.enemies=[];a.spawn=1000;a.addEnemy('slime',60,0);const step=a.autoInput();assert.ok(step.x<0,'backs away from a close enemy');
+  a.enemies=[];a.addEnemy('elite',300,0);a.enemies[0].warn={x:a.p.x+20,y:a.p.y,t:1,kind:'slam'};assert.ok(a.autoInput().x<0,'steps out of a telegraph');
+  a.offers=[...SKILLS.filter(s=>!s.job).slice(0,2),SKILLS.find(s=>s.id==='scatter')];assert.equal(a.autoChoose(),'scatter');
+});
+test('hero names are cleaned and can be rolled at random',()=>{
+  assert.equal(cleanHeroName('  <b>ไค</b>  '),'bไค/b');assert.equal(cleanHeroName('x'.repeat(30)).length,12);
+  assert.ok(randomHeroName(()=>0).length>1);
+  const r=new Run(()=>.5);r.state='awakening';assert.ok(r.awaken('knight','a','ริวมอส'));assert.equal(r.name,'ริวมอส');
 });

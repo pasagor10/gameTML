@@ -1,6 +1,7 @@
 import {constrainToArena,enemySpawn} from './arena.js';
+import {ARMOR,rollDrop,canEquip,itemName} from './loot.js';
 import {directionFor} from './sprite-layout.js';
-import {TIERS,FORGE_POINTS,tierForForge} from './weapons.js';
+import {TIERS} from './weapons.js';
 
 export const CLASSES=[
 {id:'knight',icon:'⚔',name:'นักดาบ',en:'SWORDMASTER',desc:'ฟันกวาดฝูงระยะใกล้ แรงที่สุด อาวุธระดับ Epic ปล่อยคลื่นดาบทะลุ',tag:'ดาบ · ประชิด · โจมตีหนัก'},
@@ -43,6 +44,12 @@ export function choices(skills,rng=Math.random,job='novice'){
   if(held>0)for(const boost of BOOSTS)if(picks.length<3)picks.push(boost);
   return picks;
 }
+// Hero names: two syllables, re-rollable on the class screen.
+const NAME_HEAD=['ไค','ริว','เอล','ซาร์','ลูน','คิระ','มิ','โนวา','เรน','ทิล','อาร์','ซีน','เวล','ฟิน','ไอ','โร'];
+const NAME_TAIL=['มอส','เรีย','ดิน','ลอส','นา','ไวน์','ริค','เซล','ธอร์','ลี','กา','รัน','ซ่า','โม'];
+export function randomHeroName(rng=Math.random){return NAME_HEAD[Math.floor(rng()*NAME_HEAD.length)]+NAME_TAIL[Math.floor(rng()*NAME_TAIL.length)];}
+export function cleanHeroName(name){return String(name||'').replace(/[<>&"'`]/g,'').replace(/\s+/g,' ').trim().slice(0,12);}
+export const MAGNET_COOLDOWN=60;
 export function evolutions(skills){return {inferno:skills.fire===3&&skills.area>=2,blizzard:skills.ice===3&&skills.haste>=2};}
 
 const SPEED=145,ACCEL=28;
@@ -55,7 +62,7 @@ constructor(rng=Math.random,profile=null){
   this.t=0;this.maxHp=100;this.boosts={might:0,vigor:0};this.p={x:0,y:0,hp:100,inv:0};this.enemies=[];this.gems=[];this.shots=[];this.effects=[];this.events=[];this.cues=[];this.zones=[];this.delayed=[];
   this.skills={};this.level=1;this.xp=0;this.need=5;this.kills=0;this.state='playing';this.spawn=0;this.attack=0;this.swing=0;this.aim=0;this.skillClock=0;this.droneClock=0;this.nextId=0;this.offers=[];
   this.stage=1;this.stageStart=0;this.bossSpawned=false;this.eliteSpawned=false;this.bossesDefeated=0;
-  this.forge=0;this.weaponTier=0;
+  this.weaponTier=0;this.armorTier=0;this.bag=[];this.loot=[];this.magnetClock=0;this.name=cleanHeroName(profile?.name)||'TILMO';
   this.firstMoved=false;this.firstKill=false;this.evolved={};
   this.emit('run_start');for(let i=0;i<4;i++)this.addEnemy('slime',130+i*25,i*Math.PI/2);
 }
@@ -78,23 +85,31 @@ choose(id){
   const evo=evolutions(this.skills);for(const key of Object.keys(evo))if(evo[key]&&!this.evolved[key]){this.evolved[key]=true;this.emit('evolution_unlocked',{id:key});}
   this.state='playing';this.skillClock=10;this.checkLevel();return true;
 }
-awaken(job,appearance){
+awaken(job,appearance,name){
   if(this.state!=='awakening'||!CLASSES.some(c=>c.id===job)||!['a','b'].includes(appearance))return false;
-  this.job=job;this.appearance=appearance;this.weaponTier=tierForForge(this.forge);this.cue('equip');
-  this.emit('class_chosen',{job,appearance});this.effects.push({kind:'ascend',x:this.p.x,y:this.p.y,life:1.2,max:1.2});
+  this.job=job;this.appearance=appearance;this.weaponTier=0;this.name=cleanHeroName(name)||this.name;this.cue('equip');this.equipBest();
+  this.emit('class_chosen',{job,appearance,name:this.name});this.effects.push({kind:'ascend',x:this.p.x,y:this.p.y,life:1.2,max:1.2});
   // The first pick after awakening shows the new class's own skills.
   const own=SKILLS.filter(s=>s.job===job);this.offers=own;this.state='upgrade';this.emit('upgrade_offered',{options:own.map(s=>s.id)});
   return true;
 }
-addForge(points,source){
-  const before=this.weaponTier;this.forge+=points;this.weaponTier=tierForForge(this.forge);
-  if(this.weaponTier>before&&this.job!=='novice'){this.emit('weapon_up',{tier:this.weaponTier,source});this.cue('forgeOk');this.effects.push({kind:'ascend',x:this.p.x,y:this.p.y,life:1,max:1});}
+// Puts on the best weapon and armour from the bag that the hero's level allows.
+equipBest(){
+  for(const item of this.bag){
+    if(!canEquip(item,this.level,this.job))continue;
+    if(item.kind==='weapon'&&this.job!=='novice'&&item.tier>this.weaponTier){this.weaponTier=item.tier;this.emit('weapon_up',{tier:item.tier,name:itemName(item)});this.cue('forgeOk');this.effects.push({kind:'ascend',x:this.p.x,y:this.p.y,life:1,max:1});}
+    if(item.kind==='armor'&&item.tier>this.armorTier){const gain=ARMOR[item.tier].hp-ARMOR[this.armorTier].hp;this.armorTier=item.tier;this.maxHp+=gain;this.p.hp+=gain;this.emit('armor_up',{tier:item.tier,name:itemName(item)});this.cue('equip');}
+  }
 }
+// The best piece in the bag that is still level-locked, for the HUD hint.
+lockedUpgrade(){let best=null;for(const item of this.bag){const current=item.kind==='weapon'?this.weaponTier:this.armorTier;if(item.tier>current&&(item.kind==='armor'||item.job===this.job)&&!canEquip(item,this.level,this.job)&&(!best||item.tier>best.tier))best=item;}return best;}
+// Pulls every crystal and drop on the field to the hero; once per minute of play.
+magnet(){if(this.state!=='playing'||this.magnetClock>0)return false;this.magnetClock=MAGNET_COOLDOWN;for(const g of this.gems)g.pull=true;for(const l of this.loot)l.pull=true;this.cue('portal');this.emit('magnet');this.effects.push({kind:'gust',x:this.p.x,y:this.p.y,r:220,life:.5,max:.5});return true;}
 offerUpgrade(){this.offers=choices(this.skills,this.rng,this.job);if(!this.offers.length){this.p.hp=Math.min(this.maxHp,this.p.hp+18);this.emit('upgrade_fallback');return;}this.state='upgrade';this.emit('upgrade_offered',{options:this.offers.map(s=>s.id)});}
 checkLevel(){
   if(this.xp<this.need||this.state!=='playing')return;
   this.xp-=this.need;this.level++;this.cue('levelUp');this.need=5+Math.floor(this.level*1.4);
-  if(this.level>10)this.addForge(FORGE_POINTS.level,'level');
+  this.equipBest();
   if(this.level>=10&&this.job==='novice'){this.state='awakening';this.emit('class_unlocked');return;}
   this.offerUpgrade();
 }
@@ -104,7 +119,7 @@ hit(e,damage,continuous=false){
   if(e.hp<=0){
     this.kills++;this.cue(e.type==='boss'?'bossDown':'kill');if(!this.firstKill){this.firstKill=true;this.emit('first_kill');}
     this.gems.push({x:e.x,y:e.y,value:e.type==='boss'?30:e.type==='elite'?12:1});
-    if(e.type==='elite')this.addForge(FORGE_POINTS.elite,'elite');
+    const drop=rollDrop(e.type,this.stage,this.job,this.rng);if(drop){this.loot.push({...drop,x:e.x,y:e.y,id:this.nextId++});this.emit('loot_drop',{kind:drop.kind,tier:drop.tier});}
     if(e.type==='boss')this.clearStage();
   }
 }
@@ -112,12 +127,12 @@ hit(e,damage,continuous=false){
 clearStage(){
   this.bossesDefeated++;this.emit('stage_clear',{stage:this.stage});this.cue('clear');
   this.stage++;this.stageStart=this.t;this.bossSpawned=false;this.eliteSpawned=false;this.spawn=2;
-  this.p.hp=Math.min(this.maxHp,this.p.hp+35);this.addForge(FORGE_POINTS.boss,'boss');
+  this.p.hp=Math.min(this.maxHp,this.p.hp+35);
   this.effects.push({kind:'ascend',x:this.p.x,y:this.p.y,life:1.4,max:1.4});
 }
-end(reason){if(this.state==='ended')return;this.state='ended';this.cue('death');this.result=reason;this.emit('run_end',{reason,kills:this.kills,level:this.level,stage:this.stage,weaponTier:this.weaponTier,build:{...this.skills}});}
+end(reason){if(this.state==='ended')return;this.state='ended';this.cue('death');this.result=reason;this.emit('run_end',{reason,kills:this.kills,level:this.level,stage:this.stage,weaponTier:this.weaponTier,armorTier:this.armorTier,build:{...this.skills}});}
 damage(n,source){
-  if(this.p.inv>0||this.state!=='playing')return;n*=1+.25*(this.stage-1);
+  if(this.p.inv>0||this.state!=='playing')return;n*=(1+.25*(this.stage-1))*(1-ARMOR[this.armorTier].guard);
   this.p.hp=Math.max(0,this.p.hp-n);this.p.inv=.8;this.cue('hurt');this.emit('damage_taken',{source,damage:n});this.effects.push({kind:'hurt',x:this.p.x,y:this.p.y,life:.25,max:.25});
   if(this.p.hp<=0)this.end(source==='boss'?'boss':'defeat');
 }
@@ -195,6 +210,30 @@ drones(dt){
 }
 dronePositions(){const lv=this.skills.drone||0,n=lv>=5?3:lv>=3?2:lv?1:0;return Array.from({length:n},(_,i)=>{const a=this.t*1.6+i*Math.PI*2/n;return {lv,x:this.p.x+Math.cos(a)*55,y:this.p.y-70+Math.sin(a)*18};});}
 
+// Auto mode: kite at the class's comfortable range, step out of telegraphs, sweep up drops.
+autoInput(){
+  const p=this.p,keep={knight:70,mage:95,gunner:190}[this.job]||75;let x=0,y=0,threat=0;
+  for(const e of this.enemies){
+    if(e.hp<=0)continue;const w=e.warn;
+    if(w&&w.kind==='dash'){const dx=w.x-w.ox,dy=w.y-w.oy,l=dx*dx+dy*dy||1,u=Math.max(0,Math.min(1,((p.x-w.ox)*dx+(p.y-w.oy)*dy)/l)),cx=w.ox+u*dx,cy=w.oy+u*dy,d=Math.hypot(p.x-cx,p.y-cy)||1;if(d<80){x+=(p.x-cx)/d*4;y+=(p.y-cy)/d*4;threat+=4;}}
+    else if(w){const r=w.kind==='shot'?45:115,d=Math.hypot(p.x-w.x,p.y-w.y)||1;if(d<r){x+=(p.x-w.x)/d*4;y+=(p.y-w.y)/d*4;threat+=4;}}
+    const d=Math.hypot(p.x-e.x,p.y-e.y)||1,danger=e.r+keep*(e.type==='boss'?1.5:1);
+    if(d<danger){const f=(danger-d)/danger*2.2;x+=(p.x-e.x)/d*f;y+=(p.y-e.y)/d*f;threat+=f;}
+  }
+  for(const s of this.shots){if(s.friendly)continue;const d=Math.hypot(p.x-s.x,p.y-s.y)||1;if(d<70){x+=-s.vy/150*1.5;y+=s.vx/150*1.5;}}
+  if(threat<1.5){
+    let goal=null,best=Infinity;for(const g of [...this.loot,...this.gems]){const d=Math.hypot(p.x-g.x,p.y-g.y);if(d<best&&d<500){best=d;goal=g;}}
+    if(!goal){const e=this.nearest(2000);if(e&&Math.hypot(e.x-p.x,e.y-p.y)>keep+e.r+50)goal=e;}
+    if(goal){const d=Math.hypot(goal.x-p.x,goal.y-p.y)||1;x+=(goal.x-p.x)/d;y+=(goal.y-p.y)/d;}
+  }
+  const r=Math.hypot(p.x,p.y);if(r>560){x-=p.x/r*(r-560)/200;y-=p.y/r*(r-560)/200;}
+  const len=Math.hypot(x,y);return len<.15?{x:0,y:0}:{x:x/len,y:y/len};
+}
+// Auto mode's upgrade pick: grow class skills first, then held skills, then endless boosts.
+autoChoose(){
+  const score=s=>s.kind==='boost'?(s.id==='vigor'&&this.p.hp<this.maxHp*.5?1.5:1):(s.job?4:s.kind==='active'?3:2)+(this.skills[s.id]?1:0);
+  let best=null;for(const s of this.offers)if(!best||score(s)>score(best))best=s;return best?.id;
+}
 update(dt,input={x:0,y:0}){
   if(this.state!=='playing')return;dt=Math.min(.05,Math.max(0,dt));this.t+=dt;const p=this.p;
   this.move(dt,input);p.inv=Math.max(0,p.inv-dt);this.swing=Math.max(0,this.swing-dt);
@@ -221,7 +260,10 @@ update(dt,input={x:0,y:0}){
   const dx=w.x-w.ox,dy=w.y-w.oy,l=dx*dx+dy*dy,u=l?Math.max(0,Math.min(1,((p.x-w.ox)*dx+(p.y-w.oy)*dy)/l)):0;if(Math.hypot(p.x-w.ox-u*dx,p.y-w.oy-u*dy)<48)this.damage(28,e.type);e.x=w.x;e.y=w.y;this.cue('slam');this.effects.push({kind:'gust',x:e.x,y:e.y,r:65,life:.4,max:.4});}else{this.cue('slam');this.effects.push({kind:'slam',x:w.x,y:w.y,r:95,life:.4,max:.4});if(Math.hypot(p.x-w.x,p.y-w.y)<95)this.damage(25,e.type);}e.warn=null;}}
   }
   for(const s of this.shots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;if(s.friendly){for(const e of this.enemies){if(s.life<=0)break;if(e.hp>0&&!s.hit.has(e.id)&&Math.hypot(s.x-e.x,s.y-e.y)<e.r+(s.radius||10)){s.hit.add(e.id);this.hit(e,s.damage);if(s.slows)e.slow=1.6;if(s.blast)this.blast(s.x,s.y,s.blast,s.damage*.5);if(s.pierce!==undefined&&s.pierce--<=0)s.life=0;}}}else if(Math.hypot(s.x-p.x,s.y-p.y)<22){this.damage(12,'arrow');s.life=0;}}
-  for(const g of this.gems){const d=Math.hypot(p.x-g.x,p.y-g.y);if(d<120){const step=Math.min(d,Math.max(90,280-d)*dt);g.x+=(p.x-g.x)/(d||1)*step;g.y+=(p.y-g.y)/(d||1)*step;}if(d<20){this.xp+=g.value;g.collected=true;this.cue('coin',{volume:.35});}}
+  this.magnetClock=Math.max(0,this.magnetClock-dt);
+  for(const g of this.gems){const d=Math.hypot(p.x-g.x,p.y-g.y);if(g.pull&&d>=120){const step=Math.min(d,900*dt);g.x+=(p.x-g.x)/(d||1)*step;g.y+=(p.y-g.y)/(d||1)*step;}else if(d<120){const step=Math.min(d,Math.max(90,280-d)*dt);g.x+=(p.x-g.x)/(d||1)*step;g.y+=(p.y-g.y)/(d||1)*step;}if(d<20){this.xp+=g.value;g.collected=true;this.cue('coin',{volume:.35});}}
+  for(const l of this.loot){const d=Math.hypot(p.x-l.x,p.y-l.y);if(d<90||l.pull){const step=Math.min(d,(l.pull?900:220)*dt);l.x+=(p.x-l.x)/(d||1)*step;l.y+=(p.y-l.y)/(d||1)*step;}if(d<24){l.collected=true;const {kind,tier,job}=l;this.bag.push({kind,tier,job});this.bag.sort((a,b)=>b.tier-a.tier);this.bag.length=Math.min(this.bag.length,40);this.cue('loot',TIERS[tier].id);this.emit('loot_pickup',{kind,tier,name:itemName(l)});this.equipBest();}}
+  this.loot=this.loot.filter(l=>!l.collected);
   this.gems=this.gems.filter(g=>!g.collected);this.enemies=this.enemies.filter(e=>e.hp>0&&(e.type==='boss'||Math.hypot(e.x-p.x,e.y-p.y)<1300));this.shots=this.shots.filter(s=>s.life>0);for(const f of this.effects)f.life-=dt;this.effects=this.effects.filter(f=>f.life>0).slice(-140);
   if(this.state==='playing')this.checkLevel();
 }

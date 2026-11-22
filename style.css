@@ -3,13 +3,13 @@
 /* Awakening: the first character decision happens after play, at level ten. */
 .awakening-note{font-size:12px;margin:8px}.appearance-picker{display:flex;justify-content:center;gap:8px;margin:18px}.appearance-picker button{background:#183944;border:1px solid #b3d4d166;padding:9px 18px;border-radius:24px;font-size:12px}.appearance-picker button[aria-pressed=true]{background:#ffe0a1;color:#243c46;border-color:#ffe0a1}.class-card{padding-top:0;text-align:center;overflow:hidden}.class-card canvas{display:block;width:100%;height:160px;object-fit:contain;filter:drop-shadow(0 0 15px #95dfff33)}.class-card b{font-size:16px}.class-card p{margin:10px 0}.hero small{letter-spacing:0;font-size:9px}.preview-link{display:block;margin:18px auto 0;background:transparent;border:0;border-bottom:1px solid #d7e6d65c;color:#cddfd4;padding:6px;font-size:11px}#overlay{overflow-y:auto}.awakening{margin:auto}.awakening .cards{margin:16px 0}@media(max-width:600px){.class-card{padding:0 8px 12px}.class-card canvas{height:125px}.class-card b{font-size:12px}.class-card small{font-size:9px}.class-card p{font-size:10px}.hero small{font-size:7px}.hero{min-width:160px}.awakening h2{font-size:22px}}
 .card .icon{width:62px;height:62px;display:grid;place-items:center;border:1px solid #ffe2a49c;border-radius:50%;background:radial-gradient(circle at 40% 30%,#6c9dc4,#233f69 60%,#152a42);box-shadow:inset 0 0 12px #bbecff60,0 0 20px #90ddff20;text-shadow:0 0 12px currentColor}.card[data-skill=fire] .icon{background:radial-gradient(circle at 40% 30%,#ffdf79,#b94738 65%,#482e44);color:#fff1ab}.card[data-skill=ice] .icon{color:#c3ffff;background:radial-gradient(circle at 40% 30%,#6dd4ef,#2b5ea6 65%,#1d274a)}.card[data-skill=spark] .icon{color:#fff3c3;background:radial-gradient(circle at 40% 30%,#b4a5f5,#514797 65%,#282444)}.card[data-skill=gust] .icon{color:#cdffe5;background:radial-gradient(circle at 40% 30%,#8bdec0,#267b77 65%,#183e51)}
-.camera-controls{position:absolute;bottom:85px;right:22px;display:flex;align-items:center;gap:3px;background:#14353ddd;border:1px solid #c9e1bd70;border-radius:25px;padding:3px;box-shadow:0 3px 15px #12372e35}.camera-controls button{min-width:40px;min-height:40px;border:0;background:transparent;color:#ffe3a7;border-radius:50%;font:600 24px 'Chakra Petch',sans-serif}.camera-controls button:hover{background:#c4dabe22}.camera-controls #zoomLevel{font-size:11px;min-width:42px;color:#e0eed7}@media(max-width:600px){.camera-controls{right:15px;bottom:83px}.camera-controls button{min-height:40px;min-width:35px}}
+.play-actions{position:absolute;bottom:85px;right:22px;display:flex;align-items:center;gap:3px;background:#14353ddd;border:1px solid #c9e1bd70;border-radius:25px;padding:3px;box-shadow:0 3px 15px #12372e35}.play-actions button{min-width:40px;min-height:40px;border:0;background:transparent;color:#ffe3a7;border-radius:50%;font:600 24px 'Chakra Petch',sans-serif}.play-actions button:hover{background:#c4dabe22}.play-actions #zoomLevel{font-size:11px;min-width:42px;color:#e0eed7}@media(max-width:600px){.play-actions{right:15px;bottom:83px}.play-actions button{min-height:40px;min-width:35px}}
 /* Crystal Frontier: cyan energy, machined panels and airy adventure artwork. */
 :root{--cyan:#59dcff;--gold:#ffda86;--ink:#0b2343;--mint:#a0efff}
 body{background:#071b32;color:#eaf7ff}
 #overlay{background:#06172dc9;backdrop-filter:blur(8px)}
 #overlay[data-screen=intro]{background:radial-gradient(ellipse at 80% 40%,#154c6b,#071a33 67%);backdrop-filter:none;overflow-y:auto;padding:clamp(18px,3vw,48px)}
-body[data-screen=intro] .hud,body[data-screen=intro] .objective,body[data-screen=intro] .stats,body[data-screen=intro] footer,body[data-screen=intro] .camera-controls,body[data-screen=intro] #joystick{visibility:hidden}
+body[data-screen=intro] .hud,body[data-screen=intro] .objective,body[data-screen=intro] .stats,body[data-screen=intro] footer,body[data-screen=intro] .play-actions,body[data-screen=intro] #joystick{visibility:hidden}
 .brand-intro{width:min(1220px,100%);max-width:none;display:grid;grid-template-columns:.85fr 1.15fr;gap:clamp(24px,4vw,60px);align-items:center;text-align:left;margin:auto}
 .intro-copy{position:relative;z-index:1}.brand-intro .eyebrow{font-size:11px;color:var(--cyan);letter-spacing:3px}
 .brand-intro h1{font-size:clamp(64px,8.5vw,112px);margin:25px 0;letter-spacing:-4px;color:#edfaff;text-shadow:0 3px 0 #3277b0,0 0 40px #47d8ff33;line-height:.95}
@@ -30,7 +30,7 @@ body[data-screen=intro] .hud,body[data-screen=intro] .objective,body[data-screen
 .exp{background:#0a2340c9;border-color:#7adfff80}.exp i{background:linear-gradient(90deg,#3fb3ff,#a1f3ff);box-shadow:0 0 16px #59dcff}
 .card{background:linear-gradient(150deg,#183e60,#0b203b);border-color:#73d5ff70;border-radius:8px}.card:hover{border-color:#9bf3ff;box-shadow:0 0 26px #4fd5ff22}.card b{color:#c0f4ff}.card small{color:#8bdcf7}
 .appearance-picker button{background:#102e4e;border-color:#5bb9e966}.appearance-picker button[aria-pressed=true]{background:#8ceaff;color:#0b2b46;border-color:#c1f8ff}
-.camera-controls{background:#092a45e8;border-color:#79d6fa80;border-radius:8px}.camera-controls button{color:#acf0ff}.camera-controls #zoomLevel{color:#ddf9ff}
+.play-actions{background:#092a45e8;border-color:#79d6fa80;border-radius:8px}.play-actions button{color:#acf0ff}.play-actions #zoomLevel{color:#ddf9ff}
 #toast{color:#defaff;text-shadow:0 2px 6px #06394d,0 0 18px #53d3ff66}.secondary{border-color:#63c7f080;color:#c1efff}
 @media(max-width:760px){
  #overlay[data-screen=intro]{padding:18px}
@@ -49,7 +49,7 @@ body[data-screen=intro] .hud,body[data-screen=intro] .objective,body[data-screen
 
 #atmosphere{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,#082f3400 35%,#082f3455 100%)}
 /* Class weapon collection + weapon HUD */
-body[data-screen=armory] .stats,body[data-screen=armory] footer,body[data-screen=armory] .camera-controls,body[data-screen=armory] #joystick,body[data-screen=armory] .hud,body[data-screen=armory] .objective{visibility:hidden}
+body[data-screen=armory] .stats,body[data-screen=armory] footer,body[data-screen=armory] .play-actions,body[data-screen=armory] #joystick,body[data-screen=armory] .hud,body[data-screen=armory] .objective{visibility:hidden}
 .weapon-tag{color:#ffe7a8;background:#14294a99;border:1px solid #8fc8ff55;border-radius:12px;padding:1px 9px}
 .armory{width:min(1080px,100%);margin:auto}
 .armory-rows{display:grid;gap:10px;margin:14px 0;text-align:left}
@@ -62,3 +62,15 @@ body[data-screen=armory] .stats,body[data-screen=armory] footer,body[data-screen
 .tier-mythic canvas{box-shadow:0 0 14px #ff8ae088}.tier-legendary canvas{box-shadow:0 0 10px #ff4a5566}
 @media(max-width:700px){.armory-tiers{grid-template-columns:repeat(3,minmax(0,1fr))}.armory-tiers canvas{width:60px;height:60px}}
 @media(max-width:600px){.weapon-tag{display:none}}
+
+/* Auto play and EXP magnet (replace the old zoom controls; camera is locked at 60%). */
+.play-actions{position:absolute;bottom:85px;right:22px;display:flex;gap:8px}
+.play-actions button{min-width:76px;height:44px;padding:0 14px;border-radius:10px;border:1px solid #79d6fa80;background:#092a45e8;color:#acf0ff;font:600 13px 'Chakra Petch','Noto Sans Thai',sans-serif;letter-spacing:.5px}
+.play-actions button[aria-pressed=true]{background:#ffe0a1;color:#243c46;border-color:#ffe0a1;box-shadow:0 0 16px #ffe0a170}
+.play-actions button:disabled{opacity:.55;cursor:default}
+.hero-name{display:flex;justify-content:center;gap:8px;margin:6px auto 4px;max-width:340px}
+.hero-name input{flex:1;min-width:0;background:#0f2c3a;border:1px solid #79d6fa80;border-radius:8px;color:#fff4db;padding:10px 12px;font:inherit;font-size:15px;text-align:center}
+.hero-name button{background:#183944;border:1px solid #b3d4d166;border-radius:8px;padding:0 14px;font-size:18px}
+.loot-note{font-size:11px;color:#ffe0a1;margin-left:6px}
+@media(max-width:600px){.play-actions{bottom:78px;right:12px}.play-actions button{min-width:64px;height:38px;font-size:11px;padding:0 10px}}
+.play-actions{background:none!important;border:0!important;padding:0!important;box-shadow:none!important;border-radius:0!important}

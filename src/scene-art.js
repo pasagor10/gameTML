@@ -36,6 +36,13 @@ export function drawForest(c,time){
     const painter=forestCache.getContext('2d');painter.imageSmoothingQuality='high';painter.drawImage(images.ground,0,0,pixels,pixels);
   }
   c.save();c.imageSmoothingEnabled=true;c.imageSmoothingQuality='low';
+  // Mirrored copies continue the forest past the arena so the backdrop fills any screen shape;
+  // a light shade keeps the playable clearing readable.
+  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+    if(!dx&&!dy)continue;c.save();c.translate(dx*ARENA_SIZE,dy*ARENA_SIZE);c.scale(dx?-1:1,dy?-1:1);
+    c.drawImage(forestCache,-ARENA_HALF,-ARENA_HALF,ARENA_SIZE,ARENA_SIZE);c.restore();
+  }
+  c.fillStyle='#0b2a2a40';c.beginPath();c.rect(-ARENA_HALF*3,-ARENA_HALF*3,ARENA_SIZE*3,ARENA_SIZE*3);c.rect(-ARENA_HALF,-ARENA_HALF,ARENA_SIZE,ARENA_SIZE);c.fill('evenodd');
   c.drawImage(forestCache,-ARENA_HALF,-ARENA_HALF,ARENA_SIZE,ARENA_SIZE);
   // Ambient glints remain separate from the flat background and never obscure telegraphs.
   for(let i=0;i<18;i++){

@@ -10,10 +10,8 @@ export const TIERS = [
   {id:'mythic', name:'เทพนิยาย', label:'Mythic', color:'#ff8ae0', glow:'#fff1ff', dark:'#7a3fa8', power:3}
 ];
 
-// Forge points needed (cumulative) to reach each tier. Points come from levels after awakening,
-// elites and bosses, so the weapon grows with play instead of from a shop.
-export const FORGE_COST = [0, 4, 10, 18, 28, 40];
-export const FORGE_POINTS = {level:1, elite:3, boss:6};
+// Gear drops from monsters; each tier needs this hero level before it can be equipped.
+export const REQ_LEVEL = [1, 12, 20, 28, 36, 45];
 
 export const WEAPON_NAMES = {
   novice: ['ดาบฝึกหัด'],
@@ -29,11 +27,6 @@ export const TIER_PERKS = {
   gunner: ['ยิงรัวเป้าใกล้สุด', 'กระสุนทะลุ 1 ตัว', 'ยิงคู่ 2 นัด', 'ยิง 3 นัด ทะลุ 2 ตัว', 'กระสุนระเบิด', 'ยิงเร็วขึ้น 30%']
 };
 
-export function tierForForge(points) {
-  let tier = 0;
-  for (let i = 0; i < FORGE_COST.length; i++) if (points >= FORGE_COST[i]) tier = i;
-  return tier;
-}
 export function weaponName(job, tier) {
   const names = WEAPON_NAMES[job] || WEAPON_NAMES.novice;
   return names[Math.min(names.length - 1, tier)];
