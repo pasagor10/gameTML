@@ -1302,7 +1302,7 @@ function updateHUD() {
       : d
       ? (d.mine ? MINE_INFO.name : "ถ้ำหลวง · ชั้น " + d.floor)
       : townOf(p).name);
-  setText($("#online-count"), "● " + state.online + " ออนไลน์");
+  setText($("#online-count"), "● " + state.online + " คน" + (state.botsOnline ? " · บอท " + state.botsOnline : "") + " ออนไลน์");
   const mapW = areaWidth(state.area),
     mapX = (x) => 8 + (x / mapW) * 200,
     mapY = (y) => 52 - ((WORLD.ground - y) / 450) * 43,
@@ -2282,10 +2282,10 @@ function showPanel(panel) {
     const roster = onlinePlayers || [];
     const canInvite = state.area === "town" && (!state.party || (state.party.leader === p.id && state.party.members.length < 3));
     modal(
-      "คนออนไลน์ · " + (onlinePlayers ? roster.length : state.online) + " คน",
-      `<p>${onlinePlayers ? "รายชื่อผู้เล่นที่อยู่ในเกมทุกแผนที่" : "กำลังรอรายชื่อจากเซิร์ฟเวอร์…"}</p>${roster.map((m) => {
+      "ออนไลน์ · " + state.online + " คน · บอท " + (state.botsOnline || 0),
+      `<p>${onlinePlayers ? "รายชื่อทุกแผนที่ · ชวนบอทในเมืองเข้าปาร์ตี้ได้ บอทจะกดพร้อมและต่อสู้อัตโนมัติ" : "กำลังรอรายชื่อจากเซิร์ฟเวอร์…"}</p>${roster.map((m) => {
         const self = m.id === p.id, town = m.area === "town";
-        return row(CLASSES[m.class]?.icon || "♧", m.name + (self ? " · คุณ" : ""), `${CLASSES[m.class]?.name || ""} · Lv.${m.level} · ${town ? "อยู่เมือง" : "อยู่ดันเจียน"}${m.inParty ? " · มีปาร์ตี้แล้ว" : ""}`, self ? "" : `<span class="online-actions">${state.players.some(player => player.id === m.id) ? `<button data-trade-target="${m.id}">แลกเปลี่ยน</button>` : ""}<button data-online-invite="${m.id}" ${canInvite && town && !m.inParty ? "" : "disabled"}>ชวนปาร์ตี้</button></span>`);
+        return row(CLASSES[m.class]?.icon || "♧", m.name + (self ? " · คุณ" : ""), `${CLASSES[m.class]?.name || ""} · Lv.${m.level} · ${town ? "อยู่เมือง" : "อยู่ดันเจียน"}${m.inParty ? " · มีปาร์ตี้แล้ว" : ""}`, self ? "" : `<span class="online-actions">${!m.bot && state.players.some(player => player.id === m.id) ? `<button data-trade-target="${m.id}">แลกเปลี่ยน</button>` : ""}<button data-online-invite="${m.id}" ${canInvite && town && !m.inParty ? "" : "disabled"}>ชวนปาร์ตี้</button></span>`);
       }).join("")}${state.trade ? '<button id="trade-reopen" class="primary-button">เปิดการแลกเปลี่ยนที่ค้างอยู่</button>' : ""}`,
       "players",
     );

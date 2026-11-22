@@ -137,6 +137,7 @@ import {
   DUNGEON_ENERGY_INTERVAL,
 } from "../shared/config.js";
 export const players = new Map(),
+  companionBots = new Map(),
   instances = new Map(),
   parties = new Map(),
   trades = new Map();
@@ -188,7 +189,75 @@ export function invalidateShops() {
   shopCache = null;
 }
 export function live(id) {
-  return [...players.values()].find((p) => p.id === id) || pvp.bots.get(id);
+  return [...players.values()].find((p) => p.id === id) || companionBots.get(id) || pvp.bots.get(id);
+}
+
+// Ephemeral adventurers: no accounts, ranking entries or analytics visitors.
+// Keep at least two in town so newcomers always have someone to invite.
+export function startCompanionBots(count = 4, t = now()) {
+  const names = ["ภูผา", "สายลม", "ประกาย", "อรุณ"];
+  const jobs = ["swordsman", "archer", "mage", "priest"];
+  for (let n = companionBots.size; n < Math.max(0, Math.min(4, count)); n++) {
+    const id = `companion:${n}`;
+    const bot = makeRuntime({ id, userId: null, name: `${names[n]} · บอท`,
+      class: jobs[n], gender: n % 2 ? "female" : "male", level: 3,
+      exp: 0, gold: 0, inventory: { hp: 20, mp: 20 }, upgrade: 0,
+      weapon: false, armor: false, unlocked: 1, quest: 0,
+    }, { emit() {}, request: { headers: { "user-agent": "TML companion bot" } } });
+    bot.isCompanionBot = true;
+    autoStats(bot, true);
+    bot.hp = maxHp(bot);
+    bot.mp = maxMp(bot);
+    bot.x = 620 + n * 180;
+    bot.botIndex = n;
+    bot.botTripAt = t + 90 + n * 35;
+    companionBots.set(id, bot);
+  }
+}
+
+function updateCompanionBots(t) {
+  for (const bot of companionBots.values()) {
+    let party = parties.get(bot.party);
+    if (party && !party.members.some(id => { const m = live(id); return m && !m.isCompanionBot; })) {
+      returnTown(bot, t);
+      partyAction(bot, { action: "leave" });
+      party = null;
+      bot.botTripAt = t + 90;
+    }
+    const leader = party && live(party.leader);
+    if (bot.area === "dungeon") {
+      const i = instances.get(bot.instance);
+      if (!i || (leader?.area === "town") || (!party && (i.completed || t >= bot.botReturnAt)) ||
+          (bot.hp <= 0 && t > (bot.diedAt || t) + 5)) {
+        returnTown(bot, t);
+        bot.inventory = { hp: 20, mp: 20 };
+        bot.botTripAt = t + 90 + bot.botIndex * 15;
+      } else {
+        bot.auto = bot.hp > 0;
+        continue;
+      }
+    }
+    if (party) {
+      if (leader?.area === "town" && townOf(bot).id !== townOf(leader).id) {
+        bot.townId = townOf(leader).id;
+        bot.x = leader.x;
+      }
+      party.ready.add(bot.id);
+    }
+    else if (t >= bot.botTripAt && [...companionBots.values()].filter(m => m.area === "town" && !m.party).length > 2) {
+      bot.inventory = { hp: 20, mp: 20 };
+      beginDungeon(bot, 1);
+      bot.auto = true;
+      bot.botReturnAt = t + 90;
+      continue;
+    }
+    const goal = leader?.area === "town" ? leader.x + (bot.botIndex % 2 ? 100 : -100)
+      : 760 + bot.botIndex * 200 + Math.sin(t / 9 + bot.botIndex * 2) * 220;
+    bot.input = Math.abs(goal - bot.x) > 20 ? Math.sign(goal - bot.x) : 0;
+    if (bot.input) bot.direction = bot.input;
+    bot.running = false;
+    bot.lastInput = t;
+  }
 }
 // A worn costume comes off once its last copy is sold, traded or thrown away.
 function dropUnownedSkin(c) {
@@ -1118,7 +1187,7 @@ export function stored(p) {
   };
 }
 export function savePlayer(p) {
-  if (p.isPvpBot) return;
+  if (p.isPvpBot || p.isCompanionBot) return;
   persist(stored(p));
 }
 function dungeonEnergy(p, t) {
@@ -1222,7 +1291,7 @@ function enterInstance(m, instance) {
     m.y = 600;
     m.hp = maxHp(m);
     m.mp = maxMp(m);
-    m.auto = false;
+    m.auto = !!m.isCompanionBot;
     m.action = null;
     m.pending = null;
     m.diedAt = 0;
@@ -2117,7 +2186,7 @@ function checkClear(i, t, p) {
   }
 }
 export function onlineRoster() {
-  return [...players.values()].map(p => ({ id: p.id, name: p.name, class: p.class, level: p.level, area: p.area, inParty: !!p.party }));
+  return [...players.values(), ...companionBots.values()].map(p => ({ id: p.id, name: p.name, class: p.class, level: p.level, area: p.area, inParty: !!p.party, ...(p.isCompanionBot ? { bot: true } : {}) }));
 }
 
 export const partyInvites = new Map();
@@ -2127,11 +2196,26 @@ export function partyAction(p, { action, target, inviteId }) {
     if (action === "invite") {
       const other = live(target);
       if (!other || other.id === p.id || other.area !== "town" || other.party) throw Error("ผู้เล่นนี้ยังรับคำเชิญไม่ได้");
+      if (other.isCompanionBot && townOf(other).id !== townOf(p).id) throw Error("บอทต้องอยู่เมืองเดียวกัน");
       const existing = parties.get(p.party);
       if (existing && (existing.leader !== p.id || existing.members.length >= 3)) throw Error("เฉพาะหัวหน้าทีมที่มีที่ว่างเท่านั้นที่ชวนได้");
       const pending = partyInvites.get(other.id);
       if (pending?.expires > now()) throw Error("ผู้เล่นนี้มีคำเชิญรอตอบอยู่");
       if (!existing) partyAction(p, { action: "create" });
+      if (other.isCompanionBot) {
+        other.level = p.level;
+        other.unlocked = p.unlocked;
+        other.quest = p.quest;
+        other.attrs = {};
+        autoStats(other, true);
+        other.hp = maxHp(other);
+        other.mp = maxMp(other);
+        other.inventory = { hp: 20, mp: 20 };
+        partyAction(other, { action: "join", target: p.party });
+        parties.get(p.party).ready.add(other.id);
+        other.botTripAt = Infinity;
+        return { message: `${other.name} เข้าปาร์ตี้และพร้อมแล้ว` };
+      }
       partyInvites.set(other.id, { id: randomUUID(), from: p.id, party: p.party, expires: now() + 30 });
       return { message: "ส่งคำเชิญปาร์ตี้แล้ว" };
     }
@@ -2170,8 +2254,9 @@ export function partyAction(p, { action, target, inviteId }) {
     party.members = party.members.filter((id) => id !== p.id);
     party.ready.delete(p.id);
     p.party = null;
+    if (p.isCompanionBot) p.botTripAt = now() + 90;
     if (!party.members.length) parties.delete(party.id);
-    else if (party.leader === p.id) party.leader = party.members[0];
+    else if (party.leader === p.id) party.leader = party.members.find(id => !live(id)?.isCompanionBot) || party.members[0];
   }
   return { message: "อัปเดตปาร์ตี้แล้ว" };
 }
@@ -2182,6 +2267,7 @@ export function tradeAction(
   ensureTown(p);
   if (action === "request") {
     const other = live(target);
+    if (other?.isCompanionBot) throw Error("บอทไม่รับแลกเปลี่ยนไอเทม");
     if (
       !other ||
       other.id === p.id ||
@@ -2574,7 +2660,8 @@ function updateCrystalHazards(i, t) {
 }
 export function tick(dt, t = now()) {
   pvp.update(t);
-  for (const p of [...players.values(), ...pvp.bots.values()]) {
+  updateCompanionBots(t);
+  for (const p of [...players.values(), ...companionBots.values(), ...pvp.bots.values()]) {
     if (p.hp <= 0) {
       p.input = 0;
       p.pending = null;
@@ -2894,6 +2981,7 @@ export function snapshot(p) {
     townId: townOf(m).id,
     pvpTeam: m.pvpTeam ?? null,
     isPvpBot: !!m.isPvpBot,
+    isCompanionBot: !!m.isCompanionBot,
     class: m.class,
     gender: m.gender,
     specialization: m.specialization || null,
@@ -2956,7 +3044,7 @@ export function snapshot(p) {
     },
     area: p.area,
     town: townOf(p),
-    players: [...players.values(), ...pvp.bots.values()]
+    players: [...players.values(), ...companionBots.values(), ...pvp.bots.values()]
       .filter(
         (m) => m.id !== p.id && m.area === p.area && m.instance === p.instance && (p.area !== "town" || townOf(m).id === townOf(p).id),
       )
@@ -3036,5 +3124,6 @@ export function snapshot(p) {
         }
       : null,
     online: players.size,
+    botsOnline: companionBots.size,
   };
 }

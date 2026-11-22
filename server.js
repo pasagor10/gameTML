@@ -461,6 +461,8 @@ const backupTimer = setInterval(async () => {
 backupTimer.unref();
 // Per-socket record of what each client was last sent (shared/snapshot-delta.js).
 const snapshotMemos = new WeakMap();
+// Set COMPANION_BOTS=0 to disable the four labelled AI adventurers.
+world.startCompanionBots(process.env.COMPANION_BOTS === undefined ? 4 : Number(process.env.COMPANION_BOTS));
 let announcedId = null;
 let rosterHash = "";
 let step = 0;

@@ -90,7 +90,10 @@ test("real HTTP + Socket.IO: auth, ownership, visibility, chat, concurrent last-
     let state = await snap(a.s);
     assert.equal(state.online, 3);
     assert.equal((await command(a.s, "player:join", { id: b.c.id })).ok, false);
-    assert.equal(state.players.length, 2);
+    assert.equal(state.players.filter(p => !p.isCompanionBot).length, 2);
+    assert.equal(state.players.filter(p => p.isCompanionBot).length, 4);
+    assert.equal(state.online, 3);
+    assert.equal(state.botsOnline, 4);
     const chat = once(b.s, "chat:message");
     assert.equal(
       (

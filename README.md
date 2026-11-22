@@ -2,6 +2,17 @@
 
 Playable 2D side-scrolling multiplayer RPG demo v0.3. Public URL: https://game.pikad.online
 
+## Companion bots
+
+The server starts four labelled AI adventurers (one per class). They walk around
+town, take turns running floor 1, and accept party invitations immediately.
+Invited bots match the leader's level and unlocked floors, ready automatically,
+fight using AUTO, and return when the leader returns to town. At least two free
+bots remain in town during solo trips; bots already in a party stay with it.
+Bots cannot trade, do not create accounts or saved characters, and stay outside
+human online counts, rankings and visitor analytics. The game shows their count
+separately. Set `COMPANION_BOTS=0` to disable them (default: 4, maximum: 4).
+
 ## Run locally
 
 Node.js 22+ (native better-sqlite3 and Argon2 dependencies).
