@@ -50,6 +50,7 @@ const NAME_TAIL=['มอส','เรีย','ดิน','ลอส','นา','�
 export function randomHeroName(rng=Math.random){return NAME_HEAD[Math.floor(rng()*NAME_HEAD.length)]+NAME_TAIL[Math.floor(rng()*NAME_TAIL.length)];}
 export function cleanHeroName(name){return String(name||'').replace(/[<>&"'`]/g,'').replace(/\s+/g,' ').trim().slice(0,12);}
 export const MAGNET_COOLDOWN=60;
+export const GEM_BASE={slime:1,runner:1,archer:2,elite:10,boss:30};
 export function evolutions(skills){return {inferno:skills.fire===3&&skills.area>=2,blizzard:skills.ice===3&&skills.haste>=2};}
 
 const SPEED=145,ACCEL=28;
@@ -182,12 +183,20 @@ static restore(snap,rng=Math.random){
   r.applyGear();r.p.hp=Math.max(1,Math.min(r.maxHp,snap.hp||r.maxHp));r.stageStart=r.t;r.spawn=1;r.emit('run_restored',{stage:r.stage,level:r.level});
   return r;
 }
+// EXP crystals: size follows the monster (slime < archer < elite < boss) and a random roll
+// (x1 / x2 / x3). Rarely a gold crystal worth ~10x drops instead; elites often, bosses always add one.
+dropGems(e){
+  const base=GEM_BASE[e.type]||1,r=this.rng(),mult=r<.12?3:r<.4?2:1;
+  this.gems.push({x:e.x,y:e.y,value:base*mult});
+  const goldChance=e.type==='boss'?1:e.type==='elite'?.25:.03;
+  if(this.rng()<goldChance){const value=Math.max(25,base*10)*(e.type==='boss'?2:1);this.gems.push({x:e.x-10,y:e.y-6,value,gold:true});this.emit('gold_gem',{value});}
+}
 hit(e,damage,continuous=false){
   if(e.hp<=0)return;e.hp-=damage;if(!continuous)this.cue('hit',{cls:this.job==='mage'?'mage':this.job==='gunner'?'archer':'blade',volume:.55});e.flash=.12;
   if(continuous&&e.damageText?.life>.12){e.damageText.value+=damage;}else{const text={kind:'number',x:e.x,y:e.y-e.r*2-12,life:continuous ? .4 : .6,max:continuous ? .4 : .6,value:damage};this.effects.push(text);if(continuous)e.damageText=text;}
   if(e.hp<=0){
     this.kills++;this.cue(e.type==='boss'?'bossDown':'kill');if(!this.firstKill){this.firstKill=true;this.emit('first_kill');}
-    this.gems.push({x:e.x,y:e.y,value:e.type==='boss'?30:e.type==='elite'?12:1});
+    this.dropGems(e);
     const gold=Math.round((GOLD_DROP[e.type]||1)*(1+.5*(this.stage-1)));this.coins.push({x:e.x+8,y:e.y+4,value:gold});
     const drop=rollDrop(e.type,this.stage,this.job,this.rng);if(drop){this.loot.push({...drop,x:e.x,y:e.y,id:this.nextId++});this.emit('loot_drop',{kind:drop.kind,tier:drop.tier});}
     if(e.type==='boss')this.clearStage();
@@ -334,7 +343,7 @@ update(dt,input={x:0,y:0}){
   }
   for(const s of this.shots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;if(s.friendly){for(const e of this.enemies){if(s.life<=0)break;if(e.hp>0&&!s.hit.has(e.id)&&Math.hypot(s.x-e.x,s.y-e.y)<e.r+(s.radius||10)){s.hit.add(e.id);this.hit(e,s.damage);if(s.slows)e.slow=1.6;if(s.blast)this.blast(s.x,s.y,s.blast,s.damage*.5);if(s.pierce!==undefined&&s.pierce--<=0)s.life=0;}}}else if(Math.hypot(s.x-p.x,s.y-p.y)<22){this.damage(12,'arrow');s.life=0;}}
   this.magnetClock=Math.max(0,this.magnetClock-dt);
-  for(const g of this.gems){const d=Math.hypot(p.x-g.x,p.y-g.y);if(g.pull&&d>=120){const step=Math.min(d,900*dt);g.x+=(p.x-g.x)/(d||1)*step;g.y+=(p.y-g.y)/(d||1)*step;}else if(d<120){const step=Math.min(d,Math.max(90,280-d)*dt);g.x+=(p.x-g.x)/(d||1)*step;g.y+=(p.y-g.y)/(d||1)*step;}if(d<20){this.xp+=g.value;this.xpEarned+=g.value;g.collected=true;this.cue('coin',{volume:.35});}}
+  for(const g of this.gems){const d=Math.hypot(p.x-g.x,p.y-g.y);if(g.pull&&d>=120){const step=Math.min(d,900*dt);g.x+=(p.x-g.x)/(d||1)*step;g.y+=(p.y-g.y)/(d||1)*step;}else if(d<120){const step=Math.min(d,Math.max(90,280-d)*dt);g.x+=(p.x-g.x)/(d||1)*step;g.y+=(p.y-g.y)/(d||1)*step;}if(d<20){this.xp+=g.value;this.xpEarned+=g.value;g.collected=true;this.cue('coin',{volume:g.gold?.8:.35});if(g.gold)this.effects.push({kind:'xpText',x:g.x,y:g.y-20,life:.9,max:.9,value:g.value});}}
   for(const l of this.loot){const d=Math.hypot(p.x-l.x,p.y-l.y);if(d<90||l.pull){const step=Math.min(d,(l.pull?900:220)*dt);l.x+=(p.x-l.x)/(d||1)*step;l.y+=(p.y-l.y)/(d||1)*step;}if(d<24){l.collected=true;const {kind,tier,job}=l;this.addItem({kind,tier,job});this.cue('loot',TIERS[tier].id);this.emit('loot_pickup',{kind,tier,name:itemName(l)});this.equipBest();}}
   this.loot=this.loot.filter(l=>!l.collected);
   for(const g of this.coins){const d=Math.hypot(p.x-g.x,p.y-g.y);if(g.pull||d<120){const step=Math.min(d,(g.pull?900:Math.max(90,280-d))*dt);g.x+=(p.x-g.x)/(d||1)*step;g.y+=(p.y-g.y)/(d||1)*step;}if(d<20){this.gold+=g.value;this.goldEarned+=g.value;g.collected=true;}}

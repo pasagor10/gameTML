@@ -128,3 +128,12 @@ test('gold, bag, swapping, selling and enhancing gear',()=>{
   r.addEnemy('elite',40,0);r.enemies[0].hp=1;r.hit(r.enemies[0],5);assert.ok(r.coins.length>0);r.coins[0].x=r.p.x;r.coins[0].y=r.p.y;const before=r.gold;r.update(.05);assert.ok(r.gold>before);
   const next=new Run(()=>.5,{job:'knight'});next.loadStash(r.stash());assert.equal(next.gold,r.gold);assert.equal(next.gearItem('helmet').tier,3);
 });
+
+test('EXP crystals vary by monster and roll, with rare gold crystals',()=>{
+  const seq=[.05,.9,.3,.9,.9,.9,.5,.1,.5,.5];let i=0;const r=new Run(()=>.5);r.rng=()=>seq[i++%seq.length];r.enemies=[];r.spawn=1000;r.gems=[];
+  r.dropGems({type:'slime',x:0,y:0});assert.deepEqual(r.gems.map(g=>g.value),[3],'x3 roll, no gold');
+  r.gems=[];r.dropGems({type:'archer',x:0,y:0});assert.deepEqual(r.gems.map(g=>g.value),[4]);
+  r.gems=[];r.dropGems({type:'slime',x:0,y:0});assert.deepEqual(r.gems.map(g=>g.value),[1]);
+  r.gems=[];r.dropGems({type:'elite',x:0,y:0});assert.equal(r.gems.length,2);assert.ok(r.gems[1].gold);assert.equal(r.gems[1].value,100);
+  r.gems=[];r.dropGems({type:'boss',x:0,y:0});assert.ok(r.gems.some(g=>g.gold&&g.value===600));
+});

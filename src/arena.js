@@ -1,5 +1,6 @@
 // Shared geometry follows the painted forest clearing; water/trees/ruins stay outside play.
-export const ARENA_SIZE = 2200;
+// v0.16: the clearing is ~1.6x wider (2.7x the area) than the original 2200 painted map.
+export const ARENA_SIZE = 3600;
 export const ARENA_HALF = ARENA_SIZE / 2;
 const SOURCE_SIZE = 1254;
 const mapPoint = ([x,y]) => ({x:(x-SOURCE_SIZE/2)*ARENA_SIZE/SOURCE_SIZE,y:(y-SOURCE_SIZE/2)*ARENA_SIZE/SOURCE_SIZE});

@@ -421,30 +421,31 @@ function prop(c, th, x, y, s, rng) {
   }
   c.restore();
 }
-// The arena is painted once per theme into a cache covering 1.7 arena widths; the live layer adds
-// the portal glow and drifting particles.
-const EXTENT = ARENA_SIZE * 1.7, arenaCache = new Map();
+// The arena is painted once per theme into a cache covering 1.3 arena widths (the camera never
+// shows past the map square); the live layer adds the portal glow and drifting particles.
+// SCALE/AREA keep decoration density and landmark positions from the original 2200 map.
+const EXTENT = ARENA_SIZE * 1.3, arenaCache = new Map(), SCALE = ARENA_SIZE / 2200, AREA = SCALE * SCALE;
 function paintArena(th, pixels) {
   const canvas = document.createElement('canvas');canvas.width = canvas.height = pixels;
   const c = canvas.getContext('2d'), k = pixels / EXTENT, rng = seeded(th.id.length * 7919 + 17);
   c.scale(k, k);c.translate(EXTENT / 2, EXTENT / 2);
   c.fillStyle = th.edge;c.fillRect(-EXTENT / 2, -EXTENT / 2, EXTENT, EXTENT);
-  for (let i = 0; i < 260; i++) {const x = (rng() - .5) * EXTENT, y = (rng() - .5) * EXTENT;E(c, x, y, 60 + rng() * 120, 30 + rng() * 50, th.edge2, null);}
+  for (let i = 0; i < 260 * AREA; i++) {const x = (rng() - .5) * EXTENT, y = (rng() - .5) * EXTENT;E(c, x, y, 60 + rng() * 120, 30 + rng() * 50, th.edge2, null);}
   // Ground inside the walkable polygon.
   c.beginPath();ARENA_POLYGON.forEach((p, i) => i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y));c.closePath();
   c.save();c.fillStyle = th.ground;c.fill();c.clip();
-  for (let i = 0; i < 220; i++) {const x = (rng() - .5) * ARENA_SIZE, y = (rng() - .5) * ARENA_SIZE;E(c, x, y, 40 + rng() * 90, 20 + rng() * 40, th.ground2, null);}
-  for (let i = 0; i < 130; i++) {const x = (rng() - .5) * ARENA_SIZE, y = (rng() - .5) * ARENA_SIZE, r = 18 + rng() * 26;E(c, x, y, r, r * .55, th.stone, th.rim, 2);E(c, x - r * .2, y - r * .15, r * .5, r * .2, '#ffffff22', null);}
-  for (let i = 0; i < 260; i++) {const x = (rng() - .5) * ARENA_SIZE, y = (rng() - .5) * ARENA_SIZE;L(c, x, y, x + 2, y - 8, th.ground2, 2.4);L(c, x + 4, y, x + 7, y - 6, th.ground2, 2);}
+  for (let i = 0; i < 220 * AREA; i++) {const x = (rng() - .5) * ARENA_SIZE, y = (rng() - .5) * ARENA_SIZE;E(c, x, y, 40 + rng() * 90, 20 + rng() * 40, th.ground2, null);}
+  for (let i = 0; i < 130 * AREA; i++) {const x = (rng() - .5) * ARENA_SIZE, y = (rng() - .5) * ARENA_SIZE, r = 18 + rng() * 26;E(c, x, y, r, r * .55, th.stone, th.rim, 2);E(c, x - r * .2, y - r * .15, r * .5, r * .2, '#ffffff22', null);}
+  for (let i = 0; i < 260 * AREA; i++) {const x = (rng() - .5) * ARENA_SIZE, y = (rng() - .5) * ARENA_SIZE;L(c, x, y, x + 2, y - 8, th.ground2, 2.4);L(c, x + 4, y, x + 7, y - 6, th.ground2, 2);}
   const bloom = {forest: ['#fff4c4', '#c9a8ff'], volcano: ['#ff8a3a', '#ffd27a'], ice: ['#ffffff', '#bfe9ff'], temple: ['#ff9ab8', '#ffd25a'], moon: ['#d8dcff', '#b48aff'], crystal: ['#ff8ad8', '#7ff0e0']}[th.id];
-  for (let i = 0; i < 600; i++) {const x = (rng() - .5) * ARENA_SIZE, y = (rng() - .5) * ARENA_SIZE;if (!inside(x, y) || edgeDistance(x, y) > 120) continue;E(c, x, y, 4, 3, bloom[i % 2], null);E(c, x, y, 1.6, 1.4, '#ffffffaa', null);}
+  for (let i = 0; i < 600 * AREA; i++) {const x = (rng() - .5) * ARENA_SIZE, y = (rng() - .5) * ARENA_SIZE;if (!inside(x, y) || edgeDistance(x, y) > 120) continue;E(c, x, y, 4, 3, bloom[i % 2], null);E(c, x, y, 1.6, 1.4, '#ffffffaa', null);}
   c.restore();
   // Stone rim along the boundary.
   c.beginPath();ARENA_POLYGON.forEach((p, i) => i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y));c.closePath();
   c.strokeStyle = th.rim;c.lineWidth = 34;c.lineJoin = 'round';c.stroke();c.strokeStyle = th.stone;c.lineWidth = 20;c.stroke();
   // Props outside the play area, back to front.
   const props = [];
-  for (let i = 0; i < 900 && props.length < 340; i++) {const x = (rng() - .5) * EXTENT, y = (rng() - .5) * EXTENT;if (inside(x, y) || edgeDistance(x, y) < 40) continue;props.push({x, y, s: .9 + rng() * .9});}
+  for (let i = 0; i < 900 * AREA && props.length < 340 * AREA; i++) {const x = (rng() - .5) * EXTENT, y = (rng() - .5) * EXTENT;if (inside(x, y) || edgeDistance(x, y) < 40) continue;props.push({x, y, s: .9 + rng() * .9});}
   // A dense hedge of props hugging the boundary so the clearing reads as enclosed.
   for (let i = 0; i < ARENA_POLYGON.length; i++) {
     const a = ARENA_POLYGON[i], b = ARENA_POLYGON[(i + 1) % ARENA_POLYGON.length], len = Math.hypot(b.x - a.x, b.y - a.y);
@@ -456,28 +457,28 @@ function paintArena(th, pixels) {
   props.sort((a, b) => a.y - b.y);
   for (const p of props) prop(c, th, p.x, p.y, p.s, rng);
   // Portal gate at the top of the clearing.
-  const gx = -60, gy = -720;
+  const gx = -60, gy = -720 * SCALE;
   P(c, [[gx - 70, gy + 20], [gx - 66, gy - 110], [gx - 40, gy - 150], [gx + 40, gy - 150], [gx + 66, gy - 110], [gx + 70, gy + 20], [gx + 46, gy + 20], [gx + 44, gy - 100], [gx, gy - 124], [gx - 44, gy - 100], [gx - 46, gy + 20]], th.stone, th.rim, 4);
   return canvas;
 }
 export function drawToonArena(c, time, stage = 1) {
   const th = themeFor(stage), transform = c.getTransform();
-  const pixels = Math.max(512, Math.min(3072, Math.round(EXTENT * Math.abs(transform.a) / 128) * 128)), key = `${th.id}-${pixels}`;
+  const pixels = Math.max(512, Math.min(4096, Math.round(EXTENT * Math.abs(transform.a) / 128) * 128)), key = `${th.id}-${pixels}`;
   let canvas = arenaCache.get(key);
   if (!canvas) {for (const k of arenaCache.keys()) if (k.startsWith(`${th.id}-`)) arenaCache.delete(k);canvas = paintArena(th, pixels);arenaCache.set(key, canvas);}
   c.fillStyle = th.edge;c.fillRect(-ARENA_HALF * 3, -ARENA_HALF * 3, ARENA_SIZE * 3, ARENA_SIZE * 3);
   c.save();c.imageSmoothingEnabled = true;c.drawImage(canvas, -EXTENT / 2, -EXTENT / 2, EXTENT, EXTENT);c.restore();
   // Portal swirl and theme particles.
-  const gx = -60, gy = -720;
+  const gx = -60, gy = -720 * SCALE;
   c.save();c.globalAlpha = .85;glowDot(c, gx, gy - 50, 70, `${th.portal}88`);
   for (let i = 0; i < 3; i++) {c.beginPath();c.ellipse(gx, gy - 50, 34 - i * 9, 52 - i * 13, 0, time * (1 + i * .5), time * (1 + i * .5) + 4.4);c.strokeStyle = i === 2 ? '#ffffff' : th.portal;c.lineWidth = 4 - i;c.stroke();}
   c.restore();
-  const n = 26;
+  const n = Math.round(26 * AREA);
   for (let i = 0; i < n; i++) {
-    const x = Math.sin(i * 7.13) * 760 + Math.sin(time * .4 + i) * 30;
-    let y = Math.cos(i * 3.71) * 700;
-    if (th.id === 'ice') y = ((i * 97 + time * 40) % 1500) - 750;
-    else if (th.id === 'volcano') y = 750 - ((i * 97 + time * 35) % 1500);
+    const x = Math.sin(i * 7.13) * 760 * SCALE + Math.sin(time * .4 + i) * 30;
+    let y = Math.cos(i * 3.71) * 700 * SCALE;
+    if (th.id === 'ice') y = ((i * 97 + time * 40) % (1500 * SCALE)) - 750 * SCALE;
+    else if (th.id === 'volcano') y = 750 * SCALE - ((i * 97 + time * 35) % (1500 * SCALE));
     const a = .4 + .4 * Math.sin(time * 2 + i);
     c.globalAlpha = a;glowDot(c, x, y, th.id === 'ice' ? 4 : 7, th.id === 'ice' ? '#ffffff' : th.glow);
   }
