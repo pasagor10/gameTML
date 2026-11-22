@@ -46,6 +46,8 @@ export const statText = (stats, attrs = {}) =>
   ].join(" · ") || "อุปกรณ์เริ่มต้น";
 let selected = null;
 let bagFilter = "all";
+let bagPage = 0;
+let itemSection = "stats";
 const rarity = (item) => `rarity-${item.rarity}`;
 export function rpgPanel(p, area, tab = "inventory") {
   const stats = p.stats,
@@ -183,7 +185,7 @@ function inventoryPage(p, area, stats, owned, spec, cls) {
       .map((k) => "supply:" + k),
   ];
   const worn = Object.values(p.equipment || {}).filter(Boolean);
-  if (!cells.includes(selected) && !worn.includes(selected)) selected = cells[0] ?? null;
+
 
   const cell = (key) => {
     const supply = key.startsWith("supply:") ? key.slice(7) : null,
@@ -192,8 +194,12 @@ function inventoryPage(p, area, stats, owned, spec, cls) {
     // Same picture, different tier: the level tag tells them apart.
     return `<button data-inspect="${key}" aria-pressed="${selected === key}" title="${g.name}${supply ? "" : ` · Lv.${g.level}`}" class="inv-cell ${rarity(g)} ${selected === key ? "selected" : ""}">${supply ? "" : `<em class="inv-lv">Lv.${g.level}</em>`}<b>${supply ? supplyArt(supply) : itemArt(key, g)}</b><small class="inv-count">×${count}</small></button>`;
   };
-  // Fill to whole rows of six, at least four rows.
-  const empty = Math.max(24, Math.ceil(cells.length / 6) * 6) - cells.length;
+  const pageSize = innerWidth <= 600 ? (innerHeight <= 650 ? 4 : 8) : innerHeight <= 600 ? 8 : 12;
+  const pageCount = Math.max(1, Math.ceil(cells.length / pageSize));
+  bagPage = Math.max(0, Math.min(bagPage, pageCount - 1));
+  const visibleCells = cells.slice(bagPage * pageSize, (bagPage + 1) * pageSize);
+  const empty = pageSize - visibleCells.length;
+  if (!cells.includes(selected) && !worn.includes(selected)) selected = visibleCells[0] ?? null;
 
   const slot = (name) => {
     const id = p.equipment[name],
@@ -232,14 +238,17 @@ function inventoryPage(p, area, stats, owned, spec, cls) {
       .join("")}</div>
   </aside>
   <section class="inv-bag">
-    <header><h3>◈ INVENTORY ◈</h3><strong>${supplyArt("gold")} ${p.gold.toLocaleString()} <small>ทอง</small></strong></header>
+    <div class="inv-worn-compact" aria-label="อุปกรณ์ที่สวมอยู่">${slot("weapon")}${slot("armor")}${slot("charm")}${slot("boots")}</div>
+    <header><h3>เลือกของ → กดสวมใส่</h3><strong>${supplyArt("gold")} ${p.gold.toLocaleString()} <small>ทอง</small></strong></header>
+    <label class="inv-filter-select">หมวดของ<select data-bag-filter-select aria-label="หมวดของ">${inventoryFilters.map(([id,label])=>`<option value="${id}" ${bagFilter===id?"selected":""}>${label}</option>`).join("")}</select></label>
     <div class="inv-tabs">${inventoryFilters
       .map(
         ([id, label]) =>
           `<button data-bag-filter="${id}" class="${bagFilter === id ? "active" : ""}" aria-pressed="${bagFilter === id}">${filterIcons[id]}<span>${label}</span></button>`,
       )
       .join("")}</div>
-    <div class="inv-grid">${cells.map(cell).join("")}${'<div class="inv-cell blank" aria-hidden="true"></div>'.repeat(empty)}</div>
+    <div class="inv-grid">${visibleCells.map(cell).join("")}${'<div class="inv-cell blank" aria-hidden="true"></div>'.repeat(empty)}</div>
+    <nav class="inv-pages" aria-label="หน้ากระเป๋า"><button data-bag-page="${bagPage-1}" ${bagPage === 0 ? "disabled" : ""}>‹ ก่อนหน้า</button><span>หน้า ${bagPage+1} / ${pageCount} · ${cells.length} ช่อง</span><button data-bag-page="${bagPage+1}" ${bagPage+1 >= pageCount ? "disabled" : ""}>ถัดไป ›</button></nav>
     <footer><label>${icon('<path d="M4 6h16M4 12h10M4 18h6"/>')}<span>เรียง:</span><select data-bag-sort>${bagSorts
       .map(
         ([id, label]) =>
@@ -285,7 +294,7 @@ function detailCard(p, area, stats, key, counts) {
         id !== "ore" &&
         p.hp > 0 &&
         (POTIONS[id]?.kind === "hp" ? p.hp < stats.hp : p.mp < stats.mp);
-    return `<aside class="inv-detail ${rarity(s)}"><div class="inv-detail-art">${supplyArt(id)}</div><h3>${s.name}</h3><div class="inv-pills"><span>${s.costume ? "ชุดแต่งกาย" : "วัตถุดิบ"}</span><span class="rarity">${RARITIES[s.rarity]}</span></div><p class="inv-lore">${s.text}</p><div class="inv-detail-stats"><div><span>จำนวนในกระเป๋า</span><b>×${p.inventory[id]}</b></div></div><div class="inv-detail-actions">${s.costume ? costumeAction(p, s.costume) : id === "ore" ? "" : `<button class="inv-action" data-use="${id}" ${usable ? "" : "disabled"}>${usable ? "ใช้" : "พลังเต็มอยู่แล้ว"}</button>`}${discardButton(id, area === "town")}</div></aside>`;
+    return `<aside class="inv-detail ${rarity(s)}"><div class="inv-detail-art">${supplyArt(id)}</div><h3>${s.name}</h3><div class="inv-pills"><span>${s.costume ? "ชุดแต่งกาย" : "วัตถุดิบ"}</span><span class="rarity">${RARITIES[s.rarity]}</span></div><div class="inv-detail-actions">${s.costume ? costumeAction(p, s.costume) : id === "ore" ? "" : `<button class="inv-action" data-use="${id}" ${usable ? "" : "disabled"}>${usable ? "ใช้" : "พลังเต็มอยู่แล้ว"}</button>`}${discardButton(id, area === "town")}</div><p class="inv-lore">${s.text}</p><div class="inv-detail-stats"><div><span>จำนวนในกระเป๋า</span><b>×${p.inventory[id]}</b></div></div></aside>`;
   }
   const item = GEAR[key],
     equipped = p.equipment[item.slot] === key,
@@ -330,7 +339,11 @@ function detailCard(p, area, stats, key, counts) {
     <div class="inv-detail-art">${itemArt(key, item)}</div>
     <h3>${item.name}${equipped && level ? ` +${level}` : ""}</h3>
     <div class="inv-pills"><span class="lv">Lv.${item.level}</span>${equipped ? '<span class="worn">◆ สวมใส่อยู่</span>' : ""}<span>${SLOTS[item.slot]}${counts.get(key) > 1 ? ` ×${counts.get(key)}` : ""}</span><span class="rarity">ระดับ${RARITIES[item.rarity]}</span></div>
+    <div class="inv-detail-actions"><button class="inv-action" data-equip="${key}" data-slot="${item.slot}" ${canEquip ? "" : "disabled"}>${filterIcons.armor}<span>${label}</span></button>${discardButton(key, area === "town" && !equipped && !key.startsWith("starter_"))}</div>
+    <nav class="inv-sections" aria-label="ข้อมูลอุปกรณ์">${[["stats","ค่าสถานะ"],["compare","เทียบของ"],["info","รายละเอียด"]].map(([id,label])=>`<button data-item-section="${id}" aria-pressed="${itemSection===id}">${label}</button>`).join("")}</nav>
+    <div class="inv-section" ${itemSection === "info" ? "" : "hidden"}>
     ${item.lore ? `<p class="inv-lore">${item.lore}</p>` : ""}${weaponEffectText(item) ? `<p class="inv-lore">${weaponEffectText(item)}</p>` : ""}
+    </div><div class="inv-section" ${itemSection === "stats" ? "" : "hidden"}>
     <h4>ค่าสถานะ</h4>
     <div class="inv-detail-stats">${
       Object.entries(item.stats)
@@ -341,11 +354,11 @@ function detailCard(p, area, stats, key, counts) {
         .concat(attrLines(item))
         .join("") || "<div><span>อุปกรณ์เริ่มต้น</span></div>"
     }</div>
-    ${versus}
-    <h4>เงื่อนไขสวมใส่</h4>
+    </div><div class="inv-section" ${itemSection === "compare" ? "" : "hidden"}>${versus || "<p>ยังไม่มีของในช่องนี้ให้เปรียบเทียบ</p>"}</div>
+    <div class="inv-section" ${itemSection === "info" ? "" : "hidden"}><h4>เงื่อนไขสวมใส่</h4>
     <div class="inv-reqs">${item.class ? `<div>${check(classOk)}<span>อาชีพ: ${CLASSES[item.class].name}</span></div>` : ""}<div>${check(levelOk)}<span>เลเวลขั้นต่ำ: ${item.level}</span></div>${item.floor ? `<div><em class="ok">◆</em><span>ดรอปจากบอสชั้น ${item.floor}</span></div>` : ""}</div>
-    <div class="inv-compare ${diff > 0 ? "up" : diff < 0 ? "down" : ""}">${equipped ? "ถ้าถอด" : "ถ้าสวม"} พลัง ${now.toLocaleString()} → ${next.toLocaleString()} <b>${diff >= 0 ? "+" : ""}${diff}</b></div>
-    <div class="inv-detail-actions"><button class="inv-action" data-equip="${key}" data-slot="${item.slot}" ${canEquip ? "" : "disabled"}>${filterIcons.armor}<span>${label}</span></button>${discardButton(key, area === "town" && !equipped && !key.startsWith("starter_"))}</div>
+    </div><div class="inv-compare ${diff > 0 ? "up" : diff < 0 ? "down" : ""}">${equipped ? "ถ้าถอด" : "ถ้าสวม"} พลัง ${now.toLocaleString()} → ${next.toLocaleString()} <b>${diff >= 0 ? "+" : ""}${diff}</b></div>
+
   </aside>`;
 }
 // ---------------------------------------------------------------------------
@@ -411,6 +424,7 @@ function classPage(p, area, spec, cls) {
   </aside>
   <section class="cls-path">
     <header><span>${icon('<path d="M4 20 15 9m-2-2 4-4 4 4-4 4M20 20 9 9m2-2L7 3 3 7l4 4"/>')}</span><div><h3>เส้นทางของผู้กล้า</h3><small>3 ขั้น: อาชีพเริ่มต้น → สายพัฒนา (Lv.3) → ขั้นสูง (Lv.${ADVANCE_LEVEL})</small></div><b class="cls-tier">ขั้นที่ ${tier}</b></header>
+    <footer><button class="inv-action cls-confirm" ${action || "disabled"}>${icon('<path d="M4 20 15 9m-2-2 4-4 4 4-4 4M20 20 9 9m2-2L7 3 3 7l4 4"/>')}<span>${label}</span></button>${hint ? `<small>${hint}</small>` : ""}</footer>
     <div class="path-tree">
       <div class="path-node root current"><span class="path-emblem">${cls.icon}</span><strong>${cls.name}</strong><small>${p.specialization ? "ขั้นที่ 1" : "ปัจจุบัน"}</small></div>
       <svg class="path-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M0 50H4.5V24H9M4.5 50V76H9M56 24H65M56 76H65"/></svg>
@@ -418,7 +432,7 @@ function classPage(p, area, spec, cls) {
       <div class="path-col">${specs.map(advNode).join("")}</div>
     </div>
     ${picked ? `<div class="path-info"><span>${picked.icon}</span><div><strong>${picked.name} <em>${picked.role}</em></strong><small>${picked.description}</small></div><b>${statText(picked.stats)}${p.advanced && picked.id === p.specialization ? " · ×2" : ""}</b></div>` : `<div class="path-info empty">แตะสายพัฒนาในแผนผังเพื่อดูรายละเอียด</div>`}
-    <footer><button class="inv-action cls-confirm" ${action || "disabled"}>${icon('<path d="M4 20 15 9m-2-2 4-4 4 4-4 4M20 20 9 9m2-2L7 3 3 7l4 4"/>')}<span>${label}</span></button>${hint ? `<small>${hint}</small>` : ""}</footer>
+
   </section>
   <section class="cls-skills">
     <header><span>${cls.icon}</span><h3>สกิลของ${spec?.name || cls.name}</h3></header>
@@ -526,12 +540,13 @@ function statusPage(p, area) {
   <section class="stat-alloc">
     <header class="stat-points"><div><small>แต้มสเตตัสคงเหลือ</small><strong>${left}</strong><span>/ ${total} แต้ม (Lv.${p.level})</span></div>
       <div class="stat-build"><small>บิลด์แนะนำ · ${build.name}</small><b>${weights}</b></div></header>
-    <div class="stat-rows">${STAT_KEYS.map(row).join("")}</div>
     <footer class="stat-actions">
       <button data-stat-auto ${free > 0 && !hasDraft ? "" : "disabled"}>✨ อัพตามสาย</button>
       <button data-stat-cancel ${hasDraft ? "" : "disabled"}>ยกเลิก</button>
       <button class="confirm" data-stat-confirm ${hasDraft ? "" : "disabled"}>ยืนยันอัพ</button>
     </footer>
+    <div class="stat-rows">${STAT_KEYS.map(row).join("")}</div>
+
     <p class="stat-hint">กด + เพื่อจองแต้ม (Shift = +10) แล้วกดยืนยัน · ยิ่งค่าสูงยิ่งใช้แต้มมาก · ตัวเลขสีฟ้าคือโบนัสจากอาชีพและอุปกรณ์</p>
   </section>
   <aside class="stat-derived">
@@ -603,21 +618,34 @@ function bindStatusPage(root, p, handlers) {
 }
 export function bindRpgPanel(root, p, handlers) {
   bindStatusPage(root, p, handlers);
+  root.querySelectorAll("[data-bag-page]").forEach(b => { b.onclick = () => {
+    bagPage = Number(b.dataset.bagPage); selected = null; handlers.open("inventory");
+  }; });
+  root.querySelectorAll("[data-item-section]").forEach(b => { b.onclick = () => {
+    itemSection = b.dataset.itemSection; handlers.open("inventory");
+  }; });
   root.querySelectorAll("[data-pick-spec]").forEach((b) => {
     b.onclick = () => {
       pickedSpec = b.dataset.pickSpec;
       handlers.open("class");
     };
   });
+  root.querySelectorAll("[data-bag-filter-select]").forEach(sel => { sel.onchange = () => {
+    bagFilter = sel.value; bagPage = 0; selected = null; handlers.open("inventory");
+  }; });
   root.querySelectorAll("[data-bag-filter]").forEach((b) => {
     b.onclick = () => {
       bagFilter = b.dataset.bagFilter;
+      bagPage = 0;
+      selected = null;
       handlers.open("inventory");
     };
   });
   root.querySelectorAll("[data-bag-sort]").forEach((sel) => {
     sel.onchange = () => {
       bagSort = sel.value;
+      bagPage = 0;
+      selected = null;
       handlers.open("inventory");
     };
   });

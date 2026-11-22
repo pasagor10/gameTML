@@ -1,0 +1,83 @@
+/* Primary actions and page navigation stay on screen; details use explicit tabs. */
+html body #modal#modal[data-panel="inventory"] .modal-box {
+  height: calc(100dvh - 24px); max-height: calc(100dvh - 24px) !important;
+  display: flex !important; flex-direction: column !important; overflow: hidden !important;
+}
+html body #modal#modal[data-panel="inventory"] .modal-box > header { padding: 12px 24px !important; min-height: 58px !important; }
+html body #modal#modal[data-panel="inventory"] #modal-body { display: flex !important; flex-direction: column !important; overflow: hidden !important; min-height: 0 !important; padding: 0 14px 12px !important; }
+html body #modal#modal[data-panel="inventory"] .rpg-tabs { flex: none !important; margin: 0 0 8px !important; padding: 4px !important; }
+html body #modal#modal[data-panel="inventory"] .inv2 { display: grid !important; grid-template-columns: minmax(180px,.8fr) minmax(280px,1.5fr) minmax(230px,1fr) !important; flex: 1 !important; min-height: 0 !important; gap: 12px !important; }
+html body #modal#modal[data-panel="inventory"] :is(.inv-hero,.inv-bag,.inv-detail) { min-height: 0 !important; padding: 12px !important; overflow: hidden !important; }
+html body #modal#modal[data-panel="inventory"] .inv-detail { display: flex !important; flex-direction: column !important; max-height: none !important; gap: 8px !important; }
+html body #modal#modal[data-panel="inventory"] .inv-detail > * { flex-shrink: 0; margin: 0 !important; }
+html body #modal#modal[data-panel="inventory"] .inv-detail-art { height: 64px !important; padding: 2px !important; }
+html body #modal#modal[data-panel="inventory"] .inv-detail-art img { max-height: 60px !important; width: auto !important; }
+html body #modal#modal[data-panel="inventory"] .inv-detail h3 { font-size: 17px !important; line-height: 1.4 !important; }
+html body #modal#modal[data-panel="inventory"] .inv-detail-actions { display: flex !important; gap: 6px !important; margin: 2px 0 !important; }
+html body #modal#modal[data-panel="inventory"] .inv-action { flex: 1; min-height: 44px !important; font-size: 15px !important; margin: 0 !important; }
+html body #modal#modal[data-panel="inventory"] .inv-discard { flex: 0 0 auto; min-height: 36px !important; font-size: 11px !important; padding: 6px !important; }
+html body #modal#modal[data-panel="inventory"] .inv-section[hidden] { display: none !important; }
+html body #modal#modal[data-panel="inventory"] .inv-section { min-height: 0; flex: 0 1 auto; overflow: auto; }
+html body #modal#modal[data-panel="inventory"] :is(.inv-sections,.inv-pages) { display: flex; justify-content: space-between; align-items: center; gap: 4px; flex: none; }
+html body #modal#modal[data-panel="inventory"] :is(.inv-sections,.inv-pages) button { padding: 5px 8px !important; min-height: 32px !important; font-size: 12px !important; }
+html body #modal#modal[data-panel="inventory"] .inv-sections button { flex: 1; }
+html body #modal#modal[data-panel="inventory"] .inv-sections [aria-pressed="true"] { color: #352009 !important; background: linear-gradient(#ffe299,#e9ad3d) !important; }
+html body #modal#modal[data-panel="inventory"] .inv-pages span { font-size: 11px; text-align: center; }
+html body #modal#modal[data-panel="inventory"] .inv-bag { display: flex !important; flex-direction: column !important; gap: 8px; }
+html body #modal#modal[data-panel="inventory"] .inv-tabs { display: flex !important; flex-wrap: wrap !important; overflow: visible !important; margin: 0 !important; gap: 3px !important; }
+html body #modal#modal[data-panel="inventory"] .inv-tabs button { padding: 4px 8px !important; min-height: 30px !important; font-size: 12px !important; }
+html body #modal#modal[data-panel="inventory"] .inv-grid { flex: 1 !important; min-height: 0 !important; max-height: none !important; overflow: hidden !important; grid-template-columns: repeat(4,minmax(0,1fr)) !important; grid-auto-rows: minmax(0,1fr); gap: 6px !important; }
+html body #modal#modal[data-panel="inventory"] .inv-cell { min-height: 0 !important; aspect-ratio: auto !important; height: auto !important; padding: 3px !important; }
+html body #modal#modal[data-panel="inventory"] .inv-cell b { height: 100%; display: grid; place-items: center; }
+html body #modal#modal[data-panel="inventory"] .inv-cell img { max-width: 80%; max-height: 80%; object-fit: contain; }
+html body #modal#modal[data-panel="inventory"] .inv-bag > footer { flex: none !important; padding: 0 !important; margin: 0 !important; font-size: 11px; }
+html body #modal#modal[data-panel="inventory"] .inv-stage { height: clamp(90px,23dvh,220px) !important; margin: 4px 0 !important; }
+html body #modal#modal[data-panel="inventory"] .inv-stats > div { padding: 4px !important; }
+@media (max-width: 900px) {
+  html body #modal#modal[data-panel="inventory"] .inv2 { grid-template-columns: minmax(0,1fr) minmax(0,1fr) !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-hero { display: none !important; }
+}
+@media (max-width: 600px) and (min-height: 501px) {
+  html body #modal#modal[data-panel="inventory"] .inv2 { display: flex !important; flex-direction: column !important; gap: 6px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-bag { flex: 1 !important; min-height: 160px !important; padding: 6px !important; gap: 4px; }
+  html body #modal#modal[data-panel="inventory"] .inv-detail { flex: none !important; display: grid !important; grid-template-columns: 44px minmax(0,1fr) !important; padding: 8px !important; gap: 4px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-detail-art { grid-column: 1 !important; grid-row: 1 / span 2; width: 44px !important; height: 44px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-detail h3, html body #modal#modal[data-panel="inventory"] .inv-detail > .inv-pills { grid-column: 2 !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-detail > :is(.inv-section,.inv-sections,.inv-detail-actions,.inv-compare) { grid-column: 1 / -1 !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-section { max-height: 100px; }
+  html body #modal#modal[data-panel="inventory"] .inv-detail h3 { font-size: 13px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-bag > footer > span { display: none; }
+}
+@media (max-height: 600px) {
+  html body #modal#modal[data-panel="inventory"] .modal-box > header { padding: 6px 14px !important; min-height: 38px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-detail-art, html body #modal#modal[data-panel="inventory"] .inv-bag > header { display: none !important; }
+  html body #modal#modal[data-panel="inventory"] .inv2 { grid-template-columns: minmax(0,1.2fr) minmax(0,1fr) !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-hero { display: none !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-detail { gap: 4px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-bag > footer { display: none !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-detail .inv-compare { font-size: 11px !important; }
+}
+html body #modal#modal[data-panel="inventory"] :is(.inv-sections,.inv-pages) button {
+  background: #281d11 !important; color: #eddbb5 !important; border: 1px solid #9f783d !important; border-radius: 8px !important; box-shadow: none !important;
+}
+html body #modal#modal[data-panel="inventory"] .inv-sections [aria-pressed="true"] { color: #352009 !important; background: linear-gradient(#ffe299,#e9ad3d) !important; }
+html body #modal#modal[data-panel="inventory"] .inv-pages button:disabled { opacity: .4; }
+.inv-filter-select { display: none; }
+@media (max-width: 600px) {
+  html body #modal#modal[data-panel="inventory"] .inv-tabs { display: none !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-filter-select { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; flex: none; }
+  html body #modal#modal[data-panel="inventory"] .inv-filter-select select { flex: 1; min-width: 0; min-height: 32px; }
+  html body #modal#modal[data-panel="inventory"] .inv-detail-actions > button { min-height: 44px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-section :is(.inv-lore,.inv-versus,.inv-reqs) { display: block !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-section .inv-versus { padding: 3px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-section .inv-versus-head { display: none !important; }
+}
+html body #modal#modal[data-panel="inventory"] .inv2 { align-items: stretch !important; grid-template-rows: minmax(0,1fr) !important; }
+html body #modal#modal[data-panel="inventory"] :is(.inv-bag,.inv-detail) { align-self: stretch !important; max-height: 100% !important; box-sizing: border-box; }
+.inv-worn-compact { display: none; }
+@media (max-width: 900px), (max-height: 600px) {
+  html body #modal#modal[data-panel="inventory"] .inv-worn-compact { display: flex; gap: 6px; align-items: center; flex: none; }
+  html body #modal#modal[data-panel="inventory"] .inv-worn-compact::before { content: 'ใส่อยู่'; font-size: 11px; margin-right: auto; color: #d6bd8f; }
+  html body #modal#modal[data-panel="inventory"] .inv-worn-compact .inv-slot { width: 36px !important; height: 36px !important; min-height: 36px !important; }
+  html body #modal#modal[data-panel="inventory"] .inv-worn-compact img { max-width: 28px; max-height: 28px; }
+}
