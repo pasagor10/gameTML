@@ -68,3 +68,12 @@ test('weapon hand socket follows the painted arm swing in every run row',async()
     for(let i=0;i<8;i++){const a=hands[i],b=hands[(i+1)%8];assert.ok(Math.hypot(a.x-b.x,a.y-b.y)<26,`${sex}-${direction} hand jump at ${i}`);}
   }
 });
+
+test('class recolor re-hues only the red scarf, keeping skin and leather',async()=>{
+  const {recolorPixels}=await import('../src/sprites.js');
+  const px=new Uint8ClampedArray([200,30,40,255, 230,180,150,255, 110,70,40,255, 200,30,40,0]);
+  recolorPixels(px,265);
+  assert.ok(px[2]>px[0]&&px[2]>px[1],'red scarf turns purple');
+  assert.deepEqual([...px.slice(4,12)],[230,180,150,255,110,70,40,255]);
+  assert.deepEqual([...px.slice(12)],[200,30,40,0]);
+});
