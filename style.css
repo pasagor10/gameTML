@@ -101,3 +101,22 @@ body[data-screen=armory] .stats,body[data-screen=armory] footer,body[data-screen
 .item-detail .row{display:flex;gap:6px}.item-detail p{margin:0;font-size:12px;line-height:1.6}
 .bag-empty{opacity:.7;font-size:12px}
 @media(max-width:700px){.gear-row{grid-template-columns:repeat(2,1fr)}.bag-body{grid-template-columns:1fr}.bag-grid{max-height:200px}.gear-slot{min-height:120px}}
+
+/* Town shop */
+.shop-panel{width:min(920px,100%);text-align:left}
+.town-banner{width:100%;height:auto;aspect-ratio:920/150;border-radius:12px;display:block;margin-bottom:6px}
+.shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;max-height:min(46vh,380px);overflow-y:auto;padding:2px}
+.shop-card{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;background:#0f2c3add;border:1px solid #79d6fa60;border-radius:12px;padding:8px}
+.shop-card.sold{opacity:.45}
+.shop-icon{width:52px;height:52px;border-radius:10px;border:2px solid #79d6fa60;background:#0c1a3a;display:grid;place-items:center;font-size:22px;overflow:hidden}
+.shop-icon canvas{width:100%;height:100%}
+.shop-text{display:flex;flex-direction:column;gap:2px;min-width:0}.shop-text b{font-size:13px}.shop-text small{font-size:11px;color:#cfe3dc;letter-spacing:0}
+.shop-card button{background:#4a3a14;border:1px solid #ffd56a99;color:#ffe9a8;border-radius:8px;padding:8px 10px;font-size:12px;white-space:nowrap}
+.shop-card button:disabled{opacity:.45;cursor:default}
+.shop-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}.shop-foot small{opacity:.75}
+.shop-note{font-size:12px;line-height:1.7;opacity:.85}
+.shop-actions{display:flex;gap:8px;margin-top:10px}.shop-actions button{flex:1}
+small.good,.shop-text small.good{color:#9aff8a}small.warn,.shop-text small.warn,.gear-slot small.warn{color:#ffb38a}
+.stone-row{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;margin:-4px 0 8px}.stone-row label{display:flex;align-items:center;gap:6px}
+.stats .buffs{color:#b8ffb0}.stats .buffs:empty{display:none}
+#potionBtn:disabled{opacity:.5}

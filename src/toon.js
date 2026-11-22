@@ -421,6 +421,37 @@ function prop(c, th, x, y, s, rng) {
   }
   c.restore();
 }
+// Per-theme ground palette and the cluster each theme scatters across the clearing.
+const GROUND_LOOK = {
+  forest: {path: '#d8c79a', pathEdge: '#b49f6e', pebble: '#eadfbf', tile: '#e6dab4', tuft: '#5f9a48', tuft2: '#8cc866'},
+  volcano: {path: '#3a2c2c', pathEdge: '#22191a', pebble: '#5a4644', tile: '#4a3a38', tuft: '#ff7a2a', tuft2: '#7a5a50'},
+  ice: {path: '#ffffff', pathEdge: '#bcd4ea', pebble: '#dbeaf6', tile: '#f4faff', tuft: '#a8c8e4', tuft2: '#e0f0ff'},
+  temple: {path: '#c99c55', pathEdge: '#9a6a2a', pebble: '#e8c47a', tile: '#e8c47a', tuft: '#9ab84a', tuft2: '#c4d870'},
+  moon: {path: '#5e5a86', pathEdge: '#2a2648', pebble: '#7a76a8', tile: '#6e6a98', tuft: '#8a7ad8', tuft2: '#b4a8ff'},
+  crystal: {path: '#467882', pathEdge: '#1e3e48', pebble: '#5a909a', tile: '#5a909a', tuft: '#2aa8a0', tuft2: '#7ff0e0'}
+};
+function groundCluster(c, th, look, x, y, rng) {
+  const id = th.id;
+  if (id === 'forest') {
+    if (rng() < .5) {for (let i = 0; i < 9; i++) {const a = rng() * 6.3, d = rng() * 40, fx = x + Math.cos(a) * d, fy = y + Math.sin(a) * d * .6, col = ['#fff4c4', '#ff9ab8', '#c9a8ff', '#ffd25a'][i % 4];L(c, fx, fy + 6, fx, fy, '#4f8a3e', 2);E(c, fx, fy, 4.5, 4, col, '#00000030', 1);E(c, fx, fy, 1.6, 1.6, '#ffe08a', null);}}
+    else {E(c, x, y + 8, 46, 14, '#00000022', null);for (const [dx, dy, r, col] of [[-18, 0, 20, '#4a8a52'], [16, -2, 22, '#5a9e5a'], [0, -14, 22, '#6fb062'], [-6, -20, 10, '#8fcf76']]) E(c, x + dx, y + dy, r, r * .8, col, '#2f5a3680', 1.6);if (rng() < .5) for (const [dx, dy] of [[-10, -8], [12, -12], [2, -24]]) E(c, x + dx, y + dy, 3, 3, '#ff5a6a', null);}
+  } else if (id === 'volcano') {
+    c.save();c.shadowColor = '#ff6a1a';c.shadowBlur = 14;let px = x, py = y;for (let i = 0; i < 5; i++) {const nx = px + (rng() - .5) * 70, ny = py + (rng() - .3) * 40;L(c, px, py, nx, ny, '#ff8a3a', 3.4 - i * .4);L(c, px, py, nx, ny, '#ffe08a', 1.2);px = nx;py = ny;}c.restore();
+    if (rng() < .5) {E(c, x + 30, y + 14, 16, 8, '#2a1e1e', '#1a1010', 1.6);E(c, x + 30, y + 13, 10, 5, '#ff7a2a', null);}
+  } else if (id === 'ice') {
+    if (rng() < .5) {E(c, x, y, 70, 30, '#cfeaff', '#9cc0de', 2);E(c, x - 14, y - 6, 40, 12, '#ffffffaa', null);L(c, x - 30, y + 4, x + 10, y - 6, '#ffffffcc', 2);}
+    else for (const [dx, dy, r] of [[-20, 0, 26], [14, 4, 32], [0, -10, 20]]) {E(c, x + dx, y + dy, r, r * .45, '#ffffff', '#c4d8ea', 1.6);}
+  } else if (id === 'temple') {
+    if (rng() < .5) {for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) if (rng() < .75) P(c, [[x + i * 34 - 15, y + j * 20 - 9], [x + i * 34 + 15, y + j * 20 - 9], [x + i * 34 + 15, y + j * 20 + 9], [x + i * 34 - 15, y + j * 20 + 9]], look.tile, look.pathEdge, 1.4);}
+    else {E(c, x, y + 4, 22, 9, '#00000026', null);P(c, [[x - 14, y + 4], [x - 12, y - 12], [x + 12, y - 12], [x + 14, y + 4]], '#cfa45e', '#7a4a1a', 1.6);E(c, x, y - 12, 13, 5, '#3f8aa0', '#7a4a1a', 1.4);for (const a of [-1, 0, 1]) E(c, x + a * 6, y - 16, 3, 4, '#ff9ab8', null);}
+  } else if (id === 'moon') {
+    const r = 22 + rng() * 34;E(c, x, y, r, r * .55, look.pathEdge, null);E(c, x + 2, y + 2, r * .82, r * .42, th.ground2, null);E(c, x - r * .3, y - r * .18, r * .3, r * .1, '#ffffff18', null);
+    if (rng() < .4) for (let i = 0; i < 3; i++) glowDot(c, x + (rng() - .5) * r, y + (rng() - .5) * r * .4, 6, '#d6d0ff70');
+  } else {
+    const col = ['#7ff0e0', '#ff8ad8', '#b48aff'][Math.floor(rng() * 3)];glowDot(c, x, y - 10, 46, `${col}38`);
+    for (const [dx, h, w] of [[-14, 22, 6], [0, 36, 8], [12, 26, 6], [-4, 16, 5]]) P(c, [[x + dx - w, y + 2], [x + dx - w * .6, y - h * .7], [x + dx, y - h], [x + dx + w * .6, y - h * .7], [x + dx + w, y + 2]], col, '#14323a', 1.4);
+  }
+}
 // The arena is painted once per theme into a cache covering 1.3 arena widths (the camera never
 // shows past the map square); the live layer adds the portal glow and drifting particles.
 // SCALE/AREA keep decoration density and landmark positions from the original 2200 map.
@@ -431,14 +462,33 @@ function paintArena(th, pixels) {
   c.scale(k, k);c.translate(EXTENT / 2, EXTENT / 2);
   c.fillStyle = th.edge;c.fillRect(-EXTENT / 2, -EXTENT / 2, EXTENT, EXTENT);
   for (let i = 0; i < 260 * AREA; i++) {const x = (rng() - .5) * EXTENT, y = (rng() - .5) * EXTENT;E(c, x, y, 60 + rng() * 120, 30 + rng() * 50, th.edge2, null);}
-  // Ground inside the walkable polygon.
-  c.beginPath();ARENA_POLYGON.forEach((p, i) => i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y));c.closePath();
-  c.save();c.fillStyle = th.ground;c.fill();c.clip();
-  for (let i = 0; i < 220 * AREA; i++) {const x = (rng() - .5) * ARENA_SIZE, y = (rng() - .5) * ARENA_SIZE;E(c, x, y, 40 + rng() * 90, 20 + rng() * 40, th.ground2, null);}
-  for (let i = 0; i < 130 * AREA; i++) {const x = (rng() - .5) * ARENA_SIZE, y = (rng() - .5) * ARENA_SIZE, r = 18 + rng() * 26;E(c, x, y, r, r * .55, th.stone, th.rim, 2);E(c, x - r * .2, y - r * .15, r * .5, r * .2, '#ffffff22', null);}
-  for (let i = 0; i < 260 * AREA; i++) {const x = (rng() - .5) * ARENA_SIZE, y = (rng() - .5) * ARENA_SIZE;L(c, x, y, x + 2, y - 8, th.ground2, 2.4);L(c, x + 4, y, x + 7, y - 6, th.ground2, 2);}
-  const bloom = {forest: ['#fff4c4', '#c9a8ff'], volcano: ['#ff8a3a', '#ffd27a'], ice: ['#ffffff', '#bfe9ff'], temple: ['#ff9ab8', '#ffd25a'], moon: ['#d8dcff', '#b48aff'], crystal: ['#ff8ad8', '#7ff0e0']}[th.id];
-  for (let i = 0; i < 600 * AREA; i++) {const x = (rng() - .5) * ARENA_SIZE, y = (rng() - .5) * ARENA_SIZE;if (!inside(x, y) || edgeDistance(x, y) > 120) continue;E(c, x, y, 4, 3, bloom[i % 2], null);E(c, x, y, 1.6, 1.4, '#ffffffaa', null);}
+  // Ground inside the walkable polygon: soft light pooling toward the centre, winding paths,
+  // a paved plaza at the spawn point and themed clusters instead of scattered blots.
+  const clip = () => {c.beginPath();ARENA_POLYGON.forEach((p, i) => i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y));c.closePath();};
+  clip();c.save();c.fillStyle = th.ground;c.fill();c.clip();
+  const lightG = c.createRadialGradient(0, 0, 0, 0, 0, ARENA_HALF);lightG.addColorStop(0, '#ffffff22');lightG.addColorStop(.6, '#ffffff08');lightG.addColorStop(1, '#00000000');c.fillStyle = lightG;c.fillRect(-ARENA_HALF, -ARENA_HALF, ARENA_SIZE, ARENA_SIZE);
+  // Low-contrast mottling in two tones, small enough to read as texture.
+  for (let i = 0; i < 900 * AREA; i++) {const x = (rng() - .5) * ARENA_SIZE, y = (rng() - .5) * ARENA_SIZE, r = 14 + rng() * 34;c.globalAlpha = .35 + rng() * .3;E(c, x, y, r, r * .5, rng() < .5 ? th.ground2 : th.ground, null);}
+  c.globalAlpha = 1;
+  const look = GROUND_LOOK[th.id];
+  // Winding paths from the plaza toward the portal and out to the sides.
+  const paths = [[[0, 0], [-80, -260], [40, -470], [-60, -720]], [[0, 0], [300, 120], [620, 60], [980, 220]], [[0, 0], [-320, 160], [-640, 380], [-900, 300]], [[0, 0], [120, 380], [-60, 680], [80, 980]]]
+    .map(pts => pts.map(([x, y]) => [x * SCALE, y * SCALE]));
+  const stroke = (pts, width, color) => {c.beginPath();c.moveTo(pts[0][0], pts[0][1]);for (let i = 1; i < pts.length - 1; i++) {const mx = (pts[i][0] + pts[i + 1][0]) / 2, my = (pts[i][1] + pts[i + 1][1]) / 2;c.quadraticCurveTo(pts[i][0], pts[i][1], mx, my);}const last = pts[pts.length - 1];c.lineTo(last[0], last[1]);c.strokeStyle = color;c.lineWidth = width;c.lineCap = 'round';c.lineJoin = 'round';c.stroke();};
+  for (const pts of paths) stroke(pts, 118, look.pathEdge);
+  for (const pts of paths) stroke(pts, 96, look.path);
+  for (const pts of paths) for (let k = 0; k < 40 * SCALE; k++) {const seg = Math.floor(rng() * (pts.length - 1)), u = rng(), x = pts[seg][0] + (pts[seg + 1][0] - pts[seg][0]) * u + (rng() - .5) * 70, y = pts[seg][1] + (pts[seg + 1][1] - pts[seg][1]) * u + (rng() - .5) * 70, r = 5 + rng() * 9;E(c, x, y, r, r * .6, look.pebble, look.pathEdge, 1.2);}
+  // Paved plaza with a rune ring where the hero starts.
+  E(c, 0, 0, 240, 150, look.pathEdge, null);E(c, 0, 0, 226, 140, look.path, null);
+  for (let ring = 0; ring < 3; ring++) {const rr = 70 + ring * 52, n = 10 + ring * 6;for (let i = 0; i < n; i++) {const a = (i + (ring % 2) * .5) / n * Math.PI * 2, x = Math.cos(a) * rr, y = Math.sin(a) * rr * .62;E(c, x, y, 20 - ring * 2, 11 - ring, look.tile, look.pathEdge, 1.4);}}
+  c.beginPath();c.ellipse(0, 0, 54, 33, 0, 0, Math.PI * 2);c.strokeStyle = th.portal;c.globalAlpha = .55;c.lineWidth = 4;c.stroke();c.beginPath();c.ellipse(0, 0, 40, 24, 0, 0, Math.PI * 2);c.lineWidth = 2;c.stroke();c.globalAlpha = 1;
+  // Themed clusters away from the plaza.
+  const spot = () => {for (let k = 0; k < 20; k++) {const x = (rng() - .5) * ARENA_SIZE * .95, y = (rng() - .5) * ARENA_SIZE * .95;if (inside(x, y) && Math.hypot(x, y * 1.6) > 300 && edgeDistance(x, y) > 60) return [x, y];}return null;};
+  for (let i = 0; i < 34 * AREA; i++) {const at = spot();if (at) groundCluster(c, th, look, at[0], at[1], rng);}
+  // Grass/ground tufts in two tones.
+  for (let i = 0; i < 520 * AREA; i++) {const x = (rng() - .5) * ARENA_SIZE, y = (rng() - .5) * ARENA_SIZE;if (Math.hypot(x, y * 1.6) < 250) continue;L(c, x - 3, y, x - 5, y - 9, look.tuft, 2.2);L(c, x, y, x, y - 12, look.tuft2, 2.4);L(c, x + 3, y, x + 6, y - 8, look.tuft, 2.2);}
+  // Inner shade along the boundary so the clearing reads as a bowl.
+  clip();c.strokeStyle = '#00000026';c.lineWidth = 220;c.stroke();c.strokeStyle = '#0000001c';c.lineWidth = 110;c.stroke();
   c.restore();
   // Stone rim along the boundary.
   c.beginPath();ARENA_POLYGON.forEach((p, i) => i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y));c.closePath();

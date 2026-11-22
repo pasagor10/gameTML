@@ -137,3 +137,26 @@ test('EXP crystals vary by monster and roll, with rare gold crystals',()=>{
   r.gems=[];r.dropGems({type:'elite',x:0,y:0});assert.equal(r.gems.length,2);assert.ok(r.gems[1].gold);assert.equal(r.gems[1].value,100);
   r.gems=[];r.dropGems({type:'boss',x:0,y:0});assert.ok(r.gems.some(g=>g.gold&&g.value===600));
 });
+
+test('town shop sells gear, potions, buffs and stones for gold',async()=>{
+  const {supplyPrice,refreshPrice,GEAR_PRICE}=await import('../src/shop.js');
+  const r=new Run(()=>.5,{job:'knight'});r.enemies=[];r.spawn=1000;r.level=15;r.gold=5000;
+  const stock=r.ensureShop();assert.equal(stock.length,6);assert.ok(stock.every(o=>o.tier<=1));assert.ok(stock.some(o=>o.kind==='weapon'&&o.job==='knight'));
+  const i=stock.findIndex(o=>o.kind==='weapon'),before=r.gold,item=r.buyGear(i);assert.ok(item);assert.equal(r.gold,before-stock[i].price);assert.equal(r.buyGear(i),false,'sold out');
+  assert.ok(r.buySupply('potion',5));assert.equal(r.supplies.potion,5);assert.ok(r.buySupply('xp'));assert.equal(r.buffs.xp,300);
+  assert.ok(r.buySupply('luck'));assert.equal(r.supplies.luck,1);assert.equal(r.buySupply('nope'),false);
+  const g=r.gold;assert.ok(r.refreshShop());assert.equal(r.gold,g-refreshPrice(1));assert.ok(supplyPrice('potion',3)>supplyPrice('potion',1));assert.equal(GEAR_PRICE.length,5);
+  // EXP buff doubles crystals; the potion drinks itself at low HP.
+  r.gems=[{x:r.p.x,y:r.p.y,value:3}];const xp=r.xpEarned;r.update(.05);assert.equal(r.xpEarned-xp,6);
+  r.p.hp=r.maxHp*.2;r.update(.05);assert.equal(r.supplies.potion,4);assert.ok(r.p.hp>r.maxHp*.6);
+  const st=r.stash();assert.equal(st.supplies.potion,4);const n=new Run();n.loadStash(st);assert.equal(n.supplies.luck,1);
+});
+test('enhancing can fail from +3, drops a level from +6, and stones help',()=>{
+  const r=new Run(()=>.5,{job:'knight'});r.enemies=[];r.spawn=1000;r.gold=1e7;r.level=10;const it=r.addItem({kind:'armor',tier:0});r.equipItem(it.id);
+  for(let k=0;k<3;k++)assert.equal(r.enhance('armor'),'success');
+  r.rng=()=>.95;assert.equal(r.enhance('armor'),'fail');assert.equal(it.plus,3);
+  r.rng=()=>.0;while(it.plus<6)r.enhance('armor');
+  r.rng=()=>.99;assert.equal(r.enhance('armor'),'drop');assert.equal(it.plus,5);
+  r.rng=()=>.0;r.enhance('armor');r.supplies.guard=1;r.rng=()=>.99;assert.equal(r.enhance('armor',{guard:true}),'fail');assert.equal(it.plus,6);assert.equal(r.supplies.guard,0);
+  r.supplies.luck=1;assert.ok(Math.abs(r.enhanceChance('armor',true)-(.6+.25))<1e-9);r.rng=()=>.8;assert.equal(r.enhance('armor',{luck:true}),'success');assert.equal(r.supplies.luck,0);
+});

@@ -7,7 +7,7 @@ export const SLOTS = ['weapon', 'armor', 'helmet', 'ring'];
 export const SLOT_NAMES = {weapon: 'อาวุธ', armor: 'ชุด', helmet: 'หมวก', ring: 'แหวน'};
 export const SLOT_ICONS = {weapon: '⚔', armor: '⛨', helmet: '⛑', ring: '◍'};
 export const ARMOR = [
-  {name:'ชุดผ้านักเดินทาง', hp:0, guard:0},
+  {name:'ชุดผ้านักเดินทาง', hp:10, guard:.02},
   {name:'ชุดหนังนักล่า', hp:20, guard:.05},
   {name:'เกราะเหล็กกล้า', hp:45, guard:.1},
   {name:'เกราะคริสตัล', hp:80, guard:.15},
@@ -27,10 +27,10 @@ export const BAG_MAX = 60, MAX_PLUS = 10;
 export const DROP_CHANCE = {slime:.012, runner:.015, archer:.02, elite:1, boss:1};
 export const GOLD_DROP = {slime:1, runner:1, archer:2, elite:25, boss:120};
 const BASE_TIER = {elite:1, boss:2};
-const SELL = [5, 15, 40, 100, 250, 600];
+const SELL = [8, 30, 100, 260, 650, 1400];
 
 export function rollTier(type, stage, rng) {
-  const base = (BASE_TIER[type] || 0) + (stage - 1);
+  const base = (BASE_TIER[type] || 0) + Math.floor((stage - 1) / 2);
   const swing = rng() < .2 ? 1 : rng() < .3 ? -1 : 0;
   return Math.max(0, Math.min(TIERS.length - 1, base + swing));
 }
@@ -47,11 +47,11 @@ export function itemName(item) {
 }
 export function canEquip(item, level, job) {return level >= REQ_LEVEL[item.tier] && (item.kind !== 'weapon' || item.job === job);}
 export function sellPrice(item) {return Math.round(SELL[item.tier] * (1 + .5 * (item.plus || 0)));}
-export function enhanceCost(item) {return Math.round(20 * (item.tier + 1) * 1.6 ** (item.plus || 0));}
+export function enhanceCost(item) {return Math.round(25 * (item.tier + 1) ** 2 * 1.55 ** (item.plus || 0));}
 // What a piece gives, in the units the model applies.
 export function itemStats(item) {
   const plus = item.plus || 0;
-  if (item.kind === 'weapon') return {power: TIERS[item.tier].power * (1 + .06 * plus)};
+  if (item.kind === 'weapon') return {power: TIERS[item.tier].power * (1 + .08 * plus)};
   if (item.kind === 'armor') return {hp: ARMOR[item.tier].hp + 10 * plus, guard: ARMOR[item.tier].guard};
   if (item.kind === 'helmet') return {hp: HELMET[item.tier].hp + 6 * plus};
   return {dmg: RING[item.tier].dmg + .015 * plus};

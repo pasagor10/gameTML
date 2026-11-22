@@ -1,13 +1,13 @@
 {
   "name": "tilmo-survivor",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "node server.mjs",
     "start": "node server.mjs",
     "test": "node --test tests/*.test.mjs",
-    "check": "node --check src/arena.js && node --check src/scene-art.js && node --check src/game.js && node --check src/art.js && node --check src/model.js && node --check src/sprites.js && node --check src/sprite-layout.js && node --check src/sprite-lab.js && node --check src/weapons.js && node --check src/weapon-paint.js && node --check src/skill-fx.js && node --check src/toon.js && node --check src/loot.js && node --check src/monsters.js && node --check src/sound.js && node --check src/perf/meter.js && node --check src/perf/bench.js && node --check server.mjs",
+    "check": "node --check src/arena.js && node --check src/scene-art.js && node --check src/game.js && node --check src/art.js && node --check src/model.js && node --check src/sprites.js && node --check src/sprite-layout.js && node --check src/sprite-lab.js && node --check src/weapons.js && node --check src/weapon-paint.js && node --check src/skill-fx.js && node --check src/toon.js && node --check src/loot.js && node --check src/shop.js && node --check src/monsters.js && node --check src/sound.js && node --check src/perf/meter.js && node --check src/perf/bench.js && node --check server.mjs",
     "import-sprites": "python3 tools/import-hero-sheets.py && python3 tools/import-run-v2.py && python3 tools/measure-run-timing.py && python3 tools/detect-hand-sockets.py"
   }
 }
