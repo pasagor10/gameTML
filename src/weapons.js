@@ -68,15 +68,38 @@ function sparkle(c, tier, time, radius) {
   }
 }
 
+// Sword and staff pixel art ported from the old game (held4x, 72×122, blade up) as placeholders
+// until TILMO's weapons are remade; one per rarity tier picked by colour. The old game had no
+// guns, so the gunner keeps the canvas-drawn gun.
+const ART = {novice: ['sword-novice'], knight: [0, 1, 2, 3, 4, 5].map(i => `sword-${i}`), mage: [0, 1, 2, 3, 4, 5].map(i => `staff-${i}`)};
+const ART_HEIGHT = {novice: 52, knight: 66, mage: 86};
+const art = new Map();
+export function loadWeaponArt() {
+  return Promise.all(Object.values(ART).flat().map(name => new Promise(resolve => {
+    const img = new Image();img.onload = () => {art.set(name, img);resolve();};img.onerror = () => resolve();img.src = `/assets/weapons/${name}.webp`;
+  })));
+}
+function drawWeaponArt(c, job, tier) {
+  const list = ART[job];if (!list) return false;
+  const img = art.get(list[Math.min(list.length - 1, tier)]);if (!img) return false;
+  const h = ART_HEIGHT[job], w = img.width * h / img.height;
+  // grip sits ~80% down the image, just above the pommel
+  c.save();c.imageSmoothingEnabled = false;c.drawImage(img, -w / 2, -h * .8, w, h);c.restore();
+  return true;
+}
+
 // Origin = the hand grip; the weapon points up (negative y). Sized for the in-game hero (~150px tall).
 export function drawWeapon(c, job, tier = 0, time = 0, {attacking = false} = {}) {
   const t = TIERS[Math.max(0, Math.min(5, tier))];
   const main = tier === 5 ? rainbow(time) : t.color;
   c.save();
   if (tier >= 1) glowDot(c, 0, job === 'gunner' ? -4 : -26, 18 + tier * 4, `${t.glow}${tier >= 4 ? '88' : '55'}`);
-  if (job === 'mage') drawStaff(c, tier, t, main, time);
-  else if (job === 'gunner') drawGun(c, tier, t, main, time, attacking);
-  else drawSword(c, job === 'novice' ? -1 : tier, t, main, time);
+  if (!drawWeaponArt(c, job, tier)) {
+    if (job === 'mage') drawStaff(c, tier, t, main, time);
+    else if (job === 'gunner') drawGun(c, tier, t, main, time, attacking);
+    else drawSword(c, job === 'novice' ? -1 : tier, t, main, time);
+  }
+  if (job !== 'gunner') sparkle(c, tier, time, 26);
   c.restore();
 }
 
@@ -99,7 +122,6 @@ function drawSword(c, tier, t, main, time) {
   glowDot(c, 0, -2, 4 + tier, main);
   c.fillStyle = '#4a3a5a';c.fillRect(-1.6, 2, 3.2, 10);
   shape(c, [[-3, 12], [3, 12], [0, 16]], tier >= 3 ? '#ffd56a' : '#c9d4e0');
-  sparkle(c, tier, time, len * .6);
 }
 
 function drawStaff(c, tier, t, main, time) {
@@ -123,7 +145,6 @@ function drawStaff(c, tier, t, main, time) {
     c.strokeStyle = tier === 5 ? rainbow(time, 120) : t.color;c.lineWidth = 2;
     c.beginPath();c.ellipse(0, top - orbR - 6, 9, 3, 0, 0, Math.PI * 2);c.stroke();
   }
-  sparkle(c, tier, time, 26);
 }
 
 function drawGun(c, tier, t, main, time, attacking) {

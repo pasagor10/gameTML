@@ -65,3 +65,10 @@ test('higher skill levels produce grander effects (lv carried to visuals)',()=>{
   const lv1=new Run(()=>.5,{job:'gunner'}),lv5=new Run(()=>.5,{job:'gunner'});
   lv1.skills.drone=1;lv5.skills.drone=5;assert.equal(lv1.dronePositions().length,1);assert.equal(lv5.dronePositions().length,3);
 });
+test('combat emits sound cues for attacks, kills and boss arrival; enemies remember their stage',()=>{
+  const r=new Run(()=>.5,{job:'gunner'});r.enemies=[];r.spawn=1000;r.addEnemy('slime',120,0);r.enemies[0].hp=1;r.update(.05);
+  const names=r.cues.map(c=>c.name);assert.ok(names.includes('shot'));
+  let killed=false;for(let i=0;i<20;i++){r.update(.05);killed||=r.cues.some(c=>c.name==='kill');r.cues.length=0;}assert.ok(killed);
+  const b=new Run();b.t=240;b.update(.05);assert.ok(b.cues.some(c=>c.name==='roar'));assert.equal(b.enemies[0].stage,1);
+  assert.ok(r.cues.length<=48,'cue queue is bounded');
+});
