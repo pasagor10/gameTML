@@ -1,0 +1,28 @@
+[
+  {
+    "version": "baseline",
+    "viewport": "960×540 @1x",
+    "simulationSeconds": 6.002,
+    "fixture": "95 enemies, 6 orbit flames, chain lightning, moving player",
+    "frames": 321,
+    "fps": 53.7,
+    "frameP95Ms": 26.8,
+    "cpuP50Ms": 1.1,
+    "cpuP95Ms": 1.5,
+    "over33Ms": 0,
+    "visibility": "visible"
+  },
+  {
+    "version": "current",
+    "viewport": "960×540 @1x",
+    "simulationSeconds": 6.002,
+    "fixture": "95 enemies, 6 orbit flames, chain lightning, moving player",
+    "frames": 449,
+    "fps": 75,
+    "frameP95Ms": 13.4,
+    "cpuP50Ms": 0.6,
+    "cpuP95Ms": 0.8,
+    "over33Ms": 0,
+    "visibility": "visible"
+  }
+]

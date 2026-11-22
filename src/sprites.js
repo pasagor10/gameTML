@@ -43,8 +43,7 @@ export function drawSpriteHero(c, x, y, options = {}) {
   const back = ['n','ne','nw'].includes(direction);
   const equipment = () => {if(job !== 'novice')drawEquipment(c,direction,job,time,moving,attacking,socket);};
   c.save();c.translate(x, y);
-  const transform=c.getTransform();
-  c.setTransform(transform.a,transform.b,transform.c,transform.d,Math.round(transform.e),Math.round(transform.f));
+  // HD artwork keeps subpixel positions: integer snapping steps visibly at wide zoom.
   c.imageSmoothingEnabled = true;c.imageSmoothingQuality = 'high';
   c.fillStyle = '#123c4250';c.beginPath();c.ellipse(0, 3, 21, 8, 0, 0, Math.PI * 2);c.fill();
   if (inv > 0 && Math.floor(inv * 15) % 2) c.globalAlpha = .45;

@@ -1,0 +1,14 @@
+[
+  {
+    "version": "current",
+    "viewport": "960×540 @1x",
+    "fixture": "95 enemies, 6 orbit flames, chain lightning, moving player",
+    "frames": 449,
+    "fps": 75,
+    "frameP95Ms": 13.4,
+    "cpuP50Ms": 0.6,
+    "cpuP95Ms": 1,
+    "over33Ms": 0,
+    "visibility": "visible"
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "fixture": "120 continuous-damage ticks over 2 seconds at 65 damage/second",
+  "before": {
+    "damage": 130,
+    "floatingNumbersCreated": 120
+  },
+  "after": {
+    "damage": 130,
+    "floatingNumbersCreated": 8
+  }
+}
