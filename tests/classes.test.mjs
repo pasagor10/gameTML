@@ -43,3 +43,25 @@ test('measured timing spreads frames unevenly but still visits every frame once 
   assert.deepEqual([...new Set(seen)],[0,1,2,3,4,5,6,7]);
   assert.ok(seen.filter(f=>f===1).length>seen.filter(f=>f===0).length*2-1);
 });
+
+test('endless: class skills reach Lv.5 and upgrades never run out',()=>{
+  const r=new Run(()=>.5,{job:'mage'});r.enemies=[];r.spawn=1000;
+  r.skills={meteor:5,vortex:5,nova:5,area:3,haste:3};
+  for(let i=0;i<30;i++){r.xp=r.need;r.state='playing';r.checkLevel();assert.equal(r.state,'upgrade');assert.ok(r.offers.length>=2);assert.ok(r.choose(r.offers[0].id));}
+  assert.ok(r.level>30);assert.ok(r.boosts.might+r.boosts.vigor===30);
+  assert.ok(!choices({meteor:5},Math.random,'mage').some(s=>s.id==='meteor'),'capped at Lv.5');
+  assert.ok(choices({meteor:3},Math.random,'mage').length>0);
+});
+test('stage keeps climbing with no end besides death',()=>{
+  const r=new Run(()=>.5,{job:'gunner'});
+  for(let stage=1;stage<=8;stage++){r.t=r.stageStart+180+(stage===1?60:0);r.update(.05);const boss=r.enemies.find(e=>e.type==='boss');assert.ok(boss,`boss ${stage}`);r.hit(boss,1e9);r.gems=[];r.state='playing';}
+  assert.equal(r.stage,9);assert.equal(r.state,'playing');
+});
+test('higher skill levels produce grander effects (lv carried to visuals)',()=>{
+  for(const [id,job,kind] of [['nova','mage','nova'],['judgement','knight','blade'],['meteor','mage','meteor']]){
+    const r=new Run(()=>.5,{job});r.enemies=[];r.spawn=1000;r.skills[id]=5;r.addEnemy('boss',120,0);r.castSkills(1);
+    const f=r.effects.find(e=>e.kind===kind);assert.ok(f,id);assert.equal(f.lv,5);
+  }
+  const lv1=new Run(()=>.5,{job:'gunner'}),lv5=new Run(()=>.5,{job:'gunner'});
+  lv1.skills.drone=1;lv5.skills.drone=5;assert.equal(lv1.dronePositions().length,1);assert.equal(lv5.dronePositions().length,3);
+});
