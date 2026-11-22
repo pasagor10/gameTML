@@ -27,3 +27,12 @@
   #boot-loading p { margin: 6px 0; }
   #boot-loading .tml-boot-bar { height: 2px; }
 }
+/* The wide adventure illustration already contains its ornate gold bar. */
+@media (min-width: 768px) and (orientation: landscape) {
+  #boot-loading:has(.tml-loading-art[data-painted-progress="true"]) .tml-boot-bar,
+  #area-loading:has(.tml-loading-art[data-painted-progress="true"]) .loading-bar { display: none !important; }
+  #area-loading:has(.tml-loading-art[data-painted-progress="true"]) :is(.loading-title,.loading-sub,.loading-tip) { position: absolute; left: 50%; transform: translateX(-50%); width: calc(100% - 32px); margin: 0; }
+  #area-loading:has(.tml-loading-art[data-painted-progress="true"]) .loading-title { bottom: 23%; }
+  #area-loading:has(.tml-loading-art[data-painted-progress="true"]) .loading-sub { bottom: 18%; }
+  #area-loading:has(.tml-loading-art[data-painted-progress="true"]) .loading-tip { bottom: 3%; }
+}

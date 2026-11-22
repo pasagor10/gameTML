@@ -59,6 +59,7 @@ export function updatePvpUi(state) {
 export function setPvpLoading(mode) {
   const el = document.querySelector('#area-loading .tml-loading-art');
   if (!el) return;
+  el.dataset.paintedProgress = String(!mode);
   const portrait = mode ? pvpArt(mode) : '/assets/loading/tml-adventure.webp';
   const wide = mode ? pvpArt(mode,true) : '/assets/loading/tml-adventure-desktop.webp';
   const source = el.querySelector('source'), img = el.querySelector('img');
