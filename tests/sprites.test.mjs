@@ -58,3 +58,13 @@ test('registered run head does not jump at the loop seam or drift horizontally',
     assert.ok(Math.abs(heads[7][1]-heads[0][1])<4,`${sex}-${direction} 8→1 seam`);
   }
 });
+test('weapon hand socket follows the painted arm swing in every run row',async()=>{
+  const manifest=JSON.parse(await readFile(new URL('../assets/sprites/heroes/manifest.json',import.meta.url),'utf8'));
+  for(const sex of ['male','female'])for(const direction of DIRECTIONS){
+    const hands=Array.from({length:8},(_,i)=>manifest.characters[sex].run.frames[`${direction}-${i}`].hand);
+    assert.ok(hands.every(h=>h.x>40&&h.x<216&&h.y>100&&h.y<175),`${sex}-${direction} hand inside the body area`);
+    const spread=Math.max(...hands.map(h=>h.x))-Math.min(...hands.map(h=>h.x))+Math.max(...hands.map(h=>h.y))-Math.min(...hands.map(h=>h.y));
+    assert.ok(spread>=3,`${sex}-${direction} hand must move with the stride`);
+    for(let i=0;i<8;i++){const a=hands[i],b=hands[(i+1)%8];assert.ok(Math.hypot(a.x-b.x,a.y-b.y)<26,`${sex}-${direction} hand jump at ${i}`);}
+  }
+});

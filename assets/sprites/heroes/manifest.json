@@ -50,10 +50,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 168,
+              "y": 147
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               112,
               52
@@ -85,10 +85,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 169,
+              "y": 148
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               113,
               53
@@ -120,10 +120,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 170,
+              "y": 146
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               112,
               52
@@ -155,10 +155,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 170,
+              "y": 144
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               113.0,
               52.0
@@ -190,10 +190,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 170,
+              "y": 147
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               113,
               52
@@ -225,10 +225,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 170,
+              "y": 147
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               113,
               53
@@ -260,10 +260,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 170,
+              "y": 145
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               114,
               52
@@ -295,10 +295,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 169,
+              "y": 145
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               114.0,
               52.0
@@ -330,10 +330,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 170,
+              "y": 148
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               119,
               50
@@ -365,10 +365,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 174,
+              "y": 147
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               117,
               49
@@ -400,10 +400,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 176,
+              "y": 142
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               117.0,
               49.0
@@ -435,10 +435,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 176,
+              "y": 142
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               119,
               49
@@ -470,10 +470,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 173,
+              "y": 150
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               119.0,
               50.0
@@ -505,10 +505,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 169,
+              "y": 152
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               117.0,
               50.0
@@ -540,10 +540,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 167,
+              "y": 148
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               119.0,
               50.0
@@ -575,10 +575,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 167,
+              "y": 147
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               119.0,
               47.0
@@ -610,10 +610,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 174,
+              "y": 138
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               134,
               81
@@ -645,10 +645,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 174,
+              "y": 140
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               133,
               82
@@ -680,10 +680,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 175,
+              "y": 137
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               135.0,
               81.0
@@ -715,10 +715,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 175,
+              "y": 136
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               135.0,
               81.0
@@ -750,10 +750,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 173,
+              "y": 138
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               131.0,
               83.0
@@ -785,10 +785,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 174,
+              "y": 139
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               130.0,
               83.0
@@ -820,10 +820,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 175,
+              "y": 137
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               133,
               83
@@ -855,10 +855,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 175,
+              "y": 136
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               136.0,
               82.0
@@ -890,10 +890,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 170,
+              "y": 140
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               125,
               83
@@ -925,10 +925,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 168,
+              "y": 142
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               126.0,
               82.5
@@ -960,10 +960,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 166,
+              "y": 138
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               127,
               82
@@ -995,10 +995,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 165,
+              "y": 134
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               127,
               82
@@ -1030,10 +1030,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 166,
+              "y": 136
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               127,
               83
@@ -1065,10 +1065,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 169,
+              "y": 137
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               125.0,
               84.0
@@ -1100,10 +1100,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 171,
+              "y": 138
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               128,
               82
@@ -1135,10 +1135,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 172,
+              "y": 140
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               124,
               83
@@ -1170,10 +1170,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 176,
+              "y": 148
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               123,
               86
@@ -1205,10 +1205,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 176,
+              "y": 146
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               121,
               86
@@ -1240,10 +1240,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 177,
+              "y": 141
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               120,
               86
@@ -1275,10 +1275,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 177,
+              "y": 140
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               121.0,
               85.0
@@ -1310,10 +1310,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 176,
+              "y": 140
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               121.0,
               86.0
@@ -1345,10 +1345,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 175,
+              "y": 136
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               123,
               86
@@ -1380,10 +1380,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 174,
+              "y": 135
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               125,
               86
@@ -1415,10 +1415,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 176,
+              "y": 142
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               122,
               86
@@ -1450,10 +1450,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 89,
+              "y": 146
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               92,
               86
@@ -1485,10 +1485,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 84,
+              "y": 149
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               92,
               84
@@ -1520,10 +1520,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 83,
+              "y": 143
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               90.0,
               83.0
@@ -1555,10 +1555,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 85,
+              "y": 139
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               91.0,
               82.0
@@ -1590,10 +1590,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 90,
+              "y": 141
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               94,
               83
@@ -1625,10 +1625,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 92,
+              "y": 136
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               90,
               83
@@ -1660,10 +1660,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 91,
+              "y": 130
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               92.0,
               83.0
@@ -1695,10 +1695,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 92,
+              "y": 136
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               94.0,
               82.0
@@ -1730,10 +1730,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 79,
+              "y": 145
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               63.0,
               83.0
@@ -1765,10 +1765,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 76,
+              "y": 142
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               62.0,
               81.0
@@ -1800,10 +1800,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 74,
+              "y": 136
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               63.0,
               81.0
@@ -1835,10 +1835,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 76,
+              "y": 137
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               62.0,
               80.0
@@ -1870,10 +1870,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 76,
+              "y": 140
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               63,
               82
@@ -1905,10 +1905,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 75,
+              "y": 137
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               64.5,
               82.0
@@ -1940,10 +1940,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 75,
+              "y": 132
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               62,
               81
@@ -1975,10 +1975,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 76,
+              "y": 138
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               64,
               82
@@ -2010,10 +2010,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 74,
+              "y": 132
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               85,
               51
@@ -2045,10 +2045,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 74,
+              "y": 129
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               83.0,
               50.0
@@ -2080,10 +2080,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 74,
+              "y": 124
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               83,
               49
@@ -2115,10 +2115,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 75,
+              "y": 124
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               84,
               48
@@ -2150,10 +2150,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 74,
+              "y": 130
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               85,
               50
@@ -2185,10 +2185,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 74,
+              "y": 128
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               83,
               50
@@ -2220,10 +2220,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 74,
+              "y": 124
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               84.0,
               49.0
@@ -2255,10 +2255,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 74,
+              "y": 127
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               84,
               49
@@ -2383,10 +2383,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 180,
+              "y": 157
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               53,
               52,
@@ -2404,10 +2404,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 179,
+              "y": 158
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               54,
               50,
@@ -2425,10 +2425,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 179,
+              "y": 159
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               53,
               52,
@@ -2446,10 +2446,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 180,
+              "y": 158
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               53,
               52,
@@ -2467,10 +2467,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 176,
+              "y": 155
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               53,
               46,
@@ -2488,10 +2488,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 176,
+              "y": 155
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               53,
               45,
@@ -2509,10 +2509,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 176,
+              "y": 154
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               54,
               46,
@@ -2530,10 +2530,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 176,
+              "y": 155
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               51,
               46,
@@ -2551,10 +2551,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 164,
+              "y": 150
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               47,
               43,
@@ -2572,10 +2572,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 165,
+              "y": 152
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               51,
               40,
@@ -2593,10 +2593,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 165,
+              "y": 154
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               48,
               45,
@@ -2614,10 +2614,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 164,
+              "y": 152
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               52,
               44,
@@ -2635,10 +2635,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 178,
+              "y": 150
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               47,
               38,
@@ -2656,10 +2656,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 177,
+              "y": 150
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               49,
               36,
@@ -2677,10 +2677,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 177,
+              "y": 150
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               48,
               38,
@@ -2698,10 +2698,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 177,
+              "y": 150
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               51,
               39,
@@ -2719,10 +2719,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 181,
+              "y": 155
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               47,
               36,
@@ -2740,10 +2740,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 181,
+              "y": 155
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               48,
               35,
@@ -2761,10 +2761,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 181,
+              "y": 154
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               49,
               38,
@@ -2782,10 +2782,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 181,
+              "y": 155
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               50,
               37,
@@ -2803,10 +2803,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 78,
+              "y": 148
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               53,
               33,
@@ -2824,10 +2824,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 78,
+              "y": 144
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               53,
               32,
@@ -2845,10 +2845,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 78,
+              "y": 146
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               53,
               34,
@@ -2866,10 +2866,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 78,
+              "y": 150
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               54,
               34,
@@ -2887,10 +2887,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 96,
+              "y": 142
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               70,
               33,
@@ -2908,10 +2908,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 97,
+              "y": 140
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               69,
               30,
@@ -2929,10 +2929,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 97,
+              "y": 141
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               69,
               33,
@@ -2950,10 +2950,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 96,
+              "y": 143
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               71,
               33,
@@ -2971,10 +2971,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 88,
+              "y": 154
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               70,
               30,
@@ -2992,10 +2992,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 88,
+              "y": 154
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               69,
               30,
@@ -3013,10 +3013,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 88,
+              "y": 154
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               69,
               31,
@@ -3034,10 +3034,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 88,
+              "y": 154
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               70,
               31,
@@ -3083,10 +3083,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 162,
+              "y": 143
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               115.0,
               61.0
@@ -3118,10 +3118,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 162,
+              "y": 144
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               115.0,
               62.0
@@ -3153,10 +3153,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 164,
+              "y": 147
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               114,
               60
@@ -3188,10 +3188,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 164,
+              "y": 147
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               115,
               55
@@ -3223,10 +3223,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 164,
+              "y": 143
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               113.5,
               60.0
@@ -3258,10 +3258,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 164,
+              "y": 140
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               113,
               64
@@ -3293,10 +3293,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 165,
+              "y": 139
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               114,
               60
@@ -3328,10 +3328,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 164,
+              "y": 140
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               116,
               58
@@ -3363,10 +3363,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 169,
+              "y": 137
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               112.0,
               50.0
@@ -3398,10 +3398,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 171,
+              "y": 142
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               111.0,
               51.0
@@ -3433,10 +3433,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 174,
+              "y": 142
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               111.0,
               47.0
@@ -3468,10 +3468,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 174,
+              "y": 141
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               109,
               46
@@ -3503,10 +3503,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 170,
+              "y": 140
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               111,
               51
@@ -3538,10 +3538,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 168,
+              "y": 138
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               109,
               54
@@ -3573,10 +3573,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 170,
+              "y": 134
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               112,
               54
@@ -3608,10 +3608,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 170,
+              "y": 134
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               112.0,
               55.0
@@ -3643,10 +3643,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 176,
+              "y": 138
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               145.0,
               86.0
@@ -3678,10 +3678,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 179,
+              "y": 140
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               141.0,
               88.0
@@ -3713,10 +3713,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 180,
+              "y": 138
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               141,
               88
@@ -3748,10 +3748,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 179,
+              "y": 138
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               144,
               85
@@ -3783,10 +3783,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 176,
+              "y": 139
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               143,
               87
@@ -3818,10 +3818,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 176,
+              "y": 137
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               144,
               87
@@ -3853,10 +3853,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 176,
+              "y": 136
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               146.0,
               87.0
@@ -3888,10 +3888,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 176,
+              "y": 136
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               148.0,
               83.0
@@ -3923,10 +3923,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 170,
+              "y": 148
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               144.0,
               85.0
@@ -3958,10 +3958,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 172,
+              "y": 146
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               142,
               86
@@ -3993,10 +3993,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 172,
+              "y": 143
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               142.5,
               85.0
@@ -4028,10 +4028,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 169,
+              "y": 142
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               141,
               87
@@ -4063,10 +4063,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 168,
+              "y": 147
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               143,
               86
@@ -4098,10 +4098,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 170,
+              "y": 150
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               142,
               86
@@ -4133,10 +4133,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 170,
+              "y": 149
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               145.0,
               85.0
@@ -4168,10 +4168,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 169,
+              "y": 148
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               143.0,
               85.0
@@ -4203,10 +4203,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 174,
+              "y": 140
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               120,
               88
@@ -4238,10 +4238,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 172,
+              "y": 139
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               120,
               87
@@ -4273,10 +4273,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 172,
+              "y": 137
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               121.0,
               88.0
@@ -4308,10 +4308,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 173,
+              "y": 137
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               122.0,
               88.0
@@ -4343,10 +4343,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 174,
+              "y": 138
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               122,
               88
@@ -4378,10 +4378,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 175,
+              "y": 140
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               121.0,
               86.0
@@ -4413,10 +4413,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 175,
+              "y": 139
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               122,
               88
@@ -4448,10 +4448,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 175,
+              "y": 138
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               123.0,
               88.0
@@ -4483,10 +4483,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 85,
+              "y": 142
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               86.0,
               87.0
@@ -4518,10 +4518,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 80,
+              "y": 147
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               87.0,
               85.0
@@ -4553,10 +4553,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 81,
+              "y": 150
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               87.5,
               85.0
@@ -4588,10 +4588,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 84,
+              "y": 148
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               88,
               84
@@ -4623,10 +4623,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 88,
+              "y": 147
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               86,
               85
@@ -4658,10 +4658,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 92,
+              "y": 142
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               85,
               82
@@ -4693,10 +4693,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 94,
+              "y": 132
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               87,
               84
@@ -4728,10 +4728,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 92,
+              "y": 135
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               87,
               84
@@ -4763,10 +4763,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 82,
+              "y": 139
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               71,
               82
@@ -4798,10 +4798,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 80,
+              "y": 143
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               71.0,
               82.0
@@ -4833,10 +4833,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 78,
+              "y": 144
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               71,
               81
@@ -4868,10 +4868,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 81,
+              "y": 144
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               71,
               80
@@ -4903,10 +4903,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 83,
+              "y": 143
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               70.0,
               82.0
@@ -4938,10 +4938,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 81,
+              "y": 141
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               71.0,
               84.0
@@ -4973,10 +4973,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 79,
+              "y": 138
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               72,
               84
@@ -5008,10 +5008,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 81,
+              "y": 136
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               71,
               83
@@ -5043,10 +5043,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 79,
+              "y": 142
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               111.0,
               45.0
@@ -5078,10 +5078,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 77,
+              "y": 143
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               112,
               44
@@ -5113,10 +5113,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 80,
+              "y": 141
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               109.0,
               44.0
@@ -5148,10 +5148,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 84,
+              "y": 142
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               108,
               45
@@ -5183,10 +5183,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 81,
+              "y": 144
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               110.0,
               45.0
@@ -5218,10 +5218,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 78,
+              "y": 142
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               111,
               46
@@ -5253,10 +5253,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 79,
+              "y": 136
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               107.0,
               45.0
@@ -5288,10 +5288,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 80,
+              "y": 137
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceAnchor": [
               107,
               45
@@ -5416,10 +5416,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 171,
+              "y": 147
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               61,
               17,
@@ -5437,10 +5437,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 170,
+              "y": 145
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               60,
               14,
@@ -5458,10 +5458,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 170,
+              "y": 146
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               61,
               17,
@@ -5479,10 +5479,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 170,
+              "y": 148
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               62,
               19,
@@ -5500,10 +5500,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 169,
+              "y": 154
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               67,
               13,
@@ -5521,10 +5521,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 170,
+              "y": 154
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               68,
               9,
@@ -5542,10 +5542,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 169,
+              "y": 154
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               68,
               13,
@@ -5563,10 +5563,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 169,
+              "y": 155
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               69,
               14,
@@ -5584,10 +5584,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 164,
+              "y": 124
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               49,
               12,
@@ -5605,10 +5605,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 164,
+              "y": 122
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               50,
               10,
@@ -5626,10 +5626,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 164,
+              "y": 124
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               49,
               13,
@@ -5647,10 +5647,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 164,
+              "y": 126
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               51,
               16,
@@ -5668,10 +5668,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 182,
+              "y": 151
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               40,
               9,
@@ -5689,10 +5689,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 182,
+              "y": 148
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               40,
               7,
@@ -5710,10 +5710,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 182,
+              "y": 150
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               40,
               9,
@@ -5731,10 +5731,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 182,
+              "y": 152
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               42,
               11,
@@ -5752,10 +5752,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 180,
+              "y": 152
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               46,
               8,
@@ -5773,10 +5773,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 180,
+              "y": 151
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               47,
               5,
@@ -5794,10 +5794,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 180,
+              "y": 153
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               46,
               8,
@@ -5815,10 +5815,10 @@
               "y": 224
             },
             "hand": {
-              "x": 152,
-              "y": 163
+              "x": 179,
+              "y": 154
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               50,
               10,
@@ -5836,10 +5836,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 74,
+              "y": 149
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               54,
               11,
@@ -5857,10 +5857,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 74,
+              "y": 147
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               56,
               7,
@@ -5878,10 +5878,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 75,
+              "y": 148
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               55,
               11,
@@ -5899,10 +5899,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 75,
+              "y": 150
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               59,
               13,
@@ -5920,10 +5920,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 90,
+              "y": 150
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               71,
               13,
@@ -5941,10 +5941,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 90,
+              "y": 148
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               72,
               9,
@@ -5962,10 +5962,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 90,
+              "y": 150
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               71,
               13,
@@ -5983,10 +5983,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 90,
+              "y": 152
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               72,
               17,
@@ -6004,10 +6004,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 81,
+              "y": 154
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               61,
               13,
@@ -6025,10 +6025,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 81,
+              "y": 154
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               62,
               11,
@@ -6046,10 +6046,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 81,
+              "y": 155
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               62,
               14,
@@ -6067,10 +6067,10 @@
               "y": 224
             },
             "hand": {
-              "x": 104,
-              "y": 163
+              "x": 81,
+              "y": 155
             },
-            "handStatus": "provisional",
+            "handStatus": "detected",
             "sourceBounds": [
               63,
               16,
