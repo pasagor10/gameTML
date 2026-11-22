@@ -37,7 +37,7 @@ const HAIR = {a: ['#f1f4fb', '#9aa6c4'], b: ['#f3e6f0', '#b49ab8']};
 export const HERO_TOON_SCALE = 1.45;
 
 export function drawToonHero(c, x, y, o = {}) {
-  const {time = 0, moving = false, job = 'novice', appearance = 'a', inv = 0, direction = 'se', distance, attacking = false, tier = 0, pose = null, armor = 0} = o;
+  const {time = 0, moving = false, job = 'novice', appearance = 'a', inv = 0, direction = 'se', distance, attacking = false, tier = 0, pose = null, armor = -1, helmet = -1} = o;
   const left = ['sw', 'w', 'nw'].includes(direction), back = ['n', 'ne', 'nw'].includes(direction);
   const phase = moving ? (distance !== undefined ? distance / RUN_STRIDE * Math.PI * 2 : time * 13) : 0;
   const sw = moving ? Math.sin(phase) : 0, bob = moving ? -Math.abs(Math.cos(phase)) * 3 : Math.sin(time * 3) * 1.1;
@@ -74,6 +74,7 @@ export function drawToonHero(c, x, y, o = {}) {
   const behind = () => {
     if (job === 'knight' || job === 'novice') P(c, [[-9, -31], [9, -31], [13 - flutter, -6], [3, -9], [-4, -5], [-14 - flutter, -8]], fit.cape);
     if (job === 'gunner') P(c, [[-11, -18], [11, -18], [13 + flutter * .5, -3], [0, -6], [-13 + flutter * .5, -3]], fit.top2);
+    if (armor === 5) for (const s of [-1, 1]) P(c, [[s * 6, -30], [s * 26, -46 - flutter], [s * 30, -30], [s * 22, -20], [s * 8, -22]], '#fff0ff', '#a05ac8', 1.2);
     if (appearance === 'b') {P(c, [[-15, -54], [-21, -34], [-17, -18], [-8, -26], [8, -26], [17, -18], [21, -34], [15, -54]], HAIR.b[0], HAIR.b[1]);
       P(c, [[12, -58], [26, -52 + flutter], [30, -36 + flutter], [22, -42], [14, -48]], HAIR.b[0], HAIR.b[1]);}
   };
@@ -100,8 +101,8 @@ export function drawToonHero(c, x, y, o = {}) {
     if (job === 'novice') P(c, [[-9, -31], [9, -31], [0, -24]], fit.top2, OUT, 1);
     L(c, -12, -14, 12, -14, '#5a3f2a', 3.5);E(c, 0, -14, 2.4, 2.2, accent, OUT, 1);
   }
-  // Worn armour shows as a coloured collar and shoulder trim.
-  if (armor > 0) {const ac = TIERS[armor].color;L(c, -9, -31, 9, -31, OUT, 4.4);L(c, -9, -31, 9, -31, ac, 2.6);for (const sx of [-1, 1]) E(c, sx * 11, -29, 3.4, 2.6, ac, OUT, 1);}
+  // Worn armour is drawn over the class outfit, one look per tier.
+  if (armor >= 0) wornArmor(c, armor, time);
   // Head.
   const fx = back ? 0 : 1.5;
   E(c, 0, -46, 17, 15.5, SKIN);
@@ -117,8 +118,9 @@ export function drawToonHero(c, x, y, o = {}) {
     // Spiky fringe.
     P(c, [[-18, -46], [-17, -56], [-10, -63], [-3, -60], [3, -64], [10, -61], [17, -56], [18, -46], [13, -51], [8, -47], [4, -53], [-1, -48], [-5, -53], [-10, -48], [-13, -52]], hair, hairDark);
   }
-  // Class headgear.
-  if (job === 'mage') {
+  // A worn helmet replaces the class headgear.
+  if (helmet >= 0) wornHelmet(c, helmet, time, flutter);
+  else if (job === 'mage') {
     P(c, [[-21, -55], [21, -55], [16, -52], [-16, -52]], fit.hat2);
     P(c, [[-13, -55], [13, -55], [5, -72], [10 + flutter * .4, -84], [-3, -74], [-9, -64]], fit.hat);
     L(c, -12, -57, 12, -57, accent, 2.4);
@@ -142,6 +144,34 @@ export function drawToonHero(c, x, y, o = {}) {
   c.restore();
 }
 
+// Armour on the torso (x -12..12, y -31..-15) and shoulders.
+const ARMOR_TOON = [['#c9b48a', '#8a6a44'], ['#a8683a', '#5a3418'], ['#d8e2ee', '#6a7a92'], ['#9fe6ff', '#2a7ab8'], ['#d4473e', '#6a1418'], ['#fff0ff', '#a05ac8']];
+function wornArmor(c, t, time) {
+  const [body, trim] = ARMOR_TOON[t];
+  P(c, [[-12, -31], [12, -31], [12, -16], [0, -14], [-12, -16]], body, OUT, 1.3);
+  if (t === 0) {L(c, -11, -18, 11, -18, trim, 2.6);E(c, 0, -26, 1.4, 1.4, trim, null);E(c, 0, -22, 1.4, 1.4, trim, null);}
+  else if (t === 1) {L(c, -10, -30, 8, -17, trim, 2.2);L(c, 10, -30, -8, -17, trim, 2.2);E(c, 0, -23.5, 2.2, 2.2, '#d4a64a', OUT, .8);}
+  else {for (const s of [-1, 1]) {P(c, [[s * 7, -34], [s * 17, -32], [s * 17, -24], [s * 9, -25]], body, OUT, 1.2);if (t >= 2) L(c, s * 9, -30, s * 16, -29, trim, 1.4);}
+    P(c, [[-8, -29], [8, -29], [7, -19], [0, -16], [-7, -19]], t === 2 ? '#f2f6fa' : body, trim, 1.2);
+    if (t === 3) {P(c, [[0, -28], [3, -23], [0, -18], [-3, -23]], '#ffffff', '#2a7ab8', .8);glowDot(c, 0, -23, 9, '#bff0ff88');}
+    if (t === 4) {for (let r = 0; r < 3; r++) for (let i = -1; i <= 1; i++) {c.beginPath();c.arc(i * 4 + (r % 2) * 2, -27 + r * 3.5, 2.2, 0, Math.PI);c.strokeStyle = trim;c.lineWidth = 1;c.stroke();}for (const s of [-1, 1]) P(c, [[s * 14, -33], [s * 19, -39], [s * 17, -31]], '#ffd25a', OUT, .8);}
+    if (t === 5) {for (let i = 0; i < 3; i++) E(c, -4 + i * 4, -24, 1.8, 1.8, `hsl(${(time * 120 + i * 90) % 360} 90% 65%)`, null);glowDot(c, 0, -24, 11, '#fff1ff88');}}
+}
+// Helmets on the head (centre 0,-46; crown at about y -62).
+function wornHelmet(c, t, time, flutter) {
+  if (t === 0) {L(c, -17, -53, 17, -53, OUT, 5);L(c, -17, -53, 17, -53, '#d4473e', 3.4);P(c, [[-16, -53], [-25, -48 + flutter * .5], [-22, -45], [-15, -50]], '#d4473e', OUT, 1);return;}
+  if (t === 1) {c.beginPath();c.moveTo(-18, -50);c.quadraticCurveTo(-17, -68, 0, -68);c.quadraticCurveTo(17, -68, 18, -50);c.closePath();c.fillStyle = '#a8683a';c.fill();c.strokeStyle = OUT;c.lineWidth = 1.4;c.stroke();P(c, [[-20, -51], [20, -51], [22, -48], [-22, -48]], '#5a3418', OUT, 1);return;}
+  if (t === 2) {c.beginPath();c.moveTo(-19, -46);c.quadraticCurveTo(-19, -70, 0, -70);c.quadraticCurveTo(19, -70, 19, -46);c.lineTo(14, -46);c.lineTo(13, -52);c.lineTo(-13, -52);c.lineTo(-14, -46);c.closePath();c.fillStyle = '#d8e2ee';c.fill();c.strokeStyle = OUT;c.lineWidth = 1.4;c.stroke();
+    L(c, 0, -52, 0, -44, '#6a7a92', 2.4);P(c, [[-2, -70], [2, -70], [6, -80 + flutter * .3], [-1, -76]], '#d4473e', OUT, 1);return;}
+  if (t === 3) {P(c, [[-17, -54], [-16, -63], [-10, -58], [-5, -70], [0, -60], [5, -70], [10, -58], [16, -63], [17, -54]], '#9fe6ff', '#2a7ab8', 1.2);P(c, [[0, -64], [2.5, -60], [0, -56], [-2.5, -60]], '#ffffff', '#2a7ab8', .8);glowDot(c, 0, -60, 12, '#bff0ff66');return;}
+  if (t === 4) {for (const s of [-1, 1]) P(c, [[s * 13, -60], [s * 24, -76], [s * 22, -64], [s * 17, -56]], '#f4e4c4', OUT, 1.1);
+    c.beginPath();c.moveTo(-19, -47);c.quadraticCurveTo(-19, -70, 0, -70);c.quadraticCurveTo(19, -70, 19, -47);c.lineTo(-19, -47);c.closePath();c.fillStyle = '#d4473e';c.fill();c.strokeStyle = OUT;c.lineWidth = 1.4;c.stroke();
+    P(c, [[-12, -52], [-4, -54], [-5, -49], [-12, -49]], '#ffd25a', OUT, .8);P(c, [[12, -52], [4, -54], [5, -49], [12, -49]], '#ffd25a', OUT, .8);return;}
+  c.beginPath();c.ellipse(0, -76, 15, 4, 0, 0, Math.PI * 2);c.strokeStyle = '#ffe9a8';c.lineWidth = 2.4;c.stroke();glowDot(c, 0, -76, 14, '#fff6c066');
+  P(c, [[-16, -54], [-15, -64], [-9, -59], [0, -70], [9, -59], [15, -64], [16, -54]], '#ffe39a', '#a8782a', 1.2);
+  for (let i = 0; i < 3; i++) E(c, -7 + i * 7, -58, 1.9, 1.9, `hsl(${(time * 120 + i * 90) % 360} 90% 65%)`, null);
+}
+
 // ---------------------------------------------------------------- stage themes
 export const THEMES = [
   {id: 'forest', bossName: 'ราชินีหนามพงไพร', ground: '#86b765', ground2: '#76a756', stone: '#c2bc9e', rim: '#8d8a70', edge: '#2f5a36', edge2: '#3f6e40', slime: ['#a6e070', '#5fa83e'], body: '#c0743a', body2: '#7a4420', accent: '#7fd35a', glow: '#d8ff9a', eye: '#2b2133', portal: '#5ef2d8'},
@@ -151,7 +181,8 @@ export const THEMES = [
   {id: 'moon', bossName: 'จักรพรรดิจันทราดำ', ground: '#423e62', ground2: '#36325a', stone: '#5e5a86', rim: '#2a2648', edge: '#121026', edge2: '#1e1a38', slime: ['#c0b0ff', '#5a48b0'], body: '#4a3f7a', body2: '#1e1840', accent: '#d8dcff', glow: '#d6d0ff', eye: '#e8e4ff', portal: '#b48aff'},
   {id: 'crystal', bossName: 'มังกรคริสตัล', ground: '#34606c', ground2: '#2a505c', stone: '#467882', rim: '#1e3e48', edge: '#0c2228', edge2: '#14323a', slime: ['#88f4e4', '#2aa8a0'], body: '#3a9aa2', body2: '#18484e', accent: '#ff8ad8', glow: '#b0fff2', eye: '#ffe0f4', portal: '#ff8ad8'}
 ];
-export function themeFor(stage = 1) {return THEMES[(Math.max(1, stage) - 1) % THEMES.length];}
+// Stages 1-10 are world 1 (forest), 11-20 world 2, and so on.
+export function themeFor(stage = 1) {return THEMES[(Math.ceil(Math.max(1, stage) / 10) - 1) % THEMES.length];}
 
 // ---------------------------------------------------------------- monsters
 function hpBar(c, e, y) {

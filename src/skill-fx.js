@@ -58,6 +58,14 @@ export function drawShot(c, s, time) {
     if (lv >= 4) {c.globalAlpha = 1;for (let i = 0; i < 3; i++) star(c, -14 - i * 9, Math.sin(time * 20 + i) * 8, 3, '#fffbe0');}
     c.restore();return true;
   }
+  if (s.style === 'rocket') { // body, fins and a flame trail
+    c.save();c.translate(s.x, s.y);c.rotate(a);const k = 1 + (lv - 1) * .1;c.scale(k, k);
+    for (let i = 1; i <= 4; i++) glow(c, -12 - i * 9, Math.sin(time * 40 + i) * 2, 10 - i * 1.5, i < 2 ? '#fff4b0ee' : '#ff8a3a99');
+    c.fillStyle = '#e6eef8';c.strokeStyle = '#27394c';c.lineWidth = 1.5;c.beginPath();c.moveTo(14, 0);c.lineTo(4, -5);c.lineTo(-10, -5);c.lineTo(-10, 5);c.lineTo(4, 5);c.closePath();c.fill();c.stroke();
+    c.fillStyle = accent(lv, '#ff5a4a', time);c.beginPath();c.moveTo(14, 0);c.lineTo(6, -5);c.lineTo(6, 5);c.closePath();c.fill();
+    c.beginPath();c.moveTo(-10, -5);c.lineTo(-15, -10);c.lineTo(-6, -5);c.moveTo(-10, 5);c.lineTo(-15, 10);c.lineTo(-6, 5);c.fill();
+    c.restore();return true;
+  }
   return false;
 }
 
@@ -98,6 +106,16 @@ export function drawZone(c, z, time) {
       star(c, Math.cos(a) * r, Math.sin(a) * r * .6, 2 + (1 - t) * 3, lv >= 5 ? prism(time, i * 30) : '#fff1ff');
     }
     if (lv >= 5) ring(c, 0, 0, z.r * .45, '#ffffffcc', 2);
+  } else if (z.kind === 'blizzard') { // icy ground ring with driving snow
+    c.translate(z.x, z.y);
+    if (lv >= 4) runeCircle(c, z.r, accent(lv, '#bfefff', time), time, .8);
+    glow(c, 0, 0, z.r * 1.1, '#bfe9ff44');ring(c, 0, 0, z.r, '#e6f7ffcc', 3);
+    for (let i = 0; i < 14 + lv * 4; i++) {const t = (time * (1.4 + (i % 3) * .3) + i * .37) % 1, a = i * 2.4, r = z.r * ((i * 37 % 100) / 100);
+      const x = Math.cos(a) * r - 30 + t * 60, y = Math.sin(a) * r * .62 - 60 + t * 70;c.globalAlpha = Math.min(1, q * 3) * (1 - t);star(c, x, y, 3 + (i % 3), lv >= 5 ? prism(time, i * 25) : '#ffffff');}
+  } else if (z.kind === 'mine') { // blinking disc
+    c.translate(z.x, z.y);c.fillStyle = '#00000040';c.beginPath();c.ellipse(0, 4, 14, 5, 0, 0, Math.PI * 2);c.fill();
+    c.fillStyle = '#4b5a3a';c.strokeStyle = '#1c2616';c.lineWidth = 1.6;c.beginPath();c.ellipse(0, 0, 12, 7, 0, 0, Math.PI * 2);c.fill();c.stroke();
+    const on = Math.floor(time * 4 + z.x) % 2 === 0;glow(c, 0, -2, on ? 10 : 5, on ? '#ff5a4acc' : '#ff5a4a55');c.fillStyle = '#ff5a4a';c.beginPath();c.arc(0, -2, 2.4, 0, Math.PI * 2);c.fill();
   }
   c.restore();
 }
@@ -132,6 +150,22 @@ export function drawSkillEffect(c, f, time) {
     c.translate(f.x, f.y);c.rotate(f.a);const s = 1 + (lv - 1) * .25;c.scale(s, s);glow(c, 6, 0, 18, lv >= 3 ? '#ffd36add' : '#fff1a0dd');
     c.fillStyle = '#fffbe0';c.beginPath();c.moveTo(0, -5);c.lineTo(22, 0);c.lineTo(0, 5);c.closePath();c.fill();
     if (lv >= 4) {c.fillStyle = accent(lv, '#ffd36a', time);c.beginPath();c.moveTo(4, -9);c.lineTo(16, -3);c.lineTo(4, 0);c.closePath();c.fill();c.beginPath();c.moveTo(4, 9);c.lineTo(16, 3);c.lineTo(4, 0);c.closePath();c.fill();}
+    return true;
+  }
+  if (f.kind === 'dashline') { // charge / beam: a bright streak along the struck line
+    const col = f.color || '#bfefff', w = (f.width || 30) * (1 - q * .6);
+    c.globalAlpha *= 1 - q;c.lineCap = 'round';
+    c.strokeStyle = `${col}55`;c.lineWidth = w * 2;c.beginPath();c.moveTo(f.x, f.y);c.lineTo(f.tx, f.ty);c.stroke();
+    c.strokeStyle = col;c.lineWidth = w * .8;c.beginPath();c.moveTo(f.x, f.y);c.lineTo(f.tx, f.ty);c.stroke();
+    c.strokeStyle = '#ffffff';c.lineWidth = w * .25;c.beginPath();c.moveTo(f.x, f.y);c.lineTo(f.tx, f.ty);c.stroke();
+    for (let i = 0; i < 4 + lv * 2; i++) {const u = (i + .5) / (4 + lv * 2);glow(c, f.x + (f.tx - f.x) * u, f.y + (f.ty - f.y) * u + Math.sin(i * 3 + time * 20) * w * .5, 6 + lv, lv >= 5 ? prism(time, i * 30) : '#ffffffaa');}
+    return true;
+  }
+  if (f.kind === 'explosion' && f.style === 'earth') { // ground slam: cracks and flying rocks
+    c.translate(f.x, f.y);const r = f.r * (.4 + q * .7);
+    glow(c, 0, 0, f.r * .9, '#c9a46a55');ring(c, 0, 0, r, '#e6c88a', 10 * (1 - q) + 2);ring(c, 0, 0, r * .7, accent(lv, '#a8783a', time), 4 * (1 - q) + 1);
+    c.strokeStyle = '#5a3a20';c.lineWidth = 3;for (let i = 0; i < 6 + lv; i++) {const a = i * Math.PI * 2 / (6 + lv);c.beginPath();c.moveTo(Math.cos(a) * 14, Math.sin(a) * 9);c.lineTo(Math.cos(a + .2) * r * .6, Math.sin(a + .2) * r * .37);c.lineTo(Math.cos(a) * r, Math.sin(a) * r * .62);c.stroke();}
+    for (let i = 0; i < 8; i++) {const a = i * .8 + lv, d = r * .8, h = Math.sin(q * Math.PI) * (30 + lv * 6);c.fillStyle = '#8a6a44';c.beginPath();c.arc(Math.cos(a) * d, Math.sin(a) * d * .62 - h, 4 + (i % 3), 0, Math.PI * 2);c.fill();}
     return true;
   }
   if (f.kind === 'explosion') {

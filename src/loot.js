@@ -29,15 +29,16 @@ export const GOLD_DROP = {slime:1, runner:1, archer:2, elite:25, boss:120};
 const BASE_TIER = {elite:1, boss:2};
 const SELL = [8, 30, 100, 260, 650, 1400];
 
-export function rollTier(type, stage, rng) {
-  const base = (BASE_TIER[type] || 0) + Math.floor((stage - 1) / 2);
+// `level` is the area's gear level (0 = first world); elites and guardians add one or two tiers.
+export function rollTier(type, level, rng) {
+  const base = (BASE_TIER[type] || 0) + level;
   const swing = rng() < .2 ? 1 : rng() < .3 ? -1 : 0;
   return Math.max(0, Math.min(TIERS.length - 1, base + swing));
 }
 // Before awakening no weapons drop: there is no class weapon to find yet.
-export function rollDrop(type, stage, job, rng) {
+export function rollDrop(type, level, job, rng) {
   if (rng() >= (DROP_CHANCE[type] ?? 0)) return null;
-  const tier = rollTier(type, stage, rng), v = rng();
+  const tier = rollTier(type, level, rng), v = rng();
   const kind = job !== 'novice' && v < .35 ? 'weapon' : v < .6 ? 'armor' : v < .8 ? 'helmet' : 'ring';
   return {kind, tier, job: kind === 'weapon' ? job : null};
 }
