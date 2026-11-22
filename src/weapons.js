@@ -1,3 +1,4 @@
+import {paintWeapon,PAINT_BOUNDS} from './weapon-paint.js';
 // Class weapons: data shared by the simulation and the canvas renderer.
 // Six rarity tiers follow the TILMO class-weapon sheet: Common → Rare → Epic → Unique → Legendary → Mythic.
 
@@ -43,15 +44,6 @@ function shape(c, points, fill, stroke, width = 1.4) {
   c.beginPath();points.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y));c.closePath();
   c.fillStyle = fill;c.fill();if (stroke) {c.strokeStyle = stroke;c.lineWidth = width;c.lineJoin = 'round';c.stroke();}
 }
-function wings(c, tier, time, scale = 1) {
-  // Mythic weapons carry feathered wings like the reference sheet; Unique+ get small fins.
-  const t = TIERS[tier], flap = Math.sin(time * 6) * .08;
-  for (const side of [-1, 1]) {
-    c.save();c.scale(side * scale, scale);c.rotate(flap);
-    for (let i = 0; i < 4; i++) shape(c, [[2, 0], [10 + i * 5, -6 - i * 4], [16 + i * 6, -2 - i * 3], [6, 3]], i % 2 ? '#ffffffdd' : (tier === 5 ? rainbow(time, i * 50) : t.glow), t.dark, .8);
-    c.restore();
-  }
-}
 function sparkle(c, tier, time, radius) {
   if (tier < 2) return;
   const t = TIERS[tier], n = tier + 1;
@@ -61,100 +53,33 @@ function sparkle(c, tier, time, radius) {
   }
 }
 
-// Sword and staff pixel art ported from the old game (held4x, 72×122, blade up) as placeholders
-// until TILMO's weapons are remade; one per rarity tier picked by colour. The old game had no
-// guns, so the gunner keeps the canvas-drawn gun.
-const ART = {novice: ['sword-novice'], knight: [0, 1, 2, 3, 4, 5].map(i => `sword-${i}`), mage: [0, 1, 2, 3, 4, 5].map(i => `staff-${i}`)};
-const ART_HEIGHT = {novice: 52, knight: 66, mage: 86};
-const art = new Map();
-export function loadWeaponArt() {
-  return Promise.all(Object.values(ART).flat().map(name => new Promise(resolve => {
-    const img = new Image();img.onload = () => {art.set(name, img);resolve();};img.onerror = () => resolve();img.src = `/assets/weapons/${name}.webp`;
-  })));
+// Weapons are painted in the hero's art style (weapon-paint.js) once per class and tier into a
+// cached bitmap at 4x, so drawing them every frame is a single drawImage.
+const CACHE_SCALE = 4, cache = new Map();
+const GUN_TIP = [27, 33, 35, 42, 47, 49];
+function bitmap(job, tier) {
+  const key = `${job}-${tier}`;if (cache.has(key)) return cache.get(key);
+  if (typeof document === 'undefined') return null;
+  const [x, y, w, h] = PAINT_BOUNDS[job] || PAINT_BOUNDS.novice, canvas = document.createElement('canvas');
+  canvas.width = w * CACHE_SCALE;canvas.height = h * CACHE_SCALE;
+  const c = canvas.getContext('2d');c.scale(CACHE_SCALE, CACHE_SCALE);c.translate(-x, -y);paintWeapon(c, job, tier);
+  const entry = {canvas, x, y, w, h};cache.set(key, entry);return entry;
 }
-function drawWeaponArt(c, job, tier) {
-  const list = ART[job];if (!list) return false;
-  const img = art.get(list[Math.min(list.length - 1, tier)]);if (!img) return false;
-  const h = ART_HEIGHT[job], w = img.width * h / img.height;
-  // grip sits ~80% down the image, just above the pommel
-  c.save();c.imageSmoothingEnabled = false;c.drawImage(img, -w / 2, -h * .8, w, h);c.restore();
-  return true;
+export function loadWeaponArt() {
+  for (const job of ['knight', 'mage', 'gunner']) for (let t = 0; t < TIERS.length; t++) bitmap(job, t);
+  bitmap('novice', 0);return Promise.resolve();
 }
 
 // Origin = the hand grip; the weapon points up (negative y). Sized for the in-game hero (~150px tall).
 export function drawWeapon(c, job, tier = 0, time = 0, {attacking = false} = {}) {
-  const t = TIERS[Math.max(0, Math.min(5, tier))];
-  const main = tier === 5 ? rainbow(time) : t.color;
+  tier = Math.max(0, Math.min(5, tier));const t = TIERS[tier], gun = job === 'gunner';
+  const art = bitmap(job === 'novice' || !PAINT_BOUNDS[job] ? 'novice' : job, job === 'novice' ? 0 : tier);
   c.save();
-  if (tier >= 1) glowDot(c, 0, job === 'gunner' ? -4 : -26, 18 + tier * 4, `${t.glow}${tier >= 4 ? '88' : '55'}`);
-  if (!drawWeaponArt(c, job, tier)) {
-    if (job === 'mage') drawStaff(c, tier, t, main, time);
-    else if (job === 'gunner') drawGun(c, tier, t, main, time, attacking);
-    else drawSword(c, job === 'novice' ? -1 : tier, t, main, time);
-  }
-  if (job !== 'gunner') sparkle(c, tier, time, 26);
+  if (tier >= 1 && job !== 'novice') glowDot(c, gun ? 18 : 0, gun ? -6 : job === 'mage' ? -64 : -30, 16 + tier * 4, `${tier === 5 ? '#ffffff' : t.glow}${tier >= 4 ? '88' : '50'}`);
+  if (art) c.drawImage(art.canvas, art.x, art.y, art.w, art.h);
+  if (gun && attacking) glowDot(c, GUN_TIP[tier] + 4, -5, 10 + tier * 2, '#fff4b0');
+  if (job !== 'novice') {c.save();if (gun) c.translate(20, 14);else if (job === 'mage') c.translate(0, -36);sparkle(c, tier, time, gun ? 22 : 26);c.restore();}
   c.restore();
-}
-
-function drawSword(c, tier, t, main, time) {
-  if (tier < 0) { // novice training blade
-    shape(c, [[-2.5, -2], [-2, -34], [0, -40], [2, -34], [2.5, -2]], '#d9e4ee', '#5d6b7c');
-    shape(c, [[-8, -1], [8, -1], [8, 2], [-8, 2]], '#9a7a4e', '#4b3b26');
-    c.fillStyle = '#5b4632';c.fillRect(-1.5, 2, 3, 9);return;
-  }
-  const len = 40 + tier * 4, width = 3.5 + tier * .6;
-  if (tier >= 5) {c.save();c.translate(0, -2);wings(c, tier, time, 1.1);c.restore();}
-  // blade
-  shape(c, [[-width, -3], [-width * .9, -len * .8], [0, -len], [width * .9, -len * .8], [width, -3]], '#f4fbff', t.dark, 1.6);
-  shape(c, [[-width * .45, -5], [-width * .35, -len * .78], [0, -len * .92], [width * .35, -len * .78], [width * .45, -5]], main);
-  if (tier >= 2) shape(c, [[-width - 3, -len * .35], [-width - 7, -len * .5], [-width, -len * .45]], main, t.dark, .8);
-  if (tier >= 2) shape(c, [[width + 3, -len * .35], [width + 7, -len * .5], [width, -len * .45]], main, t.dark, .8);
-  // guard
-  const gw = 9 + tier * 1.6;
-  shape(c, [[-gw, -2], [-gw * .6, -6 - tier], [0, -3], [gw * .6, -6 - tier], [gw, -2], [0, 2]], tier >= 3 ? '#ffd56a' : '#c9d4e0', t.dark);
-  glowDot(c, 0, -2, 4 + tier, main);
-  c.fillStyle = '#4a3a5a';c.fillRect(-1.6, 2, 3.2, 10);
-  shape(c, [[-3, 12], [3, 12], [0, 16]], tier >= 3 ? '#ffd56a' : '#c9d4e0');
-}
-
-function drawStaff(c, tier, t, main, time) {
-  const top = -48 - tier * 3;
-  c.strokeStyle = tier >= 3 ? '#e9b949' : '#8b6a48';c.lineWidth = 3.4;c.lineCap = 'round';
-  c.beginPath();c.moveTo(0, 14);c.lineTo(0, top + 10);c.stroke();
-  c.strokeStyle = t.dark;c.lineWidth = 1;c.beginPath();c.moveTo(-1.7, 14);c.lineTo(-1.7, top + 10);c.stroke();
-  // head prongs cradle the orb
-  shape(c, [[-3, top + 12], [-9 - tier, top + 2], [-6, top - 4], [-2, top + 6]], tier >= 3 ? '#ffd56a' : '#b8c7d8', t.dark, .9);
-  shape(c, [[3, top + 12], [9 + tier, top + 2], [6, top - 4], [2, top + 6]], tier >= 3 ? '#ffd56a' : '#b8c7d8', t.dark, .9);
-  if (tier >= 5) {c.save();c.translate(0, top + 4);wings(c, tier, time, .9);c.restore();}
-  const orbR = 6 + tier * .9;
-  glowDot(c, 0, top, orbR * 2.6, `${t.glow}99`);
-  c.fillStyle = main;c.beginPath();c.arc(0, top, orbR, 0, Math.PI * 2);c.fill();
-  c.fillStyle = '#ffffffcc';c.beginPath();c.arc(-orbR * .35, top - orbR * .35, orbR * .35, 0, Math.PI * 2);c.fill();
-  if (tier >= 2) { // orbiting rings
-    c.strokeStyle = `${t.glow}cc`;c.lineWidth = 1.2;
-    for (let i = 0; i < Math.min(3, tier - 1); i++) {c.beginPath();c.ellipse(0, top, orbR + 7 + i * 4, (orbR + 3) * .45, time * (1 + i * .4) + i, 0, Math.PI * 2);c.stroke();}
-  }
-  if (tier >= 4) { // halo
-    c.strokeStyle = tier === 5 ? rainbow(time, 120) : t.color;c.lineWidth = 2;
-    c.beginPath();c.ellipse(0, top - orbR - 6, 9, 3, 0, 0, Math.PI * 2);c.stroke();
-  }
-}
-
-function drawGun(c, tier, t, main, time, attacking) {
-  // Held pointing forward (+x) with the grip at the origin.
-  const len = 22 + tier * 3.2, h = 7 + tier * .7;
-  c.save();c.rotate(-.12);
-  if (tier >= 5) {c.save();c.translate(4, -h);c.rotate(-1.3);wings(c, tier, time, .8);c.restore();}
-  shape(c, [[-6, -h * .2], [len, -h * .2], [len, -h * 1.1], [-2, -h * 1.1], [-8, -h * .6]], '#e9eef5', t.dark, 1.3);
-  shape(c, [[0, -h * .45], [len - 2, -h * .45], [len - 2, -h * .9], [2, -h * .9]], main);
-  if (tier >= 2) shape(c, [[len, -h * .9], [len + 6 + tier, -h * .8], [len + 6 + tier, -h * .45], [len, -h * .4]], '#c9d4e0', t.dark, .9); // muzzle
-  if (tier >= 3) shape(c, [[4, -h * 1.1], [12, -h * 1.9], [18, -h * 1.9], [16, -h * 1.1]], '#ffd56a', t.dark, .9); // scope
-  if (tier >= 4) {glowDot(c, len * .45, -h * .65, 6, t.glow);}
-  shape(c, [[-3, -h * .25], [3, -h * .25], [1, 10], [-6, 9]], '#5a4a6a', t.dark); // grip
-  c.strokeStyle = t.dark;c.lineWidth = .8;c.beginPath();c.moveTo(2, -h * .2);c.lineTo(6, 3);c.lineTo(8, -h * .2);c.stroke(); // trigger guard
-  if (attacking) {glowDot(c, len + 8 + tier, -h * .65, 10 + tier * 2, '#fff4b0');}
-  c.restore();
-  sparkle(c, tier, time, 22);
 }
 
 // Small framed icon for HUD/collection cards.
@@ -164,9 +89,10 @@ export function drawWeaponIcon(c, job, tier, time = 0, size = 72) {
   const g = c.createLinearGradient(0, 0, size, size);g.addColorStop(0, '#0c1a3a');g.addColorStop(1, `${t.dark}`);
   c.fillStyle = g;c.fillRect(0, 0, size, size);
   c.strokeStyle = tier === 5 ? rainbow(time) : t.color;c.lineWidth = 3;c.strokeRect(1.5, 1.5, size - 3, size - 3);
-  c.translate(size / 2, size * (job === 'gunner' ? .55 : .78));
-  const s = size / 62;c.scale(s, s);
-  if (job === 'gunner') c.translate(-14, 0);else c.rotate(.5);
+  // Fit the painted weapon's bounds into the frame; long weapons lie on the diagonal.
+  const [bx, by, bw, bh] = PAINT_BOUNDS[job] || PAINT_BOUNDS.novice, gun = job === 'gunner';
+  const span = gun ? Math.max(bw, bh) : (bw + bh) * Math.SQRT1_2, s = size * .84 / span;
+  c.translate(size / 2, size / 2);c.scale(s, s);if (!gun) c.rotate(Math.PI / 4);c.translate(-(bx + bw / 2), -(by + bh / 2));
   drawWeapon(c, job, tier, time);
   c.restore();
 }
