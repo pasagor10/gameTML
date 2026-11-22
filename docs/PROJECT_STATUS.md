@@ -13,7 +13,7 @@ Git HEAD ที่ตรวจพบ: `9f1dde4e7985bd99289a3bb91cc41ae3a2a6120d`
 
 ## เกมใหม่ — วางแผนแยก
 ตำแหน่ง: `/Users/pasagor_dev/Desktop/kaykk/tilmo-survivor`
-เริ่ม Combat Prototype แล้ว มี runtime Node.js แยก พอร์ต 5174; ยังไม่ได้ตั้ง Git repository
+เริ่ม Combat Prototype แล้ว มี runtime Node.js แยก พอร์ต 5174; ใช้ Git repository เดียวกับเกมเดิม แต่อยู่ branch `tilmo-survivor` แยก (orphan ไม่มีประวัติ/โค้ดเกมเดิม) ผ่าน git worktree
 ไม่ดึง node_modules, ฐานข้อมูล, บัญชี, ไอเท็ม หรือเศรษฐกิจเดิมเข้ามา
 ก่อนเริ่มพัฒนาให้ตั้ง repository และ runtime แยก และใช้พอร์ต/ฐานข้อมูล/โดเมนคนละชุดเมื่อถึงขั้นทดลองออนไลน์
 
