@@ -236,45 +236,130 @@ function beast(c, th, f, t, e) {
   P(c, [[22, -45], [18, -58], [27, -48]], f(th.id === 'temple' ? '#ffd25a' : '#efe6d0'), OUT, 1);
   P(c, [[32, -46], [34, -60], [37, -46]], f(th.id === 'temple' ? '#ffd25a' : '#efe6d0'), OUT, 1);
 }
+// Each stage's guardian has its own silhouette; `raise` (0..1) lifts the attack during a telegraph.
 function titan(c, th, f, t, e) {
-  const sway = Math.sin(t * 2) * 2, raise = e.warn ? Math.min(1, (1.1 - e.warn.t) / .6) : 0;
-  c.translate(0, sway * .5);
-  // legs
-  for (const s of [-1, 1]) {limb(c, s * 16, -70, s * 20, -8, f(th.body2), 17);E(c, s * 21, -6, 14, 7, f(OUT), null);}
-  // cape / robe behind
-  P(c, [[-34, -150], [34, -150], [44 + sway, -40], [0, -52], [-44 + sway, -40]], f(th.body2));
-  // torso
-  P(c, [[-36, -152], [36, -152], [28, -70], [-28, -70]], f(th.body));
-  P(c, [[-20, -140], [20, -140], [14, -96], [0, -88], [-14, -96]], f(th.stone), OUT, 1.4);
-  glowDot(c, 0, -118, 16, `${th.glow}cc`);E(c, 0, -118, 7, 7, f(th.glow), OUT, 1.2);
-  // shoulders
-  for (const s of [-1, 1]) {E(c, s * 38, -146, 17, 12, f(th.stone));P(c, [[s * 30, -156], [s * 42, -172], [s * 48, -152]], f(th.accent), OUT, 1.2);}
-  // back arm
-  limb(c, -38, -140, -46, -96, f(th.body), 12);E(c, -46, -94, 8, 8, f(th.body2));
-  // head
-  E(c, 0, -170, 22, 20, f(th.body));
-  eyes(c, 4, -172, 4.2, 9, th, f, true);
-  glowDot(c, 4, -172, 26, `${th.glow}66`);
-  P(c, [[-6, -158], [14, -158], [12, -154], [-4, -154]], f(OUT), null);
-  // crown
-  const crown = th.id === 'moon' ? '#d8dcff' : th.id === 'ice' ? '#bfe9ff' : '#ffd25a';
-  P(c, [[-20, -186], [-22, -204], [-11, -194], [0, -210], [11, -194], [22, -204], [20, -186]], f(crown), OUT, 1.4);
-  E(c, 0, -194, 3.4, 3.4, f(th.accent), OUT, 1);
-  // front arm + signature weapon, raised during a telegraph
-  c.save();c.translate(38, -140);c.rotate(-.3 - raise * 1.6);
-  limb(c, 0, 0, 6, 42, f(th.body), 12);E(c, 6, 46, 8, 8, f(th.body2));
-  c.translate(6, 46);
-  const w = th.id;
-  if (w === 'forest') {c.beginPath();c.moveTo(0, 0);for (let i = 1; i <= 8; i++) c.lineTo(Math.sin(i + t * 4) * 8, i * 9);c.strokeStyle = OUT;c.lineWidth = 6;c.stroke();c.strokeStyle = f('#5a9a3a');c.lineWidth = 3.4;c.stroke();for (let i = 2; i <= 8; i += 2) P(c, [[Math.sin(i + t * 4) * 8, i * 9], [Math.sin(i + t * 4) * 8 + 6, i * 9 - 4], [Math.sin(i + t * 4) * 8 + 2, i * 9 + 3]], f('#d24a5a'), OUT, .8);}
-  else if (w === 'volcano' || w === 'temple') {L(c, 0, 0, 0, 52, OUT, 9);L(c, 0, 0, 0, 52, f('#7a5a3a'), 5.5);
-    if (w === 'volcano') {P(c, [[-18, 50], [18, 50], [18, 70], [-18, 70]], f('#4a4a5a'));L(c, -16, 60, 16, 60, f('#ff8a3a'), 2.4);glowDot(c, 0, 60, 24, '#ff8a3a55');}
-    else {E(c, 0, 62, 13, 18, f('#d49440'));for (const s of [-1, 1]) E(c, s * 7, 58, 2.4, 2.4, f('#ffd25a'), OUT, .8);}}
-  else if (w === 'ice') {P(c, [[-4, -6], [4, -6], [3, 78], [0, 88], [-3, 78]], f('#dff6ff'), '#3a6a9a', 1.6);L(c, -12, -4, 12, -4, f('#8fb4d8'), 5);glowDot(c, 0, 50, 22, '#bfeaff66');}
-  else if (w === 'moon') {L(c, 0, -20, 0, 70, OUT, 7);L(c, 0, -20, 0, 70, f('#d8dcff'), 4);c.beginPath();c.arc(0, -26, 12, .6, 5.6);c.strokeStyle = f('#e8e4ff');c.lineWidth = 4;c.stroke();glowDot(c, 0, -26, 26, '#c8c0ff66');}
-  else {for (const a of [-.5, 0, .5]) P(c, [[0, 0], [Math.sin(a) * 26 - 3, 28], [Math.sin(a) * 30, 34], [Math.sin(a) * 26 + 3, 28]], f(th.accent), OUT, 1.2);}
+  const raise = e.warn ? Math.min(1, (1.1 - e.warn.t) / .6) : 0;
+  ({forest: thornQueen, volcano: emberColossus, ice: frostRevenant, temple: goldenYaksha, moon: moonEmperor, crystal: crystalWyrm}[th.id] || emberColossus)(c, th, f, t, raise);
+}
+function crownSpikes(c, f, y, w, h, col, gem) {
+  P(c, [[-w, y], [-w - 2, y - h], [-w * .5, y - h * .5], [0, y - h * 1.3], [w * .5, y - h * .5], [w + 2, y - h], [w, y]], f(col), OUT, 1.4);
+  if (gem) E(c, 0, y - h * .45, 3.4, 3.4, f(gem), OUT, 1);
+}
+// Forest: a tall dryad queen in a flared vine gown with leafy hair and thorn whips.
+function thornQueen(c, th, f, t, raise) {
+  const sway = Math.sin(t * 1.6) * 3;
+  P(c, [[-12, -100], [12, -100], [46 + sway, -4], [24, 0], [0, -6], [-24, 0], [-46 + sway, -4]], f('#3f7a4a'));
+  for (let i = -2; i <= 2; i++) P(c, [[i * 14, -40], [i * 18 + sway - 8, -2], [i * 18 + sway + 8, -2]], f(i % 2 ? '#5a9e5a' : '#4a8a52'), OUT, 1);
+  for (let i = 0; i < 6; i++) E(c, -30 + i * 12 + sway * .5, -12 - (i % 2) * 6, 4, 3, f('#d24a5a'), OUT, .8);
+  P(c, [[-14, -150], [14, -150], [11, -100], [-11, -100]], f('#6aae5a'));
+  P(c, [[-6, -146], [6, -146], [3, -104], [-3, -104]], f('#d24a5a'), OUT, 1);
+  // leafy hair flowing behind the head
+  for (const s of [-1, 1]) P(c, [[s * 10, -186], [s * 30, -170 + sway], [s * 34, -130 + sway], [s * 18, -144], [s * 12, -160]], f('#4a8a52'));
+  E(c, 0, -168, 15, 17, f('#cfe8b0'));
+  eyes(c, 2, -168, 3, 6, th, f, true);
+  crownSpikes(c, f, -182, 13, 12, '#d24a5a', '#ffd25a');
+  // whip arms
+  for (const s of [-1, 1]) {
+    const lift = s > 0 ? raise : 0;
+    c.save();c.translate(s * 13, -146);c.rotate(s * (.5 - lift * 1.4));limb(c, 0, 0, 0, 34, f('#6aae5a'), 6);
+    c.beginPath();c.moveTo(0, 34);for (let i = 1; i <= 7; i++) c.lineTo(Math.sin(i * 1.3 + t * 5) * 8 * s, 34 + i * 10);
+    c.strokeStyle = OUT;c.lineWidth = 5;c.stroke();c.strokeStyle = f('#5a9a3a');c.lineWidth = 3;c.stroke();c.restore();
+  }
+}
+// Volcano: a hulking forge golem, tiny head sunk between huge shoulders, magma cracks, giant hammer.
+function emberColossus(c, th, f, t, raise) {
+  const sway = Math.sin(t * 1.4) * 2;
+  for (const s of [-1, 1]) {limb(c, s * 22, -60, s * 28, -10, f('#3a2a2a'), 22);E(c, s * 30, -6, 18, 8, f('#2a1e1e'));}
+  P(c, [[-58, -150], [58, -150], [50, -70], [30, -50], [-30, -50], [-50, -70]], f('#4a3838'));
+  for (const [x0, y0, x1, y1] of [[-30, -130, -12, -96], [-12, -96, -22, -66], [20, -140, 30, -104], [30, -104, 14, -78]]) {L(c, x0, y0, x1, y1, '#ff8a3a', 4);L(c, x0, y0, x1, y1, '#ffe08a', 1.6);}
+  glowDot(c, 0, -104, 34, `${th.glow}77`);E(c, 0, -104, 12, 12, f('#ffb03a'), OUT, 1.6);
+  for (const s of [-1, 1]) E(c, s * 54, -144, 26, 18, f('#5a4644'));
+  E(c, 0, -158, 18, 14, f('#4a3838'));
+  for (const s of [-1, 1]) E(c, s * 7, -160, 4, 2.6, f('#ffd27a'), null);
+  glowDot(c, 0, -160, 24, '#ff8a3a66');
+  P(c, [[-12, -172], [-6, -182], [0, -174], [6, -184], [12, -172]], f('#ff8a3a'), OUT, 1);
+  limb(c, -60, -140, -70 - sway, -80, f('#4a3838'), 20);E(c, -70 - sway, -74, 14, 12, f('#5a4644'));
+  c.save();c.translate(60, -140);c.rotate(-.2 - raise * 2.2);limb(c, 0, 0, 8, 60, f('#4a3838'), 20);E(c, 8, 64, 14, 12, f('#5a4644'));
+  c.translate(8, 64);L(c, 0, -10, 0, 70, OUT, 10);L(c, 0, -10, 0, 70, f('#7a5a3a'), 6);
+  P(c, [[-30, 62], [30, 62], [30, 96], [-30, 96]], f('#5a5a6a'));L(c, -28, 79, 28, 79, f('#ff8a3a'), 3);glowDot(c, 0, 79, 34, '#ff8a3a55');
   c.restore();
 }
-
+// Ice: a floating ghost knight — no legs, a wisp tail, horned helm with a glowing visor slit.
+function frostRevenant(c, th, f, t, raise) {
+  const hover = Math.sin(t * 2) * 6;
+  c.translate(0, -18 + hover);
+  c.globalAlpha *= .9;
+  P(c, [[-34, -130], [34, -130], [26, -60], [10 + Math.sin(t * 4) * 8, -10], [0, 0], [-8 + Math.sin(t * 4 + 1) * 8, -14], [-26, -60]], f('#cfe8f8'), '#5f8ab3', 1.6);
+  for (let i = 0; i < 4; i++) P(c, [[-30 + i * 18, -70], [-26 + i * 18 + Math.sin(t * 3 + i) * 4, -36], [-20 + i * 18, -70]], f('#e8f6ff'), '#86a6c6', 1);
+  c.globalAlpha /= .9;
+  P(c, [[-30, -150], [30, -150], [24, -96], [-24, -96]], f('#8fb4d8'));
+  P(c, [[-18, -144], [18, -144], [12, -104], [0, -98], [-12, -104]], f('#dff4ff'), '#5f8ab3', 1.2);
+  for (const s of [-1, 1]) {E(c, s * 34, -146, 16, 11, f('#b3cce2'));P(c, [[s * 26, -154], [s * 40, -172], [s * 46, -150]], f('#ffffff'), '#5f8ab3', 1);}
+  E(c, 0, -170, 18, 19, f('#b3cce2'));
+  P(c, [[-12, -172], [12, -172], [10, -167], [-10, -167]], f('#1a2a4a'), null);
+  glowDot(c, 0, -170, 22, '#7fd8ff99');L(c, -9, -169.5, 9, -169.5, '#d6f6ff', 2.4);
+  for (const s of [-1, 1]) P(c, [[s * 12, -182], [s * 26, -206], [s * 18, -180]], f('#ffffff'), '#5f8ab3', 1.2);
+  limb(c, -34, -140, -40, -98, f('#8fb4d8'), 11);
+  c.save();c.translate(34, -140);c.rotate(-.25 - raise * 1.8);limb(c, 0, 0, 6, 40, f('#8fb4d8'), 11);c.translate(6, 44);
+  P(c, [[-5, -8], [5, -8], [4, 90], [0, 102], [-4, 90]], f('#dff6ff'), '#3a6a9a', 1.6);L(c, -14, -6, 14, -6, f('#8fb4d8'), 6);glowDot(c, 0, 50, 26, '#bfeaff66');
+  c.restore();
+}
+// Temple: a stout Thai yaksha giant — big belly, tiered pointed crown, tusks and a heavy club.
+function goldenYaksha(c, th, f, t, raise) {
+  const sway = Math.sin(t * 1.5) * 2;
+  for (const s of [-1, 1]) {limb(c, s * 20, -56, s * 30, -10, f('#3f8a5a'), 18);E(c, s * 32, -6, 14, 7, f('#d49440'));}
+  P(c, [[-30, -60], [30, -60], [36, -36], [-36, -36]], f('#d23a3a'));
+  E(c, 0, -92, 46, 42, f('#4fa86a'));
+  P(c, [[-36, -126], [36, -126], [24, -92], [0, -84], [-24, -92]], f('#ffd25a'), OUT, 1.4);
+  for (const s of [-1, 0, 1]) E(c, s * 14, -108, 4, 4, f('#d23a3a'), OUT, 1);
+  for (const s of [-1, 1]) {E(c, s * 42, -126, 18, 13, f('#ffd25a'));P(c, [[s * 34, -136], [s * 50, -150], [s * 56, -128]], f('#ffd25a'), OUT, 1);}
+  E(c, 0, -148, 22, 20, f('#4fa86a'));
+  eyes(c, 2, -152, 4.6, 9, th, f, true);
+  P(c, [[-12, -138], [12, -138], [10, -134], [-10, -134]], f('#8a1a1a'), null);
+  for (const s of [-1, 1]) P(c, [[s * 8, -138], [s * 11, -128], [s * 13, -138]], f('#fff4dc'), OUT, 1);
+  // Thai chada crown: stacked tiers to a tall spire.
+  for (let i = 0; i < 4; i++) P(c, [[-18 + i * 4, -164 - i * 12], [18 - i * 4, -164 - i * 12], [14 - i * 4, -176 - i * 12], [-14 + i * 4, -176 - i * 12]], f(i % 2 ? '#e8b83a' : '#ffd25a'), OUT, 1.2);
+  P(c, [[-4, -212], [4, -212], [0, -234]], f('#ffd25a'), OUT, 1.2);
+  limb(c, -44, -120, -54 - sway, -74, f('#4fa86a'), 15);
+  c.save();c.translate(44, -120);c.rotate(-.2 - raise * 2);limb(c, 0, 0, 8, 46, f('#4fa86a'), 15);c.translate(8, 50);
+  L(c, 0, -6, 0, 40, OUT, 9);L(c, 0, -6, 0, 40, f('#7a4a1a'), 5.5);E(c, 0, 60, 15, 24, f('#d49440'));for (const y of [48, 62, 76]) L(c, -13, y, 13, y, f('#ffd25a'), 2.4);
+  c.restore();
+}
+// Moon: a tall robed sorcerer-king floating before a dark moon, with a crescent staff.
+function moonEmperor(c, th, f, t, raise) {
+  const hover = Math.sin(t * 1.8) * 4;
+  c.save();c.translate(0, -150);glowDot(c, 0, 0, 90, '#b48aff44');E(c, 0, 0, 52, 52, f('#1e1a38'), '#5e5a86', 3);c.beginPath();c.arc(14, -8, 44, 0, Math.PI * 2);c.fillStyle = f('#2e2a48');c.fill();c.restore();
+  c.translate(0, hover);
+  P(c, [[-20, -150], [20, -150], [40, -4], [-40, -4]], f('#2a2448'));
+  P(c, [[-8, -150], [8, -150], [14, -4], [-14, -4]], f('#d8dcff'), OUT, 1);
+  for (let i = 0; i < 4; i++) {const y = -124 + i * 28;P(c, [[0, y - 5], [1.6, y - 1.6], [5, y], [1.6, y + 1.6], [0, y + 5], [-1.6, y + 1.6], [-5, y], [-1.6, y - 1.6]], f('#8a7ad8'), null);}
+  P(c, [[-28, -156], [28, -156], [20, -138], [-20, -138]], f('#4a3f7a'));
+  for (const s of [-1, 1]) P(c, [[s * 14, -160], [s * 34, -186], [s * 30, -152]], f('#4a3f7a'), OUT, 1.2);
+  E(c, 0, -170, 14, 15, f('#d8d4f0'));
+  eyes(c, 1, -170, 2.8, 5.5, th, f, true);
+  c.beginPath();c.arc(0, -190, 13, Math.PI * 1.1, Math.PI * 1.9);c.strokeStyle = OUT;c.lineWidth = 7;c.stroke();c.strokeStyle = f('#e8e4ff');c.lineWidth = 4;c.stroke();
+  P(c, [[-6, -186], [0, -206], [6, -186]], f('#e8e4ff'), OUT, 1);
+  limb(c, -18, -146, -32, -104, f('#2a2448'), 9);
+  c.save();c.translate(18, -146);c.rotate(-.15 - raise * 1.2);limb(c, 0, 0, 14, 40, f('#2a2448'), 9);c.translate(14, 44);
+  L(c, 0, -70, 0, 60, OUT, 7);L(c, 0, -70, 0, 60, f('#d8dcff'), 4);c.beginPath();c.arc(0, -78, 14, .6, 5.6);c.strokeStyle = f('#e8e4ff');c.lineWidth = 4;c.stroke();glowDot(c, 0, -78, 30 + raise * 20, '#c8c0ff77');
+  c.restore();
+  for (let i = 0; i < 3; i++) {const a = t * 1.5 + i * 2.1;glowDot(c, Math.cos(a) * 50, -120 + Math.sin(a) * 20, 10, '#b48affaa');}
+}
+// Crystal: a coiled serpent dragon of teal scales and crystal spines, head raised to strike.
+function crystalWyrm(c, th, f, t, raise) {
+  const segs = 9, pts = [];
+  for (let i = 0; i < segs; i++) {const u = i / (segs - 1), a = u * Math.PI * 1.6 + Math.sin(t * 2) * .15;pts.push([Math.cos(a) * 46 * (1 - u * .5) - 10, -16 - u * 110 - Math.sin(a) * 14]);}
+  for (let i = 0; i < segs; i++) {const [x, y] = pts[i], r = 24 - i * 1.6;E(c, x, y, r, r * .8, f(i % 2 ? th.body : '#2f8088'));
+    if (i % 2 === 0) P(c, [[x - 5, y - r * .6], [x, y - r * .6 - 16], [x + 5, y - r * .6]], f(i % 4 ? th.accent : '#7ff0e0'), OUT, 1);}
+  const [hx, hy] = pts[segs - 1], lift = raise * 18;
+  c.save();c.translate(hx + 8, hy - 14 - lift);c.rotate(-.1 - raise * .3);
+  E(c, 0, 0, 26, 18, f(th.body));P(c, [[14, -4], [42, 4], [40, 14], [14, 12]], f(th.body));
+  P(c, [[22, 10], [40, 14], [26, 22]], f('#1a4a52'), OUT, 1);
+  for (let i = 0; i < 3; i++) P(c, [[26 + i * 5, 12], [28 + i * 5, 18], [30 + i * 5, 12]], f('#ffffff'), null);
+  eyes(c, 8, -4, 4, 6, th, f, true);glowDot(c, 8, -4, 20, '#ff8ad866');
+  for (const [x, h] of [[-12, 30], [0, 24], [-22, 22]]) P(c, [[x - 4, -12], [x - 8, -12 - h], [x + 4, -12]], f(x ? '#7ff0e0' : th.accent), OUT, 1.2);
+  c.restore();
+}
 // ---------------------------------------------------------------- arenas
 function inside(x, y) {
   let hit = false;

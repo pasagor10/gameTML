@@ -62,7 +62,7 @@ constructor(rng=Math.random,profile=null){
   this.t=0;this.maxHp=100;this.boosts={might:0,vigor:0};this.p={x:0,y:0,hp:100,inv:0};this.enemies=[];this.gems=[];this.shots=[];this.effects=[];this.events=[];this.cues=[];this.zones=[];this.delayed=[];
   this.skills={};this.level=1;this.xp=0;this.need=5;this.kills=0;this.state='playing';this.spawn=0;this.attack=0;this.swing=0;this.aim=0;this.skillClock=0;this.droneClock=0;this.nextId=0;this.offers=[];
   this.stage=1;this.stageStart=0;this.bossSpawned=false;this.eliteSpawned=false;this.bossesDefeated=0;
-  this.weaponTier=0;this.armorTier=0;this.bag=[];this.loot=[];this.magnetClock=0;this.name=cleanHeroName(profile?.name)||'TILMO';
+  this.weaponTier=0;this.armorTier=0;this.bag=[];this.loot=[];this.magnetClock=0;this.holdPicks=false;this.pendingPicks=0;this.awaitingClass=false;this.reviveOnDefeat=false;this.retreats=0;this.xpEarned=0;this.name=cleanHeroName(profile?.name)||'TILMO';
   this.firstMoved=false;this.firstKill=false;this.evolved={};
   this.emit('run_start');for(let i=0;i<4;i++)this.addEnemy('slime',130+i*25,i*Math.PI/2);
 }
@@ -80,14 +80,14 @@ addEnemy(type,radius=430,angle=this.rng()*Math.PI*2){
 }
 choose(id){
   if(this.state!=='upgrade'||!this.offers.some(s=>s.id===id))return false;
-  if(id==='might'||id==='vigor'){this.boosts[id]++;if(id==='vigor'){this.maxHp+=15;this.p.hp=this.maxHp;}this.emit('upgrade_chosen',{id,level:this.boosts[id]});this.state='playing';this.checkLevel();return true;}
+  if(id==='might'||id==='vigor'){this.boosts[id]++;if(id==='vigor'){this.maxHp+=15;this.p.hp=this.maxHp;}this.emit('upgrade_chosen',{id,level:this.boosts[id]});this.state='playing';this.checkLevel();this.openPending();return true;}
   this.skills[id]=(this.skills[id]||0)+1;this.emit('upgrade_chosen',{id,level:this.skills[id]});
   const evo=evolutions(this.skills);for(const key of Object.keys(evo))if(evo[key]&&!this.evolved[key]){this.evolved[key]=true;this.emit('evolution_unlocked',{id:key});}
-  this.state='playing';this.skillClock=10;this.checkLevel();return true;
+  this.state='playing';this.skillClock=10;this.checkLevel();this.openPending();return true;
 }
 awaken(job,appearance,name){
   if(this.state!=='awakening'||!CLASSES.some(c=>c.id===job)||!['a','b'].includes(appearance))return false;
-  this.job=job;this.appearance=appearance;this.weaponTier=0;this.name=cleanHeroName(name)||this.name;this.cue('equip');this.equipBest();
+  this.awaitingClass=false;this.job=job;this.appearance=appearance;this.weaponTier=0;this.name=cleanHeroName(name)||this.name;this.cue('equip');this.equipBest();
   this.emit('class_chosen',{job,appearance,name:this.name});this.effects.push({kind:'ascend',x:this.p.x,y:this.p.y,life:1.2,max:1.2});
   // The first pick after awakening shows the new class's own skills.
   const own=SKILLS.filter(s=>s.job===job);this.offers=own;this.state='upgrade';this.emit('upgrade_offered',{options:own.map(s=>s.id)});
@@ -110,8 +110,36 @@ checkLevel(){
   if(this.xp<this.need||this.state!=='playing')return;
   this.xp-=this.need;this.level++;this.cue('levelUp');this.need=5+Math.floor(this.level*1.4);
   this.equipBest();
-  if(this.level>=10&&this.job==='novice'){this.state='awakening';this.emit('class_unlocked');return;}
-  this.offerUpgrade();
+  if(this.level>=10&&this.job==='novice'&&!this.awaitingClass){
+    if(this.holdPicks){this.awaitingClass=true;this.emit('class_unlocked');}else{this.state='awakening';this.emit('class_unlocked');return;}
+  }else if(this.holdPicks){this.pendingPicks++;this.emit('pick_saved',{pending:this.pendingPicks});}
+  else{this.offerUpgrade();return;}
+  this.checkLevel();
+}
+// While the player is away, level-ups are banked instead of picked; this opens the next banked
+// choice (the class pick first) once they are back.
+openPending(){
+  if(this.state!=='playing'||this.holdPicks)return false;
+  if(this.awaitingClass&&this.job==='novice'){this.state='awakening';return true;}
+  while(this.pendingPicks>0&&this.state==='playing'){this.pendingPicks--;this.offerUpgrade();}
+  return this.state!=='playing';
+}
+// Auto-farming never ends the run: a defeat retreats to the start of the current stage.
+retreat(){
+  this.retreats++;this.p.hp=this.maxHp;this.p.inv=2;this.enemies=[];this.shots=this.shots.filter(s=>s.friendly);this.zones=[];
+  this.stageStart=this.t;this.bossSpawned=false;this.eliteSpawned=false;this.spawn=2;this.emit('retreat',{stage:this.stage});this.cue('portal');
+  this.effects.push({kind:'ascend',x:this.p.x,y:this.p.y,life:1.2,max:1.2});
+}
+// Plain snapshot for saving; the stage restarts on restore and enemies respawn.
+serialize(){
+  const keep=['job','appearance','name','t','stage','bossesDefeated','level','xp','need','kills','skills','boosts','maxHp','weaponTier','armorTier','bag','evolved','welcome','firstMoved','firstKill','magnetClock','pendingPicks','awaitingClass','retreats','xpEarned'];
+  const out={v:1,hp:this.p.hp};for(const k of keep)out[k]=structuredClone(this[k]);return out;
+}
+static restore(snap,rng=Math.random){
+  const r=new Run(rng,{job:snap.job,appearance:snap.appearance,name:snap.name});
+  for(const [k,v] of Object.entries(snap))if(k!=='v'&&k!=='hp'&&k in r)r[k]=structuredClone(v);
+  r.job=normalizeJob(r.job);r.p.hp=Math.max(1,Math.min(r.maxHp,snap.hp||r.maxHp));r.stageStart=r.t;r.spawn=1;r.emit('run_restored',{stage:r.stage,level:r.level});
+  return r;
 }
 hit(e,damage,continuous=false){
   if(e.hp<=0)return;e.hp-=damage;if(!continuous)this.cue('hit',{cls:this.job==='mage'?'mage':this.job==='gunner'?'archer':'blade',volume:.55});e.flash=.12;
@@ -134,7 +162,7 @@ end(reason){if(this.state==='ended')return;this.state='ended';this.cue('death');
 damage(n,source){
   if(this.p.inv>0||this.state!=='playing')return;n*=(1+.25*(this.stage-1))*(1-ARMOR[this.armorTier].guard);
   this.p.hp=Math.max(0,this.p.hp-n);this.p.inv=.8;this.cue('hurt');this.emit('damage_taken',{source,damage:n});this.effects.push({kind:'hurt',x:this.p.x,y:this.p.y,life:.25,max:.25});
-  if(this.p.hp<=0)this.end(source==='boss'?'boss':'defeat');
+  if(this.p.hp<=0){if(this.reviveOnDefeat)this.retreat();else this.end(source==='boss'?'boss':'defeat');}
 }
 alive(){return this.enemies.filter(e=>e.hp>0);}
 nearest(range,from=this.p){let best=null,bestD=range;for(const e of this.enemies){if(e.hp<=0)continue;const d=Math.hypot(e.x-from.x,e.y-from.y);if(d<bestD){best=e;bestD=d;}}return best;}
@@ -261,7 +289,7 @@ update(dt,input={x:0,y:0}){
   }
   for(const s of this.shots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;if(s.friendly){for(const e of this.enemies){if(s.life<=0)break;if(e.hp>0&&!s.hit.has(e.id)&&Math.hypot(s.x-e.x,s.y-e.y)<e.r+(s.radius||10)){s.hit.add(e.id);this.hit(e,s.damage);if(s.slows)e.slow=1.6;if(s.blast)this.blast(s.x,s.y,s.blast,s.damage*.5);if(s.pierce!==undefined&&s.pierce--<=0)s.life=0;}}}else if(Math.hypot(s.x-p.x,s.y-p.y)<22){this.damage(12,'arrow');s.life=0;}}
   this.magnetClock=Math.max(0,this.magnetClock-dt);
-  for(const g of this.gems){const d=Math.hypot(p.x-g.x,p.y-g.y);if(g.pull&&d>=120){const step=Math.min(d,900*dt);g.x+=(p.x-g.x)/(d||1)*step;g.y+=(p.y-g.y)/(d||1)*step;}else if(d<120){const step=Math.min(d,Math.max(90,280-d)*dt);g.x+=(p.x-g.x)/(d||1)*step;g.y+=(p.y-g.y)/(d||1)*step;}if(d<20){this.xp+=g.value;g.collected=true;this.cue('coin',{volume:.35});}}
+  for(const g of this.gems){const d=Math.hypot(p.x-g.x,p.y-g.y);if(g.pull&&d>=120){const step=Math.min(d,900*dt);g.x+=(p.x-g.x)/(d||1)*step;g.y+=(p.y-g.y)/(d||1)*step;}else if(d<120){const step=Math.min(d,Math.max(90,280-d)*dt);g.x+=(p.x-g.x)/(d||1)*step;g.y+=(p.y-g.y)/(d||1)*step;}if(d<20){this.xp+=g.value;this.xpEarned+=g.value;g.collected=true;this.cue('coin',{volume:.35});}}
   for(const l of this.loot){const d=Math.hypot(p.x-l.x,p.y-l.y);if(d<90||l.pull){const step=Math.min(d,(l.pull?900:220)*dt);l.x+=(p.x-l.x)/(d||1)*step;l.y+=(p.y-l.y)/(d||1)*step;}if(d<24){l.collected=true;const {kind,tier,job}=l;this.bag.push({kind,tier,job});this.bag.sort((a,b)=>b.tier-a.tier);this.bag.length=Math.min(this.bag.length,40);this.cue('loot',TIERS[tier].id);this.emit('loot_pickup',{kind,tier,name:itemName(l)});this.equipBest();}}
   this.loot=this.loot.filter(l=>!l.collected);
   this.gems=this.gems.filter(g=>!g.collected);this.enemies=this.enemies.filter(e=>e.hp>0&&(e.type==='boss'||Math.hypot(e.x-p.x,e.y-p.y)<1300));this.shots=this.shots.filter(s=>s.life>0);for(const f of this.effects)f.life-=dt;this.effects=this.effects.filter(f=>f.life>0).slice(-140);

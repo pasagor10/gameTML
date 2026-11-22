@@ -96,3 +96,22 @@ test('hero names are cleaned and can be rolled at random',()=>{
   assert.ok(randomHeroName(()=>0).length>1);
   const r=new Run(()=>.5);r.state='awakening';assert.ok(r.awaken('knight','a','ริวมอส'));assert.equal(r.name,'ริวมอส');
 });
+
+test('away from the screen, level-ups are banked and opened one by one on return',()=>{
+  const r=new Run(()=>.5,{job:'mage'});r.enemies=[];r.spawn=1000;r.holdPicks=true;r.xp=200;r.checkLevel();
+  assert.equal(r.state,'playing');assert.ok(r.pendingPicks>=3);const banked=r.pendingPicks,level=r.level;
+  r.holdPicks=false;assert.ok(r.openPending());assert.equal(r.state,'upgrade');assert.equal(r.pendingPicks,banked-1);
+  r.choose(r.offers[0].id);assert.equal(r.state,'upgrade','next banked pick opens right away');assert.equal(r.level,level);
+  // A novice reaching Lv.10 while away gets the class pick first on return.
+  const n=new Run(()=>.5);n.enemies=[];n.spawn=1000;n.holdPicks=true;n.xp=400;n.checkLevel();assert.ok(n.awaitingClass);assert.equal(n.state,'playing');
+  n.holdPicks=false;n.openPending();assert.equal(n.state,'awakening');assert.ok(n.awaken('gunner','a','ไค'));assert.equal(n.awaitingClass,false);
+});
+test('auto-farming retreats instead of dying, and runs survive a save and restore',()=>{
+  const r=new Run(()=>.5,{job:'knight',name:'ริว'});r.reviveOnDefeat=true;r.stage=3;r.t=500;r.p.hp=1;r.damage(50,'boss');
+  assert.equal(r.state,'playing');assert.equal(r.p.hp,r.maxHp);assert.equal(r.stage,3);assert.equal(r.retreats,1);assert.equal(r.enemies.length,0);
+  r.level=17;r.skills={whirl:3};r.bag=[{kind:'armor',tier:2,job:null}];r.armorTier=2;r.pendingPicks=4;
+  const back=Run.restore(JSON.parse(JSON.stringify(r.serialize())));
+  for(const k of ['job','name','stage','level','pendingPicks','armorTier'])assert.deepEqual(back[k],r[k],k);
+  assert.deepEqual(back.skills,{whirl:3});assert.equal(back.bag.length,1);assert.equal(back.state,'playing');
+  const plain=new Run(()=>.5,{job:'knight'});plain.p.hp=1;plain.damage(50,'boss');assert.equal(plain.state,'ended');
+});
