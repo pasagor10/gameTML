@@ -869,48 +869,86 @@ export function drawToonArena(c, time, stage = 1) {
 }
 
 // ---------------------------------------------------------------- pets
-// Small companions drawn facing right with their feet at (0, 0); `moving` adds a run cycle.
+// Companions drawn facing right with their feet at (0, 0), about 34 units tall; `moving` adds a run cycle.
+const PET_AURA = {cat: '#4fb6ff', fox: '#c46bff', owl: '#ffb52e', dragon: '#ff4a55', qilin: '#ff8ae0'};
+function petAura(c, col, time, big) {
+  c.save();c.scale(1, .34);const R = big ? 24 : 18;
+  const g = c.createRadialGradient(0, 0, 0, 0, 0, R * 1.3);g.addColorStop(0, `${col}55`);g.addColorStop(1, `${col}00`);c.fillStyle = g;c.beginPath();c.arc(0, 0, R * 1.3, 0, Math.PI * 2);c.fill();
+  c.setLineDash([6, 5]);c.lineDashOffset = -time * 30;c.strokeStyle = col;c.lineWidth = 2.4;c.beginPath();c.arc(0, 0, R, 0, Math.PI * 2);c.stroke();c.restore();
+}
+function flame(c, x, y, w, h, time, k, hot = '#ffe27a', mid = '#ff7a2a') {
+  const f = Math.sin(time * 14 + k) * .18;c.save();c.translate(x, y);
+  c.beginPath();c.moveTo(-w, 0);c.quadraticCurveTo(-w * 1.1, -h * .6, w * f * 3, -h);c.quadraticCurveTo(w * 1.1, -h * .55, w, 0);c.quadraticCurveTo(0, h * .25, -w, 0);
+  const g = c.createLinearGradient(0, 0, 0, -h);g.addColorStop(0, mid);g.addColorStop(1, hot);c.fillStyle = g;c.fill();c.strokeStyle = OUT;c.lineWidth = 1.2;c.stroke();c.restore();
+}
+function fierceEye(c, x, y, r, iris, slant = 1) {
+  P(c, [[x - r * 1.2, y - r * .2], [x + r * 1.1, y - r * .9 * slant], [x + r * 1.1, y + r * .7], [x - r * .9, y + r * .7]], '#ffffff', OUT, 1);
+  E(c, x + r * .3, y + r * .05, r * .55, r * .65, iris, null);E(c, x + r * .4, y - r * .15, r * .18, r * .18, '#ffffff', null);
+}
 export function drawToonPet(c, id, time, moving = false, face = 1) {
-  const run = moving ? time * 16 : time * 3, bob = moving ? Math.abs(Math.sin(run)) * 2.2 : Math.sin(time * 3) * .6;
-  c.save();E(c, 0, 1, 11, 3.6, '#10303040', null);c.scale(face, 1);c.translate(0, -bob);
-  const feet = (col, xs) => {for (const [x, ph] of xs) {const s = moving ? Math.sin(run + ph) * 2.5 : 0;L(c, x, -5, x + s, 0, col, 2.2);}};
-  if (id === 'chick') {
-    feet('#e08a2a', [[-2, 0], [3, Math.PI]]);E(c, 0, -9, 8, 7.5, '#ffe14a');E(c, -3, -8, 3.6, 2.6, '#f4c42a', OUT, 1);
-    P(c, [[7, -11], [12, -9.5], [7, -8]], '#ff9a2a', OUT, 1);E(c, 3.5, -12, 1.3, 1.6, OUT, null);P(c, [[-1, -16], [1, -20], [2, -16]], '#ffe14a', OUT, 1);
-  } else if (id === 'cat') {
-    feet('#d0702a', [[-6, 0], [-2, Math.PI], [3, 0], [6, Math.PI]]);
-    c.beginPath();c.moveTo(-9, -9);c.quadraticCurveTo(-17, -14 + Math.sin(time * 5) * 3, -13, -22);c.strokeStyle = OUT;c.lineWidth = 4.4;c.stroke();c.strokeStyle = '#ff9a3a';c.lineWidth = 2.6;c.stroke();
-    E(c, -1, -9, 10, 5.5, '#ff9a3a');for (const x of [-4, 0]) L(c, x, -14, x + 1, -10, '#c4561a', 1.4);
-    E(c, 8, -14, 6, 5.5, '#ff9a3a');for (const x of [4, 10]) P(c, [[x - 2, -18], [x, -23], [x + 2.5, -18]], '#ff9a3a', OUT, 1);
-    for (const x of [7, 10.5]) E(c, x, -14.5, 1.1, 1.5, OUT, null);E(c, 12.5, -12.5, 1, .8, '#ff6a8a', null);
-  } else if (id === 'fox') {
-    feet('#8a2a10', [[-6, 0], [-2, Math.PI], [3, 0], [6, Math.PI]]);
-    c.save();c.translate(-9, -10);c.rotate(-.5 + Math.sin(time * 6) * .25);E(c, -7, 0, 9, 4.6, '#ff6a2a');E(c, -14, 0, 3.4, 3, '#fff4e0', OUT, 1);c.restore();
-    E(c, -1, -9, 9.5, 5.5, '#ff6a2a');E(c, 2, -7, 5, 2.6, '#fff4e0', null);
-    E(c, 8, -14, 5.5, 5, '#ff6a2a');P(c, [[11, -15], [17, -12.5], [11, -11]], '#ff6a2a', OUT, 1);E(c, 16.5, -12.6, 1, .9, OUT, null);
-    for (const x of [4, 9]) P(c, [[x - 2, -17], [x, -24], [x + 2.5, -17]], '#ff6a2a', OUT, 1);E(c, 9, -15, 1.1, 1.4, OUT, null);
-    for (let i = 0; i < 3; i++) {const ph = (time * 1.2 + i / 3) % 1;c.globalAlpha = 1 - ph;glowDot(c, -16 + i * 3, -14 - ph * 12, 3.4, '#ffb03aaa');}c.globalAlpha = 1;
-  } else if (id === 'owl') {
-    c.translate(0, -10 + Math.sin(time * 5) * 2);const flap = Math.sin(time * 14) * .5;
-    for (const s of [-1, 1]) {c.save();c.scale(s, 1);c.rotate(flap);P(c, [[4, -6], [16, -12], [14, -2], [6, 0]], '#3a4a8a');c.restore();}
-    E(c, 0, -6, 8, 9, '#4a5aa8');E(c, 0, -3, 5, 5.6, '#c8d0ff', null);for (const s of [-1, 1]) P(c, [[s * 4, -14], [s * 7, -19], [s * 7.5, -12]], '#4a5aa8', OUT, 1);
-    for (const s of [-1, 1]) {E(c, s * 3.4, -10, 3.2, 3.2, '#fff8d0', OUT, 1);E(c, s * 3.4 + .6, -10, 1.6, 1.8, OUT, null);}P(c, [[-1.2, -7.5], [1.2, -7.5], [0, -5]], '#ffb03a', OUT, .8);
-    for (let i = 0; i < 3; i++) {const a = time * 2 + i * 2.1;glowDot(c, Math.cos(a) * 14, -6 + Math.sin(a) * 6, 4, '#fff4a8cc');}
-  } else if (id === 'dragon') {
-    c.translate(0, -12 + Math.sin(time * 4) * 2);const flap = Math.sin(time * 10) * .5;
-    for (const s of [-1, 1]) {c.save();c.translate(-2, -8);c.scale(s * .9 + (s < 0 ? 0 : .1), 1);c.rotate(-flap);P(c, [[0, 0], [12, -12], [18, -6], [14, -2], [16, 3], [6, 2]], '#b8222e');c.restore();}
-    c.beginPath();c.moveTo(-8, -2);c.quadraticCurveTo(-18, 2, -20, -6 + Math.sin(time * 5) * 2);c.strokeStyle = OUT;c.lineWidth = 4.6;c.stroke();c.strokeStyle = '#e8384a';c.lineWidth = 2.8;c.stroke();
-    E(c, -1, -4, 9, 6.5, '#e8384a');E(c, 1, -2, 5, 3.6, '#ffd27a', null);
-    E(c, 8, -11, 6.5, 5.5, '#e8384a');P(c, [[12, -12], [18, -10], [12, -8]], '#e8384a', OUT, 1);for (const x of [5, 9]) P(c, [[x - 1.5, -15], [x - 3, -21], [x + 1.5, -15.5]], '#fff0c0', OUT, 1);
-    E(c, 9.5, -12.5, 1.3, 1.6, '#ffe08a', null);glowDot(c, 19, -10, 5 + Math.sin(time * 9) * 1.5, '#ffb03aaa');
-  } else if (id === 'qilin') {
-    glowDot(c, 0, -14, 26, '#ffe39a55');feet('#a8650f', [[-7, 0], [-3, Math.PI], [4, 0], [8, Math.PI]]);
-    c.beginPath();c.moveTo(-10, -12);c.quadraticCurveTo(-20, -10, -18, -20 + Math.sin(time * 5) * 2);c.strokeStyle = OUT;c.lineWidth = 4.6;c.stroke();c.strokeStyle = '#ff8ae0';c.lineWidth = 2.8;c.stroke();
-    E(c, -1, -11, 11, 6.5, '#ffd25a');for (const x of [-6, -1, 4]) E(c, x, -12, 2, 1.6, '#ffb52e', null);
-    P(c, [[4, -14], [9, -24], [14, -22], [10, -12]], '#ffd25a');E(c, 13, -23, 5.5, 4.6, '#ffd25a');P(c, [[16, -24], [21, -22], [16, -20]], '#ffd25a', OUT, 1);
-    for (let i = 0; i < 4; i++) P(c, [[6 + i * 2, -26 + i * 2], [2 + i * 2, -30 + i * 2 + Math.sin(time * 6 + i) * 1.5], [9 + i * 2, -24 + i * 2]], `hsl(${(i * 70 + time * 120) % 360} 90% 70%)`, OUT, .8);
-    P(c, [[12, -27], [14, -35], [15.5, -27]], '#fff4c0', OUT, 1);E(c, 14.5, -23.5, 1.1, 1.4, OUT, null);
-    for (let i = 0; i < 4; i++) {const ph = (time * .9 + i / 4) % 1;c.globalAlpha = 1 - ph;glowDot(c, Math.sin(i * 2.4) * 14, -4 - ph * 30, 3, `hsl(${i * 80} 90% 75%)`);}c.globalAlpha = 1;
+  const run = moving ? time * 15 : time * 3, bob = moving ? Math.abs(Math.sin(run)) * 2.6 : Math.sin(time * 3) * .8;
+  c.save();if (PET_AURA[id]) petAura(c, PET_AURA[id], time, id === 'dragon' || id === 'qilin');
+  E(c, 0, 1, 13, 4, '#10303050', null);c.scale(face, 1);c.translate(0, -bob);
+  const legs = (col, xs, w = 3) => {for (const [x, ph] of xs) {const sw = moving ? Math.sin(run + ph) * 3.4 : 0;limb(c, x, -7, x + sw, 0, col, w);}};
+  if (id === 'chick') { // battle chick: headband and a twig sword
+    legs('#e08a2a', [[-3, 0], [4, Math.PI]], 2);
+    E(c, 0, -12, 11, 11, '#ffe14a');E(c, -4, -9, 5, 3.4, '#f4c42a', OUT, 1);E(c, 3, -6, 6, 3.6, '#fff4b0', null);
+    P(c, [[-10, -17], [10, -17], [10, -13], [-10, -13]], '#d8322a', OUT, 1.2);
+    for (const k of [0, 1]) {const fl = Math.sin(time * 9 + k) * 3;P(c, [[-10, -16], [-19, -18 + fl + k * 4], [-18, -13 + fl + k * 4], [-10, -14]], '#d8322a', OUT, 1);}
+    fierceEye(c, 5, -12, 2.6, '#2b2133');L(c, 2, -16.5, 8.5, -14.5, OUT, 1.8);
+    P(c, [[9, -11], [16, -9], [9, -7]], '#ff9a2a', OUT, 1.2);P(c, [[-2, -24], [1, -30], [3, -23]], '#ffe14a', OUT, 1);
+    c.save();c.translate(11, -4);c.rotate(.55 + (moving ? Math.sin(run) * .25 : 0));L(c, 0, 0, 0, -15, OUT, 3.4);L(c, 0, 0, 0, -15, '#c8d4e2', 1.8);L(c, -3, -2, 3, -2, '#8a5a34', 2.4);c.restore();E(c, 10, -5, 2.6, 2.2, '#f4c42a', OUT, 1);
+  } else if (id === 'cat') { // ninja cat: mask, scarf, glowing eyes
+    legs('#1e2440', [[-8, 0], [-3, Math.PI], [5, 0], [9, Math.PI]], 3.2);
+    c.beginPath();c.moveTo(-11, -12);c.bezierCurveTo(-22, -12, -20, -26 + Math.sin(time * 5) * 3, -14, -28);c.strokeStyle = OUT;c.lineWidth = 5;c.stroke();c.strokeStyle = '#2a3258';c.lineWidth = 3.2;c.stroke();
+    E(c, -1, -12, 13, 7, '#2a3258');E(c, 1, -9, 7, 3, '#3a4478', null);
+    for (let k = 0; k < 2; k++) {const fl = Math.sin(time * 10 + k * 1.3) * 3;P(c, [[3, -16], [-12 - k * 5, -20 + fl + k * 3], [-10 - k * 5, -15 + fl + k * 3], [3, -13]], '#e8384a', OUT, 1);}
+    E(c, 9, -19, 8.5, 7.5, '#2a3258');for (const x of [4, 12]) P(c, [[x - 3, -23], [x, -32], [x + 3.5, -23]], '#2a3258', OUT, 1.2);
+    P(c, [[2, -21], [17, -21], [16, -17], [3, -17]], '#11142a', null);for (const x of [7, 13]) {E(c, x, -19, 2.4, 1.3, '#bff6ff', null);glowDot(c, x, -19, 5, '#7fe8ff88');}
+    P(c, [[3, -15], [17, -15], [12, -12], [6, -12]], '#e8384a', OUT, 1);
+  } else if (id === 'fox') { // flame fox: three burning tails
+    for (let k = 0; k < 3; k++) {c.save();c.translate(-10, -12);c.rotate(-1.9 + k * .45 + Math.sin(time * 6 + k) * .12);flame(c, 0, 0, 4.4, 20, time, k * 2);c.restore();}
+    legs('#2a1410', [[-8, 0], [-3, Math.PI], [5, 0], [9, Math.PI]], 3.2);
+    E(c, -1, -12, 12, 7, '#ff6a2a');E(c, 3, -9, 7, 3.4, '#fff4e0', null);
+    E(c, 10, -19, 7.5, 7, '#ff6a2a');P(c, [[14, -21], [23, -17], [15, -14]], '#ff6a2a', OUT, 1.2);P(c, [[15, -16], [22, -17], [16, -14]], '#fff4e0', null);E(c, 22.5, -17.2, 1.3, 1.1, OUT, null);
+    for (const x of [5, 11]) {P(c, [[x - 3, -23], [x, -33], [x + 3.5, -23]], '#ff6a2a', OUT, 1.2);P(c, [[x - 1.2, -24], [x, -30], [x + 1.6, -24]], '#2a1410', null);}
+    fierceEye(c, 11, -20, 2.4, '#ffb000');glowDot(c, 12, -20, 7, '#ffb00055');
+    for (let i = 0; i < 4; i++) {const ph = (time * 1.1 + i / 4) % 1;c.globalAlpha = 1 - ph;E(c, -14 + Math.sin(i * 3) * 6, -26 - ph * 16, 1.6, 1.6, i % 2 ? '#ffe27a' : '#ff7a2a', null);}c.globalAlpha = 1;
+  } else if (id === 'owl') { // archmage owl: star hat, rune circle, orbs
+    c.save();c.translate(0, -2);c.scale(1, .32);c.rotate(time * .8);c.strokeStyle = '#ffd25a';c.lineWidth = 2;c.beginPath();c.arc(0, 0, 15, 0, Math.PI * 2);c.stroke();
+    for (let i = 0; i < 6; i++) {c.rotate(Math.PI / 3);c.beginPath();c.moveTo(11, 0);c.lineTo(15, -3);c.lineTo(15, 3);c.closePath();c.fillStyle = '#ffd25a';c.fill();}c.restore();
+    c.translate(0, -8 + Math.sin(time * 4) * 2.5);const flap = Math.sin(time * 12) * .45;
+    for (const sd of [-1, 1]) {c.save();c.scale(sd, 1);c.translate(6, -12);c.rotate(-.3 + flap);P(c, [[0, 0], [16, -10], [22, -4], [18, 0], [20, 5], [8, 6]], '#2e3a7a');for (const k of [6, 11, 16]) L(c, k, -2, k + 2, 4, '#5a6ac8', 1.2);c.restore();}
+    E(c, 0, -12, 10, 11.5, '#3a4aa0');E(c, 0, -8, 6.5, 6.5, '#c8d0ff', null);
+    for (const sd of [-1, 1]) {E(c, sd * 4.4, -15, 4.2, 4.2, '#fff8d0', OUT, 1.2);E(c, sd * 4.4 + .8, -15, 2, 2.4, '#1a1040', null);glowDot(c, sd * 4.4, -15, 6, '#ffe27a44');}
+    L(c, -8, -20, -1, -18, OUT, 1.8);L(c, 8, -20, 1, -18, OUT, 1.8);P(c, [[-1.6, -12], [1.6, -12], [0, -8.5]], '#ffb03a', OUT, 1);
+    P(c, [[-11, -22], [11, -22], [3, -38], [8, -42], [-1, -37]], '#5a2aa8', OUT, 1.4);P(c, [[-12, -23], [12, -23], [12, -20], [-12, -20]], '#ffd25a', OUT, 1);
+    P(c, [[7, -42], [8.2, -39.6], [10.8, -39.4], [8.8, -37.8], [9.4, -35.2], [7, -36.6], [4.6, -35.2], [5.2, -37.8], [3.2, -39.4], [5.8, -39.6]], '#ffe27a', OUT, .8);
+    for (let i = 0; i < 3; i++) {const a = time * 2.2 + i * 2.1;glowDot(c, Math.cos(a) * 18, -14 + Math.sin(a) * 7, 6, '#b8a0ffcc');E(c, Math.cos(a) * 18, -14 + Math.sin(a) * 7, 1.8, 1.8, '#ffffff', null);}
+  } else if (id === 'dragon') { // fire drake: big wings, horns, back spikes, flame breath
+    c.translate(0, -10 + Math.sin(time * 3.5) * 2.5);const flap = Math.sin(time * 9) * .55;
+    c.save();c.translate(-3, -14);c.scale(.85, 1);c.rotate(-flap);P(c, [[0, 0], [-6, -22], [-18, -26], [-24, -12], [-20, -10], [-18, -2], [-8, 2]], '#8a1420');c.restore();
+    c.beginPath();c.moveTo(-10, -6);c.bezierCurveTo(-22, -4, -26, -12, -30, -6 + Math.sin(time * 5) * 3);c.strokeStyle = OUT;c.lineWidth = 6;c.stroke();c.strokeStyle = '#d8283a';c.lineWidth = 4;c.stroke();
+    P(c, [[-31, -8 + Math.sin(time * 5) * 3], [-36, -4 + Math.sin(time * 5) * 3], [-30, -2 + Math.sin(time * 5) * 3]], '#ffd25a', OUT, 1);
+    for (const x of [-6, 4]) limb(c, x, -6, x + (moving ? Math.sin(run + x) * 2 : 0), 4, '#d8283a', 3.4);
+    E(c, -1, -9, 12, 8.5, '#d8283a');for (let i = 0; i < 4; i++) P(c, [[-4 + i * 3, -2], [-2 + i * 3, -2], [-3 + i * 3, -9]], '#ffd27a', null);E(c, 1, -6, 7, 4, '#ffd27a', null);
+    for (let i = 0; i < 4; i++) P(c, [[-10 + i * 5, -15], [-7 + i * 5, -21], [-5 + i * 5, -15]], '#ffd25a', OUT, 1);
+    c.save();c.translate(-1, -16);c.rotate(flap * .9);P(c, [[0, 0], [10, -24], [22, -30], [26, -16], [21, -13], [21, -6], [10, 0]], '#b81c2c');for (const k of [[10, -24], [22, -30], [26, -16]]) L(c, 2, -1, k[0], k[1] + 3, '#6a0e18', 1.2);c.restore();
+    E(c, 11, -18, 8, 7, '#d8283a');P(c, [[15, -21], [25, -18], [24, -13], [15, -13]], '#d8283a', OUT, 1.2);E(c, 23.5, -17.8, 1.1, 1, OUT, null);
+    for (const x of [7, 12]) P(c, [[x - 2, -23], [x - 6, -33], [x + 2, -24.5]], '#fff0c0', OUT, 1);
+    fierceEye(c, 13, -20, 2.3, '#ffe08a');P(c, [[17, -13.5], [19, -11], [21, -13.5]], '#fffaf0', OUT, .7);
+    const puff = (time * 1.3) % 1;if (puff < .6) {c.globalAlpha = 1 - puff / .6;glowDot(c, 26 + puff * 6, -15, 4 + puff * 6, '#ff9a2aaa');E(c, 26 + puff * 6, -15, 1.6 + puff * 2, 1.6 + puff * 2, '#ffe27a', null);c.globalAlpha = 1;}
+  } else if (id === 'qilin') { // golden qilin: flaming mane, antler horns, cloud hooves
+    glowDot(c, 0, -18, 30, '#ffe39a44');
+    for (const [x, ph] of [[-9, 0], [-4, Math.PI], [6, 0], [11, Math.PI]]) {const sw = moving ? Math.sin(run + ph) * 3.4 : 0;limb(c, x, -9, x + sw, -1, '#d4a034', 3.4);for (const k of [-1, 1]) E(c, x + sw + k * 2.4, 0, 2.6, 1.8, '#ffffff', OUT, .8);}
+    for (let k = 0; k < 3; k++) {c.save();c.translate(-13, -14);c.rotate(-1.6 + k * .3);flame(c, 0, 0, 3.6, 14, time, k, '#e0fbff', '#4fb6ff');c.restore();}
+    E(c, -1, -15, 14, 8, '#ffd25a');for (let r = 0; r < 2; r++) for (let i = 0; i < 4; i++) {c.beginPath();c.arc(-8 + i * 5 + r * 2.5, -16 + r * 4, 2.4, 0, Math.PI);c.strokeStyle = '#c4801a';c.lineWidth = 1.2;c.stroke();}
+    P(c, [[6, -18], [10, -30], [18, -30], [14, -16]], '#ffd25a');
+    for (let k = 0; k < 5; k++) {c.save();c.translate(6 + k * 1.6, -32 + k * 3.6);c.rotate(-2.2 + Math.sin(time * 5 + k) * .15);flame(c, 0, 0, 2.8, 10, time, k + 3, '#fff4ff', `hsl(${(k * 60 + time * 90) % 360} 90% 62%)`);c.restore();}
+    E(c, 17, -31, 6.5, 5.5, '#ffd25a');P(c, [[20, -33], [27, -31], [26, -27], [20, -27]], '#ffd25a', OUT, 1.2);E(c, 26, -30, 1, .9, OUT, null);
+    for (const [x, d] of [[14, 0], [18, 1]]) {L(c, x, -35, x + 2 + d * 2, -44, OUT, 3);L(c, x, -35, x + 2 + d * 2, -44, '#fff4c0', 1.6);L(c, x + 1 + d, -40, x + 5 + d * 2, -42, '#fff4c0', 1.4);}
+    fierceEye(c, 19, -32, 2.2, '#4fb6ff');glowDot(c, 20, -32, 6, '#7fe8ff66');
+    for (let i = 0; i < 5; i++) {const ph = (time * .8 + i / 5) % 1;c.globalAlpha = 1 - ph;glowDot(c, Math.sin(i * 2.4 + time) * 18, -6 - ph * 40, 3.4, `hsl(${i * 70} 95% 72%)`);}c.globalAlpha = 1;
   }
   c.restore();
 }

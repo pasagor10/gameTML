@@ -3,12 +3,12 @@
 import {priceScale} from './shop.js';
 
 export const PETS = [
-  {id: 'chick', tier: 0, name: 'ลูกเจี๊ยบ', speed: 70, reach: 26, range: 260},
-  {id: 'cat', tier: 1, name: 'แมวส้ม', speed: 110, reach: 34, range: 330},
-  {id: 'fox', tier: 2, name: 'จิ้งจอกไฟ', speed: 150, reach: 42, range: 400},
-  {id: 'owl', tier: 3, name: 'นกฮูกดวงดาว', speed: 200, reach: 52, range: 470, loot: true},
-  {id: 'dragon', tier: 4, name: 'มังกรน้อย', speed: 260, reach: 62, range: 560, loot: true, bonus: .1},
-  {id: 'qilin', tier: 5, name: 'กิเลนทอง', speed: 340, reach: 78, range: 680, loot: true, bonus: .2}
+  {id: 'chick', tier: 0, name: 'เจี๊ยบนักสู้', speed: 90, reach: 26, range: 260},
+  {id: 'cat', tier: 1, name: 'แมวนินจา', speed: 110, reach: 34, range: 330},
+  {id: 'fox', tier: 2, name: 'จิ้งจอกเพลิง', speed: 150, reach: 42, range: 400},
+  {id: 'owl', tier: 3, name: 'นกฮูกจอมเวท', speed: 200, reach: 52, range: 470, loot: true},
+  {id: 'dragon', tier: 4, name: 'มังกรเพลิง', speed: 260, reach: 62, range: 560, loot: true, bonus: .1},
+  {id: 'qilin', tier: 5, name: 'กิเลนทองคำ', speed: 340, reach: 78, range: 680, loot: true, bonus: .2}
 ];
 export const petDef = id => PETS.find(p => p.id === id) || null;
 // Pets also fight: each hit deals this share of the hero's base hit, growing 15% per pet level.

@@ -21,3 +21,8 @@ test('pets bite monsters and level up for gold',()=>{
   const atk=r.pet().atk;r.gold=0;assert.equal(r.upgradePet('fox'),false,'needs gold');r.gold=1e9;assert.ok(r.upgradePet('fox'));assert.equal(r.petLevel('fox'),2);assert.ok(r.pet().atk>atk);
   assert.equal(r.upgradePet('cat'),false,'not owned');for(let i=0;i<20;i++)r.upgradePet('fox');assert.equal(r.petLevel('fox'),10,'capped at Lv.10');
   const back=new Run();back.loadStash(r.stash());assert.equal(back.petLevel('fox'),10);});
+test('pets keep fetching crystals even with monsters next to the hero',()=>{
+  const r=new Run(()=>.5);r.state='playing';r.pets=['cat'];r.setPet('cat');r.spawn=1e9;r.enemies=[];
+  for(let i=0;i<4;i++){r.addEnemy('brute',60,i*1.5);const e=r.enemies[r.enemies.length-1];e.hp=e.max=1e9;e.speed=0;}
+  r.gems=[{x:r.p.x+260,y:r.p.y+40,value:5},{x:r.p.x-240,y:r.p.y-60,value:5}];
+  for(let i=0;i<200&&r.gems.length;i++){r.p.inv=9;r.update(.05);}assert.equal(r.gems.length,0,'both far crystals were fetched');});

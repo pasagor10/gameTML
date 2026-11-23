@@ -197,17 +197,22 @@ petsLeftToPity(){return PITY-this.petPity;}
 // and sends it flying to the hero; with nothing to fetch it trots beside the hero.
 petStep(dt){
   const def=this.pet(),p=this.p;if(!def){this.petPos=null;return;}
-  if(!this.petPos||Math.hypot(this.petPos.x-p.x,this.petPos.y-p.y)>900)this.petPos={x:p.x-30,y:p.y+12,face:1,moving:false};
-  const q=this.petPos;let best=null,bd=Infinity;q.cd=Math.max(0,(q.cd||0)-dt);q.bite=Math.max(0,(q.bite||0)-dt);
-  const foe=r=>{let f=null,fd=Infinity;for(const e of this.enemies){if(e.hp<=0)continue;const dh=Math.hypot(e.x-p.x,e.y-p.y);if(dh>r)continue;const d=Math.hypot(e.x-q.x,e.y-q.y);if(d<fd){fd=d;f=e;}}return f;};
-  // Defend first when something is at the hero, then fetch, then hunt nearby monsters.
-  let target=foe(150);
-  if(!target){const look=arr=>{for(const g of arr){if(g.pull||g.collected)continue;const dh=Math.hypot(g.x-p.x,g.y-p.y);if(dh<110||dh>def.range)continue;const d=Math.hypot(g.x-q.x,g.y-q.y);if(d<bd){bd=d;best=g;}}};
-    look(this.gems);look(this.coins);if(def.loot)look(this.loot);if(!best)target=foe(def.range*.6);}
-  if(target){const d=Math.hypot(target.x-q.x,target.y-q.y);if(d<target.r+16){if(q.cd<=0){q.cd=PET_HIT_CD;q.bite=.15;this.hit(target,(12+this.level)*this.power()*def.atk);}best={x:q.x,y:q.y};q.face=target.x>q.x?1:-1;}else best={x:target.x-(target.x>q.x?1:-1)*(target.r+8),y:target.y};}
-  const tx=best?best.x:p.x-34*(this.facing<0?-1:1),ty=best?best.y:p.y+14,d=Math.hypot(tx-q.x,ty-q.y);
-  if(d>2){const step=Math.min(d,(best?def.speed:Math.max(def.speed,d*2.5))*dt);q.x+=(tx-q.x)/d*step;q.y+=(ty-q.y)/d*step;if(!target&&Math.abs(tx-q.x)>1)q.face=tx>q.x?1:-1;}
-  q.moving=d>4;
+  if(!this.petPos||Math.hypot(this.petPos.x-p.x,this.petPos.y-p.y)>1100)this.petPos={x:p.x-40,y:p.y+16,face:1,moving:false};
+  const q=this.petPos;q.cd=Math.max(0,(q.cd||0)-dt);q.bite=Math.max(0,(q.bite||0)-dt);
+  // 1) Fetch: the crystal / coin / drop nearest the pet that is within the pet's range of the hero.
+  let goal=null,gd=Infinity,hunting=null;
+  const look=arr=>{for(const g of arr){if(g.pull||g.collected)continue;const dh=Math.hypot(g.x-p.x,g.y-p.y);if(dh<80||dh>def.range)continue;const d=Math.hypot(g.x-q.x,g.y-q.y);if(d<gd){gd=d;goal=g;}}};
+  look(this.gems);look(this.coins);if(def.loot)look(this.loot);
+  // 2) Nothing to fetch: hunt the monster nearest the pet. 3) Nothing at all: roam around the hero.
+  if(!goal){let fd=Infinity;for(const e of this.enemies){if(e.hp<=0||Math.hypot(e.x-p.x,e.y-p.y)>def.range*.8)continue;const d=Math.hypot(e.x-q.x,e.y-q.y);if(d<fd){fd=d;hunting=e;}}
+    if(hunting){const side=hunting.x>q.x?-1:1;goal={x:hunting.x+side*(hunting.r+10),y:hunting.y};}
+    else{const a=this.t*.6+(this.petId.length),rad=110+Math.sin(this.t*.9)*40;goal={x:p.x+Math.cos(a)*rad,y:p.y+Math.sin(a)*rad*.6};}}
+  const d=Math.hypot(goal.x-q.x,goal.y-q.y),far=Math.hypot(q.x-p.x,q.y-p.y),speed=def.speed*(far>def.range?1.8:1);
+  if(d>2){const step=Math.min(d,speed*dt);q.x+=(goal.x-q.x)/d*step;q.y+=(goal.y-q.y)/d*step;if(Math.abs(goal.x-q.x)>1)q.face=goal.x>q.x?1:-1;}
+  q.moving=d>3;
+  // Bites whatever is in reach, also while running for a crystal.
+  if(q.cd<=0){let near=null,nd=Infinity;for(const e of this.enemies){if(e.hp<=0)continue;const dd=Math.hypot(e.x-q.x,e.y-q.y)-e.r;if(dd<def.reach&&dd<nd){nd=dd;near=e;}}
+    if(near){q.cd=PET_HIT_CD;q.bite=.15;q.face=near.x>q.x?1:-1;this.hit(near,(12+this.level)*this.power()*def.atk);}}
   const grab=arr=>{for(const g of arr)if(!g.pull&&Math.hypot(g.x-q.x,g.y-q.y)<def.reach)g.pull=true;};
   grab(this.gems);grab(this.coins);if(def.loot)grab(this.loot);
 }
