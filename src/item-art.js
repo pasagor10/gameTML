@@ -19,7 +19,8 @@ function shine(c, x, y, r) {const g = c.createRadialGradient(x, y, 0, x, y, r);g
 const ARMOR_LOOK = [
   {body: '#c9b48a', trim: '#8a6a44'}, {body: '#a8683a', trim: '#5a3418'}, {body: '#c8d4e2', trim: '#6a7a92'},
   {body: '#8fe0ff', trim: '#2a7ab8'}, {body: '#d4473e', trim: '#6a1418'}, {body: '#fff0ff', trim: '#a05ac8'},
-  {body: '#7af0c4', trim: '#137a5a'}, {body: '#d6f6ff', trim: '#2a6f9a'}, {body: '#5a46c8', trim: '#c4b4ff'}, {body: '#ff8ac8', trim: '#8a1a5a'}, {body: '#ffe58a', trim: '#8a6a10'}
+  {body: '#7af0c4', trim: '#137a5a'}, {body: '#d6f6ff', trim: '#2a6f9a'}, {body: '#5a46c8', trim: '#c4b4ff'}, {body: '#ff8ac8', trim: '#8a1a5a'}, {body: '#ffe58a', trim: '#8a6a10'},
+  {body: '#fffbe0', trim: '#a8862a'}, {body: '#ff9a5a', trim: '#7a2a0a'}, {body: '#8ae4ff', trim: '#0a4a8a'}, {body: '#c8ff7a', trim: '#3a7a0a'}, {body: '#ffc4f4', trim: '#5a1a8a'}
 ];
 function armor(c, look) {
   const {body, trim} = ARMOR_LOOK[look], tier = Math.min(5, look);
@@ -49,7 +50,8 @@ function helmet(c, tier) {
 }
 // Rings: a band in the tier's metal with a gem in the tier's colour.
 const RING_LOOK = [['#c8783a', null], ['#d8e0ea', '#9fd8ff'], ['#e6eef8', '#3a6aff'], ['#ffd25a', '#ffffff'], ['#ffd25a', '#ff3a4a'], ['#fff0ff', 'rainbow'],
-  ['#d8ffe8', '#3fe6a8'], ['#ffffff', '#9fe8ff'], ['#3a2a7a', '#8a6bff'], ['#ffd6ec', '#ff5ab0'], ['#ffe58a', '#ffffff']];
+  ['#d8ffe8', '#3fe6a8'], ['#ffffff', '#9fe8ff'], ['#3a2a7a', '#8a6bff'], ['#ffd6ec', '#ff5ab0'], ['#ffe58a', '#ffffff'],
+  ['#fffbe0', '#ffe27a'], ['#ffb07a', '#ff4a1a'], ['#d0f6ff', '#1a8aff'], ['#eaffc8', '#5ad02a'], ['#ffe0f8', 'rainbow']];
 function ring(c, tier) {
   const [metal, stone] = RING_LOOK[tier];
   c.beginPath();c.ellipse(50, 60, 26, 22, 0, 0, Math.PI * 2);c.strokeStyle = OUT;c.lineWidth = 13;c.stroke();c.strokeStyle = metal;c.lineWidth = 8;c.stroke();

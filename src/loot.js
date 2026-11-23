@@ -1,5 +1,5 @@
-// Gear that drops from monsters: class weapons, armour, helmets and rings in eleven rarity tiers
-// (Common → Mythic, then the Lv.50-80 tiers Ancient → Eternal).
+// Gear that drops from monsters: class weapons, armour, helmets and rings in sixteen rarity tiers
+// (Common → Mythic, the Lv.50-80 tiers Ancient → Eternal, then the Lv.90-145 tiers Divine → Infinity).
 // Drops land on the ground; picked-up pieces go in the bag, where they can be worn, swapped,
 // sold for gold or enhanced (+1..+10) with gold.
 import {TIERS,REQ_LEVEL,weaponName} from './weapons.js';
@@ -18,24 +18,31 @@ export const ARMOR = [
   {name:'เกราะนภาสวรรค์', hp:370, guard:.3},
   {name:'เกราะอเวจี', hp:470, guard:.32},
   {name:'เกราะดาราจักร', hp:600, guard:.34},
-  {name:'เกราะนิรันดร์', hp:760, guard:.36}
+  {name:'เกราะนิรันดร์', hp:760, guard:.36},
+  {name:'เกราะศักดิ์สิทธิ์', hp:950, guard:.38},
+  {name:'เกราะปฐมกาล', hp:1180, guard:.4},
+  {name:'เกราะดาราศักดิ์', hp:1450, guard:.42},
+  {name:'เกราะกำเนิดโลก', hp:1780, guard:.44},
+  {name:'เกราะอนันต์', hp:2200, guard:.46}
 ];
 export const HELMET = [
   {name:'ผ้าคาดหัว', hp:5}, {name:'หมวกหนัง', hp:15}, {name:'หมวกเหล็ก', hp:30},
   {name:'มงกุฎคริสตัล', hp:50}, {name:'หมวกเกล็ดมังกร', hp:75}, {name:'มงกุฎเทพ', hp:110},
-  {name:'มงกุฎหยกโบราณ', hp:150}, {name:'มงกุฎนภาสวรรค์', hp:200}, {name:'หมวกอเวจี', hp:260}, {name:'มงกุฎดาราจักร', hp:340}, {name:'มงกุฎนิรันดร์', hp:440}
+  {name:'มงกุฎหยกโบราณ', hp:150}, {name:'มงกุฎนภาสวรรค์', hp:200}, {name:'หมวกอเวจี', hp:260}, {name:'มงกุฎดาราจักร', hp:340}, {name:'มงกุฎนิรันดร์', hp:440},
+  {name:'มงกุฎศักดิ์สิทธิ์', hp:550}, {name:'หมวกปฐมกาล', hp:680}, {name:'มงกุฎดาราศักดิ์', hp:840}, {name:'มงกุฎกำเนิดโลก', hp:1030}, {name:'มงกุฎอนันต์', hp:1260}
 ];
 export const RING = [
   {name:'แหวนทองแดง', dmg:.02}, {name:'แหวนเงิน', dmg:.05}, {name:'แหวนไพลิน', dmg:.09},
   {name:'แหวนทองคำ', dmg:.14}, {name:'แหวนทับทิม', dmg:.2}, {name:'แหวนสายรุ้ง', dmg:.28},
-  {name:'แหวนหยกโบราณ', dmg:.36}, {name:'แหวนนภาสวรรค์', dmg:.45}, {name:'แหวนอเวจี', dmg:.55}, {name:'แหวนดาราจักร', dmg:.68}, {name:'แหวนนิรันดร์', dmg:.82}
+  {name:'แหวนหยกโบราณ', dmg:.36}, {name:'แหวนนภาสวรรค์', dmg:.45}, {name:'แหวนอเวจี', dmg:.55}, {name:'แหวนดาราจักร', dmg:.68}, {name:'แหวนนิรันดร์', dmg:.82},
+  {name:'แหวนศักดิ์สิทธิ์', dmg:.98}, {name:'แหวนปฐมกาล', dmg:1.16}, {name:'แหวนดาราศักดิ์', dmg:1.36}, {name:'แหวนกำเนิดโลก', dmg:1.58}, {name:'แหวนอนันต์', dmg:1.85}
 ];
 export const BAG_MAX = 60, MAX_PLUS = 10;
 // Normal monsters rarely drop; elites always drop one piece and guardians a better one.
 export const DROP_CHANCE = {slime:.012, runner:.015, archer:.02, elite:1, boss:1};
 export const GOLD_DROP = {slime:1, runner:1, archer:2, elite:25, boss:120,brute:5,bomber:2,imp:1,spitter:3};
 const BASE_TIER = {elite:1, boss:2};
-const SELL = [8, 30, 100, 260, 650, 1400, 2600, 4200, 6500, 10000, 15000];
+const SELL = [8, 30, 100, 260, 650, 1400, 2600, 4200, 6500, 10000, 15000, 22000, 32000, 46000, 66000, 95000];
 
 // `level` is the area's gear level (0 = first world); elites and guardians add one or two tiers.
 export function rollTier(type, level, rng) {

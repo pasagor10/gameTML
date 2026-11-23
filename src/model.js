@@ -58,6 +58,9 @@ export const SKILLS=[
 {id:'annihilation',job:'gunner',kind:'active',icon:'🚀',name:'ขีปนาวุธล้างสนาม',desc:'ปล่อยจรวดหลายลูกพุ่งเข้าหาศัตรู ระเบิดสร้างดาเมจเป็นวง',tag:'ขั้นเทพ · จรวด · ระเบิด'},
 {id:'railgun',job:'gunner',kind:'active',icon:'⌁',name:'เรลกันนิรันดร์',desc:'ยิงลำแสงพลังงานสองแนวทะลุฝูงศัตรู',tag:'ขั้นเทพ · แนวตรง · ทะลุ'},
 {id:'ascension',kind:'passive',icon:'✵',name:'พลังจุติ',desc:'ดาเมจทุกอย่าง +5% และ HP สูงสุด +25 ต่อระดับ ใช้แต้มที่สะสมต่อยอดได้ถึง 30 ระดับ',tag:'Lv.70 · ทุกอาชีพ · ติดตัว'},
+// Lv.100 awakening passives (v0.30): one makes the hero tankier, the other hit harder.
+{id:'titanbody',kind:'passive',icon:'🛡',name:'กายาไททัน',desc:'HP สูงสุด +6% และรับดาเมจลดลง 2.5% ต่อระดับ',tag:'Lv.100 · ทุกอาชีพ · ติดตัว · ถึก'},
+{id:'warlord',kind:'passive',icon:'⚔',name:'จิตวิญญาณจอมทัพ',desc:'ดาเมจทุกอย่าง +6% ต่อระดับ ทั้งตีปกติและสกิล',tag:'Lv.100 · ทุกอาชีพ · ติดตัว · ตีแรง'},
 // Shared long-run passives (formerly endless boost cards).
 {id:'might',kind:'passive',icon:'✊',name:'พลังไร้ขีดจำกัด',desc:'ดาเมจทุกอย่าง +10% ต่อเลเวล',tag:'ทุกอาชีพ · ติดตัว'},
 {id:'vigor',kind:'passive',icon:'♥',name:'หัวใจคริสตัล',desc:'HP สูงสุด +15 ต่อเลเวล',tag:'ทุกอาชีพ · ติดตัว'}];
@@ -66,10 +69,19 @@ const SKILL_META={fire:[3,1],ice:[3,1],spark:[3,3],gust:[3,5],area:[3,4],haste:[
   whirl:[5,10],wave:[5,10],judgement:[5,12],charge:[5,15],quake:[5,20],bladerain:[5,30],ironwill:[5,14],bloodlust:[5,25],
   meteor:[5,10],vortex:[5,10],nova:[5,12],blizzard2:[5,15],thunder:[5,20],beam:[5,30],manaflow:[5,14],arcanemind:[5,25],
   scatter:[5,10],grenade:[5,10],drone:[5,12],rocket:[5,15],mine:[5,20],barrage:[5,30],deadeye:[5,14],quickdraw:[5,25],
-  heavensword:[10,70],dragonstorm:[10,75],worldsplitter:[10,80],starfall:[10,70],singularity:[10,75],divinenova:[10,80],orbital:[10,70],annihilation:[10,75],railgun:[10,80],ascension:[30,70],
+  heavensword:[10,70],dragonstorm:[10,75],worldsplitter:[10,80],starfall:[10,70],singularity:[10,75],divinenova:[10,80],orbital:[10,70],annihilation:[10,75],railgun:[10,80],ascension:[30,70],titanbody:[10,100],warlord:[10,100],
   might:[20,8],vigor:[20,8]};
 for(const s of SKILLS){const [max,req]=SKILL_META[s.id];s.max=max;s.req=req;}
 export const BOOSTS=[];
+// Saves from before v0.30 had 6 worlds with Hard mode at difficulty 60+k. Normal stages 61-150 now
+// cover that range, so Hard progress moves onto them and Hard reopens after stage 150.
+export function migrateHard(r){
+  const old=r.cleared?.hard|0;
+  if(old>0)r.cleared.normal=Math.min(LAST_STAGE,Math.max(r.cleared.normal|0,60+old));
+  if(r.cleared)r.cleared.hard=0;
+  for(const k of Object.keys(r.stars||{}))if(k[0]==='h'){const n=60+Number(k.slice(1));if(n<=LAST_STAGE)r.stars['n'+n]=Math.max(r.stars['n'+n]||0,r.stars[k]);delete r.stars[k];}
+  if(r.hard){r.hard=false;r.stage=Math.min(LAST_STAGE,(r.stage|0)+60);}
+}
 // Each cast skill has its own cooldown (multiples of the 1.4s base). A longer cooldown hits
 // proportionally harder per cast, so damage per second stays the same. fire/drone run constantly.
 export const SKILL_CD={ice:1,spark:1,gust:1.4,whirl:2,wave:1,judgement:1.8,meteor:2.2,vortex:2.4,nova:1.6,scatter:1,grenade:1.6,
@@ -95,9 +107,16 @@ export function xpNeed(level){return Math.round(4+4*level+.35*level*level);}
 // an elite, a mini-boss on stage 5 and the world boss on stage 10. Losing sends the hero back to farm
 // the last cleared stage; clearing all 60 opens Hard mode, which continues the difficulty curve.
 export const ALLY_HIT_CD=.45,ALLY_ASSIST=1.6,ALLY_REACH=320;
-export const WORLDS=6,STAGES_PER_WORLD=10,LAST_STAGE=60,FARM_RETRY=120;
-export const WORLD_NAMES=['ป่าพงไพร','ภูเขาไฟคำราม','ธารน้ำแข็ง','วิหารทองคำ','ดินแดนจันทรา','ถ้ำคริสตัล'];
+export const WORLDS=15,STAGES_PER_WORLD=10,LAST_STAGE=150,FARM_RETRY=120;
+// Hero level cap (v0.30).
+export const MAX_LEVEL=150;
+export const WORLD_NAMES=['ป่าพงไพร','ภูเขาไฟคำราม','ธารน้ำแข็ง','วิหารทองคำ','ดินแดนจันทรา','ถ้ำคริสตัล',
+  'ทะเลทรายสุริยา','หนองน้ำพิษ','เกาะลอยฟ้า','ใต้มหาสมุทร','แดนขนมหวาน','นครจักรกล','ปราสาทแวมไพร์','สวนซากุระวิญญาณ','ห้วงจักรวาล'];
 export const STAGE_HP=1.16,STAGE_HIT=1.075,STAGE_GOLD=1.06;
+// Worlds 7-15 (stages 61-150) grow far more gently than worlds 1-6: at x1.16 per stage a stage-150
+// slime would have ~1e11 HP, beyond any Lv.150 build. After stage 60 each curve switches to its LATE rate.
+export const LATE_FROM=60,LATE_HP=1.035,LATE_HIT=1.025,LATE_GOLD=1.03,LATE_REC=1.028;
+export function stageScale(early,late,eff){return early**(Math.min(eff,LATE_FROM)-1)*late**Math.max(0,eff-LATE_FROM);}
 export function stageInfo(stage){const world=Math.ceil(stage/STAGES_PER_WORLD),sub=(stage-1)%STAGES_PER_WORLD+1;return {world,sub,guardian:sub===10?'boss':sub===5?'mini':'elite',label:`${world}-${sub}`};}
 export function stageQuota(stage){return 40+5*stageInfo(stage).sub;}
 export function parTime(stage){return 70+10*stageInfo(stage).sub;}
@@ -110,7 +129,25 @@ export const WORLD_ROSTER=[
   [['slime',6,1],['brute',5,1],['runner',4,2],['spitter',3,4],['archer',2,6]],
   [['slime',5,1],['spitter',5,1],['brute',3,2],['archer',3,3],['bomber',2,5],['runner',2,6]],
   [['imp',5,1],['runner',5,1],['spitter',3,2],['slime',3,3],['brute',3,5],['bomber',2,6]],
-  [['slime',4,1],['brute',4,1],['spitter',4,2],['runner',3,2],['archer',3,3],['bomber',3,4],['imp',3,5]]
+  [['slime',4,1],['brute',4,1],['spitter',4,2],['runner',3,2],['archer',3,3],['bomber',3,4],['imp',3,5]],
+  // 7 desert: scorpions, cactus bombs, mummy casters
+  [['slime',5,1],['brute',4,1],['bomber',4,2],['archer',3,3],['runner',3,4],['spitter',2,6]],
+  // 8 swamp: frogs, snapping flowers
+  [['runner',6,1],['spitter',5,1],['slime',4,2],['brute',3,3],['imp',3,5],['bomber',2,6]],
+  // 9 sky islands: birdlings, storm clouds
+  [['imp',6,1],['bomber',5,1],['runner',4,2],['slime',3,3],['archer',3,4],['brute',2,6]],
+  // 10 deep sea: jellyfish, crabs, puffers
+  [['imp',5,1],['brute',5,1],['bomber',4,2],['slime',4,3],['spitter',3,4],['runner',2,6]],
+  // 11 candy land: gummy bears, cupcakes, lollipop turrets
+  [['brute',5,1],['bomber',5,1],['slime',5,2],['spitter',3,3],['runner',3,4],['imp',2,6]],
+  // 12 clockwork city: robots, gear drones, cannon bots
+  [['brute',5,1],['imp',5,1],['spitter',4,2],['runner',3,3],['bomber',3,4],['archer',2,6]],
+  // 13 vampire castle: bats, pumpkins, skeleton knights
+  [['runner',6,1],['bomber',5,1],['brute',4,2],['archer',3,3],['imp',3,4],['slime',2,6]],
+  // 14 sakura spirits: tanuki, lanterns, oni
+  [['runner',5,1],['bomber',5,1],['brute',4,2],['slime',3,3],['archer',3,4],['spitter',3,6]],
+  // 15 cosmic void: star sprites, mini planets, UFOs
+  [['imp',6,1],['bomber',5,1],['spitter',5,2],['brute',4,3],['runner',3,4],['slime',3,5],['archer',3,6]]
 ];
 // A world boss that is not down this many seconds after it appears goes berserk.
 export const WORLD_BOSS_HP=7500,BERSERK_AT=45;
@@ -121,8 +158,9 @@ export const FINAL_BALANCE={
   50:{hp:.15,damage:.42,berserkAt:100,berserkDamage:1.4,pace:1.2,warning:1.15},
   60:{hp:.032,damage:.3,berserkAt:110,berserkDamage:1.4,pace:1.25,warning:1.2}
 };
-export function guardianBalance(stage,hard=false,mode='challenge'){return !hard&&mode!=='raid'&&FINAL_BALANCE[stage]||{hp:1,damage:1,berserkAt:BERSERK_AT,berserkDamage:2,pace:1,warning:1};}
-export function recommendedPower(stage,hard=false){return Math.round(REC_BASE*REC_GROWTH**(effStage(stage,hard)-1));}
+// Worlds 7-15 finals keep the 6-10 profile: on the gentle late curve they grow at the heroes' pace.
+export function guardianBalance(stage,hard=false,mode='challenge'){return !hard&&mode!=='raid'&&(FINAL_BALANCE[stage]||(stage>60&&stage%STAGES_PER_WORLD===0?FINAL_BALANCE[60]:null))||{hp:1,damage:1,berserkAt:BERSERK_AT,berserkDamage:2,pace:1,warning:1};}
+export function recommendedPower(stage,hard=false){return Math.round(REC_BASE*stageScale(REC_GROWTH,LATE_REC,effStage(stage,hard)));}
 export const REC_BASE=130,REC_GROWTH=1.11;
 export const POTION_AT=.35,POTION_HEAL=.5,POTION_COOLDOWN=6;
 export const GEM_BASE={slime:1,runner:1,archer:2,elite:10,boss:30,brute:3,bomber:1,imp:1,spitter:2};
@@ -147,14 +185,14 @@ emit(type,data={}){this.events.push({type,t:Math.round(this.t*100)/100,...data})
 // Sound cues for the renderer to play; the model stays silent and testable.
 cue(name,arg){if(this.cues.length<48)this.cues.push(arg?{name,arg}:{name});}
 weaponPower(){return this.job==='novice'?1:TIERS[this.weaponTier].power*(1+.08*this.weaponPlus);}
-power(){return this.weaponPower()*(1+.1*(this.skills.might||0))*(1+this.ringBonus)*(1+.05*(this.skills.ascension||0));}
+power(){return this.weaponPower()*(1+.1*(this.skills.might||0))*(1+this.ringBonus)*(1+.05*(this.skills.ascension||0))*(1+.06*(this.skills.warlord||0));}
 // Skills scale with half the weapon's growth so the weapon stays the main upgrade.
-skillPower(){const weapon=this.weaponPower();return (1+(weapon-1)*.5)*(1+.1*(this.skills.might||0))*(1+this.ringBonus)*(1+.08*(this.skills.arcanemind||0))*(1+.05*(this.skills.ascension||0));}
+skillPower(){const weapon=this.weaponPower();return (1+(weapon-1)*.5)*(1+.1*(this.skills.might||0))*(1+this.ringBonus)*(1+.08*(this.skills.arcanemind||0))*(1+.05*(this.skills.ascension||0))*(1+.06*(this.skills.warlord||0));}
 // One number for the UI: offence (gear, passives, skill levels) times the square root of toughness.
 combatPower(){const levels=Object.values(this.skills).reduce((a,b)=>a+b,0),offence=this.power()*(1+.012*this.level)*(1+.03*levels),tough=this.maxHp/(1-this.guard);return Math.round(offence*Math.sqrt(tough)*6);}
 eff(){return effStage(this.stage,this.hard);}
 addEnemy(type,radius=430,angle=this.rng()*Math.PI*2,{guardian=false,mini=false}={}){
-  const boss=type==='boss',elite=type==='elite',eff=this.eff(),scale=STAGE_HP**(eff-1),{world}=stageInfo(this.stage);
+  const boss=type==='boss',elite=type==='elite',eff=this.eff(),scale=stageScale(STAGE_HP,LATE_HP,eff),{world}=stageInfo(this.stage);
   const BASE={runner:22,archer:30,brute:78,bomber:14,imp:9,spitter:34},RAD={brute:22,bomber:14,imp:10,spitter:15},SPD={runner:76,brute:30,bomber:68,imp:96,spitter:34};
   let hp=boss?(mini?550:WORLD_BOSS_HP)*scale:(elite?(guardian?480:220):BASE[type]??24+Math.min(60,this.t-this.stageStart)*.06)*scale;
   const tuning=boss&&!mini?guardianBalance(this.stage,this.hard,this.mode):guardianBalance(0);if(boss&&!mini)hp*=tuning.hp;
@@ -329,7 +367,7 @@ applyGear(){
   if(w&&w.job!==this.job)this.equipped.weapon=null;
   const weapon=this.gearItem('weapon');this.weaponTier=weapon?weapon.tier:0;this.weaponPlus=weapon?weapon.plus:0;
   this.armorTier=a?a.tier:0;this.helmetTier=h?h.tier:-1;this.armorLook=a?a.tier:-1;this.guard=Math.min(.6,(a?itemStats(a).guard:0)+.04*(this.skills.ironwill||0));this.ringBonus=r?itemStats(r).dmg:0;
-  const hp=100+25*(this.skills.ascension||0)+15*(this.skills.vigor||0)+(a?itemStats(a).hp:0)+(h?itemStats(h).hp:0),gain=hp-this.maxHp;
+  const hp=(100+25*(this.skills.ascension||0)+15*(this.skills.vigor||0)+(a?itemStats(a).hp:0)+(h?itemStats(h).hp:0))*(1+.06*(this.skills.titanbody||0)),gain=hp-this.maxHp;
   this.maxHp=hp;this.p.hp=Math.max(1,Math.min(hp,this.p.hp+Math.max(0,gain)));
 }
 addItem({kind,tier,job}){
@@ -402,6 +440,7 @@ loadStash(st){if(!st)return;this.gold=st.gold||0;this.paidGrants=Array.isArray(s
 magnet(){if(this.state!=='playing'||this.magnetClock>0)return false;if(this.magnetLimited()){if(this.magnetCharges<=0)return false;this.magnetCharges--;this.magnetClock=MAGNET_GAP;}else this.magnetClock=MAGNET_COOLDOWN;for(const g of this.gems)g.pull=true;for(const g of this.coins)g.pull=true;for(const l of this.loot)l.pull=true;this.cue('portal');this.emit('magnet');this.effects.push({kind:'gust',x:this.p.x,y:this.p.y,r:220,life:.5,max:.5});return true;}
 checkLevel(){
   if(this.xp<this.need||this.state!=='playing')return;
+  if(this.level>=MAX_LEVEL){this.xp=Math.min(this.xp,this.need);return;}
   this.xp-=this.need;this.level++;this.skillPoints++;this.cue('levelUp');this.need=xpNeed(this.level);this.emit('level_up',{level:this.level});
   this.equipBest();
   if(this.level>=10&&this.job==='novice'&&!this.awaitingClass){
@@ -428,12 +467,14 @@ retreat(){
 // Plain snapshot for saving; the stage restarts on restore and enemies respawn.
 serialize(){
   const keep=['job','appearance','name','t','stage','hard','cleared','stars','mode','autoChallenge','bossesDefeated','level','xp','need','kills','skills','slots','skillPoints','bag','equipped','nextItemId','gold','paidGrants','goldEarned','evolved','welcome','firstMoved','firstKill','magnetClock','awaitingClass','retreats','xpEarned','supplies','buffs','shopStock','shopClock','potionAt','magnetCharges','magnetGranted','pets','petLv','petId','petPity','raidJoined'];
-  const out={v:4,hp:this.p.hp};for(const k of keep)out[k]=structuredClone(this[k]);return out;
+  const out={v:5,hp:this.p.hp};for(const k of keep)out[k]=structuredClone(this[k]);return out;
 }
 static restore(snap,rng=Math.random){
   const r=new Run(rng,{job:snap.job,appearance:snap.appearance,name:snap.name});
   for(const [k,v] of Object.entries(snap))if(!['v','hp','maxHp','weaponTier','armorTier'].includes(k)&&k in r)r[k]=structuredClone(v);
   r.job=normalizeJob(r.job);for(const k of ['potion','luck','guard','egg'])if(!Number.isFinite(r.supplies[k]))r.supplies[k]=0;
+  // v5 (15 worlds): old Hard stage k sat at difficulty 60+k, which is now normal stage 60+k.
+  if((snap.v||0)<5)migrateHard(r);
   r.applyGear();r.p.hp=Math.max(1,Math.min(r.maxHp,snap.hp||r.maxHp));
   if(r.mode==='farm')r.farmAt(r.stage,r.hard);else if(!r.startChallenge(r.stage,r.hard))r.farmAt(r.stage,r.hard);
   r.emit('run_restored',{stage:r.stage,level:r.level});
@@ -456,7 +497,7 @@ hit(e,damage,continuous=false){
   if(e.hp<=0){
     this.kills++;this.cue(e.type==='boss'?'bossDown':'kill');if(!this.firstKill){this.firstKill=true;this.emit('first_kill');}
     this.dropGems(e);
-    const gold=Math.round((GOLD_DROP[e.type]||1)*(e.mini?.5:1)*STAGE_GOLD**(this.eff()-1));this.coins.push({x:e.x+8,y:e.y+4,value:gold});
+    const gold=Math.round((GOLD_DROP[e.type]||1)*(e.mini?.5:1)*stageScale(STAGE_GOLD,LATE_GOLD,this.eff()));this.coins.push({x:e.x+8,y:e.y+4,value:gold});
     const drop=rollDrop(e.type,this.lootBase(),this.job,this.rng);if(drop){this.loot.push({...drop,x:e.x,y:e.y,id:this.nextId++});this.emit('loot_drop',{kind:drop.kind,tier:drop.tier});}
     if(this.skills.bloodlust)this.p.hp=Math.min(this.maxHp,this.p.hp+this.maxHp*.004*this.skills.bloodlust);
     if(e.mod==='burst'){this.effects.push({kind:'explosion',x:e.x,y:e.y,r:60,lv:1,style:'fire',life:.4,max:.4});if(Math.hypot(this.p.x-e.x,this.p.y-e.y)<60+16)this.damage(10,'burst');}
@@ -467,11 +508,11 @@ hit(e,damage,continuous=false){
 // Defeating the guardian opens the next, harder stage instead of ending the run.
 // Gear quality follows the world (and Hard mode adds two tiers' worth).
 // Gear level of the area: worlds 5-6 reach the Lv.50-60 tiers, hard mode the Lv.70-80 ones.
-lootBase(){return Math.min(TIERS.length-3,[0,0,1,2,4,5][stageInfo(this.stage).world-1]+(this.hard?3:0));}
+lootBase(){return Math.min(TIERS.length-3,[0,0,1,2,4,5,6,7,8,9,10,11,11,12,13][stageInfo(this.stage).world-1]+(this.hard?3:0));}
 clearStage(){
   const stage=this.stage,hard=this.hard,track=hard?'hard':'normal',key=(hard?'h':'n')+stage,time=this.t-this.stageStart,info=stageInfo(stage);
   const stars=1+(time<=parTime(stage)?1:0)+(!this.stageFailed&&this.p.hp>=this.maxHp*.5?1:0);this.stars[key]=Math.max(this.stars[key]||0,stars);
-  const first=stage>this.cleared[track];if(first){this.cleared[track]=stage;const bonus=Math.round(40*info.sub*(info.sub===10?3:1)*STAGE_GOLD**(this.eff()-1));this.gold+=bonus;this.goldEarned+=bonus;}
+  const first=stage>this.cleared[track];if(first){this.cleared[track]=stage;const bonus=Math.round(40*info.sub*(info.sub===10?3:1)*stageScale(STAGE_GOLD,LATE_GOLD,this.eff()));this.gold+=bonus;this.goldEarned+=bonus;}
   this.bossesDefeated++;this.emit('stage_clear',{stage,hard,stars,first,label:info.label});this.cue('clear');
   this.p.hp=Math.min(this.maxHp,this.p.hp+this.maxHp*.35);this.effects.push({kind:'ascend',x:this.p.x,y:this.p.y,life:1.4,max:1.4});
   if(stage<LAST_STAGE)this.startChallenge(stage+1,hard);
@@ -481,7 +522,7 @@ end(reason){if(this.state==='ended')return;this.state='ended';this.cue('death');
 // Normal world-six mobs soften by 35%; boss tuning, Hard and raids keep their own curves.
 lateMobDamageScale(boss){return !this.hard&&this.mode!=='raid'&&this.stage>=51&&!(boss?.damageScale<1) ? .65 : 1;}
 damage(n,source){
-  if(this.p.inv>0||this.state!=='playing')return;const boss=this.enemies.find(e=>e.type==='boss'&&e.hp>0),berserk=this.enemies.find(e=>e.berserk&&e.hp>0);n*=STAGE_HIT**(this.eff()-1)*(1-this.guard)*(boss?.damageScale??1)*(berserk?berserk.berserkScale??2:1)*(this.mode==='raid'?.5:1)*this.lateMobDamageScale(boss);
+  if(this.p.inv>0||this.state!=='playing')return;const boss=this.enemies.find(e=>e.type==='boss'&&e.hp>0),berserk=this.enemies.find(e=>e.berserk&&e.hp>0);n*=stageScale(STAGE_HIT,LATE_HIT,this.eff())*(1-this.guard)*(1-.025*(this.skills.titanbody||0))*(boss?.damageScale??1)*(berserk?berserk.berserkScale??2:1)*(this.mode==='raid'?.5:1)*this.lateMobDamageScale(boss);
   this.p.hp=Math.max(0,this.p.hp-n);this.p.inv=.8;this.cue('hurt');this.emit('damage_taken',{source,damage:n});this.effects.push({kind:'hurt',x:this.p.x,y:this.p.y,life:.25,max:.25});
   if(this.p.hp<=0){if(this.mode==='raid')this.finishRaid(true);else this.retreat();}
 }

@@ -320,7 +320,8 @@ function auraMotes(c, lv, col, time) {
 }
 // Armour on the torso (x -12..12, y -31..-15) and shoulders.
 const ARMOR_TOON = [['#c9b48a', '#8a6a44'], ['#a8683a', '#5a3418'], ['#d8e2ee', '#6a7a92'], ['#9fe6ff', '#2a7ab8'], ['#d4473e', '#6a1418'], ['#fff0ff', '#a05ac8'],
-  ['#7af0c4', '#137a5a'], ['#d6f6ff', '#2a6f9a'], ['#5a46c8', '#c4b4ff'], ['#ff8ac8', '#8a1a5a'], ['#ffe58a', '#8a6a10']];
+  ['#7af0c4', '#137a5a'], ['#d6f6ff', '#2a6f9a'], ['#5a46c8', '#c4b4ff'], ['#ff8ac8', '#8a1a5a'], ['#ffe58a', '#8a6a10'],
+  ['#fffbe0', '#a8862a'], ['#ff9a5a', '#7a2a0a'], ['#8ae4ff', '#0a4a8a'], ['#c8ff7a', '#3a7a0a'], ['#ffc4f4', '#5a1a8a']];
 function wornArmor(c, t, time) {
   const [body, trim] = ARMOR_TOON[t];
   P(c, [[-12, -31], [12, -31], [12, -16], [0, -14], [-12, -16]], body, OUT, 1.3);
@@ -356,7 +357,16 @@ export const THEMES = [
   {id: 'ice', bossName: 'อัศวินวิญญาณน้ำแข็ง', ground: '#e6f1fa', ground2: '#cfe2f1', stone: '#b3cce2', rim: '#86a6c6', edge: '#5f82a8', edge2: '#7896bb', slime: ['#c4ecff', '#6ab4e8'], body: '#eef6ff', body2: '#8fb4d8', accent: '#7fd8ff', glow: '#e0f8ff', eye: '#1f6fc0', portal: '#9fe8ff'},
   {id: 'temple', bossName: 'ยักษ์ทองผู้พิทักษ์', ground: '#ecd59f', ground2: '#dcc084', stone: '#cfa45e', rim: '#9a6a2a', edge: '#5a3a1a', edge2: '#7a5226', slime: ['#ffdc70', '#d29a22'], body: '#d49440', body2: '#7a4a1a', accent: '#d23a3a', glow: '#fff0a8', eye: '#2b2133', portal: '#ffd25a'},
   {id: 'moon', bossName: 'จักรพรรดิจันทราดำ', ground: '#423e62', ground2: '#36325a', stone: '#5e5a86', rim: '#2a2648', edge: '#121026', edge2: '#1e1a38', slime: ['#c0b0ff', '#5a48b0'], body: '#4a3f7a', body2: '#1e1840', accent: '#d8dcff', glow: '#d6d0ff', eye: '#e8e4ff', portal: '#b48aff'},
-  {id: 'crystal', bossName: 'มังกรคริสตัล', ground: '#34606c', ground2: '#2a505c', stone: '#467882', rim: '#1e3e48', edge: '#0c2228', edge2: '#14323a', slime: ['#88f4e4', '#2aa8a0'], body: '#3a9aa2', body2: '#18484e', accent: '#ff8ad8', glow: '#b0fff2', eye: '#ffe0f4', portal: '#ff8ad8'}
+  {id: 'crystal', bossName: 'มังกรคริสตัล', ground: '#34606c', ground2: '#2a505c', stone: '#467882', rim: '#1e3e48', edge: '#0c2228', edge2: '#14323a', slime: ['#88f4e4', '#2aa8a0'], body: '#3a9aa2', body2: '#18484e', accent: '#ff8ad8', glow: '#b0fff2', eye: '#ffe0f4', portal: '#ff8ad8'},
+  {id: 'desert', bossName: 'ฟาโรห์ทรายทมิฬ', ground: '#f0d29a', ground2: '#e4c07e', stone: '#d8a868', rim: '#a8763a', edge: '#7a4a2a', edge2: '#8a5a32', slime: ['#ffe08a', '#e0a040'], body: '#c88a4a', body2: '#7a4a22', accent: '#3ad0c0', glow: '#fff0b0', eye: '#2b2133', portal: '#ffd25a'},
+  {id: 'swamp', bossName: 'ราชากบหนองพิษ', ground: '#6a8a5a', ground2: '#5a7a4c', stone: '#7a8a6a', rim: '#4a5a3a', edge: '#1e2e22', edge2: '#2a3a2a', slime: ['#b8e86a', '#5a9a2a'], body: '#6ac05a', body2: '#3a7a3a', accent: '#c46bff', glow: '#e0ffb0', eye: '#2b2133', portal: '#c46bff'},
+  {id: 'sky', bossName: 'พญาครุฑสายฟ้า', ground: '#d8ecff', ground2: '#c4dcf4', stone: '#ffffff', rim: '#a8c4e4', edge: '#6a9ad8', edge2: '#7aaae0', slime: ['#ffffff', '#9ac8ff'], body: '#7ac0ff', body2: '#3a7ad0', accent: '#ffd25a', glow: '#fffbe0', eye: '#2b2133', portal: '#ffe27a'},
+  {id: 'deepsea', bossName: 'คราเคนยักษ์', ground: '#2a6a8a', ground2: '#245c7a', stone: '#3a8aa0', rim: '#1a4a62', edge: '#0a1e3a', edge2: '#102a48', slime: ['#7ae8ff', '#2a8ac8'], body: '#ff8a6a', body2: '#c84a3a', accent: '#ff9ad0', glow: '#c8f8ff', eye: '#2b2133', portal: '#7ae8ff'},
+  {id: 'candy', bossName: 'ราชินีเค้กสตรอว์เบอร์รี', ground: '#ffe0ec', ground2: '#ffd0e2', stone: '#ffffff', rim: '#ff8ac8', edge: '#c84a8a', edge2: '#d85a9a', slime: ['#ffc4e8', '#ff6ab4'], body: '#ff8ac8', body2: '#c84a8a', accent: '#7ad0ff', glow: '#fff0f8', eye: '#2b2133', portal: '#ff8ac8'},
+  {id: 'clockwork', bossName: 'ไททันฟันเฟือง', ground: '#a89a84', ground2: '#988a74', stone: '#c8b89a', rim: '#6a5a44', edge: '#2a2420', edge2: '#3a322a', slime: ['#ffd27a', '#c88a3a'], body: '#5a8ab0', body2: '#2a4a6a', accent: '#ffd25a', glow: '#fff0c0', eye: '#5ae8ff', portal: '#ffb43a'},
+  {id: 'haunted', bossName: 'เจ้าชายแวมไพร์', ground: '#4a4258', ground2: '#3e374c', stone: '#6a6278', rim: '#2a2436', edge: '#100c18', edge2: '#1a1424', slime: ['#b0ff9a', '#4a9a5a'], body: '#6a4a8a', body2: '#3a1a4a', accent: '#9aff7a', glow: '#d0ffd0', eye: '#ff3a5a', portal: '#9aff7a'},
+  {id: 'sakura', bossName: 'จิ้งจอกเก้าหาง', ground: '#f4e4dc', ground2: '#ecd4cc', stone: '#d8c0b4', rim: '#a87a6a', edge: '#4a2a3a', edge2: '#5a3448', slime: ['#ffd4e4', '#ff8ab4'], body: '#ff8ab4', body2: '#a83a6a', accent: '#ffb4d0', glow: '#fff0f6', eye: '#2b2133', portal: '#ff8ab4'},
+  {id: 'void', bossName: 'มังกรกลืนดาว', ground: '#2a2050', ground2: '#221a44', stone: '#4a3a80', rim: '#1a1238', edge: '#05030f', edge2: '#0c0820', slime: ['#b4a8ff', '#5a40d0'], body: '#5a40d0', body2: '#1e1060', accent: '#ff8ad8', glow: '#e0d8ff', eye: '#ffe27a', portal: '#8a7aff'}
 ];
 // Stages 1-10 are world 1 (forest), 11-20 world 2, and so on.
 export function themeFor(stage = 1) {return THEMES[(Math.ceil(Math.max(1, stage) / 10) - 1) % THEMES.length];}
@@ -377,8 +387,8 @@ export function drawToonMonster(c, e, time, player) {
   c.save();if (faceLeft) c.scale(-1, 1);
   if (e.rage) c.translate(Math.sin(time * 40) * (e.berserk ? 3 : 1.6), 0);
   if (e.berserk) c.scale(1.12, 1.12);
-  if (e.type === 'runner') runner(c, th, f, t, e);
-  else if (VARIANT[th.id]?.[e.type]) VARIANT[th.id][e.type](c, th, f, t, e);
+  if (VARIANT[th.id]?.[e.type]) VARIANT[th.id][e.type](c, th, f, t, e);
+  else if (e.type === 'runner') runner(c, th, f, t, e);
   else if (e.type === 'brute') brute(c, th, f, t, e);
   else if (e.type === 'bomber') bomber(c, th, f, t, e);
   else if (e.type === 'imp') imp(c, th, f, t, e);
@@ -532,7 +542,16 @@ const VARIANT = {
   ice: {brute: yeti},
   temple: {brute: stoneGuardian, bomber: scarab, spitter: cobra},
   moon: {brute: werewolf, imp: ghost, spitter: floatingEye, bomber: shadowOrb},
-  crystal: {brute: crystalGolem, bomber: shardCluster, imp: crystalMoth, spitter: crystalTurret}
+  crystal: {brute: crystalGolem, bomber: shardCluster, imp: crystalMoth, spitter: crystalTurret},
+  desert: {brute: sandScorpion, bomber: cactusBomb, archer: mummyCaster},
+  swamp: {runner: frog, spitter: snapFlower},
+  sky: {bomber: cloudPuff, imp: birdling},
+  deepsea: {imp: jellyfish, brute: crab, bomber: puffer},
+  candy: {brute: gummyBear, bomber: cupcake, spitter: lollipop},
+  clockwork: {brute: robot, imp: gearDrone, spitter: cannonBot},
+  haunted: {bomber: pumpkin, brute: skeletonKnight, runner: batling},
+  sakura: {bomber: lantern, brute: oni, runner: tanuki},
+  void: {imp: starSprite, bomber: miniPlanet, spitter: ufo}
 };
 // Guardians stand on a pulsing dark sigil; enraged ones burn red.
 function bossAura(c, e, th, time) {
@@ -640,7 +659,7 @@ function slime(c, th, f, t, e) {
   else if (th.id === 'ice') for (const s of [-1, 0, 1]) P(c, [[s * 6 - 2.5, top + 3], [s * 6, top - 6 + Math.abs(s) * 2], [s * 6 + 2.5, top + 3]], f('#ffffff'), '#6a9ac8', 1);
   else if (th.id === 'temple') {E(c, 0, top - 2, 3.5, 3.5, f('#ffd25a'), OUT, 1);}
   else if (th.id === 'moon') {c.beginPath();c.arc(0, top - 4, 4.5, -2.2, 1.2);c.strokeStyle = f('#e8e4ff');c.lineWidth = 2.2;c.stroke();}
-  else P(c, [[0, top - 9], [3, top], [0, top + 2], [-3, top]], f(th.accent), OUT, 1);
+  else slimeTopper(c, th, f, t, top);
 }
 function runner(c, th, f, t, e) {
   const run = t * 14, bob = Math.abs(Math.sin(run)) * 2;
@@ -705,7 +724,7 @@ function beast(c, th, f, t, e) {
 // Each stage's guardian has its own silhouette; `raise` (0..1) lifts the attack during a telegraph.
 function titan(c, th, f, t, e) {
   const raise = e.warn ? Math.min(1, (1.1 - e.warn.t) / .6) : 0;
-  ({forest: thornQueen, volcano: emberColossus, ice: frostRevenant, temple: goldenYaksha, moon: moonEmperor, crystal: crystalWyrm}[th.id] || emberColossus)(c, th, f, t, raise);
+  ({forest: thornQueen, volcano: emberColossus, ice: frostRevenant, temple: goldenYaksha, moon: moonEmperor, crystal: crystalWyrm, desert: sandPharaoh, swamp: toadKing, sky: thunderRoc, deepsea: kraken, candy: cakeQueen, clockwork: gearTitan, haunted: vampireLord, sakura: kitsune, void: starDevourer}[th.id] || emberColossus)(c, th, f, t, raise);
 }
 // World boss: the rift lord, a four-armed horned demon floating out of a tear in the world.
 function riftLord(c, f, t, e) {
@@ -905,7 +924,8 @@ function prop(c, th, x, y, s, rng) {
   } else if (id === 'moon') {
     if (v < .55) {P(c, [[-11, 4], [-10, -90], [10, -90], [11, 4]], '#3a3660');P(c, [[-15, -90], [15, -90], [13, -98], [-13, -98]], '#5e5a86');c.beginPath();c.arc(0, -60, 6, .6, 5.6);c.strokeStyle = '#d8dcff';c.lineWidth = 2;c.stroke();}
     else {L(c, 0, 4, 0, -40, '#b8b4d0', 5);for (const a of [-.9, -.3, .4, 1]) L(c, 0, -30, Math.sin(a) * 26, -30 - Math.cos(a) * 26, '#b8b4d0', 2.4);}
-  } else {
+  } else if (NEW_PROPS[id]) NEW_PROPS[id](c, v);
+  else {
     const cols = ['#7ff0e0', '#ff8ad8', '#b48aff'], col = cols[Math.floor(v * 3)];
     for (const [dx, h, w] of [[-14, 34, 8], [0, 56, 11], [14, 40, 9]]) P(c, [[dx - w, 4], [dx - w * .7, -h * .75], [dx, -h], [dx + w * .7, -h * .75], [dx + w, 4]], col, '#14323a');
     glowDot(c, 0, -26, 40, `${col}40`);
@@ -919,10 +939,20 @@ const GROUND_LOOK = {
   ice: {path: '#ffffff', pathEdge: '#bcd4ea', pebble: '#dbeaf6', tile: '#f4faff', tuft: '#a8c8e4', tuft2: '#e0f0ff'},
   temple: {path: '#c99c55', pathEdge: '#9a6a2a', pebble: '#e8c47a', tile: '#e8c47a', tuft: '#9ab84a', tuft2: '#c4d870'},
   moon: {path: '#5e5a86', pathEdge: '#2a2648', pebble: '#7a76a8', tile: '#6e6a98', tuft: '#8a7ad8', tuft2: '#b4a8ff'},
-  crystal: {path: '#467882', pathEdge: '#1e3e48', pebble: '#5a909a', tile: '#5a909a', tuft: '#2aa8a0', tuft2: '#7ff0e0'}
+  crystal: {path: '#467882', pathEdge: '#1e3e48', pebble: '#5a909a', tile: '#5a909a', tuft: '#2aa8a0', tuft2: '#7ff0e0'},
+  desert: {path: '#e8c47a', pathEdge: '#b88a4a', pebble: '#f8e4b8', tile: '#f4d8a0', tuft: '#a8a04a', tuft2: '#d8c070'},
+  swamp: {path: '#8a7a5a', pathEdge: '#5a4a3a', pebble: '#a89a7a', tile: '#9a8a6a', tuft: '#3a7a3a', tuft2: '#7ab84a'},
+  sky: {path: '#ffffff', pathEdge: '#b4d0ec', pebble: '#e8f4ff', tile: '#f4faff', tuft: '#ffe27a', tuft2: '#ffffff'},
+  deepsea: {path: '#e8d8a8', pathEdge: '#a8986a', pebble: '#fff4d0', tile: '#d8c898', tuft: '#3ab86a', tuft2: '#7ae8a0'},
+  candy: {path: '#ffffff', pathEdge: '#ff8ac8', pebble: '#ffe4f0', tile: '#fff4fa', tuft: '#7ad0ff', tuft2: '#ffe27a'},
+  clockwork: {path: '#7a7068', pathEdge: '#4a4038', pebble: '#9a9088', tile: '#8a8078', tuft: '#c88a3a', tuft2: '#e8c47a'},
+  haunted: {path: '#5e566e', pathEdge: '#2a2436', pebble: '#7a7290', tile: '#6a6280', tuft: '#4a6a4a', tuft2: '#7a9a6a'},
+  sakura: {path: '#e8d0c0', pathEdge: '#b8907a', pebble: '#f8ece4', tile: '#f0dcd0', tuft: '#7ab85a', tuft2: '#ffb4d0'},
+  void: {path: '#3a2e6a', pathEdge: '#140a30', pebble: '#5a4a90', tile: '#4a3a80', tuft: '#8a7aff', tuft2: '#ff8ad8'}
 };
 function groundCluster(c, th, look, x, y, rng) {
   const id = th.id;
+  if (NEW_CLUSTERS[id]) return NEW_CLUSTERS[id](c, th, look, x, y, rng);
   if (id === 'forest') {
     if (rng() < .5) {for (let i = 0; i < 9; i++) {const a = rng() * 6.3, d = rng() * 40, fx = x + Math.cos(a) * d, fy = y + Math.sin(a) * d * .6, col = ['#fff4c4', '#ff9ab8', '#c9a8ff', '#ffd25a'][i % 4];L(c, fx, fy + 6, fx, fy, '#4f8a3e', 2);E(c, fx, fy, 4.5, 4, col, '#00000030', 1);E(c, fx, fy, 1.6, 1.6, '#ffe08a', null);}}
     else {E(c, x, y + 8, 46, 14, '#00000022', null);for (const [dx, dy, r, col] of [[-18, 0, 20, '#4a8a52'], [16, -2, 22, '#5a9e5a'], [0, -14, 22, '#6fb062'], [-6, -20, 10, '#8fcf76']]) E(c, x + dx, y + dy, r, r * .8, col, '#2f5a3680', 1.6);if (rng() < .5) for (const [dx, dy] of [[-10, -8], [12, -12], [2, -24]]) E(c, x + dx, y + dy, 3, 3, '#ff5a6a', null);}
@@ -1110,3 +1140,485 @@ export function drawToonPet(c, id, time, moving = false, face = 1) {
   }
   c.restore();
 }
+
+// ================================================================ worlds 7-15 (v0.30)
+// Each new world has its own monsters (wired through VARIANT), a boss (through titan), arena props,
+// ground clusters and a slime topper. Coordinates follow the rest of the file: feet at y=0, facing +x.
+function smile(c, x, y, w, f, open = false) {
+  c.beginPath();c.moveTo(x - w, y);c.quadraticCurveTo(x, y + w * 1.1, x + w, y);
+  if (open) {c.closePath();c.fillStyle = f('#7a2a3a');c.fill();}
+  c.strokeStyle = f('#3a1a2a');c.lineWidth = 1.2;c.lineCap = 'round';c.stroke();
+}
+function shine(c, x, y, rx, ry, rot = -.5) {c.beginPath();c.ellipse(x, y, rx, ry, rot, 0, Math.PI * 2);c.fillStyle = '#ffffffb0';c.fill();}
+function bolt(c, x, y, s, col) {P(c, [[x, y], [x + 4 * s, y + 8 * s], [x + 1 * s, y + 8 * s], [x + 5 * s, y + 17 * s], [x - 3 * s, y + 6 * s], [x, y + 6 * s]], col, OUT, 1);}
+function star5(c, x, y, r, col, stroke = OUT, w = 1) {
+  const pts = [];for (let i = 0; i < 10; i++) {const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * .45 : r;pts.push([x + Math.cos(a) * rr, y + Math.sin(a) * rr]);}
+  P(c, pts, col, stroke, w);
+}
+
+// ---- 7 desert
+function sandScorpion(c, th, f, t, e) {
+  const walk = Math.sin(t * 14) * 2, strike = lift(e);
+  for (const x of [-10, -2, 6]) for (const s of [-1, 1]) L(c, x, -10, x - 4 + walk * s, 0, f(OUT), 2.4);
+  E(c, -2, -14, 20, 11, f(th.body));E(c, -8, -19, 8, 3, '#ffffff50', null);
+  for (const x of [-12, -4]) L(c, x, -23, x + 2, -6, f(th.body2), 1.4);
+  // Tail arcs over the back; it lunges forward when the attack is wound up.
+  const segs = 5;for (let i = 0; i < segs; i++) {const a = Math.PI * (.95 - i * .2) - strike * .5, r = 22;E(c, -14 + Math.cos(a) * r * .8 + strike * i * 3, -24 - Math.sin(a) * r * (.4 + i * .14), 6 - i * .5, 5.5 - i * .5, f(th.body));}
+  P(c, [[-2 + strike * 15, -56], [8 + strike * 15, -60], [2 + strike * 15, -48]], f('#3a2a3a'));
+  E(c, 17, -15, 10, 9, f(th.body));
+  for (const s of [-1, 1]) {const cy = -14 + s * 5;limb(c, 22, cy, 30, cy - 6 - strike * 4, f(th.body), 4);E(c, 33, cy - 8 - strike * 4, 6, 4.5, f(th.body2));P(c, [[33, cy - 12 - strike * 4], [42, cy - 10 - strike * 4], [36, cy - 7 - strike * 4]], f(th.body2), OUT, 1);}
+  eyes(c, 19, -18, 1.8, 3.4, th, f, true);
+}
+function cactusBomb(c, th, f, t, e) {
+  const hot = armed(e, t), sway = Math.sin(t * 6) * .06;
+  c.save();c.rotate(sway);if (e.warn) c.scale(1 + Math.sin(t * 40) * .06, 1 + Math.sin(t * 40) * .06);
+  P(c, [[-9, 0], [9, 0], [11, -8], [-11, -8]], f('#c86a3a'));L(c, -10, -6, 10, -6, f('#ffd27a'), 1.6);
+  const body = hot ? '#ff5a4a' : f('#5ab84a');
+  c.beginPath();c.moveTo(-7, -8);c.lineTo(-7, -26);c.arc(0, -26, 7, Math.PI, 0);c.lineTo(7, -8);c.closePath();c.fillStyle = body;c.fill();c.strokeStyle = OUT;c.lineWidth = LW;c.stroke();
+  for (const s of [-1, 1]) {c.beginPath();c.moveTo(s * 7, -16);c.lineTo(s * 12, -16);c.lineTo(s * 12, -23);c.arc(s * 12, -23, 2.5, Math.PI, 0, s < 0);c.strokeStyle = OUT;c.lineWidth = 7.4;c.stroke();c.strokeStyle = body;c.lineWidth = 5;c.stroke();}
+  shine(c, -3, -27, 1.6, 4, 0);
+  for (const [x, y] of [[-4, -18], [4, -12], [3, -24]]) L(c, x, y, x + 1.2, y - 1.2, '#ffffffcc', 1);
+  E(c, 0, -34, 3.4, 3.4, f('#ff8ac8'), OUT, 1);E(c, 0, -34, 1.3, 1.3, f('#ffe27a'), null);
+  eyes(c, 0, -20, 1.4, 3, th, f);blush(c, 0, -16.5, 1.3, 4.5);
+  c.restore();if (hot) glowDot(c, 0, -20, 24, '#ff6a3a66');
+}
+function mummyCaster(c, th, f, t, e) {
+  const hover = Math.sin(t * 3) * 1.5;c.translate(0, hover);
+  P(c, [[-11, 0], [11, 0], [9, -26], [-9, -26]], f('#e8dcc0'));
+  for (let i = 0; i < 5; i++) L(c, -10 + i * .4, -4 - i * 5, 10 - i * .4, -7 - i * 5, f('#c8b896'), 1.4);
+  E(c, 0, -32, 11, 10.5, f('#efe4c8'));
+  for (let i = 0; i < 3; i++) L(c, -10, -37 + i * 5, 10, -34 + i * 5 - (i === 1 ? 3 : 0), f('#c8b896'), 1.4);
+  eyes(c, 2, -31, 1.8, 3.8, th, f);blush(c, 2, -27, 1.5, 6);
+  L(c, -11, -38, -20, -30 + Math.sin(t * 5) * 3, f('#e8dcc0'), 2.4);
+  const ox = 15, oy = -20, r = 4 + (e.warn ? 2 : 0) + Math.sin(t * 8) * .6;
+  limb(c, 7, -18, ox - 2, oy + 2, f('#e8dcc0'), 3.2);glowDot(c, ox, oy, r * 3.2, `${th.accent}aa`);E(c, ox, oy, r, r, f(th.accent), OUT, 1);
+}
+function sandPharaoh(c, th, f, t, raise) {
+  const float = Math.sin(t * 2) * 4;c.translate(0, float);
+  for (let i = 0; i < 3; i++) {c.save();c.scale(1, .3);c.globalAlpha = .35;c.beginPath();c.arc(0, -10, 50 + i * 16 + Math.sin(t * 3 + i) * 4, 0, Math.PI * 2);c.strokeStyle = f('#e8c47a');c.lineWidth = 4;c.stroke();c.restore();}
+  P(c, [[-34, -10], [34, -10], [26, -96], [-26, -96]], f('#f4e8c8'));
+  P(c, [[-28, -96], [28, -96], [24, -60], [0, -50], [-24, -60]], f('#3a6ad0'));
+  for (let i = 0; i < 4; i++) L(c, -22 + i * 2, -86 + i * 8, 22 - i * 2, -86 + i * 8, f('#ffd25a'), 3);
+  for (const y of [-40, -28]) L(c, -30, y, 30, y, f('#c8b896'), 2);
+  // Nemes headdress with gold and blue stripes.
+  P(c, [[-40, -96], [40, -96], [34, -150], [0, -168], [-34, -150]], f('#ffd25a'));
+  for (let i = 0; i < 6; i++) L(c, -36 + i * 1.4, -100 - i * 9, 36 - i * 1.4, -100 - i * 9, f('#2a5ac0'), 3.2);
+  E(c, 0, -124, 22, 22, f('#d8a05a'));E(c, -8, -132, 7, 4, '#ffffff40', null);
+  eyes(c, 2, -126, 3.6, 8, th, f, true);for (const s of [-1, 1]) L(c, s * 8 + 2 + s * 4, -122, s * 8 + 2 + s * 10, -118, f(OUT), 2);
+  P(c, [[-3, -112], [7, -112], [5, -96], [-1, -96]], f('#3a2a5a'));
+  P(c, [[-6, -168], [6, -168], [4, -182], [-4, -182]], f('#3ad0c0'), OUT, 1.2);glowDot(c, 0, -176, 14, '#3ad0c066');
+  limb(c, -30, -84, -40, -44, f('#d8a05a'), 10);
+  c.save();c.translate(30, -84);c.rotate(-.3 - raise * 1.8);limb(c, 0, 0, 10, 36, f('#d8a05a'), 10);c.translate(10, 40);
+  L(c, 0, -60, 0, 30, OUT, 7);L(c, 0, -60, 0, 30, f('#ffd25a'), 4);c.beginPath();c.arc(-8, -60, 8, 0, Math.PI, true);c.strokeStyle = OUT;c.lineWidth = 7;c.stroke();c.strokeStyle = f('#2a5ac0');c.lineWidth = 4;c.stroke();
+  if (raise > .3) glowDot(c, 0, -60, 30 * raise, '#ffe27a99');c.restore();
+}
+
+// ---- 8 swamp
+function frog(c, th, f, t, e) {
+  const hop = Math.max(0, Math.sin(t * 9)) * 10, squash = hop > 1 ? 1 : 1.08;c.translate(0, -hop);c.scale(1, 1 / squash);
+  for (const s of [-1, 1]) E(c, s * 10, -3, 7, 4, f(th.body2));
+  E(c, 0, -13, 15, 12, f(th.body));E(c, 0, -9, 10, 7, f('#e8f4b0'), null);shine(c, -7, -19, 4, 2.4);
+  for (const s of [-1, 1]) {E(c, s * 7 + 2, -25, 6, 6, f(th.body));}
+  eyes(c, 2, -25, 2, 7, th, f);blush(c, 2, -17, 2, 9);smile(c, 2, -15, 4, f);
+  if (Math.sin(t * 3) > .85) {L(c, 6, -14, 22, -16, f('#ff7a9a'), 2.4);E(c, 23, -16, 2.4, 2.4, f('#ff7a9a'), OUT, 1);}
+}
+function snapFlower(c, th, f, t, e) {
+  const sway = Math.sin(t * 2.5) * 3, open = e.warn ? .6 : .2 + Math.abs(Math.sin(t * 3)) * .2;
+  E(c, 0, -2, 12, 4, f('#4a3a2a'));
+  c.beginPath();c.moveTo(0, -2);c.quadraticCurveTo(-6, -20, sway, -36);c.strokeStyle = OUT;c.lineWidth = 6.6;c.stroke();c.strokeStyle = f('#4a9a3a');c.lineWidth = 4;c.stroke();
+  for (const s of [-1, 1]) P(c, [[0, -12], [s * 14, -20], [s * 18, -12], [s * 6, -8]], f('#5ab84a'));
+  c.save();c.translate(sway, -44);
+  for (let i = 0; i < 6; i++) {c.save();c.rotate(i * Math.PI / 3 + t * .4);E(c, 0, -13, 6, 8, f(th.accent));c.restore();}
+  E(c, 0, 0, 12, 11, f('#ff6a8a'));shine(c, -5, -5, 3.4, 2);
+  c.beginPath();c.moveTo(-8, 3);c.quadraticCurveTo(0, 3 + 12 * open, 8, 3);c.closePath();c.fillStyle = f('#5a1a2a');c.fill();c.strokeStyle = OUT;c.lineWidth = 1.2;c.stroke();
+  for (const x of [-5, 0, 5]) P(c, [[x - 1.8, 3], [x, 6], [x + 1.8, 3]], '#ffffff', OUT, .6);
+  eyes(c, 0, -3, 1.7, 4, th, f, true);
+  c.restore();
+}
+function toadKing(c, th, f, t, raise) {
+  const breathe = Math.sin(t * 2) * 3;
+  E(c, 0, -4, 70, 16, f('#3a8a4a'));E(c, -20, -8, 20, 5, '#ffffff30', null);
+  for (const s of [-1, 1]) {E(c, s * 40, -16, 22, 14, f(th.body2));}
+  E(c, 0, -64, 56 + breathe, 50, f(th.body));E(c, 0, -50, 38, 32, f('#e8f4b0'));shine(c, -26, -92, 12, 7);
+  for (const [x, y] of [[-34, -76], [30, -88], [40, -60]]) E(c, x, y, 5, 4, f(th.body2), null);
+  for (const s of [-1, 1]) E(c, s * 26, -112, 18, 18, f(th.body));
+  eyes(c, 0, -112, 6, 26, th, f, true);blush(c, 0, -90, 7, 34);
+  c.beginPath();c.moveTo(-30, -82);c.quadraticCurveTo(0, -66 + raise * 12, 30, -82);c.strokeStyle = OUT;c.lineWidth = 3;c.stroke();
+  if (raise > .2) {c.beginPath();c.moveTo(-26, -80);c.quadraticCurveTo(0, -60, 26, -80);c.closePath();c.fillStyle = f('#7a2a3a');c.fill();}
+  crownSpikes(c, f, -128, 26, 22, '#ffd25a', th.accent);
+  c.save();c.translate(44, -60);c.rotate(-.4 - raise * 1.4);L(c, 0, 0, 0, -70, OUT, 7);L(c, 0, 0, 0, -70, f('#8a5a2a'), 4);E(c, 0, -74, 9, 9, f(th.accent));glowDot(c, 0, -74, 18, `${th.accent}88`);c.restore();
+}
+
+// ---- 9 sky islands
+function cloudPuff(c, th, f, t, e) {
+  const hover = Math.sin(t * 3) * 3, hot = armed(e, t);c.translate(0, -18 + hover);
+  if (e.warn) c.scale(1 + Math.sin(t * 40) * .07, 1 + Math.sin(t * 40) * .07);
+  const col = hot ? '#9aa4c8' : f('#ffffff');
+  for (const [x, y, r] of [[-10, 0, 8], [10, 0, 8], [-5, -7, 9], [5, -8, 10], [0, 1, 10]]) E(c, x, y, r, r * .85, col, null);
+  c.beginPath();for (const [x, y, r] of [[-10, 0, 8], [10, 0, 8], [-5, -7, 9], [5, -8, 10], [0, 1, 10]]) {c.moveTo(x + r, y);c.ellipse(x, y, r, r * .85, 0, 0, Math.PI * 2);}
+  c.strokeStyle = OUT;c.lineWidth = LW;c.stroke();
+  for (const [x, y, r] of [[-10, 0, 8], [10, 0, 8], [-5, -7, 9], [5, -8, 10], [0, 1, 10]]) E(c, x, y, r - 1, r * .85 - 1, col, null);
+  shine(c, -6, -10, 4, 2);
+  eyes(c, 0, -2, 1.6, 4, th, f);blush(c, 0, 2, 1.5, 7);smile(c, 0, 3.5, 2, f);
+  if (hot || e.warn) bolt(c, 2, 8, 1, f('#ffe27a'));
+}
+function birdling(c, th, f, t, e) {
+  const flap = Math.sin(t * 20), hover = Math.sin(t * 5) * 3;c.translate(0, -22 + hover);
+  for (const s of [-1, 1]) {c.save();c.translate(-2, -2);c.scale(1, s);c.rotate(-.3 + flap * .6 * s);P(c, [[0, 0], [-6, -12], [-12, -10], [-10, -3]], f(th.body2));c.restore();}
+  P(c, [[-9, 0], [-16, -3], [-15, 3]], f(th.body2));
+  E(c, 0, 0, 9, 8.5, f(th.body));E(c, 1, 3, 5.5, 4, f('#fff8e0'), null);shine(c, -3, -4, 2.6, 1.6);
+  P(c, [[-1, -8], [2, -14], [4, -8]], f('#ff7a5a'), OUT, 1);
+  eyes(c, 3, -1, 1.4, 3.4, th, f);P(c, [[7, 0], [12, 1.5], [7, 3]], f('#ffb43a'), OUT, 1);
+}
+function thunderRoc(c, th, f, t, raise) {
+  const flap = Math.sin(t * 3) * .25 - raise * .5, bob = Math.sin(t * 3) * 6;c.translate(0, -40 + bob);
+  for (const s of [-1, 1]) {c.save();c.translate(s * 26, -60);c.scale(s, 1);c.rotate(-flap);
+    P(c, [[0, 0], [40, -40], [80, -36], [96, -10], [70, -6], [84, 10], [56, 8], [60, 22], [30, 14]], f(th.body2));
+    for (let i = 0; i < 4; i++) L(c, 30 + i * 14, -22 + i * 2, 40 + i * 14, 4 + i * 2, f('#ffffff60'), 2);c.restore();}
+  E(c, 0, -50, 44, 50, f(th.body));E(c, 0, -34, 28, 30, f('#fff8e0'));shine(c, -20, -80, 12, 7);
+  for (const s of [-1, 1]) limb(c, s * 14, 0, s * 18, 30, f('#ffb43a'), 6);
+  for (let i = 0; i < 5; i++) P(c, [[-12 + i * 6, -96], [-20 + i * 10, -128 - (i % 2) * 10], [-6 + i * 6, -98]], f(i % 2 ? th.accent : '#ffffff'), OUT, 1.2);
+  eyes(c, 4, -70, 5, 14, th, f, true);
+  P(c, [[-8, -60], [8, -60], [24, -50], [8, -44], [-8, -48]], f('#ffb43a'));
+  for (let i = 0; i < 3; i++) {const a = t * 2 + i * 2.1;bolt(c, Math.cos(a) * 70, -50 + Math.sin(a) * 30, 1.4 + raise, f('#ffe27a'));}
+  if (raise > .3) glowDot(c, 0, -60, 90 * raise, '#ffe27a55');
+}
+
+// ---- 10 deep sea
+function jellyfish(c, th, f, t, e) {
+  const pulse = Math.sin(t * 5), hover = pulse * 3;c.translate(0, -24 + hover);
+  for (let i = 0; i < 5; i++) {const x = -8 + i * 4;c.beginPath();c.moveTo(x, 2);c.quadraticCurveTo(x + Math.sin(t * 6 + i) * 4, 10, x + Math.sin(t * 5 + i) * 3, 18);c.strokeStyle = f('#ff9ad0');c.lineWidth = 2;c.lineCap = 'round';c.stroke();}
+  glowDot(c, 0, -2, 22, '#ff9ad055');
+  c.beginPath();c.moveTo(-12, 2);c.bezierCurveTo(-13 - pulse, -18, 13 + pulse, -18, 12, 2);
+  for (let i = 0; i < 4; i++) c.quadraticCurveTo(12 - i * 6 - 3, 6, 12 - (i + 1) * 6, 2);
+  c.closePath();c.globalAlpha = .9;c.fillStyle = f('#ffb4e0');c.fill();c.globalAlpha = 1;c.strokeStyle = OUT;c.lineWidth = LW;c.stroke();
+  shine(c, -5, -9, 3.6, 2);eyes(c, 0, -4, 1.6, 4, th, f);blush(c, 0, -.5, 1.5, 7);
+}
+function crab(c, th, f, t, e) {
+  const walk = Math.sin(t * 16) * 2, pinch = lift(e);
+  for (const x of [-12, -6, 6, 12]) L(c, x, -8, x * 1.5 + walk * Math.sign(x), 0, f(OUT), 2.6);
+  for (const s of [-1, 1]) {limb(c, s * 14, -18, s * 24, -30 - pinch * 8, f(th.body), 5);c.save();c.translate(s * 26, -36 - pinch * 8);c.scale(s, 1);
+    E(c, 0, 0, 9, 7, f(th.body));P(c, [[2, -6], [12, -10 - pinch * 4], [8, -2]], f(th.body2));c.restore();}
+  E(c, 0, -16, 20, 13, f(th.body));E(c, -6, -22, 8, 3.4, '#ffffff50', null);
+  for (const s of [-1, 1]) {L(c, s * 5, -26, s * 6, -34, f(OUT), 2);E(c, s * 6, -36, 4, 4, f('#ffffff'));E(c, s * 6 + 1, -36, 2.2, 2.6, f('#221c36'), null);E(c, s * 6, -37, .9, .9, '#ffffff', null);}
+  smile(c, 0, -12, 4, f);blush(c, 0, -14, 2, 10);
+}
+function puffer(c, th, f, t, e) {
+  const puff = e.warn ? 1.4 : 1 + Math.sin(t * 3) * .05, hot = armed(e, t);c.translate(0, -16);c.scale(puff, puff);
+  P(c, [[-12, 0], [-20, -6], [-20, 6]], f(th.accent));
+  for (let i = 0; i < 12; i++) {const a = i * Math.PI / 6;P(c, [[Math.cos(a - .15) * 11, Math.sin(a - .15) * 11], [Math.cos(a) * 16, Math.sin(a) * 16], [Math.cos(a + .15) * 11, Math.sin(a + .15) * 11]], f('#fff4c0'), OUT, .8);}
+  E(c, 0, 0, 12, 11.5, hot ? '#ff5a4a' : f('#ffd25a'));E(c, 0, 4, 8, 5, f('#fff8e0'), null);shine(c, -4, -5, 3.4, 2);
+  eyes(c, 3, -2, 1.5, 3.6, th, f);E(c, 6, 4, 1.6, 1.6, f('#7a2a3a'), OUT, .8);
+}
+function kraken(c, th, f, t, raise) {
+  for (let i = 0; i < 8; i++) {const s = i < 4 ? -1 : 1, k = i % 4, base = s * (14 + k * 10), sw = Math.sin(t * 2 + i) * 14 - (k === 3 ? raise * 30 * s : 0);
+    c.beginPath();c.moveTo(base, -40);c.bezierCurveTo(base + s * 20, -20, base + s * 30 + sw, 0, base + s * 46 + sw, -10 - k * 8);
+    c.strokeStyle = OUT;c.lineWidth = 17 - k;c.lineCap = 'round';c.stroke();c.strokeStyle = f(i % 2 ? th.body : '#ff9a7a');c.lineWidth = 14 - k;c.stroke();
+    for (let j = 1; j < 4; j++) E(c, base + s * (10 + j * 9) + sw * j / 4, -26 + j * 4, 2, 2, f('#ffe0d0'), null);}
+  E(c, 0, -96, 52, 64, f(th.body));shine(c, -24, -132, 14, 9);
+  for (const [x, y] of [[-30, -110], [26, -130], [34, -80], [-16, -150]]) E(c, x, y, 6, 5, f(th.body2), null);
+  eyes(c, 0, -80, 7, 20, th, f, true);
+  c.beginPath();c.moveTo(-14, -58);c.quadraticCurveTo(0, -48 - raise * 8, 14, -58);c.strokeStyle = OUT;c.lineWidth = 3;c.stroke();
+  P(c, [[-36, -150], [36, -150], [26, -172], [-26, -172]], f('#2a2a3a'));P(c, [[-46, -150], [46, -150], [40, -144], [-40, -144]], f('#2a2a3a'));
+  E(c, 0, -161, 6, 5, f('#fff4dc'), OUT, 1);for (const s of [-1, 1]) L(c, s * 3, -158, s * 8, -153, f(OUT), 2);
+}
+
+// ---- 11 candy land
+function gummyBear(c, th, f, t, e) {
+  const step = Math.sin(t * 6) * 3, col = f(['#ff6a8a', '#ffb43a', '#5ad06a'][e.id % 3]);
+  c.save();c.globalAlpha = .92;
+  for (const s of [-1, 1]) E(c, s * 9 + step * s * .3, -6, 7, 7, col);
+  E(c, 0, -26, 17, 19, col);for (const s of [-1, 1]) E(c, s * 16, -32 + (s > 0 ? -lift(e) * 10 : 0), 6, 9, col);
+  E(c, 0, -52, 14, 13, col);for (const s of [-1, 1]) E(c, s * 11, -62, 5, 5, col);
+  c.restore();shine(c, -7, -34, 4, 8, -.2);shine(c, -6, -58, 3.4, 2);
+  E(c, 0, -26, 9, 10, '#ffffff30', null);
+  eyes(c, 1, -53, 1.8, 4.2, th, f);E(c, 1, -47, 2.4, 1.8, f('#3a1a2a'), null);blush(c, 1, -48, 1.8, 7.5);
+}
+function cupcake(c, th, f, t, e) {
+  const hot = armed(e, t), bounce = Math.abs(Math.sin(t * 5)) * 3;c.translate(0, -bounce);
+  if (e.warn) c.scale(1 + Math.sin(t * 40) * .07, 1 + Math.sin(t * 40) * .07);
+  P(c, [[-11, -12], [11, -12], [8, 0], [-8, 0]], f('#7ac8ff'));for (let i = -2; i <= 2; i++) L(c, i * 4, -11, i * 3, -1, f('#4a98d8'), 1.2);
+  for (const [x, y, r] of [[-8, -15, 6], [8, -15, 6], [0, -16, 8], [-4, -22, 6], [4, -23, 6], [0, -28, 4.5]]) E(c, x, y, r, r * .85, hot ? '#ff5a4a' : f('#ffc4e0'), null);
+  c.beginPath();c.moveTo(-14, -13);c.bezierCurveTo(-16, -30, 16, -30, 14, -13);c.strokeStyle = OUT;c.lineWidth = LW;c.stroke();
+  shine(c, -5, -24, 3, 1.8);for (const [x, y, col] of [[-6, -18, '#ffe27a'], [5, -20, '#7ad0ff'], [1, -25, '#5ad06a'], [-2, -15, '#c46bff']]) L(c, x, y, x + 1.6, y - 1, col, 1.6);
+  E(c, 1, -34, 3.6, 3.6, f('#ff3a4a'), OUT, 1);L(c, 1, -37, 3, -41, f('#4a8a3a'), 1.4);
+  eyes(c, 0, -7, 1.3, 3.2, th, f);blush(c, 0, -4, 1.2, 5.5);
+  if (hot) glowDot(c, 0, -14, 22, '#ff6a3a66');
+}
+function lollipop(c, th, f, t, e) {
+  const sway = Math.sin(t * 2) * 2;
+  E(c, 0, -2, 10, 3.6, f('#ffffff'));L(c, 0, -2, sway, -38, OUT, 5);L(c, 0, -2, sway, -38, f('#ffffff'), 3);
+  c.save();c.translate(sway, -50);c.rotate(t * (e.warn ? 6 : 1));
+  E(c, 0, 0, 14, 14, f('#ff8ac8'));for (let i = 0; i < 3; i++) {c.beginPath();c.arc(0, 0, 4 + i * 3.4, i, i + 4);c.strokeStyle = f(['#ffffff', '#7ad0ff', '#ffe27a'][i]);c.lineWidth = 2.4;c.stroke();}
+  c.restore();shine(c, sway - 6, -56, 3.4, 2);
+  eyes(c, sway + 1, -50, 1.7, 4.2, th, f, !!e.warn);blush(c, sway + 1, -46, 1.5, 7);
+  if (e.warn) glowDot(c, sway + 14, -50, 12, `${th.glow}cc`);
+}
+function cakeQueen(c, th, f, t, raise) {
+  const sway = Math.sin(t * 1.6) * 2;
+  P(c, [[-50, 0], [50, 0], [46, -40], [-46, -40]], f('#ffe8c8'));for (let i = 0; i < 7; i++) E(c, -42 + i * 14, -40, 8, 6, f('#ff8ac8'), null);
+  L(c, -48, -16, 48, -16, f('#ff8ac8'), 4);
+  P(c, [[-36, -40], [36, -40], [32, -78], [-32, -78]], f('#ffc4e0'));for (let i = 0; i < 5; i++) E(c, -26 + i * 13, -78, 7, 5, f('#ffffff'), null);
+  for (let i = 0; i < 6; i++) E(c, -30 + i * 12, -58, 3, 3, f(['#ff3a4a', '#ffe27a', '#7ad0ff'][i % 3]), OUT, .8);
+  E(c, 0, -104, 26, 26, f('#ffe4cc'));shine(c, -10, -114, 6, 4);
+  for (const s of [-1, 1]) {c.beginPath();c.arc(s * 24, -112, 12, 0, Math.PI * 2);c.fillStyle = f('#ff6aa0');c.fill();c.strokeStyle = OUT;c.lineWidth = LW;c.stroke();}
+  c.beginPath();c.moveTo(-26, -110);c.bezierCurveTo(-30, -150, 30, -150, 26, -110);c.quadraticCurveTo(14, -122, 0, -120);c.quadraticCurveTo(-14, -122, -26, -110);c.fillStyle = f('#ff6aa0');c.fill();c.strokeStyle = OUT;c.stroke();
+  eyes(c, 2, -102, 4, 9, th, f, true);blush(c, 2, -94, 4, 15);smile(c, 2, -91, 5, f);
+  // Strawberry crown.
+  P(c, [[-12, -134], [12, -134], [8, -158], [0, -164], [-8, -158]], f('#ff3a4a'));for (const [x, y] of [[-5, -146], [4, -150], [0, -140]]) E(c, x, y, 1.2, 1.6, '#ffe27a', null);
+  for (const s of [-1, 0, 1]) P(c, [[s * 6, -162], [s * 6 - 4, -170], [s * 6 + 4, -170]], f('#4ab84a'), OUT, 1);
+  c.save();c.translate(36, -70);c.rotate(-.3 - raise * 1.6 + sway * .02);L(c, 0, 0, 0, -60, OUT, 8);
+  for (let i = 0; i < 6; i++) L(c, 0, -i * 10, 0, -i * 10 - 10, f(i % 2 ? '#ff3a4a' : '#ffffff'), 5);
+  c.beginPath();c.arc(-8, -60, 8, 0, Math.PI, true);c.strokeStyle = OUT;c.lineWidth = 8;c.stroke();c.strokeStyle = f('#ff3a4a');c.lineWidth = 5;c.stroke();c.restore();
+}
+
+// ---- 12 clockwork city
+function robot(c, th, f, t, e) {
+  const step = Math.sin(t * 6) * 3, punch = lift(e);
+  for (const s of [-1, 1]) {limb(c, s * 8, -16, s * 9 + step * s, -2, f('#6a7a8a'), 6);P(c, [[s * 9 + step * s - 6, 0], [s * 9 + step * s + 6, 0], [s * 9 + step * s + 6, -4], [s * 9 + step * s - 6, -4]], f(th.body2));}
+  P(c, [[-18, -16], [18, -16], [18, -50], [-18, -50]], f(th.body));
+  for (const [x, y] of [[-14, -46], [14, -46], [-14, -20], [14, -20]]) E(c, x, y, 1.4, 1.4, f('#ffe27a'), null);
+  c.save();c.translate(0, -33);c.rotate(t * 2);for (let i = 0; i < 8; i++) {c.rotate(Math.PI / 4);P(c, [[-2, -10], [2, -10], [2, -7], [-2, -7]], f('#ffd25a'), OUT, .8);}E(c, 0, 0, 7, 7, f('#ffd25a'), OUT, 1.2);E(c, 0, 0, 2.6, 2.6, f(th.body2), null);c.restore();
+  P(c, [[-14, -50], [14, -50], [14, -72], [-14, -72]], f('#c8d0d8'));P(c, [[-10, -54], [10, -54], [10, -68], [-10, -68]], f('#1a2a3a'));
+  for (const s of [-1, 1]) {E(c, s * 4 + 1, -61, 2.2, 2.8, f(th.eye), null);E(c, s * 4 + .4, -62, .8, .8, '#ffffff', null);}
+  L(c, 0, -72, 0, -80, f(OUT), 2);E(c, 0, -82, 2.6, 2.6, f('#ff4a3a'), OUT, 1);if (Math.sin(t * 6) > 0) glowDot(c, 0, -82, 7, '#ff4a3a88');
+  limb(c, -18, -44, -24, -26, f('#6a7a8a'), 5);
+  c.save();c.translate(18, -44);c.rotate(.5 - punch * 2);limb(c, 0, 0, 8, 16, f('#6a7a8a'), 5);E(c, 9, 20, 6, 6, f(th.body2));c.restore();
+}
+function gearDrone(c, th, f, t, e) {
+  const hover = Math.sin(t * 6) * 3;c.translate(0, -24 + hover);
+  L(c, 0, -10, 0, -16, f(OUT), 2);c.save();c.translate(0, -17);c.scale(Math.cos(t * 30), 1);E(c, 0, 0, 12, 2, f('#c8d0d8'));c.restore();
+  c.save();c.rotate(t * 3);for (let i = 0; i < 8; i++) {c.rotate(Math.PI / 4);P(c, [[-2.4, -12], [2.4, -12], [2.4, -8], [-2.4, -8]], f(th.body), OUT, .8);}c.restore();
+  E(c, 0, 0, 9.5, 9.5, f(th.body));E(c, 0, 0, 5.4, 5.4, f('#1a2a3a'), OUT, 1);E(c, .6, .4, 2.6, 2.6, f(th.eye), null);E(c, -.6, -1, 1, 1, '#ffffff', null);
+  glowDot(c, 0, 0, 12, `${th.eye}44`);
+}
+function cannonBot(c, th, f, t, e) {
+  const recoil = e.warn ? Math.sin(t * 30) * 1.5 : 0;
+  for (const s of [-1, 1]) {E(c, s * 9, -5, 6, 6, f('#3a3a4a'));E(c, s * 9, -5, 2.2, 2.2, f('#c8d0d8'), null);}
+  P(c, [[-14, -8], [14, -8], [12, -26], [-12, -26]], f(th.body));
+  c.save();c.translate(4 - recoil, -24);c.rotate(-.35);P(c, [[-4, -4], [20, -6], [20, 6], [-4, 4]], f('#4a4a5a'));E(c, 20, 0, 3, 6, f('#1a1a2a'));c.restore();
+  E(c, -2, -30, 9, 8, f('#c8d0d8'));P(c, [[-8, -33], [6, -33], [6, -27], [-8, -27]], f('#1a2a3a'));
+  for (const s of [-1, 1]) E(c, -1 + s * 3, -30, 1.4, 1.6, f(th.eye), null);
+  if (e.warn) glowDot(c, 26, -32, 12, '#ffd25acc');
+}
+function gearTitan(c, th, f, t, raise) {
+  const step = Math.sin(t * 1.6) * 4;
+  for (const s of [-1, 1]) {limb(c, s * 24, -70, s * 30 + step * s, -12, f('#6a7a8a'), 20);P(c, [[s * 30 - 18, 0], [s * 30 + 18, 0], [s * 30 + 16, -14], [s * 30 - 16, -14]], f(th.body2));}
+  P(c, [[-50, -70], [50, -70], [56, -150], [-56, -150]], f(th.body));shine(c, -36, -138, 10, 6);
+  c.save();c.translate(0, -110);c.rotate(t * 1.2);for (let i = 0; i < 10; i++) {c.rotate(Math.PI / 5);P(c, [[-5, -32], [5, -32], [5, -24], [-5, -24]], f('#ffd25a'), OUT, 1.2);}
+  E(c, 0, 0, 26, 26, f('#ffd25a'), OUT, 2);E(c, 0, 0, 10, 10, f(th.body2));c.restore();
+  glowDot(c, 0, -110, 30, `${th.accent}55`);
+  for (const s of [-1, 1]) P(c, [[s * 40, -150], [s * 52, -150], [s * 50, -186], [s * 42, -186]], f('#4a4a5a'));
+  for (let i = 0; i < 3; i++) {const k = (t * .8 + i / 3) % 1;E(c, -46 + k * 6, -190 - k * 40, 6 + k * 8, 5 + k * 6, `rgba(220,220,230,${.6 * (1 - k)})`, null);}
+  P(c, [[-30, -150], [30, -150], [26, -192], [-26, -192]], f('#c8d0d8'));P(c, [[-22, -160], [22, -160], [22, -180], [-22, -180]], f('#1a2a3a'));
+  eyes(c, 0, -170, 4, 10, {eye: th.eye}, f, true);
+  limb(c, -54, -136, -66, -90, f('#6a7a8a'), 14);E(c, -68, -84, 12, 12, f(th.body2));
+  c.save();c.translate(54, -136);c.rotate(-.2 - raise * 2);limb(c, 0, 0, 10, 46, f('#6a7a8a'), 14);c.translate(10, 52);
+  P(c, [[-6, 0], [6, 0], [6, 40], [-6, 40]], f('#c8d0d8'));c.beginPath();c.arc(0, 50, 16, Math.PI * 1.25, Math.PI * 1.75 + Math.PI);c.strokeStyle = OUT;c.lineWidth = 12;c.stroke();c.strokeStyle = f('#c8d0d8');c.lineWidth = 8;c.stroke();c.restore();
+}
+
+// ---- 13 vampire castle
+function batling(c, th, f, t, e) {
+  const flap = Math.sin(t * 16) * .6, bob = Math.sin(t * 8) * 3;c.translate(0, -24 + bob);
+  for (const s of [-1, 1]) {c.save();c.scale(s, 1);c.rotate(flap * .5);P(c, [[4, 0], [14, -10], [26, -6], [30, 4], [22, 2], [16, 8], [10, 3]], f(th.body2));c.restore();}
+  E(c, 0, 0, 10, 9, f(th.body));for (const s of [-1, 1]) P(c, [[s * 3, -6], [s * 8, -15], [s * 9, -5]], f(th.body));shine(c, -4, -4, 2.6, 1.6);
+  eyes(c, 1, -1, 1.8, 3.8, th, f);blush(c, 1, 3, 1.6, 6.5);for (const s of [-1, 1]) P(c, [[1 + s * 1.6, 4.4], [1 + s * 1.6, 7], [1 + s * 2.8, 4.4]], '#ffffff', OUT, .6);
+}
+function pumpkin(c, th, f, t, e) {
+  const hot = armed(e, t), bounce = Math.abs(Math.sin(t * 4)) * 3;c.translate(0, -bounce);
+  if (e.warn) c.scale(1 + Math.sin(t * 40) * .07, 1 + Math.sin(t * 40) * .07);
+  const col = hot ? '#ff5a3a' : f('#ff9a2a');
+  for (const [x, r] of [[-8, 9], [8, 9], [0, 11]]) E(c, x, -12, r, 11, col);
+  L(c, 0, -23, 2, -29, f('#4a6a2a'), 3);P(c, [[2, -27], [10, -32], [6, -26]], f('#5ab84a'), OUT, 1);shine(c, -9, -17, 2.6, 4, -.3);
+  glowDot(c, 0, -10, 14, '#ffd25a66');
+  for (const s of [-1, 1]) P(c, [[s * 5 - 3, -15], [s * 5 + 3, -15], [s * 5, -19]], f('#ffe27a'), OUT, 1);
+  P(c, [[-7, -8], [7, -8], [5, -4], [2, -6], [-1, -4], [-4, -6], [-6, -4]], f('#ffe27a'), OUT, 1);
+  if (hot) glowDot(c, 0, -12, 26, '#ff6a3a66');
+}
+function skeletonKnight(c, th, f, t, e) {
+  const step = Math.sin(t * 5) * 3, bone = f('#f4f0e4');
+  for (const s of [-1, 1]) limb(c, s * 6, -18, s * 7 + step * s, -2, bone, 3.6);
+  for (let i = 0; i < 4; i++) L(c, -9, -24 - i * 6, 9, -24 - i * 6, bone, 2.6);L(c, 0, -20, 0, -46, bone, 3.6);
+  P(c, [[-14, -46], [14, -46], [12, -36], [-12, -36]], f(th.body));
+  E(c, 0, -58, 13, 12, bone);for (const s of [-1, 1]) E(c, 1 + s * 5, -58, 3.6, 4, f('#2a1a2a'), null);for (const s of [-1, 1]) E(c, 1 + s * 5, -58, 1.4, 1.4, f(th.accent), null);
+  for (let i = -1; i <= 1; i++) L(c, i * 3 + 1, -51, i * 3 + 1, -48, f(OUT), 1.2);
+  c.beginPath();c.moveTo(-14, -58);c.quadraticCurveTo(-14, -74, 0, -74);c.quadraticCurveTo(14, -74, 14, -58);c.lineTo(10, -62);c.lineTo(-10, -62);c.closePath();c.fillStyle = f('#6a6a7a');c.fill();c.strokeStyle = OUT;c.lineWidth = LW;c.stroke();
+  P(c, [[-2, -74], [2, -74], [8, -86 + Math.sin(t * 6) * 2], [-1, -80]], f(th.accent), OUT, 1);
+  limb(c, -12, -42, -18, -26, bone, 3);
+  swingArm(c, 12, -42, lift(e), bone, 3, () => {L(c, 0, 0, 0, 26, OUT, 5);L(c, 0, 0, 0, 26, f('#c8d0d8'), 3);L(c, -6, 0, 6, 0, f('#8a6a3a'), 3);});
+}
+function vampireLord(c, th, f, t, raise) {
+  const sway = Math.sin(t * 1.4) * 3, open = raise;
+  for (const s of [-1, 1]) {c.save();c.scale(s, 1);P(c, [[10, -150], [50 + open * 50, -150 + open * 20], [70 + open * 50, -40], [60 + open * 40, 0], [20, 0]], f('#2a0a1a'));
+    P(c, [[14, -146], [44 + open * 44, -140 + open * 20], [56 + open * 44, -40], [24, -6]], f('#9a1a3a'), null);c.restore();}
+  P(c, [[-26, 0], [26, 0], [22, -120], [-22, -120]], f(th.body2));
+  P(c, [[-6, -120], [6, -120], [4, -60], [-4, -60]], f('#ffffff'));E(c, 0, -100, 4, 4, f('#ff3a5a'), OUT, 1);glowDot(c, 0, -100, 10, '#ff3a5a88');
+  for (const s of [-1, 1]) P(c, [[0, -128], [s * 34, -150], [s * 30, -118]], f('#9a1a3a'));
+  E(c, 0, -152, 22, 24, f('#f0e4f4'));shine(c, -9, -162, 6, 3.6);
+  P(c, [[-24, -158], [-22, -176], [0, -182], [22, -176], [24, -158], [14, -170], [0, -162], [-14, -170]], f('#1a0a1a'));
+  eyes(c, 2, -150, 3.8, 8.5, {eye: '#ff3a5a'}, f, true);
+  c.beginPath();c.moveTo(-8, -136);c.quadraticCurveTo(2, -132, 12, -136);c.strokeStyle = OUT;c.lineWidth = 2;c.stroke();for (const s of [-1, 1]) P(c, [[2 + s * 4, -135], [2 + s * 4.6, -129], [2 + s * 6, -135]], '#ffffff', OUT, .8);
+  for (let i = 0; i < 4; i++) {const a = t * 1.6 + i * 1.57, x = Math.cos(a) * 80, y = -120 + Math.sin(a * 2) * 30;c.save();c.translate(x + sway, y);c.scale(.6, .6);batling(c, {...th, body: '#3a2a4a', body2: '#1a0a2a'}, f, t + i, {id: i});c.restore();}
+  if (raise > .3) glowDot(c, 0, -110, 80 * raise, '#ff3a5a44');
+}
+
+// ---- 14 sakura spirits
+function tanuki(c, th, f, t, e) {
+  const run = t * 12, bob = Math.abs(Math.sin(run)) * 2;c.translate(0, -bob);
+  for (const [x, ph] of [[-6, 0], [6, Math.PI]]) {const s = Math.sin(run + ph) * 3;limb(c, x, -8, x + s, -1, f('#5a3a2a'), 4);}
+  P(c, [[-12, -14], [-24, -20 + Math.sin(t * 8) * 2], [-22, -10]], f('#8a6a4a'));for (let i = 0; i < 2; i++) L(c, -16 - i * 3, -18 + i, -16 - i * 3, -12 + i, f('#3a2a1a'), 2);
+  E(c, 0, -14, 13, 10, f('#a88a6a'));E(c, 2, -11, 7, 6, f('#f0e4c8'), null);
+  E(c, 8, -24, 10, 9, f('#a88a6a'));for (const dx of [2, 13]) E(c, dx, -32, 3.6, 3.6, f('#5a3a2a'));
+  for (const s of [-1, 1]) E(c, 9 + s * 3.6, -24, 3.4, 2.8, f('#3a2a1a'), null);
+  eyes(c, 9, -24, 1.4, 3.6, th, f);E(c, 15, -21, 1.4, 1.2, f(OUT), null);blush(c, 9, -20, 1.4, 6);
+  P(c, [[4, -34], [14, -40], [10, -32]], f('#5ab84a'), OUT, 1);
+}
+function lantern(c, th, f, t, e) {
+  const hot = armed(e, t), sway = Math.sin(t * 3) * .1;c.translate(0, -20);c.rotate(sway);
+  if (e.warn) c.scale(1 + Math.sin(t * 40) * .07, 1 + Math.sin(t * 40) * .07);
+  glowDot(c, 0, 0, 24, hot ? '#ff4a3a88' : '#ffb43a55');
+  P(c, [[-6, -15], [6, -15], [6, -12], [-6, -12]], f('#2a1a1a'));P(c, [[-6, 15], [6, 15], [6, 12], [-6, 12]], f('#2a1a1a'));
+  E(c, 0, 0, 12, 13, hot ? '#ff5a4a' : f('#ff6a5a'));for (const y of [-7, 0, 7]) L(c, -11 + Math.abs(y) * .3, y, 11 - Math.abs(y) * .3, y, f('#c83a3a'), 1);
+  shine(c, -5, -5, 2.4, 4, -.2);L(c, 0, 15, 0, 22, f('#ffd25a'), 2);
+  eyes(c, 0, -1, 1.5, 4, th, f);blush(c, 0, 3, 1.4, 7);smile(c, 0, 4.5, 2.2, f, true);
+}
+function oni(c, th, f, t, e) {
+  const step = Math.sin(t * 5) * 3, skin = f('#ff6a5a');
+  for (const s of [-1, 1]) limb(c, s * 9, -20, s * 10 + step * s, -2, skin, 8);
+  P(c, [[-16, -22], [16, -22], [14, -10], [-14, -10]], f('#ffd25a'));for (const x of [-8, 0, 8]) L(c, x, -21, x - 2, -11, f(OUT), 2);
+  E(c, 0, -36, 18, 16, skin);E(c, 0, -32, 9, 7, '#ffffff30', null);
+  E(c, 0, -60, 15, 14, skin);shine(c, -6, -66, 4, 2.4);
+  for (const s of [-1, 1]) P(c, [[s * 6, -72], [s * 10, -86], [s * 12, -70]], f('#fff4dc'), OUT, 1);
+  P(c, [[-13, -66], [-6, -76], [0, -68], [6, -76], [13, -66], [8, -70], [0, -64], [-8, -70]], f('#2a1a2a'));
+  eyes(c, 2, -59, 2.2, 5, th, f, true);for (const s of [-1, 1]) P(c, [[2 + s * 4, -51], [2 + s * 4.6, -47], [2 + s * 6, -51]], '#ffffff', OUT, .7);
+  limb(c, -16, -42, -24, -26, skin, 6);
+  swingArm(c, 16, -44, lift(e), skin, 6, () => {L(c, 0, -4, 0, 34, OUT, 11);L(c, 0, -4, 0, 34, f('#8a5a2a'), 8);for (const y of [12, 22, 30]) E(c, 0, y, 2, 2, f('#c8d0d8'), OUT, .8);});
+}
+function kitsune(c, th, f, t, raise) {
+  for (let i = 0; i < 9; i++) {const a = -Math.PI / 2 + (i - 4) * .3 + Math.sin(t * 1.5 + i) * .08 - raise * (i - 4) * .05, L1 = 90 + (i % 2) * 10;
+    c.save();c.translate(0, -70);c.rotate(a + Math.PI / 2);
+    c.beginPath();c.moveTo(-8, 0);c.quadraticCurveTo(-20, -L1 * .5, -6, -L1);c.quadraticCurveTo(10, -L1 * .6, 8, 0);c.closePath();c.fillStyle = f('#fff0f4');c.fill();c.strokeStyle = OUT;c.lineWidth = LW;c.stroke();
+    E(c, -4, -L1 + 12, 6, 10, f(th.body), null);c.restore();}
+  P(c, [[-34, 0], [34, 0], [26, -100], [-26, -100]], f('#ffffff'));P(c, [[-34, 0], [-4, 0], [-10, -100], [-26, -100]], f('#c83a5a'));
+  L(c, -30, -50, 30, -50, f('#ffd25a'), 6);for (let i = 0; i < 4; i++) E(c, -18 + i * 12, -24, 4, 3, f(th.body), null);
+  E(c, 0, -128, 30, 28, f('#fff4f0'));shine(c, -12, -140, 8, 4);
+  for (const s of [-1, 1]) {P(c, [[s * 10, -150], [s * 26, -184], [s * 30, -142]], f('#fff4f0'));P(c, [[s * 14, -152], [s * 25, -176], [s * 26, -148]], f(th.body), null);}
+  P(c, [[-6, -116], [6, -116], [16, -108], [0, -102], [-16, -108]], f('#fff4f0'), null);E(c, 4, -112, 3, 2.4, f(OUT), null);
+  eyes(c, 2, -128, 4.2, 10, {eye: '#ff5a8a'}, f, true);for (const s of [-1, 1]) L(c, 2 + s * 14, -136, 2 + s * 20, -132, f('#ff3a5a'), 2.4);
+  for (let i = 0; i < 4; i++) {const a = t * 2 + i * 1.57, x = Math.cos(a) * 64, y = -100 + Math.sin(a) * 26;flame(c, x, y, 7 + raise * 4, 14 + raise * 6, t, i, '#ffe0ff', '#ff6ae0');}
+}
+
+// ---- 15 cosmic void
+function starSprite(c, th, f, t, e) {
+  const hover = Math.sin(t * 4) * 3;c.translate(0, -24 + hover);
+  for (let i = 1; i < 4; i++) {c.globalAlpha = .3 / i;star5(c, -i * 6, i * 2, 6 - i, f(th.accent), null);}c.globalAlpha = 1;
+  glowDot(c, 0, 0, 18, '#ffe27a66');c.save();c.rotate(Math.sin(t * 3) * .2);star5(c, 0, 0, 13, f('#ffe27a'), OUT, LW);c.restore();shine(c, -4, -5, 2.4, 1.4);
+  eyes(c, 0, 0, 1.4, 3.4, th, f);blush(c, 0, 3.6, 1.3, 6);
+}
+function miniPlanet(c, th, f, t, e) {
+  const hot = armed(e, t), hover = Math.sin(t * 3) * 2;c.translate(0, -18 + hover);
+  if (e.warn) c.scale(1 + Math.sin(t * 40) * .07, 1 + Math.sin(t * 40) * .07);
+  c.beginPath();c.ellipse(0, 0, 19, 5, -.3, Math.PI, Math.PI * 2);c.strokeStyle = OUT;c.lineWidth = 4.4;c.stroke();c.strokeStyle = f('#ffd25a');c.lineWidth = 2.4;c.stroke();
+  E(c, 0, 0, 11, 11, hot ? '#ff5a4a' : f(['#5ab4ff', '#ff8ac8', '#7ae0a0'][e.id % 3]));
+  for (const [x, y, r] of [[-4, 4, 2.4], [5, -4, 1.6]]) E(c, x, y, r, r, '#00000022', null);shine(c, -4, -5, 3, 1.8);
+  c.beginPath();c.ellipse(0, 0, 19, 5, -.3, 0, Math.PI);c.strokeStyle = OUT;c.lineWidth = 4.4;c.stroke();c.strokeStyle = f('#ffd25a');c.lineWidth = 2.4;c.stroke();
+  eyes(c, 1, -1, 1.3, 3.4, th, f);blush(c, 1, 3, 1.2, 6);
+  if (hot) glowDot(c, 0, 0, 24, '#ff6a3a66');
+}
+function ufo(c, th, f, t, e) {
+  const hover = Math.sin(t * 3) * 3, tilt = Math.sin(t * 2) * .1;c.translate(0, -26 + hover);c.rotate(tilt);
+  if (e.warn) {c.globalAlpha = .4;P(c, [[-8, 6], [8, 6], [18, 26], [-18, 26]], '#b8ffe0', null);c.globalAlpha = 1;}
+  E(c, 0, -6, 9, 9, f('#b8ffe0'), OUT, LW);E(c, -3, -9, 2.6, 2, '#ffffffc0', null);
+  E(c, 0, -5, 5, 5, f('#7ae06a'));for (const s of [-1, 1]) {E(c, s * 2.2, -6, 1.6, 2.2, f('#221c36'), null);E(c, s * 2.2 - .5, -7, .6, .6, '#ffffff', null);}
+  E(c, 0, 1, 20, 6, f('#c8d0d8'));E(c, 0, 0, 12, 3, '#ffffff60', null);
+  for (let i = 0; i < 5; i++) E(c, -12 + i * 6, 2.4, 1.6, 1.6, (Math.floor(t * 6) + i) % 2 ? '#ffe27a' : '#ff6ad0', null);
+}
+function starDevourer(c, th, f, t, raise) {
+  const coil = t * .8;
+  for (let i = 12; i >= 0; i--) {const k = i / 12, a = coil + k * 5, x = Math.cos(a) * (50 - k * 10), y = -40 - k * 20 + Math.sin(a) * 14, r = 26 - k * 10;
+    const g = c.createRadialGradient(x - r * .3, y - r * .3, 1, x, y, r);g.addColorStop(0, f('#8a7aff'));g.addColorStop(1, f(th.body2));
+    E(c, x, y, r, r * .9, g);for (let s = 0; s < 2; s++) E(c, x + Math.cos(i * 3 + s) * r * .5, y + Math.sin(i * 2 + s) * r * .4, 1.2, 1.2, '#ffffffcc', null);}
+  for (const s of [-1, 1]) {c.save();c.translate(s * 30, -120);c.scale(s, 1);c.rotate(-.3 - raise * .3 + Math.sin(t * 2) * .1);
+    P(c, [[0, 0], [50, -50], [90, -40], [70, -20], [96, -6], [60, 4], [70, 20], [30, 10]], f('#2a1a6a'));for (let i = 0; i < 3; i++) L(c, 10 + i * 20, -4, 40 + i * 20, -36 + i * 8, f('#8a7aff'), 2);c.restore();}
+  E(c, 0, -130, 40, 36, f(th.body));shine(c, -16, -150, 10, 5);
+  for (const s of [-1, 1]) P(c, [[s * 16, -160], [s * 30, -200], [s * 32, -156]], f('#ffd25a'), OUT, 1.4);
+  P(c, [[-30, -116], [30, -116], [44, -102], [0, -88 - raise * 10], [-44, -102]], f(th.body2));
+  if (raise > .1) {E(c, 0, -104, 20, 8 + raise * 8, f('#140a2a'));glowDot(c, 0, -104, 30 * raise, '#ffe27a88');}
+  for (const s of [-1, 1]) for (let i = 0; i < 3; i++) P(c, [[s * (8 + i * 8), -114], [s * (10 + i * 8), -108], [s * (12 + i * 8), -114]], '#ffffff', OUT, .8);
+  eyes(c, 0, -136, 5, 13, th, f, true);
+  for (let i = 0; i < 6; i++) {const a = t * .6 + i * 1.05;star5(c, Math.cos(a) * 110, -110 + Math.sin(a) * 50, 5 + (i % 2) * 2, f('#ffe27a'), null);}
+  if (raise > .3) glowDot(c, 0, -120, 120 * raise, '#8a7aff44');
+}
+
+// Slime toppers for the new worlds (worlds 1-6 keep their own in slime()).
+function slimeTopper(c, th, f, t, top) {
+  const id = th.id;
+  if (id === 'desert') P(c, [[-6, top + 2], [0, top - 8], [6, top + 2]], f('#e8c47a'), OUT, 1);
+  else if (id === 'swamp') {E(c, 0, top, 8, 2.6, f('#4ab84a'), OUT, 1);E(c, 3, top - 3, 2.6, 2.6, f('#ff8ac8'), OUT, .8);}
+  else if (id === 'sky') for (const [x, r] of [[-3, 3.4], [3, 3.4], [0, 4.2]]) E(c, x, top - 3, r, r * .8, f('#ffffff'), OUT, .8);
+  else if (id === 'deepsea') for (const [x, y, r] of [[-2, -4, 2], [2, -9, 1.6], [-1, -13, 1.2]]) E(c, x, top + y, r, r, '#d8f8ffcc', OUT, .6);
+  else if (id === 'candy') {L(c, 0, top, 2, top - 6, f('#4a8a3a'), 1.4);E(c, 2, top - 8, 3.4, 3.4, f('#ff3a4a'), OUT, 1);}
+  else if (id === 'clockwork') {L(c, 0, top, 0, top - 7, f(OUT), 1.6);E(c, 0, top - 9, 2.4, 2.4, f('#ff4a3a'), OUT, .8);}
+  else if (id === 'haunted') for (const s of [-1, 1]) P(c, [[s * 2, top], [s * 9, top - 5], [s * 7, top + 2]], f('#3a2a4a'), OUT, .8);
+  else if (id === 'sakura') for (let i = 0; i < 5; i++) {const a = i * 1.257;E(c, Math.cos(a) * 3, top - 3 + Math.sin(a) * 3, 2.4, 2.4, f('#ffc4dc'), OUT, .6);}
+  else if (id === 'void') {c.beginPath();c.ellipse(0, top - 2, 8, 2.4, 0, 0, Math.PI * 2);c.strokeStyle = f('#ffd25a');c.lineWidth = 1.6;c.stroke();}
+  else P(c, [[0, top - 9], [3, top], [0, top + 2], [-3, top]], f(th.accent), OUT, 1);
+}
+
+// Arena props (painted once per arena) for the new worlds.
+const NEW_PROPS = {
+  desert(c, v) {
+    if (v < .6) {for (const [x, y, h] of [[0, 4, 70]]) {c.beginPath();c.moveTo(x - 8, y);c.lineTo(x - 8, -h + 8);c.arc(x, -h + 8, 8, Math.PI, 0);c.lineTo(x + 8, y);c.closePath();c.fillStyle = '#5ab84a';c.fill();c.strokeStyle = OUT;c.lineWidth = 2;c.stroke();}
+      for (const s of [-1, 1]) {c.beginPath();c.moveTo(s * 8, -30);c.lineTo(s * 18, -30);c.lineTo(s * 18, -46);c.strokeStyle = OUT;c.lineWidth = 11;c.lineCap = 'round';c.stroke();c.strokeStyle = '#5ab84a';c.lineWidth = 8;c.stroke();}
+      L(c, -3, -10, -3, -58, '#8ad86a', 2);}
+    else {P(c, [[-34, 4], [0, -48], [34, 4]], '#e8c47a');P(c, [[0, -48], [34, 4], [8, 4]], '#c89a4a', null);for (let i = 1; i < 4; i++) L(c, -34 + i * 8.5, 4 - i * 13, 34 - i * 8.5, 4 - i * 13, '#a8763a80', 1.6);}
+  },
+  swamp(c, v) {
+    if (v < .55) {P(c, [[-6, 4], [-4, -40], [4, -40], [6, 4]], '#5a4a3a');for (const [x, y, a] of [[-4, -36, -.8], [4, -30, .9], [0, -40, -.1]]) {c.save();c.translate(x, y);c.rotate(a);L(c, 0, 0, 0, -22, '#5a4a3a', 4);c.restore();}
+      for (const [x, y] of [[-14, -60], [14, -54], [0, -66]]) {L(c, x, y + 10, x, y + 30, '#8aa86a', 1.4);}}
+    else {E(c, 0, -14, 16, 6, '#c46bff');P(c, [[-4, -14], [-6, 2], [6, 2], [4, -14]], '#e8e0c8');E(c, 0, -18, 22, 12, '#c46bff');for (const [x, y] of [[-10, -20], [6, -24], [10, -16]]) E(c, x, y, 3, 2.4, '#f0d8ff', null);}
+  },
+  sky(c, v) {
+    if (v < .5) for (const [x, y, r] of [[-18, -6, 16], [16, -6, 18], [0, -18, 20]]) E(c, x, y, r, r * .7, '#ffffff', '#a8c8e8', 2);
+    else {P(c, [[-10, 4], [-9, -76], [9, -76], [10, 4]], '#f4fbff');P(c, [[-14, -76], [14, -76], [12, -84], [-12, -84]], '#d8e8f8');for (const x of [-4, 4]) L(c, x, -4, x, -72, '#d8e8f880', 2);glowDot(c, 0, -90, 16, '#ffe27a66');}
+  },
+  deepsea(c, v) {
+    if (v < .55) {const col = ['#ff7a9a', '#ffb43a', '#c46bff'][Math.floor(v * 6) % 3];for (const [x1, y1, x2, y2] of [[0, 4, 0, -40], [0, -20, -16, -44], [0, -26, 14, -52], [-10, -34, -20, -60], [10, -42, 18, -66]]) {L(c, x1, y1, x2, y2, OUT, 9);L(c, x1, y1, x2, y2, col, 6);}}
+    else {for (let i = 0; i < 3; i++) {c.beginPath();c.moveTo(-8 + i * 8, 4);c.quadraticCurveTo(-16 + i * 8, -30, -6 + i * 8 + Math.sin(i) * 6, -60 - i * 6);c.strokeStyle = OUT;c.lineWidth = 7;c.stroke();c.strokeStyle = '#3ab86a';c.lineWidth = 4.4;c.stroke();}
+      E(c, 18, -2, 9, 6, '#ffe0d0');for (let i = -2; i <= 2; i++) L(c, 18, 3, 18 + i * 3.4, -6, '#d8a890', 1.2);}
+  },
+  candy(c, v) {
+    if (v < .55) {L(c, 0, 4, 0, -50, OUT, 6);L(c, 0, 4, 0, -50, '#ffffff', 4);E(c, 0, -66, 20, 20, '#ff8ac8');for (let i = 0; i < 3; i++) {c.beginPath();c.arc(0, -66, 5 + i * 5, i, i + 4.2);c.strokeStyle = ['#ffffff', '#7ad0ff', '#ffe27a'][i];c.lineWidth = 3.4;c.stroke();}}
+    else {c.beginPath();c.moveTo(0, 4);c.lineTo(0, -54);c.arc(-12, -54, 12, 0, Math.PI, true);c.strokeStyle = OUT;c.lineWidth = 11;c.stroke();c.strokeStyle = '#ffffff';c.lineWidth = 8;c.stroke();c.setLineDash([6, 6]);c.strokeStyle = '#ff3a4a';c.stroke();c.setLineDash([]);}
+  },
+  clockwork(c, v) {
+    if (v < .5) {c.save();c.translate(0, -36);for (let i = 0; i < 10; i++) {c.rotate(Math.PI / 5);P(c, [[-5, -34], [5, -34], [5, -26], [-5, -26]], '#c88a3a');}E(c, 0, 0, 28, 28, '#c88a3a');E(c, 0, 0, 10, 10, '#5a4a3a');c.restore();}
+    else {P(c, [[-12, 4], [-12, -80], [12, -80], [12, 4]], '#6a5a4a');P(c, [[-16, -80], [16, -80], [16, -88], [-16, -88]], '#4a3a2a');for (const y of [-20, -44, -66]) L(c, -12, y, 12, y, '#c88a3a', 3);for (let i = 0; i < 3; i++) E(c, i * 6 - 4, -100 - i * 16, 8 + i * 4, 6 + i * 3, `rgba(220,220,230,${.5 - i * .12})`, null);}
+  },
+  haunted(c, v) {
+    if (v < .55) {c.beginPath();c.moveTo(-14, 4);c.lineTo(-14, -30);c.arc(0, -30, 14, Math.PI, 0);c.lineTo(14, 4);c.closePath();c.fillStyle = '#8a8a9a';c.fill();c.strokeStyle = OUT;c.lineWidth = 2;c.stroke();L(c, 0, -36, 0, -18, '#5a5a6a', 3);L(c, -6, -30, 6, -30, '#5a5a6a', 3);}
+    else {P(c, [[-6, 4], [-4, -60], [4, -60], [6, 4]], '#3a2a3a');for (const [x, y, a] of [[0, -50, -.9], [0, -40, 1], [0, -60, .2]]) {c.save();c.translate(x, y);c.rotate(a);L(c, 0, 0, 0, -26, '#3a2a3a', 4);c.restore();}
+      L(c, 14, -44, 14, -34, '#3a2a3a', 1.4);E(c, 14, -30, 4, 5, '#ffb43a', OUT, 1);glowDot(c, 14, -30, 16, '#ffb43a66');}
+  },
+  sakura(c, v) {
+    if (v < .65) {P(c, [[-6, 4], [-4, -50], [4, -50], [6, 4]], '#6a4a3a');for (const [cx, cy, r, col] of [[-22, -60, 24, '#ffb4d0'], [20, -64, 26, '#ffc4dc'], [0, -84, 28, '#ffd4e4'], [-8, -92, 14, '#ffe4ee']]) E(c, cx, cy, r, r * .85, col);
+      for (let i = 0; i < 5; i++) E(c, -20 + i * 10, -70 + (i % 2) * 14, 2.4, 2.4, '#ff8ab4', null);}
+    else {for (const x of [-26, 26]) P(c, [[x - 4, 4], [x - 4, -66], [x + 4, -66], [x + 4, 4]], '#e83a3a');P(c, [[-40, -66], [40, -66], [44, -76], [-44, -76]], '#e83a3a');P(c, [[-34, -52], [34, -52], [34, -46], [-34, -46]], '#c82a2a');}
+  },
+  void(c, v) {
+    if (v < .5) {const col = ['#5ab4ff', '#ff8ac8', '#7ae0a0'][Math.floor(v * 6) % 3];glowDot(c, 0, -40, 50, `${col}40`);E(c, 0, -40, 24, 24, col);E(c, -8, -48, 8, 5, '#ffffff50', null);c.beginPath();c.ellipse(0, -40, 40, 9, -.3, 0, Math.PI * 2);c.strokeStyle = '#ffd25a';c.lineWidth = 3;c.stroke();}
+    else {for (const [dx, h, w] of [[-12, 40, 8], [2, 60, 10], [14, 34, 7]]) P(c, [[dx - w, 4], [dx - w * .6, -h * .7], [dx, -h], [dx + w * .6, -h * .7], [dx + w, 4]], '#8a7aff', '#140a40');star5(c, 2, -70, 8, '#ffe27a');}
+  }
+};
+// Ground decoration clusters for the new worlds.
+const NEW_CLUSTERS = {
+  desert(c, th, look, x, y, rng) {for (let i = 0; i < 4; i++) {c.beginPath();c.moveTo(x - 40, y + i * 9);c.quadraticCurveTo(x, y - 8 + i * 9, x + 40, y + i * 9);c.strokeStyle = look.pathEdge;c.lineWidth = 2;c.stroke();}if (rng() < .4) E(c, x + 20, y - 4, 8, 4, '#f4f0e4', '#a8a090', 1.2);},
+  swamp(c, th, look, x, y, rng) {E(c, x, y, 50, 20, '#3a5a4a', '#2a3a2a', 2);E(c, x - 12, y - 4, 20, 5, '#ffffff20', null);for (let i = 0; i < 3; i++) {const px = x + (rng() - .5) * 60, py = y + (rng() - .5) * 20;E(c, px, py, 9, 4, '#4ab84a', '#2a6a2a', 1.2);}},
+  sky(c, th, look, x, y, rng) {for (const [dx, dy, r] of [[-20, 0, 22], [16, 2, 26], [0, -8, 18]]) E(c, x + dx, y + dy, r, r * .45, '#ffffff', '#c4dcf0', 1.6);},
+  deepsea(c, th, look, x, y, rng) {for (let i = 0; i < 6; i++) E(c, x + (rng() - .5) * 60, y + (rng() - .5) * 30, 2 + rng() * 4, 2 + rng() * 4, '#d8f8ff70', '#ffffff90', 1);if (rng() < .5) {E(c, x, y + 4, 12, 7, '#ff9a7a', OUT, 1.4);for (let i = -2; i <= 2; i++) L(c, x, y + 9, x + i * 4, y - 1, '#d86a5a', 1);}},
+  candy(c, th, look, x, y, rng) {for (let i = 0; i < 14; i++) {const a = rng() * 6.3, d = rng() * 46, px = x + Math.cos(a) * d, py = y + Math.sin(a) * d * .5;c.save();c.translate(px, py);c.rotate(rng() * 3);L(c, -3, 0, 3, 0, ['#ff3a4a', '#7ad0ff', '#ffe27a', '#5ad06a', '#c46bff'][i % 5], 2.4);c.restore();}},
+  clockwork(c, th, look, x, y, rng) {c.save();c.translate(x, y);c.scale(1, .5);for (let i = 0; i < 8; i++) {c.rotate(Math.PI / 4);P(c, [[-4, -24], [4, -24], [4, -18], [-4, -18]], '#8a6a3a');}E(c, 0, 0, 20, 20, '#8a6a3a', '#4a3a2a', 2);E(c, 0, 0, 7, 7, look.path, null);c.restore();},
+  haunted(c, th, look, x, y, rng) {for (let i = 0; i < 3; i++) {const px = x + (rng() - .5) * 70, py = y + (rng() - .5) * 24;L(c, px - 6, py, px + 6, py - 2, '#e8e4d8', 2.4);E(c, px - 6, py, 2, 2, '#e8e4d8', null);E(c, px + 6, py - 2, 2, 2, '#e8e4d8', null);}if (rng() < .4) glowDot(c, x, y - 10, 20, '#9aff9a30');},
+  sakura(c, th, look, x, y, rng) {for (let i = 0; i < 12; i++) {const a = rng() * 6.3, d = rng() * 50, px = x + Math.cos(a) * d, py = y + Math.sin(a) * d * .5;c.save();c.translate(px, py);c.rotate(rng() * 6);E(c, 0, 0, 3.4, 2, ['#ffb4d0', '#ffd4e4', '#ff8ab4'][i % 3], null);c.restore();}},
+  void(c, th, look, x, y, rng) {for (let i = 0; i < 6; i++) {const px = x + (rng() - .5) * 80, py = y + (rng() - .5) * 30;star5(c, px, py, 2 + rng() * 3, ['#ffe27a', '#ffffff', '#b4a8ff'][i % 3], null);}glowDot(c, x, y, 30, '#8a7aff30');}
+};

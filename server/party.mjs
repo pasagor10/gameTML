@@ -4,7 +4,7 @@
 import crypto from 'node:crypto';
 
 export const PARTY_MAX = 4, CODE_LEN = 6, CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11', MAX_FRAME = 16384, STATE_PER_SEC = 20, RAID_SEND_MS = 200, TOP_TIER = 10;
+const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11', MAX_FRAME = 16384, STATE_PER_SEC = 20, RAID_SEND_MS = 200, TOP_TIER = 15;
 
 export function makeCode(rng = Math.random) {let s = '';for (let i = 0; i < CODE_LEN; i++) s += CODE_CHARS[Math.floor(rng() * CODE_CHARS.length)];return s;}
 export function cleanCode(code) {return String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, CODE_LEN);}

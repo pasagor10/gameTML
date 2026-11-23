@@ -12,11 +12,12 @@ export const BUFFS = {
   gold: {icon: '🍀', ico: 'clover', name: 'เครื่องรางทอง x2', desc: 'เงินที่เก็บได้ ×2 นาน 5 นาที', price: 300, seconds: 300}
 };
 // Gear follows hero level through Eternal; drops remain an alternative to buying.
-export const GEAR_PRICE = [60, 240, 900, 3000, 9000, 18000, 32000, 50000, 75000, 110000, 160000];
+export const GEAR_PRICE = [60, 240, 900, 3000, 9000, 18000, 32000, 50000, 75000, 110000, 160000, 230000, 330000, 470000, 670000, 950000];
 export const SHOP_SIZE = 6, SHOP_REFRESH = 600;
 // Consumables cost more in later stages, growing a little faster than gold drops (STAGE_GOLD 1.06)
 // so they stay a choice without ever pricing the hero out.
-export function priceScale(stage) {return 1.075 ** (Math.max(1, stage) - 1);}
+// After stage 60 prices follow the gentler late-world curve (see lateScale in model.js).
+export function priceScale(stage) {const s = Math.max(1, stage);return 1.075 ** (Math.min(s, 60) - 1) * 1.035 ** Math.max(0, s - 60);}
 export function supplyPrice(id, stage) {const item = SUPPLIES[id] || BUFFS[id];return Math.round(item.price * priceScale(stage) / 5) * 5;}
 export function refreshPrice(stage) {return Math.round(50 * priceScale(stage) / 5) * 5;}
 // Chance that enhancing from +n to +n+1 succeeds (index = current plus).
