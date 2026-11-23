@@ -378,3 +378,18 @@ body[data-screen=intro] .skill-hud,body[data-screen=armory] .skill-hud{visibilit
 .pet-btns button.gold-btn{background:#4a3a14;border-color:#ffd56a99;color:#ffe9a8}
 .pet-btns button:disabled{opacity:.55}
 .play-actions .pet .badge{background:#ffd25a;color:#3a2a10}
+
+#game .raid-chip{display:flex;align-items:center;gap:6px;padding:4px 10px 4px 6px;border-radius:12px;border:1px solid #b45aff99;background:#2a1240e6;color:#f0dcff;pointer-events:auto;text-align:left;width:auto;height:auto}
+#game .raid-chip .rc-ico{font-size:20px}#game .raid-chip b{display:block;font-size:12px}#game .raid-chip small{display:block;font-size:10.5px;opacity:.85;white-space:nowrap}
+#game .raid-chip.open{border-color:#ffd25a;background:linear-gradient(135deg,#5a1a8a,#a8261e);box-shadow:0 0 14px #ff5a3a99;animation:raidPulse 1.2s ease-in-out infinite}
+#game .raid-chip:disabled:not(.open){opacity:.8}@keyframes raidPulse{50%{box-shadow:0 0 24px #ffd25acc}}
+.raid-board{position:absolute;left:12px;top:132px;width:200px;padding:8px;border-radius:12px;background:#120a24d9;border:1px solid #b45aff88;color:#fff;font-size:12px;z-index:5;pointer-events:none}
+.raid-board>b{display:block;margin-bottom:4px;color:#ffd56a}.rb-row,.raid-table li{display:flex;align-items:center;gap:6px;padding:2px 0}
+.rb-rank{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:#2a2048;font-weight:800;font-size:11px;flex:none}.rb-rank.r1{background:#ffd25a;color:#3a2a10}.rb-rank.r2{background:#d8e0ea;color:#243040}.rb-rank.r3{background:#e0904a;color:#2a1408}
+.rb-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rb-dmg{font-weight:700;color:#ffb0a0}.rb-row.me,.raid-table li.me{background:#ffd25a26;border-radius:6px}
+.raid-result{width:min(620px,100%)}.raid-table{list-style:none;margin:8px 0;padding:6px;border-radius:12px;background:#0a1828aa;max-height:40vh;overflow-y:auto}.raid-table small{opacity:.7;width:44px}
+.raid-rewards{margin-top:8px}.rr-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}.rr{display:flex;flex-direction:column;align-items:center;gap:4px;width:110px;padding:8px 4px;border-radius:12px;background:#0c1a3a;border:2px solid var(--rar,#79d6fa55);text-align:center}
+.rr canvas{width:56px;height:56px}.rr .rr-ico{font-size:30px;line-height:56px}.rr .rr-ico svg{width:44px;height:44px}.rr.miss{width:auto;flex:1;justify-content:center;opacity:.75}.rr.gear{box-shadow:0 0 16px var(--rar)}
+@media(max-width:700px){.raid-board{top:auto;bottom:150px;width:170px}}
+#game .raid-chip[hidden]{display:none}
+.raid-table .rb-name{text-align:left}.raid-result .rb-name{padding-left:4px}

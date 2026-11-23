@@ -3,6 +3,7 @@ import {ARMOR,SLOTS,BAG_MAX,MAX_PLUS,GOLD_DROP,rollDrop,canEquip,itemName,itemSt
 import {directionFor} from './sprite-layout.js';
 import {TIERS} from './weapons.js';
 import {PETS,petDef,petStats,petUpgradeCost,MAX_PET_LV,PET_HIT_CD,PET_PRICE,PITY,eggPrice,dupeRefund,rollEgg} from './pets.js';
+import {RAID_TIME,RAID_EGGS,RAID_STONES,raidWindow,raidOpen,makeRaiders,rollRankGear} from './raid.js';
 import {SUPPLIES,BUFFS,SHOP_REFRESH,ENHANCE_RATE,DROP_FROM,rollStock,supplyPrice,refreshPrice} from './shop.js';
 
 export const CLASSES=[
@@ -117,7 +118,7 @@ constructor(rng=Math.random,profile=null){
   this.t=0;this.maxHp=100;this.p={x:0,y:0,hp:100,inv:0};this.enemies=[];this.gems=[];this.shots=[];this.effects=[];this.events=[];this.cues=[];this.zones=[];this.delayed=[];
   this.skills={};this.level=1;this.xp=0;this.need=xpNeed(1);this.kills=0;this.state='playing';this.spawn=0;this.attack=0;this.swing=0;this.aim=0;this.cooldowns={};this.castGlow={};this.droneClock=0;this.nextId=0;this.slots=[];this.skillPoints=0;
   this.stage=1;this.hard=false;this.cleared={normal:0,hard:0};this.stars={};this.mode='challenge';this.stageKills=0;this.quota=stageQuota(1);this.farmClock=0;this.autoChallenge=true;this.stageFailed=false;this.stageStart=0;this.bossSpawned=false;this.eliteSpawned=false;this.bossesDefeated=0;
-  this.potionAt=POTION_AT;this.weaponTier=0;this.weaponPlus=0;this.armorTier=0;this.guard=0;this.ringBonus=0;this.bag=[];this.equipped={weapon:null,armor:null,helmet:null,ring:null};this.nextItemId=1;this.gold=0;this.goldEarned=0;this.coins=[];this.pose=null;this.supplies={potion:0,luck:0,guard:0};this.buffs={xp:0,gold:0};this.potionClock=0;this.shopStock=[];this.shopClock=0;this.loot=[];this.magnetClock=0;this.magnetCharges=0;this.magnetGranted={normal:0,hard:0};this.pets=[];this.petLv={};this.petId=null;this.petPity=0;this.petPos=null;this.holdPicks=false;this.awaitingClass=false;this.reviveOnDefeat=false;this.retreats=0;this.xpEarned=0;this.name=cleanHeroName(profile?.name)||'TILMO';
+  this.potionAt=POTION_AT;this.weaponTier=0;this.weaponPlus=0;this.armorTier=0;this.guard=0;this.ringBonus=0;this.bag=[];this.equipped={weapon:null,armor:null,helmet:null,ring:null};this.nextItemId=1;this.gold=0;this.goldEarned=0;this.coins=[];this.pose=null;this.supplies={potion:0,luck:0,guard:0,egg:0};this.buffs={xp:0,gold:0};this.potionClock=0;this.shopStock=[];this.shopClock=0;this.loot=[];this.magnetClock=0;this.magnetCharges=0;this.magnetGranted={normal:0,hard:0};this.raid=null;this.raidJoined=-1;this.clock=()=>Date.now();this.pets=[];this.petLv={};this.petId=null;this.petPity=0;this.petPos=null;this.holdPicks=false;this.awaitingClass=false;this.reviveOnDefeat=false;this.retreats=0;this.xpEarned=0;this.name=cleanHeroName(profile?.name)||'TILMO';
   this.firstMoved=false;this.firstKill=false;this.evolved={};
   this.emit('run_start');for(let i=0;i<4;i++)this.addEnemy('slime',130+i*25,i*Math.PI/2);
 }
@@ -185,12 +186,40 @@ upgradePet(id){if(!this.pets.includes(id)||this.petLevel(id)>=MAX_PET_LV)return 
 setPet(id){if(id!==null&&!this.pets.includes(id))return false;this.petId=id;this.petPos=null;this.emit('pet_set',{id});return true;}
 buyPet(){if(this.pets.includes('chick')||this.gold<PET_PRICE)return false;this.gold-=PET_PRICE;this.pets.push('chick');if(!this.pet())this.setPet('chick');this.cue('coin');this.emit('pet_hatched',{id:'chick',tier:0,fresh:true});return true;}
 // Hatches n eggs; new pets join the collection (and the best one is sent out), duplicates refund gold.
-hatchEggs(n=1){
-  const price=eggPrice(this.stage)*n;if(!(n>=1)||this.gold<price)return null;this.gold-=price;const out=[];
+hatchEggs(n=1,{free=false}={}){
+  const price=free?0:eggPrice(this.stage)*n;if(!(n>=1)||this.gold<price||(free&&this.supplies.egg<n))return null;this.gold-=price;if(free)this.supplies.egg-=n;const out=[];
   for(let i=0;i<n;i++){const pet=rollEgg(this.rng,this.petPity);this.petPity=pet.tier>=4?0:this.petPity+1;
     if(this.pets.includes(pet.id)){const refund=dupeRefund(pet.tier,this.stage);this.gold+=refund;out.push({id:pet.id,tier:pet.tier,refund});}
     else{this.pets.push(pet.id);out.push({id:pet.id,tier:pet.tier,fresh:true});if(!this.pet()||pet.tier>this.pet().tier)this.setPet(pet.id);}}
   this.cue('loot',TIERS[Math.max(...out.map(o=>o.tier))].id);this.emit('eggs_hatched',{results:out});return out;
+}
+// ---- World boss raid.
+canJoinRaid(now=this.clock()){return this.state==='playing'&&this.mode!=='raid'&&raidOpen(now)&&this.raidJoined!==raidWindow(now);}
+// Damage per second of a hero at the stage's recommended power (simulated heroes deal ~2.6 x combat power);
+// raiders are scaled from it, so heroes stronger than recommended climb the board.
+raidPace(){return 2.6*recommendedPower(this.stage,this.hard);}
+joinRaid(now=this.clock()){
+  if(!this.canJoinRaid(now))return false;
+  const back={mode:this.mode,stage:this.stage,hard:this.hard};this.raidJoined=raidWindow(now);this.mode='raid';this.resetField();this.bossSpawned=true;
+  this.addEnemy('boss',240,-Math.PI/2,{guardian:true});const b=this.enemies[0];Object.assign(b,{raid:true,hp:1e15,max:1e15,r:60,rage:true,born:Infinity,speed:b.speed*.8});
+  this.raid={t:RAID_TIME,dmg:0,back,pace:this.raidPace(),raiders:makeRaiders(this.rng,this.level),tick:0};
+  this.p.hp=this.maxHp;this.cue('roar');this.emit('raid_start',{raiders:this.raid.raiders.length});return true;
+}
+raidStep(dt){
+  const R=this.raid;R.t-=dt;R.tick-=dt;
+  for(const x of R.raiders)x.dmg+=R.pace*x.rate*(.6+this.rng()*.8)*dt;
+  const b=this.enemies.find(e=>e.raid);
+  if(b&&R.tick<=0){R.tick=.35;const x=R.raiders[Math.floor(this.rng()*R.raiders.length)];this.effects.push({kind:'number',x:b.x+(this.rng()-.5)*90,y:b.y-b.r*2-20-this.rng()*40,life:.6,max:.6,value:R.pace*x.rate*(1+this.rng()*2),crit:false,ally:true});}
+  if(R.t<=0)this.finishRaid(false);
+}
+raidBoard(){const R=this.raid;if(!R)return [];return [...R.raiders.map(x=>({...x})),{name:this.name,job:this.job,lv:this.level,dmg:R.dmg,you:true}].sort((a,b)=>b.dmg-a.dmg);}
+finishRaid(fell){
+  const R=this.raid;if(!R)return;const board=this.raidBoard(),rank=board.findIndex(x=>x.you)+1;
+  const rewards={eggs:RAID_EGGS,stones:{...RAID_STONES},gear:null};this.supplies.egg=(this.supplies.egg||0)+RAID_EGGS;for(const [k,v] of Object.entries(RAID_STONES))this.supplies[k]=(this.supplies[k]||0)+v;
+  if(rank<=5){const g=rollRankGear(this.rng,rank,this.job==='novice'?'knight':this.job);rewards.gear=this.addItem(g);}
+  this.raid=null;this.lastRaid={rank,board,rewards,fell,total:board.length};
+  const {mode,stage,hard}=R.back;this.mode='farm';if(!(mode==='challenge'&&this.startChallenge(stage,hard)))this.farmAt(stage,hard);
+  this.p.hp=this.maxHp;this.p.inv=2;this.state='raidResult';this.cue('portal');this.emit('raid_end',{rank,total:board.length});
 }
 petsLeftToPity(){return PITY-this.petPity;}
 // The pet runs to the nearest crystal/coin (and drop, from Unique) the hero has not reached yet
@@ -317,8 +346,8 @@ equipBest(){
 // The best piece in the bag that is still level-locked, for the HUD hint.
 lockedUpgrade(){let best=null;for(const item of this.bag){const cur=this.gearItem(item.kind);if(item.tier>(cur?cur.tier:-1)&&(item.kind!=='weapon'||item.job===this.job)&&!canEquip(item,this.level,this.job)&&(!best||item.tier>best.tier))best=item;}return best;}
 // Gold and gear carry over to the next run.
-stash(){return {pets:[...this.pets],petLv:{...this.petLv},petId:this.petId,petPity:this.petPity,gold:this.gold,bag:structuredClone(this.bag),equipped:{...this.equipped},nextItemId:this.nextItemId,supplies:{...this.supplies},potionAt:this.potionAt};}
-loadStash(st){if(!st)return;this.gold=st.gold||0;this.bag=structuredClone(st.bag||[]);this.equipped={weapon:null,armor:null,helmet:null,ring:null,...(st.equipped||{})};this.nextItemId=Math.max(st.nextItemId||1,...this.bag.map(i=>i.id+1));this.supplies={potion:0,luck:0,guard:0,...(st.supplies||{})};if(typeof st.potionAt==='number')this.setPotionAt(st.potionAt);if(Array.isArray(st.pets)){this.pets=st.pets.filter(id=>petDef(id));this.petId=st.petId??null;this.petPity=st.petPity||0;this.petLv={...(st.petLv||{})};}this.applyGear();this.p.hp=this.maxHp;}
+stash(){return {raidJoined:this.raidJoined,pets:[...this.pets],petLv:{...this.petLv},petId:this.petId,petPity:this.petPity,gold:this.gold,bag:structuredClone(this.bag),equipped:{...this.equipped},nextItemId:this.nextItemId,supplies:{...this.supplies},potionAt:this.potionAt};}
+loadStash(st){if(!st)return;this.gold=st.gold||0;this.bag=structuredClone(st.bag||[]);this.equipped={weapon:null,armor:null,helmet:null,ring:null,...(st.equipped||{})};this.nextItemId=Math.max(st.nextItemId||1,...this.bag.map(i=>i.id+1));this.supplies={potion:0,luck:0,guard:0,egg:0,...(st.supplies||{})};if(typeof st.raidJoined==='number')this.raidJoined=st.raidJoined;if(typeof st.potionAt==='number')this.setPotionAt(st.potionAt);if(Array.isArray(st.pets)){this.pets=st.pets.filter(id=>petDef(id));this.petId=st.petId??null;this.petPity=st.petPity||0;this.petLv={...(st.petLv||{})};}this.applyGear();this.p.hp=this.maxHp;}
 // Pulls every crystal and drop on the field to the hero; once per minute of play.
 magnet(){if(this.state!=='playing'||this.magnetClock>0)return false;if(this.magnetLimited()){if(this.magnetCharges<=0)return false;this.magnetCharges--;this.magnetClock=MAGNET_GAP;}else this.magnetClock=MAGNET_COOLDOWN;for(const g of this.gems)g.pull=true;for(const g of this.coins)g.pull=true;for(const l of this.loot)l.pull=true;this.cue('portal');this.emit('magnet');this.effects.push({kind:'gust',x:this.p.x,y:this.p.y,r:220,life:.5,max:.5});return true;}
 checkLevel(){
@@ -348,13 +377,13 @@ retreat(){
 }
 // Plain snapshot for saving; the stage restarts on restore and enemies respawn.
 serialize(){
-  const keep=['job','appearance','name','t','stage','hard','cleared','stars','mode','autoChallenge','bossesDefeated','level','xp','need','kills','skills','slots','skillPoints','bag','equipped','nextItemId','gold','goldEarned','evolved','welcome','firstMoved','firstKill','magnetClock','awaitingClass','retreats','xpEarned','supplies','buffs','shopStock','shopClock','potionAt','magnetCharges','magnetGranted','pets','petLv','petId','petPity'];
+  const keep=['job','appearance','name','t','stage','hard','cleared','stars','mode','autoChallenge','bossesDefeated','level','xp','need','kills','skills','slots','skillPoints','bag','equipped','nextItemId','gold','goldEarned','evolved','welcome','firstMoved','firstKill','magnetClock','awaitingClass','retreats','xpEarned','supplies','buffs','shopStock','shopClock','potionAt','magnetCharges','magnetGranted','pets','petLv','petId','petPity','raidJoined'];
   const out={v:4,hp:this.p.hp};for(const k of keep)out[k]=structuredClone(this[k]);return out;
 }
 static restore(snap,rng=Math.random){
   const r=new Run(rng,{job:snap.job,appearance:snap.appearance,name:snap.name});
   for(const [k,v] of Object.entries(snap))if(!['v','hp','maxHp','weaponTier','armorTier'].includes(k)&&k in r)r[k]=structuredClone(v);
-  r.job=normalizeJob(r.job);
+  r.job=normalizeJob(r.job);for(const k of ['potion','luck','guard','egg'])if(!Number.isFinite(r.supplies[k]))r.supplies[k]=0;
   r.applyGear();r.p.hp=Math.max(1,Math.min(r.maxHp,snap.hp||r.maxHp));
   if(r.mode==='farm')r.farmAt(r.stage,r.hard);else if(!r.startChallenge(r.stage,r.hard))r.farmAt(r.stage,r.hard);
   r.emit('run_restored',{stage:r.stage,level:r.level});
@@ -371,6 +400,7 @@ dropGems(e){
 hit(e,damage,continuous=false){
   if(e.hp<=0)return;if(e.mod==='shield'&&e.hp>e.max*.5)damage*=.5;
   let crit=false;if(!continuous&&this.skills.deadeye&&this.rng()<.05*this.skills.deadeye){damage*=2;crit=true;}
+  if(e.raid&&this.raid)this.raid.dmg+=damage;
   e.hp-=damage;if(!continuous)this.cue('hit',{cls:this.job==='mage'?'mage':this.job==='gunner'?'archer':'blade',volume:.55});e.flash=.12;
   if(continuous&&e.damageText?.life>.12){e.damageText.value+=damage;}else{const text={kind:'number',x:e.x,y:e.y-e.r*2-12,life:continuous ? .4 : .6,max:continuous ? .4 : .6,value:damage,crit};this.effects.push(text);if(continuous)e.damageText=text;}
   if(e.hp<=0){
@@ -398,9 +428,9 @@ clearStage(){
 }
 end(reason){if(this.state==='ended')return;this.state='ended';this.cue('death');this.result=reason;this.emit('run_end',{reason,kills:this.kills,level:this.level,stage:this.stage,weaponTier:this.weaponTier,armorTier:this.armorTier,build:{...this.skills}});}
 damage(n,source){
-  if(this.p.inv>0||this.state!=='playing')return;n*=STAGE_HIT**(this.eff()-1)*(1-this.guard)*(this.enemies.some(e=>e.berserk&&e.hp>0)?2:1);
+  if(this.p.inv>0||this.state!=='playing')return;n*=STAGE_HIT**(this.eff()-1)*(1-this.guard)*(this.enemies.some(e=>e.berserk&&e.hp>0)?2:1)*(this.mode==='raid'?.5:1);
   this.p.hp=Math.max(0,this.p.hp-n);this.p.inv=.8;this.cue('hurt');this.emit('damage_taken',{source,damage:n});this.effects.push({kind:'hurt',x:this.p.x,y:this.p.y,life:.25,max:.25});
-  if(this.p.hp<=0)this.retreat();
+  if(this.p.hp<=0){if(this.mode==='raid')this.finishRaid(true);else this.retreat();}
 }
 alive(){return this.enemies.filter(e=>e.hp>0);}
 nearest(range,from=this.p){let best=null,bestD=range;for(const e of this.enemies){if(e.hp<=0)continue;const d=Math.hypot(e.x-from.x,e.y-from.y);if(d<bestD){best=e;bestD=d;}}return best;}
@@ -530,14 +560,15 @@ update(dt,input={x:0,y:0}){
   if(this.state!=='playing')return;dt=Math.min(.05,Math.max(0,dt));this.t+=dt;const p=this.p;
   this.move(dt,input);p.inv=Math.max(0,p.inv-dt);if(this.pose&&(this.pose.life-=dt)<=0)this.pose=null;this.swing=Math.max(0,this.swing-dt);
   const st=this.t-this.stageStart,info=stageInfo(this.stage),guardianUp=this.bossSpawned&&this.enemies.some(e=>e.guardian&&e.hp>0);
-  this.spawn-=dt;if(this.spawn<=0&&!(guardianUp&&info.guardian!=='elite')){this.spawn=Math.max(.3,1.2-.05*info.sub-.05*(info.world-1)-(this.hard?.2:0))*(guardianUp?2:1);if(this.enemies.length<95)this.spawnWave(st,info);}
+  if(this.mode==='raid'){this.raidStep(dt);}
+  else{this.spawn-=dt;}if(this.mode!=='raid'&&this.spawn<=0&&!(guardianUp&&info.guardian!=='elite')){this.spawn=Math.max(.3,1.2-.05*info.sub-.05*(info.world-1)-(this.hard?.2:0))*(guardianUp?2:1);if(this.enemies.length<95)this.spawnWave(st,info);}
   if(this.mode==='challenge'){
     if(!this.eliteSpawned&&info.guardian==='elite'&&info.sub>=3&&this.stageKills>=this.quota*.5){this.eliteSpawned=true;this.addEnemy('elite',300);this.emit('elite_start');}
     if(!this.bossSpawned&&this.stageKills>=this.quota){this.bossSpawned=true;
       if(info.guardian==='elite'){this.addEnemy('elite',280,undefined,{guardian:true});this.emit('boss_start',{stage:this.stage,kind:'elite'});}
       else{this.enemies=[];this.shots=this.shots.filter(s=>s.friendly);this.addEnemy('boss',270,undefined,{guardian:true,mini:info.guardian==='mini'});this.emit('boss_start',{stage:this.stage,kind:info.guardian});}
       this.cue('roar');}
-  }else{
+  }else if(this.mode==='farm'){
     this.farmClock+=dt;if(this.farmClock>=90*(1+(this.eliteSpawned?1:0))&&!this.eliteSpawned){this.eliteSpawned=true;this.addEnemy('elite',300);}
     if(this.autoChallenge&&this.farmClock>=FARM_RETRY&&this.canChallenge())this.startChallenge();
   }

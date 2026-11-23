@@ -280,6 +280,7 @@ export function drawToonMonster(c, e, time, player) {
   if (e.slow > 0) E(c, 0, 0, e.r * 1.35, e.r * .5, '#9fe0ff40', null);
   c.save();if (faceLeft) c.scale(-1, 1);
   if (e.rage) c.translate(Math.sin(time * 40) * (e.berserk ? 3 : 1.6), 0);
+  if (e.raid) c.scale(1.6, 1.6);
   if (e.berserk) c.scale(1.12, 1.12);
   if (e.type === 'runner') runner(c, th, f, t, e);
   else if (VARIANT[th.id]?.[e.type]) VARIANT[th.id][e.type](c, th, f, t, e);
