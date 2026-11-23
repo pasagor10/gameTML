@@ -4,9 +4,9 @@ import {mergeGoldGrants} from './gold-grants.js';
 import {track} from './analytics.js';
 import {mountSocial} from './social-ui.js';
 import {PartyLink} from './party.js';
-import {createCharacterStore,CHARACTER_LIMIT} from './characters.js?v=novice1';
 import {leaderboard,townRivals} from './rivals.js';
 import {paintHeroPortrait,paintLobby} from './lobby-art.js';
+import {createCharacterStore,CHARACTER_LIMIT} from './characters.js?v=novice1';
 import {createFrameMeter} from './perf/meter.js';
 import {loadSceneArt,drawForest,drawSlime,sceneStatus} from './scene-art.js';
 import {cameraPosition} from './arena.js';
@@ -214,19 +214,20 @@ function syncPartyBtn(){const n=party.members.size,here=party.list().filter(ally
 $('topupBtn').onclick=showTopup;
 $('goldPacksBtn').onclick=()=>{if(run.state==='goldPacks')closePanel();else if(started&&run.state==='playing'){run.state='goldPacks';uiState='';}};
 $('partyBtn').onclick=()=>{if(run.state==='party')closePanel();else openPanel('party');};
-function renderParty(){
 // Leaderboard and online list: real players from the server, NPC rivals always marked "NPC".
 const ranks={online:null,top:[],at:Date.now()-55000,tab:'rank'};
 async function pollRanking(force=false){if(!force&&Date.now()-ranks.at<60000)return;ranks.at=Date.now();try{const r=await fetch('/api/ranking',{cache:'no-store'});if(!r.ok)throw 0;const d=await r.json();ranks.online=d.online||[];ranks.top=d.top||[];}catch{ranks.online=null;}syncRankBtn();if(run.state==='ranking')renderRanking();}
+// The viewer is online too, even before their first presence update reaches the server.
+function onlineNow(){if(!ranks.online)return null;const list=[...ranks.online];if(!list.some(p=>p.name===run.name&&p.job===run.job))list.push({name:run.name,job:run.job,level:run.level,stage:run.stage,hard:run.hard});return list;}
 function myRank(){const me={name:run.name,job:run.job,level:run.level,cleared:run.cleared.normal|0,cp:Math.round(run.combatPower())};return leaderboard(ranks.top,me).find(r=>r.you);}
-function syncRankBtn(){if(!started)return;const me=myRank();$('rankInfo').textContent=ranks.online?`ออนไลน์ ${ranks.online.length} คน`:me?`คุณอันดับ ${me.rank}`:'ดูอันดับ';}
+function syncRankBtn(){if(!started)return;const me=myRank();$('rankInfo').textContent=ranks.online?`ออนไลน์ ${onlineNow().length} คน`:me?`คุณอันดับ ${me.rank}`:'ดูอันดับ';}
 $('rankBtn').onclick=()=>{if(run.state==='ranking')closePanel();else{openPanel('ranking');pollRanking(true);}};
 function renderRanking(){
   const overlay=$('overlay'),job=id=>CLASSES.find(c=>c.id===id)?.name||'นักผจญภัย',me={name:run.name,job:run.job,level:run.level,cleared:run.cleared.normal|0,cp:Math.round(run.combatPower())};
   const npc='<i class="npc-tag" title="ตัวละครคู่แข่งที่ระบบสร้าง ไม่ใช่ผู้เล่นจริง">NPC</i>',stageOf=n=>n?stageInfo(Math.min(LAST_STAGE,n)).label:'—';
   const rows=leaderboard(ranks.top,me),mine=rows.find(r=>r.you),shown=rows.slice(0,30);if(mine&&!shown.includes(mine))shown.push(mine);
   const rankRow=r=>`<li class="rank-row${r.you?' you':''}${r.npc?' npc':''}"><span class="rk${r.rank<=3?' top'+r.rank:''}">${r.rank<=3?['🥇','🥈','🥉'][r.rank-1]:r.rank}</span><b>${escapeText(r.name)} ${r.npc?npc:''}${r.online?'<i class="on-dot" title="ออนไลน์"></i>':''}</b><small>${job(r.job)} · ผ่านด่าน ${stageOf(r.cleared)} · พลัง ${r.cp.toLocaleString()}</small><em>Lv.${r.level}</em></li>`;
-  const live=ranks.online,town=townRivals();
+  const live=onlineNow(),town=townRivals();
   const onlineBody=live===null?'<p class="party-note">เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง</p>'
     :`<h3 class="rank-h">ผู้เล่นออนไลน์ตอนนี้ · ${live.length} คน</h3><ul class="party-list">${live.length?live.map(p=>`<li class="party-row"><b>${escapeText(p.name)} <span>Lv.${p.level}</span></b><small>${job(p.job)} · ด่าน ${stageInfo(Math.min(LAST_STAGE,p.stage)).label}${p.hard?' (ยาก)':''}</small><em class="ok">ออนไลน์</em></li>`).join(''):'<li class="party-row"><small>ยังไม่มีผู้เล่นคนอื่นออนไลน์ ชวนเพื่อนมาเล่นด้วยกันได้ที่ปุ่มปาร์ตี้</small></li>'}</ul>
      <h3 class="rank-h">นักผจญภัย NPC ในเมือง</h3><ul class="party-list">${town.map(p=>`<li class="party-row npc"><b>${escapeText(p.name)} ${npc} <span>Lv.${p.level}</span></b><small>${job(p.job)} · ผ่านด่าน ${stageOf(p.cleared)}</small><em class="dim">พักในเมือง</em></li>`).join('')}</ul>`;
@@ -238,6 +239,7 @@ function renderRanking(){
   overlay.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{ranks.tab=b.dataset.tab;renderRanking();});
 }
   const overlay=$('overlay'),job=id=>CLASSES.find(c=>c.id===id)?.name||'นักผจญภัย',err=party.error?`<p class="party-err">${PARTY_ERR[party.error]||'เชื่อมต่อไม่สำเร็จ ลองใหม่อีกครั้ง'}</p>`:'';
+function renderParty(){
   const status=party.status==='connecting'?'<p class="party-note">กำลังเชื่อมต่อเซิร์ฟเวอร์…</p>':party.status==='offline'&&party.want?'<p class="party-note">หลุดการเชื่อมต่อ · กำลังลองเชื่อมใหม่</p>':'';
   const me=`<li class="party-row you"><b>${escapeText(run.name)} <span>Lv.${run.level}</span></b><small>${job(run.job)} · ด่าน ${stageInfo(run.stage).label}${run.hard?' (ยาก)':''}</small><em>คุณ</em></li>`;
   const row=m=>{const s=m.s,info=stageInfo(s.stage),here=allyHere(m),same=here&&s.stage===run.stage,can=!same&&run.canHelp(s.stage,s.hard);
