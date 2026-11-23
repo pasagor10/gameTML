@@ -1,6 +1,6 @@
 // Only the install/offline screen is cached. Game code, accounts, API data and
 // Socket.IO always use the live server so installing cannot freeze a release.
-const CACHE = "tilmo-install-v1";
+const CACHE = "tilmo-install-v2";
 const OFFLINE = "/offline.html";
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -9,8 +9,8 @@ self.addEventListener("install", (event) => {
       .then((cache) =>
         cache.addAll([
           OFFLINE,
-          "/assets/brand/icon-192.png",
-          "/assets/brand/icon-512.png",
+          "/assets/brand/icon-192.png?v=toon2",
+          "/assets/brand/icon-512.png?v=toon2",
         ]),
       )
       .then(() => self.skipWaiting()),

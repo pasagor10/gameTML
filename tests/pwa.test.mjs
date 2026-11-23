@@ -22,7 +22,7 @@ test("TILMO manifest has installable icons, stable identity and launch scope", a
     );
   assert.ok(manifest.icons.some((i) => i.purpose === "maskable"));
   for (const icon of manifest.icons) {
-    const bytes = await readFile(new URL(icon.src.slice(1), publicRoot));
+    const bytes = await readFile(new URL(icon.src.slice(1).split("?")[0], publicRoot));
     const [w, h] = icon.sizes.split("x").map(Number);
     assert.equal(bytes.readUInt32BE(16), w);
     assert.equal(bytes.readUInt32BE(20), h);
@@ -74,8 +74,8 @@ test("service worker keeps live game and account traffic out of its cache", asyn
   await work;
   assert.deepEqual(Array.from(saved), [
     "/offline.html",
-    "/assets/brand/icon-192.png",
-    "/assets/brand/icon-512.png",
+    "/assets/brand/icon-192.png?v=toon2",
+    "/assets/brand/icon-512.png?v=toon2",
   ]);
   listeners.activate({ waitUntil: (p) => (work = p) });
   await work;

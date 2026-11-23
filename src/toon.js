@@ -227,7 +227,8 @@ function auraMotes(c, lv, col, time) {
   c.restore();
 }
 // Armour on the torso (x -12..12, y -31..-15) and shoulders.
-const ARMOR_TOON = [['#c9b48a', '#8a6a44'], ['#a8683a', '#5a3418'], ['#d8e2ee', '#6a7a92'], ['#9fe6ff', '#2a7ab8'], ['#d4473e', '#6a1418'], ['#fff0ff', '#a05ac8']];
+const ARMOR_TOON = [['#c9b48a', '#8a6a44'], ['#a8683a', '#5a3418'], ['#d8e2ee', '#6a7a92'], ['#9fe6ff', '#2a7ab8'], ['#d4473e', '#6a1418'], ['#fff0ff', '#a05ac8'],
+  ['#7af0c4', '#137a5a'], ['#d6f6ff', '#2a6f9a'], ['#5a46c8', '#c4b4ff'], ['#ff8ac8', '#8a1a5a'], ['#ffe58a', '#8a6a10']];
 function wornArmor(c, t, time) {
   const [body, trim] = ARMOR_TOON[t];
   P(c, [[-12, -31], [12, -31], [12, -16], [0, -14], [-12, -16]], body, OUT, 1.3);
@@ -237,7 +238,8 @@ function wornArmor(c, t, time) {
     P(c, [[-8, -29], [8, -29], [7, -19], [0, -16], [-7, -19]], t === 2 ? '#f2f6fa' : body, trim, 1.2);
     if (t === 3) {P(c, [[0, -28], [3, -23], [0, -18], [-3, -23]], '#ffffff', '#2a7ab8', .8);glowDot(c, 0, -23, 9, '#bff0ff88');}
     if (t === 4) {for (let r = 0; r < 3; r++) for (let i = -1; i <= 1; i++) {c.beginPath();c.arc(i * 4 + (r % 2) * 2, -27 + r * 3.5, 2.2, 0, Math.PI);c.strokeStyle = trim;c.lineWidth = 1;c.stroke();}for (const s of [-1, 1]) P(c, [[s * 14, -33], [s * 19, -39], [s * 17, -31]], '#ffd25a', OUT, .8);}
-    if (t === 5) {for (let i = 0; i < 3; i++) E(c, -4 + i * 4, -24, 1.8, 1.8, `hsl(${(time * 120 + i * 90) % 360} 90% 65%)`, null);glowDot(c, 0, -24, 11, '#fff1ff88');}}
+    if (t === 5) {for (let i = 0; i < 3; i++) E(c, -4 + i * 4, -24, 1.8, 1.8, `hsl(${(time * 120 + i * 90) % 360} 90% 65%)`, null);glowDot(c, 0, -24, 11, '#fff1ff88');}
+    if (t > 5) {const tc = TIERS[t];P(c, [[0, -29], [4, -23], [0, -17], [-4, -23]], tc.glow, trim, .9);glowDot(c, 0, -23, 12, `${tc.color}99`);for (const s of [-1, 1]) P(c, [[s * 15, -33], [s * 22, -41], [s * 18, -31]], tc.color, OUT, .8);}}
 }
 // Helmets on the head (centre 0,-46; crown at about y -62).
 function wornHelmet(c, t, time, flutter, back = false) {
@@ -249,8 +251,9 @@ function wornHelmet(c, t, time, flutter, back = false) {
   if (t === 4) {for (const s of [-1, 1]) P(c, [[s * 13, -60], [s * 24, -76], [s * 22, -64], [s * 17, -56]], '#f4e4c4', OUT, 1.1);
     c.beginPath();c.moveTo(-19, -47);c.quadraticCurveTo(-19, -70, 0, -70);c.quadraticCurveTo(19, -70, 19, -47);c.lineTo(-19, -47);c.closePath();c.fillStyle = '#d4473e';c.fill();c.strokeStyle = OUT;c.lineWidth = 1.4;c.stroke();
     if (!back) {P(c, [[-12, -52], [-4, -54], [-5, -49], [-12, -49]], '#ffd25a', OUT, .8);P(c, [[12, -52], [4, -54], [5, -49], [12, -49]], '#ffd25a', OUT, .8);}else P(c, [[0, -70], [3, -62], [0, -48], [-3, -62]], '#9a1828', OUT, .8);return;}
-  c.beginPath();c.ellipse(0, -76, 15, 4, 0, 0, Math.PI * 2);c.strokeStyle = '#ffe9a8';c.lineWidth = 2.4;c.stroke();glowDot(c, 0, -76, 14, '#fff6c066');
-  P(c, [[-16, -54], [-15, -64], [-9, -59], [0, -70], [9, -59], [15, -64], [16, -54]], '#ffe39a', '#a8782a', 1.2);
+  const tc = t > 5 ? TIERS[t] : null;
+  c.beginPath();c.ellipse(0, -76, 15, 4, 0, 0, Math.PI * 2);c.strokeStyle = tc ? tc.glow : '#ffe9a8';c.lineWidth = 2.4;c.stroke();glowDot(c, 0, -76, 14, tc ? `${tc.color}77` : '#fff6c066');
+  P(c, [[-16, -54], [-15, -64], [-9, -59], [0, -70], [9, -59], [15, -64], [16, -54]], tc ? tc.color : '#ffe39a', tc ? tc.dark : '#a8782a', 1.2);
   for (let i = 0; i < 3; i++) E(c, -7 + i * 7, -58, 1.9, 1.9, `hsl(${(time * 120 + i * 90) % 360} 90% 65%)`, null);
 }
 

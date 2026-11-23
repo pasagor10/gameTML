@@ -52,3 +52,5 @@
 #install-app[hidden],body:not([data-screen="intro"]) #install-app{display:none}
 #install-app:focus-visible,#install-help button:focus-visible{outline:3px solid #6be9ef;outline-offset:4px}
 @media(max-width:600px){#install-app{padding:5px 9px;font-size:11px}#install-app img{width:24px;height:24px}}
+
+body[data-screen=intro] #install-app{background:#faf7ee;color:#5b5148;border:2px solid #b9aa8c;box-shadow:0 3px 0 #b9aa8c;border-radius:12px}

@@ -24,7 +24,7 @@ test('every class active skill damages enemies',()=>{
   }
 });
 test('gear drops from monsters and is only worn once the hero level allows it',()=>{
-  assert.equal(TIERS.length,6);assert.equal(REQ_LEVEL.length,6);assert.equal(REQ_LEVEL[0],1);
+  assert.equal(TIERS.length,11);assert.equal(REQ_LEVEL.length,11);assert.equal(REQ_LEVEL[0],1);assert.deepEqual(REQ_LEVEL.slice(6),[50,55,60,70,80]);
   const r=new Run(()=>.5,{job:'gunner'});assert.equal(r.weaponTier,0);
   // A Rare gun needs Lv.12: picked up at Lv.1 it waits in the bag.
   r.loot.push({kind:'weapon',tier:2,job:'gunner',x:r.p.x,y:r.p.y,id:999});r.enemies=[];r.spawn=1000;r.update(.05);

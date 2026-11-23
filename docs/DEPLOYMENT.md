@@ -3,7 +3,7 @@
 Deployed 2026-11-23 to the TML VPS, root@157.85.96.64.
 
 - Public hostname: https://tilmo.pikad.online/
-- Static release: /opt/tilmo/releases/20261123024500
+- Static release: /opt/tilmo/releases/20261123-lobby-characters
 - Active symlink: /opt/tilmo/current
 - Nginx: /etc/nginx/sites-available/tilmo
 - No Node service or database required; game progress is browser localStorage.
@@ -54,3 +54,9 @@ Party play needs a small Node process (no npm dependencies) that relays presence
 4. Check: `curl http://127.0.0.1:5191` returns `tilmo party ok`; in the game, Party → create shows a 6-character code.
 
 Without the relay the game still runs; the party panel only shows that it cannot connect.
+
+## Prevent mixed browser/CDN releases
+
+Before activating a staged release, run `python3 tools/stamp-release.py /path/to/release UNIQUE_RELEASE_ID`. This versions all HTML entry assets and every transitive JavaScript import, including nested model and art modules. Versioning only game.js leaves cached model.js active and can crash gameplay with missing methods (observed: `run.canJoinRaid is not a function`). Never stamp the source checkout.
+
+2026-11-23 recovery: `/opt/tilmo/releases/20261123-cache-fix`, version `cachefix1`. Verified live resume, movement, advancing game clock and inventory with no browser errors. Existing local saves are preserved.
