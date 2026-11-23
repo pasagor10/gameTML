@@ -1,23 +1,25 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {Run,SKILLS,CLASSES,choices,cleanHeroName,randomHeroName} from '../src/model.js';
+import {Run,SKILLS,CLASSES,cleanHeroName,randomHeroName,LAST_STAGE,recommendedPower} from '../src/model.js';
 import {rollDrop,ARMOR} from '../src/loot.js';
 import {TIERS,REQ_LEVEL,weaponName} from '../src/weapons.js';
 import {directionFor,animationFrame} from '../src/sprite-layout.js';
 const advance=(r,seconds)=>{for(let i=0;i<seconds*20&&r.state==='playing';i++)r.update(.05);};
 
-test('only swordmaster, sorcerer and gunner are playable; each has three own skills',()=>{
+test('only swordmaster, sorcerer and gunner are playable; each has six actives and two passives of its own',()=>{
   assert.deepEqual(CLASSES.map(c=>c.id),['knight','mage','gunner']);
-  for(const c of CLASSES)assert.equal(SKILLS.filter(s=>s.job===c.id).length,3);
+  for(const c of CLASSES){const own=SKILLS.filter(s=>s.job===c.id);assert.equal(own.filter(s=>s.kind==='active').length,6);assert.equal(own.filter(s=>s.kind==='passive').length,2);}
+  for(const s of SKILLS){assert.ok(s.max>=3&&s.req>=1,s.id);}
 });
-test('awakening offers that class skills and other classes never see them',()=>{
-  for(const c of CLASSES){const r=new Run();r.level=9;r.xp=r.need;r.checkLevel();assert.ok(r.awaken(c.id,'a'));assert.deepEqual(r.offers.map(s=>s.job),[c.id,c.id,c.id]);}
-  for(let i=0;i<30;i++)assert.ok(choices({},Math.random,'novice').every(s=>!s.job));
-  for(let i=0;i<30;i++)assert.ok(choices({},Math.random,'mage').every(s=>!s.job||s.job==='mage'));
+test('class skills open after awakening and other classes never get them',()=>{
+  for(const c of CLASSES){const r=new Run();r.level=9;r.xp=r.need;r.checkLevel();assert.ok(r.awaken(c.id,'a'));assert.equal(r.state,'playing');r.skillPoints=5;
+    const own=SKILLS.find(s=>s.job===c.id&&s.req<=10),other=SKILLS.find(s=>s.job&&s.job!==c.id&&s.req<=10),late=SKILLS.find(s=>s.job===c.id&&s.req>10);
+    assert.ok(r.canLearn(own.id));assert.equal(r.canLearn(other.id),false);assert.equal(r.canLearn(late.id),false,'needs a higher level');}
+  const n=new Run();n.skillPoints=5;n.level=40;assert.ok(SKILLS.filter(s=>s.job).every(s=>!n.canLearn(s.id)));
 });
-test('every class skill damages enemies',()=>{
-  for(const s of SKILLS.filter(s=>s.job)){
-    const r=new Run(()=>.3,{job:s.job});r.enemies=[];r.spawn=1000;r.attack=999;r.skills[s.id]=3;r.addEnemy('elite',110,0);const e=r.enemies[0],hp=e.hp;r.skillClock=2;
-    for(let i=0;i<30;i++){r.update(.05);r.attack=999;}
+test('every class active skill damages enemies',()=>{
+  for(const s of SKILLS.filter(s=>s.job&&s.kind==='active')){
+    let seed=7;const r=new Run(()=>((seed=(seed*1664525+1013904223)>>>0)/4294967296),{job:s.job});r.enemies=[];r.spawn=1000;r.attack=999;r.skills[s.id]=3;r.slots=[s.id];r.addEnemy('elite',110,0);const e=r.enemies[0],hp=e.hp;r.skillClock=2;
+    for(let i=0;i<60;i++){r.update(.05);r.attack=999;}
     assert.ok(e.hp<hp,s.id);
   }
 });
@@ -31,7 +33,7 @@ test('gear drops from monsters and is only worn once the hero level allows it',(
   // Another class's weapon never fits; armour fits anyone and adds HP and damage reduction.
   r.addItem({kind:'weapon',tier:5,job:'mage'});r.addItem({kind:'armor',tier:1,job:null});r.equipBest();assert.equal(r.weaponTier,2);assert.equal(r.armorTier,1);assert.equal(r.maxHp,100+ARMOR[1].hp);
   // Elites always drop; novices never find weapons.
-  const drop=rollDrop('elite',1,'novice',()=>.5);assert.notEqual(drop.kind,'weapon');assert.equal(drop.tier,1);assert.equal(rollDrop('slime',1,'knight',()=>.5),null);
+  const drop=rollDrop('elite',0,'novice',()=>.5);assert.notEqual(drop.kind,'weapon');assert.equal(drop.tier,1);assert.equal(rollDrop('slime',0,'knight',()=>.5),null);
   r.weaponTier=2;
   assert.ok(r.power()>1.5);assert.equal(weaponName('gunner',5),'ปืนเทพสายรุ้ง');
   const damage=[];for(const tier of [0,5]){const g=new Run(()=>.5,{job:'knight'});g.enemies=[];g.spawn=1000;g.weaponTier=tier;g.addEnemy('boss',60,0);g.update(.05);damage.push(g.enemies[0].max-g.enemies[0].hp);}
@@ -54,42 +56,41 @@ test('measured timing spreads frames unevenly but still visits every frame once 
   assert.ok(seen.filter(f=>f===1).length>seen.filter(f=>f===0).length*2-1);
 });
 
-test('endless: class skills reach Lv.5 and upgrades never run out',()=>{
-  const r=new Run(()=>.5,{job:'mage'});r.enemies=[];r.spawn=1000;
-  r.skills={meteor:5,vortex:5,nova:5,area:3,haste:3};
-  for(let i=0;i<30;i++){r.xp=r.need;r.state='playing';r.checkLevel();assert.equal(r.state,'upgrade');assert.ok(r.offers.length>=2);assert.ok(r.choose(r.offers[0].id));}
-  assert.ok(r.level>30);assert.ok(r.boosts.might+r.boosts.vigor===30);
-  assert.ok(!choices({meteor:5},Math.random,'mage').some(s=>s.id==='meteor'),'capped at Lv.5');
-  assert.ok(choices({meteor:3},Math.random,'mage').length>0);
+test('class skills cap at Lv.5 while the shared passives go to Lv.20',()=>{
+  const r=new Run(()=>.5,{job:'mage'});r.level=60;r.skillPoints=200;
+  for(let i=0;i<5;i++)assert.ok(r.learn('meteor'));assert.equal(r.learn('meteor'),false);
+  for(let i=0;i<20;i++)assert.ok(r.learn('might'));assert.equal(r.learn('might'),false);assert.ok(Math.abs(r.power()-3)<1e-9);
+  r.autoLearn();assert.ok(r.spentPoints()>40);assert.ok(r.slots.length<=4);
 });
-test('stage keeps climbing with no end besides death',()=>{
+test('sixty stages across six worlds, then Hard mode opens and continues the curve',()=>{
   const r=new Run(()=>.5,{job:'gunner'});
-  for(let stage=1;stage<=8;stage++){r.t=r.stageStart+180+(stage===1?60:0);r.update(.05);const boss=r.enemies.find(e=>e.type==='boss');assert.ok(boss,`boss ${stage}`);r.hit(boss,1e9);r.gems=[];r.state='playing';}
-  assert.equal(r.stage,9);assert.equal(r.state,'playing');
+  for(let stage=1;stage<=LAST_STAGE;stage++){assert.equal(r.stage,stage);r.stageKills=r.quota;r.enemies=[];r.update(.05);const g=r.enemies.find(e=>e.guardian);assert.ok(g,`guardian ${stage}`);r.hit(g,1e12);}
+  assert.equal(r.cleared.normal,LAST_STAGE);assert.ok(r.events.some(e=>e.type==='hard_unlocked'));assert.equal(r.mode,'farm');
+  assert.ok(r.startChallenge(1,true));assert.ok(r.hard);assert.ok(recommendedPower(1,true)>recommendedPower(60));
+  r.stageKills=r.quota;r.enemies=[];r.update(.05);assert.ok(r.enemies.find(e=>e.guardian).max>1e5);
 });
 test('higher skill levels produce grander effects (lv carried to visuals)',()=>{
   for(const [id,job,kind] of [['nova','mage','nova'],['judgement','knight','blade'],['meteor','mage','meteor']]){
-    const r=new Run(()=>.5,{job});r.enemies=[];r.spawn=1000;r.skills[id]=5;r.addEnemy('boss',120,0);r.castSkills(1);
+    const r=new Run(()=>.5,{job});r.enemies=[];r.spawn=1000;r.skills[id]=5;r.slots=[id];r.addEnemy('boss',120,0);r.castSkills(1);
     const f=r.effects.find(e=>e.kind===kind);assert.ok(f,id);assert.equal(f.lv,5);
   }
   const lv1=new Run(()=>.5,{job:'gunner'}),lv5=new Run(()=>.5,{job:'gunner'});
-  lv1.skills.drone=1;lv5.skills.drone=5;assert.equal(lv1.dronePositions().length,1);assert.equal(lv5.dronePositions().length,3);
+  lv1.skills.drone=1;lv5.skills.drone=5;lv1.slots=lv5.slots=['drone'];assert.equal(lv1.dronePositions().length,1);assert.equal(lv5.dronePositions().length,3);
 });
 test('combat emits sound cues for attacks, kills and boss arrival; enemies remember their stage',()=>{
   const r=new Run(()=>.5,{job:'gunner'});r.enemies=[];r.spawn=1000;r.addEnemy('slime',120,0);r.enemies[0].hp=1;r.update(.05);
   const names=r.cues.map(c=>c.name);assert.ok(names.includes('shot'));
   let killed=false;for(let i=0;i<20;i++){r.update(.05);killed||=r.cues.some(c=>c.name==='kill');r.cues.length=0;}assert.ok(killed);
-  const b=new Run();b.t=240;b.update(.05);assert.ok(b.cues.some(c=>c.name==='roar'));assert.equal(b.enemies[0].stage,1);
+  const b=new Run();b.stageKills=b.quota;b.update(.05);assert.ok(b.cues.some(c=>c.name==='roar'));assert.ok(b.enemies.every(e=>e.stage===1));
   assert.ok(r.cues.length<=48,'cue queue is bounded');
 });
 
-test('magnet pulls every crystal once a minute; auto mode moves, dodges and picks upgrades',()=>{
+test('magnet pulls every crystal once a minute; auto mode moves and dodges',()=>{
   const r=new Run(()=>.5,{job:'mage'});r.enemies=[];r.spawn=1000;r.gems=[{x:600,y:0,value:1},{x:-600,y:300,value:1}];
   assert.ok(r.magnet());assert.equal(r.magnet(),false,'cooldown');for(let i=0;i<40;i++)r.update(.05);assert.equal(r.gems.length,0);
   assert.ok(r.magnetClock>55);
   const a=new Run(()=>.5,{job:'gunner'});a.enemies=[];a.spawn=1000;a.addEnemy('slime',60,0);const step=a.autoInput();assert.ok(step.x<0,'backs away from a close enemy');
   a.enemies=[];a.addEnemy('elite',300,0);a.enemies[0].warn={x:a.p.x+20,y:a.p.y,t:1,kind:'slam'};assert.ok(a.autoInput().x<0,'steps out of a telegraph');
-  a.offers=[...SKILLS.filter(s=>!s.job).slice(0,2),SKILLS.find(s=>s.id==='scatter')];assert.equal(a.autoChoose(),'scatter');
 });
 test('hero names are cleaned and can be rolled at random',()=>{
   assert.equal(cleanHeroName('  <b>ไค</b>  '),'bไค/b');assert.equal(cleanHeroName('x'.repeat(30)).length,12);
@@ -97,25 +98,20 @@ test('hero names are cleaned and can be rolled at random',()=>{
   const r=new Run(()=>.5);r.state='awakening';assert.ok(r.awaken('knight','a','ริวมอส'));assert.equal(r.name,'ริวมอส');
 });
 
-test('away from the screen, level-ups are banked and opened one by one on return',()=>{
+test('away from the screen, level-ups bank skill points and the class pick waits for return',()=>{
   const r=new Run(()=>.5,{job:'mage'});r.enemies=[];r.spawn=1000;r.holdPicks=true;r.xp=200;r.checkLevel();
-  assert.equal(r.state,'playing');assert.ok(r.pendingPicks>=3);const banked=r.pendingPicks,level=r.level;
-  r.holdPicks=false;assert.ok(r.openPending());assert.equal(r.state,'upgrade');assert.equal(r.pendingPicks,banked-1);
-  r.choose(r.offers[0].id);assert.equal(r.state,'upgrade','next banked pick opens right away');assert.equal(r.level,level);
-  // A novice reaching Lv.10 while away gets the class pick first on return.
-  const n=new Run(()=>.5);n.enemies=[];n.spawn=1000;n.holdPicks=true;n.xp=400;n.checkLevel();assert.ok(n.awaitingClass);assert.equal(n.state,'playing');
+  assert.equal(r.state,'playing');assert.ok(r.skillPoints>=3);assert.equal(r.skillPoints,r.level-1);
+  const n=new Run(()=>.5);n.enemies=[];n.spawn=1000;n.holdPicks=true;n.xp=800;n.checkLevel();assert.ok(n.awaitingClass);assert.equal(n.state,'playing');
   n.holdPicks=false;n.openPending();assert.equal(n.state,'awakening');assert.ok(n.awaken('gunner','a','ไค'));assert.equal(n.awaitingClass,false);
 });
-test('auto-farming retreats instead of dying, and runs survive a save and restore',()=>{
-  const r=new Run(()=>.5,{job:'knight',name:'ริว'});r.reviveOnDefeat=true;r.stage=3;r.t=500;r.p.hp=1;r.damage(50,'boss');
-  assert.equal(r.state,'playing');assert.equal(r.p.hp,r.maxHp);assert.equal(r.stage,3);assert.equal(r.retreats,1);assert.equal(r.enemies.length,0);
-  r.level=17;r.skills={whirl:3};r.addItem({kind:'armor',tier:2,job:null});r.equipBest();r.gold=321;r.pendingPicks=4;
+test('progress survives a save and restore, including stages, stars and skills',()=>{
+  const r=new Run(()=>.5,{job:'knight',name:'ริว'});r.cleared.normal=12;r.stars={n12:3};r.startChallenge(13);
+  r.level=17;r.skills={whirl:3,ironwill:2};r.slots=['whirl'];r.skillPoints=4;r.addItem({kind:'armor',tier:1,job:null});r.equipBest();r.applyGear();r.gold=321;assert.equal(r.equipped.armor,1);
   const back=Run.restore(JSON.parse(JSON.stringify(r.serialize())));
-  for(const k of ['job','name','stage','level','pendingPicks','armorTier','gold','maxHp'])assert.deepEqual(back[k],r[k],k);
-  assert.deepEqual(back.skills,{whirl:3});assert.equal(back.bag.length,1);assert.equal(back.state,'playing');
-  const plain=new Run(()=>.5,{job:'knight'});plain.p.hp=1;plain.damage(50,'boss');assert.equal(plain.state,'ended');
+  for(const k of ['job','name','stage','level','skillPoints','armorTier','gold','maxHp','guard','mode'])assert.deepEqual(back[k],r[k],k);
+  assert.deepEqual(back.skills,r.skills);assert.deepEqual(back.slots,['whirl']);assert.deepEqual(back.cleared,r.cleared);assert.deepEqual(back.stars,{n12:3});assert.equal(back.bag.length,1);assert.equal(back.state,'playing');
+  assert.ok(r.guard>.1,'iron will adds damage reduction');
 });
-
 test('gold, bag, swapping, selling and enhancing gear',()=>{
   const r=new Run(()=>.5,{job:'knight'});r.enemies=[];r.spawn=1000;r.level=30;
   const old=r.addItem({kind:'helmet',tier:1}),better=r.addItem({kind:'helmet',tier:3}),ring=r.addItem({kind:'ring',tier:2});
