@@ -214,3 +214,94 @@ small.good,.shop-text small.good{color:#9aff8a}small.warn,.shop-text small.warn,
 .skill-cast.on{opacity:1;transform:none}
 body[data-screen=intro] .skill-hud,body[data-screen=armory] .skill-hud{visibility:hidden}
 @media(max-width:600px){.skill-hud{bottom:126px;right:12px}.skill-slot{width:44px;height:44px}.skill-slot .ic{font-size:21px;line-height:40px}.skill-slot em{font-size:16px}}
+
+/* ===== v0.20 game HUD ===== */
+#game .hud{top:max(12px,env(safe-area-inset-top));left:14px;right:14px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;pointer-events:none}
+#game .hero-card{display:flex;align-items:center;gap:0;pointer-events:auto;filter:drop-shadow(0 4px 10px #0009)}
+#game .portrait{position:relative;width:78px;height:78px;border-radius:50%;padding:0;border:3px solid #ffd76a;background:radial-gradient(circle at 50% 35%,#4fb6ff,#173a78 70%);box-shadow:0 0 0 3px #3a2a10,inset 0 0 14px #0008;overflow:visible;z-index:2;display:block}
+#game .portrait canvas{width:100%;height:100%;border-radius:50%;display:block}
+#game .lv-badge{position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);background:linear-gradient(#ffe48a,#e59a1e);color:#3a1f00;font:800 12px 'Chakra Petch',sans-serif;letter-spacing:0;padding:1px 8px;border-radius:9px;border:2px solid #3a2a10;white-space:nowrap}
+#game .hero-info{margin-left:-14px;padding:6px 12px 7px 22px;width:236px;background:linear-gradient(90deg,#0b1d3cee,#0b1d3cbb);border:2px solid #ffd76a90;border-left:0;border-radius:0 14px 14px 0}
+#game .hero-name{display:flex;align-items:baseline;gap:6px;white-space:nowrap;overflow:hidden}
+#game .hero-name span{font:800 15px 'Chakra Petch','Noto Sans Thai',sans-serif;color:#fff;text-shadow:0 2px 0 #000}
+#game .hero-name small{font-size:10px;color:#9fe3ff;letter-spacing:0;overflow:hidden;text-overflow:ellipsis}
+#game .bar{position:relative;height:16px;margin-top:4px;background:#1a0d14;border:2px solid #000;border-radius:8px;overflow:hidden;box-shadow:inset 0 2px 4px #000a}
+#game .bar i{display:block;height:100%;width:100%;transition:width .2s}
+#game .bar span{position:absolute;inset:0;display:grid;place-items:center;font:700 10.5px 'Chakra Petch',sans-serif;color:#fff;text-shadow:0 1px 2px #000,0 0 2px #000}
+#game .hp-bar i{background:linear-gradient(#ff8a7a,#e0283a 55%,#a3101f);box-shadow:inset 0 2px 0 #ffffff60}
+#game .hp-bar.low{animation:hpLow .7s infinite alternate}
+@keyframes hpLow{to{border-color:#ff4a4a;box-shadow:0 0 10px #ff2a2a}}
+#game .xp-bar{height:11px;border-width:1.5px}#game .xp-bar span{font-size:8.5px}
+#game .xp-bar i{background:linear-gradient(#d9a8ff,#8a4aff 60%,#5a22c8);box-shadow:inset 0 2px 0 #ffffff50;width:0}
+#game .power-pill{display:inline-block;margin-top:5px;font:700 11px 'Chakra Petch','Noto Sans Thai',sans-serif;color:#ffe08a;background:#00000055;border:1px solid #ffd76a60;border-radius:8px;padding:0 8px}
+#game .power-pill b{color:#fff;font-size:12px}
+#game .stage-banner{position:absolute;left:50%;top:0;transform:translateX(-50%);width:260px;text-align:center;padding:6px 26px 8px;background:linear-gradient(#173a78f0,#0b1d3cf0);border:2px solid #ffd76a;border-top:0;border-radius:0 0 18px 18px;box-shadow:0 6px 16px #0009,inset 0 -3px 0 #ffd76a40;pointer-events:none}
+#game .stage-banner::before,#game .stage-banner::after{content:'✦';position:absolute;top:8px;color:#ffd76a;font-size:13px}#game .stage-banner::before{left:9px}#game .stage-banner::after{right:9px}
+#game .stage-top small{display:block;font-size:10px;color:#9fe3ff;letter-spacing:.5px}
+#game .stage-top b{display:block;font:800 18px 'Chakra Petch','Noto Sans Thai',sans-serif;color:#ffe08a;text-shadow:0 2px 0 #3a2a10;letter-spacing:.5px}
+#game .quota{position:relative;height:14px;margin:4px 0 3px;background:#0a0a18;border:1.5px solid #000;border-radius:7px;overflow:hidden}
+#game .quota i{display:block;height:100%;width:0;background:linear-gradient(#ffe48a,#f0a020);transition:width .25s}
+#game .quota[data-mode=boss] i{background:linear-gradient(#ff8a7a,#c81830)}#game .quota[data-mode=farm] i{background:linear-gradient(#a8f0a0,#3aa85a)}
+#game .quota span{position:absolute;inset:0;display:grid;place-items:center;font:700 10px 'Chakra Petch','Noto Sans Thai',sans-serif;color:#fff;text-shadow:0 1px 2px #000}
+#game .timer{font:600 11px 'Chakra Petch',sans-serif;color:#cfe6ff}#game .timer b{font-size:12px;color:#fff}
+#game .top-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:auto}
+#game .res{display:flex;gap:6px}
+#game .res-pill{display:flex;align-items:center;gap:5px;min-width:84px;height:28px;padding:0 10px 0 4px;background:#0b1d3cdd;border:2px solid #ffd76a90;border-radius:14px;font-size:15px;box-shadow:0 3px 8px #0007}
+#game .res-pill b{font:800 13px 'Chakra Petch',sans-serif;color:#fff;margin-left:auto}
+#game .res-pill.kills{border-color:#b9c7e090}
+#game .sys{display:flex;gap:6px}
+#game .hud .sys button{width:38px;height:38px;border-radius:12px;border:2px solid #ffd76a;background:linear-gradient(#2a5aa8,#122d60);color:#ffe08a;font-size:17px;box-shadow:0 3px 0 #08142c,0 4px 10px #0007}
+#game .objective{top:96px;font-size:11.5px;padding:5px 14px;background:#0b1d3ccc;border:1px solid #9fe3ff50;border-radius:12px;color:#e8f4ff}
+#game .stats{top:118px;left:14px;gap:6px;flex-direction:column;align-items:flex-start}
+#game .stats span:empty{display:none}
+#game .stats .buffs,#game .stats .weapon-tag{background:#0b1d3cbb;border:1px solid #ffffff25;border-radius:8px;padding:2px 8px;font-size:10.5px;color:#e8f4ff}
+#game #bossbar{top:130px}
+/* action buttons */
+#game .play-actions{bottom:max(14px,env(safe-area-inset-bottom));right:14px;gap:6px;display:flex;align-items:flex-end}
+#game .play-actions .act{position:relative;width:58px;min-width:0;height:60px;padding:4px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border-radius:14px;border:2px solid #ffd76a;background:linear-gradient(#2f66b8,#143064);color:#fff;box-shadow:0 4px 0 #08142c,0 6px 12px #0008;letter-spacing:0;transition:transform .08s}
+#game .play-actions .act:active{transform:translateY(3px);box-shadow:0 1px 0 #08142c}
+#game .play-actions .act:hover{filter:brightness(1.12)}
+#game .play-actions .bi{font-size:22px;line-height:1;filter:drop-shadow(0 2px 0 #0006)}
+#game .play-actions .bl{font:700 10px 'Noto Sans Thai','Chakra Petch',sans-serif;white-space:nowrap;text-shadow:0 1px 2px #000}
+#game .play-actions .badge{position:absolute;top:-7px;right:-6px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#e0283a;border:2px solid #fff;font:800 11px/16px 'Chakra Petch',sans-serif;color:#fff}
+#game .play-actions .act:disabled{filter:grayscale(.7) brightness(.75);opacity:1}
+#game .play-actions .potion{background:linear-gradient(#c43a5a,#6a1430)}
+#game .play-actions #magnet.cooling .bl{font-family:'Chakra Petch',sans-serif;font-size:12px;color:#ffe08a}
+#game .play-actions .auto{background:linear-gradient(#5a5a6a,#2a2a38);border-color:#b9c7e0}
+#game .play-actions .auto[aria-pressed=true]{background:linear-gradient(#7af08a,#1f9a3a);border-color:#eaffc8;box-shadow:0 4px 0 #0a3a14,0 0 16px #7af08a90;color:#fff}
+#game .play-actions .auto[aria-pressed=true] .bi{animation:spinPulse 1.4s infinite}
+@keyframes spinPulse{50%{transform:scale(1.15)}}
+#game #skillBtn[data-points]:not([data-points=""])::after{top:-7px;right:-6px}
+#game .skill-hud{bottom:96px;right:14px}
+#game footer{bottom:max(14px,env(safe-area-inset-bottom));left:14px;right:auto;width:auto}
+#game footer .hint{text-align:left;margin:0 0 4px}
+#game .footerline{margin:0}#game #next{font:700 12px 'Noto Sans Thai',sans-serif;color:#ffe08a;text-shadow:0 1px 3px #000;animation:spinPulse 1.6s infinite;display:inline-block}
+@media(max-width:600px){
+  #game .hud{left:8px;right:8px;top:max(8px,env(safe-area-inset-top))}
+  #game .portrait{width:56px;height:56px;border-width:2px}#game .lv-badge{font-size:10px;bottom:-8px;padding:0 6px}
+  #game .hero-info{width:150px;padding:4px 8px 5px 18px;margin-left:-12px}
+  #game .hero-name span{font-size:12px}#game .hero-name small{display:none}
+  #game .bar{height:13px;margin-top:3px}#game .bar span{font-size:9px}#game .xp-bar{height:9px}#game .xp-bar span{font-size:7px}
+  #game .power-pill{font-size:9px;margin-top:3px;padding:0 6px}#game .power-pill b{font-size:10px}
+  #game .stage-banner{top:76px}#game .stage-top b{font-size:14px}#game .stage-top small{font-size:9px}#game .quota{height:12px}
+  #game .res{flex-direction:column;gap:4px;align-items:flex-end}#game .res-pill{min-width:72px;height:22px;font-size:12px}#game .res-pill b{font-size:11px}
+  #game .hud .sys button{width:30px;height:30px;font-size:14px;border-radius:9px}
+  #game .objective{top:136px;font-size:10px;padding:3px 10px}
+  #game .stats{top:160px;left:8px}
+  #game #bossbar{top:160px}
+  #game .play-actions{right:6px;left:6px;bottom:max(10px,env(safe-area-inset-bottom));justify-content:space-between;gap:3px}
+  #game .play-actions .act{flex:1;width:auto;max-width:52px;height:52px;border-radius:12px}
+  #game .play-actions .bi{font-size:19px}#game .play-actions .bl{font-size:8.5px}
+  #game .skill-hud{bottom:78px;right:8px}
+  #game #joystick{bottom:150px}
+  #game footer{bottom:70px;left:8px}#game #next{font-size:10px}
+}
+#game .objective:empty{display:none}
+@media(max-width:980px){
+  #game .stage-banner{top:96px;width:min(86vw,300px);padding:3px 22px 5px;border-top:2px solid #ffd76a;border-radius:14px}
+  #game .stage-banner::before,#game .stage-banner::after{top:12px}
+  #game .stage-top{display:flex;justify-content:center;align-items:baseline;gap:8px}
+  #game .quota{margin:2px 0}#game .timer{position:absolute;right:26px;top:5px;font-size:9px}#game .timer b{font-size:10px}#game .stage-top{justify-content:flex-start;padding-left:2px}
+  #game .objective{top:150px}#game #bossbar{top:150px}
+}
+@media(max-width:600px){#game .stage-banner{top:86px}#game .objective{top:138px}#game #bossbar{top:138px}}
