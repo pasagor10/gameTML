@@ -4,7 +4,7 @@
 import crypto from 'node:crypto';
 
 export const PARTY_MAX = 4, CODE_LEN = 6, CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11', MAX_FRAME = 16384, STATE_PER_SEC = 20, RAID_SEND_MS = 200, TOP_TIER = 15;
+const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11', MAX_FRAME = 16384, STATE_PER_SEC = 20, RAID_SEND_MS = 200, TOP_TIER = 15, LAST_STAGE = 150;
 
 export function makeCode(rng = Math.random) {let s = '';for (let i = 0; i < CODE_LEN; i++) s += CODE_CHARS[Math.floor(rng() * CODE_CHARS.length)];return s;}
 export function cleanCode(code) {return String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, CODE_LEN);}
@@ -16,8 +16,8 @@ export function cleanState(s = {}) {
   return {
     name: String(s.name || 'TILMO').slice(0, 16), job: ['knight', 'mage', 'gunner', 'novice'].includes(s.job) ? s.job : 'novice',
     app: s.app === 'b' ? 'b' : 'a', tier: num(s.tier, 0, TOP_TIER) | 0, plus: num(s.plus, 0, 10) | 0, armor: num(s.armor, -1, TOP_TIER, -1) | 0, helmet: num(s.helmet, -1, TOP_TIER, -1) | 0,
-    lv: num(s.lv, 1, 999, 1) | 0, cp: num(s.cp, 0, 1e15), hit: num(s.hit, 0, 1e15), stage: num(s.stage, 1, 60, 1) | 0, hard: !!s.hard,
-    cleared: num(s.cleared, 0, 60) | 0, raid: !!s.raid, x: num(s.x, -5000, 5000), y: num(s.y, -5000, 5000), mv: !!s.mv, atk: !!s.atk,
+    lv: num(s.lv, 1, 999, 1) | 0, cp: num(s.cp, 0, 1e15), hit: num(s.hit, 0, 1e15), stage: num(s.stage, 1, LAST_STAGE, 1) | 0, hard: !!s.hard,
+    cleared: num(s.cleared, 0, LAST_STAGE) | 0, raid: !!s.raid, x: num(s.x, -5000, 5000), y: num(s.y, -5000, 5000), mv: !!s.mv, atk: !!s.atk,
     face: s.face < 0 ? -1 : 1, dir: ['e', 'n', 'ne', 'nw', 's', 'se', 'sw', 'w'].includes(s.dir) ? s.dir : 'se', hp: num(s.hp, 0, 1, 1),
     // World boss: which 10-minute window, damage so far and where the hero stands relative to the boss.
     rw: s.raid ? num(s.rw, 0, 1e9) | 0 : 0, dmg: s.raid ? num(s.dmg, 0, 1e18) : 0, rx: num(s.rx, -3000, 3000), ry: num(s.ry, -3000, 3000)

@@ -1,7 +1,7 @@
 import {readFileSync,writeFileSync,renameSync,mkdirSync} from 'node:fs';
 import {dirname} from 'node:path';
 import {createHash} from 'node:crypto';
-export const SEEN_MAX=300,SEEN_DAYS=30,RECENT_LIST=60;
+export const SEEN_MAX=300,SEEN_DAYS=30,RECENT_LIST=60,RANK_LIST=50;
 export const dayOf=now=>new Date(now+7*3600000).toISOString().slice(0,10);
 export class Metrics{
  constructor(file=null){this.file=file;this.days={};this.seen={};this.since=Date.now();this.dirty=false;this.getHub=null;if(file){try{const data=JSON.parse(readFileSync(file,'utf8'));this.days=data.days||{};this.seen=data.seen||{};this.since=data.since||this.since;}catch(e){if(e.code!=='ENOENT')throw e;}}}
@@ -16,9 +16,17 @@ export class Metrics{
  // Remembers when each hero (name + class) was last connected, for the "recently played" list.
  observe(hub,now=Date.now()){
   if(!hub)return;for(const c of hub.clients){const s=c.state;if(!s||now-c.at>=45000)continue;const key=s.name+'|'+s.job,old=this.seen[key];
-   this.seen[key]={name:s.name,level:s.lv,job:s.job,stage:s.stage,hard:!!s.hard,first:old?.first||now,last:now};this.dirty=true;}
+   this.seen[key]={name:s.name,level:s.lv,job:s.job,stage:s.stage,hard:!!s.hard,cleared:Math.max(s.hard?0:s.cleared|0,old?.cleared|0),cp:Math.max(s.cp||0,old?.cp||0),first:old?.first||now,last:now};this.dirty=true;}
   const cutoff=now-SEEN_DAYS*86400000;for(const k of Object.keys(this.seen))if(this.seen[k].last<cutoff){delete this.seen[k];this.dirty=true;}
   const extra=Object.keys(this.seen).length-SEEN_MAX;if(extra>0)for(const [k] of Object.entries(this.seen).sort((a,b)=>a[1].last-b[1].last).slice(0,extra))delete this.seen[k];
+ }
+ // Public leaderboard: real heroes seen in the last 30 days, plus who is connected right now.
+ ranking(hub,now=Date.now()){
+  this.observe(hub,now);const active=hub?[...hub.clients].filter(c=>c.state&&now-c.at<45000):[];
+  const online=active.map(({state:s})=>({name:s.name,level:s.lv,job:s.job,stage:s.stage,hard:!!s.hard}));
+  const top=Object.values(this.seen).map(p=>({name:p.name,job:p.job,level:p.level,cleared:p.cleared|0,cp:Math.round(p.cp||0),online:now-p.last<45000}))
+   .sort((a,b)=>b.level-a.level||b.cleared-a.cleared||b.cp-a.cp).slice(0,RANK_LIST);
+  return {at:now,online,top};
  }
  flush(){this.observe(this.getHub?.());if(!this.file||!this.dirty)return;mkdirSync(dirname(this.file),{recursive:true});writeFileSync(this.file+'.tmp',JSON.stringify({since:this.since,days:this.days,seen:this.seen}));renameSync(this.file+'.tmp',this.file);this.dirty=false;}
  snapshot(hub,{days=7,now=Date.now()}={}){
@@ -29,8 +37,9 @@ export class Metrics{
  }
 }
 export function metricsRoutes(metrics,getHub){const rates=new Map();metrics.getHub=getHub;return async(req,res)=>{
- const url=new URL(req.url,'http://localhost');if(!['/api/dashboard','/api/analytics'].includes(url.pathname))return false;
+ const url=new URL(req.url,'http://localhost');if(!['/api/dashboard','/api/analytics','/api/ranking'].includes(url.pathname))return false;
  res.setHeader('Cache-Control','no-store');res.setHeader('Content-Type','application/json; charset=utf-8');
+ if(url.pathname==='/api/ranking'&&req.method==='GET'){res.end(JSON.stringify(metrics.ranking(getHub())));return true;}
  if(url.pathname==='/api/dashboard'&&req.method==='GET'){res.end(JSON.stringify(metrics.snapshot(getHub(),{days:Number(url.searchParams.get('days'))})));return true;}
  if(url.pathname!=='/api/analytics'||req.method!=='POST'){res.writeHead(405);res.end('{}');return true;}
  if(req.headers.origin&&req.headers.origin!==`https://${req.headers.host}`&&req.headers.origin!==`http://${req.headers.host}`){res.writeHead(403);res.end('{}');return true;}

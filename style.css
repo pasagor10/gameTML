@@ -452,3 +452,15 @@ body[data-screen=intro] #raidBoard,body[data-screen=intro] #skillHud,body[data-s
 #game .skill-slot .ic.ai-skill{width:100%;height:100%;border:0;border-radius:9px}
 #game .sk-slot .ai-skill{width:42px;height:42px}
 #game .sk-tile.locked .ai-skill{filter:grayscale(.9) brightness(.65)}
+
+/* Leaderboard chip and panel. NPC rivals always carry a visible NPC tag. */
+#game .rank-chip{display:flex;align-items:center;gap:6px;padding:4px 10px 4px 6px;border-radius:12px;border:1px solid #d8a83a;background:#3a2a0ce6;color:#fff0c8;pointer-events:auto;text-align:left;width:auto;height:auto;cursor:pointer}
+#game .rank-chip .rc-ico{font-size:18px}#game .rank-chip b{display:block;font-size:12px}#game .rank-chip small{display:block;font-size:10.5px;opacity:.85;white-space:nowrap}
+.rank-tabs{display:flex;gap:6px;margin:4px 0 8px}.rank-tabs button{flex:1;padding:7px;border-radius:10px;border:1px solid #79d6fa44;background:#13263a;color:#e8f4ff;font-weight:700}.rank-tabs button[aria-pressed=true]{outline:2px solid #ffd56a;background:#22405e}
+.rank-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px;max-height:52vh;overflow:auto}
+.rank-row{text-align:left;display:grid;grid-template-columns:34px 1fr auto;grid-template-rows:auto auto;column-gap:8px;align-items:center;padding:6px 10px;border-radius:10px;background:#ffffff0d;border:1px solid #ffffff14}
+.rank-row .rk{grid-row:1/3;font-weight:800;text-align:center;font-size:15px;color:#cfe4ff}.rank-row b{font-size:13px}.rank-row small{grid-column:2;font-size:11px;opacity:.75}.rank-row em{grid-row:1/3;grid-column:3;font-style:normal;font-weight:800;color:#ffe08a}
+.rank-row.you{background:#ffd56a22;border-color:#ffd56a}.rank-row.npc{opacity:.88}
+.npc-tag{font-style:normal;font-size:9px;font-weight:800;padding:1px 5px;border-radius:6px;background:#5a6a8a;color:#fff;vertical-align:middle;letter-spacing:.5px}
+.on-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#5ce07a;margin-left:5px;vertical-align:middle;box-shadow:0 0 6px #5ce07a}
+.rank-h{font-size:13px;margin:10px 0 6px;color:#ffe08a}
