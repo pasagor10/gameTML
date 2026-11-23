@@ -279,8 +279,10 @@ export function drawToonMonster(c, e, time, player) {
   E(c, 0, 2, e.r * 1.1, e.r * .38, '#10303045', null);
   if (e.slow > 0) E(c, 0, 0, e.r * 1.35, e.r * .5, '#9fe0ff40', null);
   c.save();if (faceLeft) c.scale(-1, 1);
-  if (e.rage) c.translate(Math.sin(time * 40) * 1.6, 0);
+  if (e.rage) c.translate(Math.sin(time * 40) * (e.berserk ? 3 : 1.6), 0);
+  if (e.berserk) c.scale(1.12, 1.12);
   if (e.type === 'runner') runner(c, th, f, t, e);
+  else if (VARIANT[th.id]?.[e.type]) VARIANT[th.id][e.type](c, th, f, t, e);
   else if (e.type === 'brute') brute(c, th, f, t, e);
   else if (e.type === 'bomber') bomber(c, th, f, t, e);
   else if (e.type === 'imp') imp(c, th, f, t, e);
@@ -291,12 +293,152 @@ export function drawToonMonster(c, e, time, player) {
   else slime(c, th, f, t, e);
   c.restore();
   if (e.rage) rageEmbers(c, e, time);
-  hpBar(c, e, e.type === 'elite' ? -82 : e.type === 'brute' ? -70 : e.type === 'imp' ? -48 : e.type === 'spitter' ? -66 : -e.r * 3.4);
+  if (e.berserk) {c.save();c.globalAlpha = .25 + .2 * Math.sin(time * 12);glowDot(c, 0, -e.r * 2.2, e.r * 3.2, '#ff1a2a');c.restore();}
+  hpBar(c, e, e.type === 'elite' ? -82 : e.type === 'brute' ? -80 : e.type === 'imp' ? -48 : e.type === 'spitter' ? -66 : -e.r * 3.4);
   c.restore();
 }
+// ---- World-specific monsters: each map dresses the shared behaviours in its own creatures.
+const lift = e => e.warn ? Math.min(1, (1 - e.warn.t) / .6) : 0;
+const armed = (e, t) => e.warn && Math.sin(t * 30) > 0;
+function glowEyes(c, x, y, gap, r, col) {glowDot(c, x, y, gap * 3, `${col}66`);for (const s of [-1, 1]) E(c, x + s * gap, y, r, r * 1.2, col, null);}
+function swingArm(c, x, y, raise, color, w, tip) {c.save();c.translate(x, y);c.rotate(.6 - raise * 2.2);limb(c, 0, 0, 10, 16, color, w);c.translate(10, 18);tip();c.restore();}
+// Forest: a walking treant and a spore puffball.
+function treant(c, th, f, t, e) {
+  const step = Math.sin(t * 5) * 3, bark = f('#7a5634');
+  for (const s of [-1, 1]) {limb(c, s * 8, -12, s * 11 + step * s, 0, bark, 8);P(c, [[s * 11 + step * s - 6, 0], [s * 11 + step * s + 7, 0], [s * 11 + step * s, -4]], bark, OUT, 1);}
+  P(c, [[-15, -8], [15, -8], [13, -48], [-13, -48]], bark);for (const x of [-7, 6]) L(c, x, -12, x + 2, -40, '#5a3a20', 1.6);
+  limb(c, -12, -38, -22, -22, bark, 6);L(c, -22, -22, -28, -18, OUT, 2);L(c, -22, -22, -24, -14, OUT, 2);
+  E(c, 0, -60, 23, 15, f('#4f8a3a'));E(c, -12, -54, 12, 9, f('#5fa046'));E(c, 12, -56, 13, 9, f('#6ab84e'));E(c, 4, -68, 10, 6, f('#7fd35a'), null);
+  for (const x of [1, 10]) E(c, x, -34, 3.2, 4.2, '#1a1008', null);glowEyes(c, 5.5, -34, 4.5, 1.6, th.glow);
+  P(c, [[-1, -24], [12, -24], [10, -20], [7, -23], [4, -20], [1, -23]], '#1a1008', null);
+  swingArm(c, 12, -40, lift(e), bark, 6, () => {for (const k of [-1, 0, 1]) L(c, 0, 0, k * 6, 8, OUT, 2.4);E(c, -2, -4, 6, 4, f('#5fa046'), OUT, 1);});
+}
+function sporePuff(c, th, f, t, e) {
+  const pulse = e.warn ? 1 + Math.sin(t * 40) * .1 : 1, hop = Math.abs(Math.sin(t * 10)) * 2;
+  c.translate(0, -hop);E(c, 0, -8, 7, 8, f('#f1d5b0'));eyes(c, 2, -9, 1.8, 3, th, f, true);
+  c.save();c.translate(0, -16);c.scale(pulse, pulse);
+  c.beginPath();c.moveTo(-17, 2);c.bezierCurveTo(-17, -20, 17, -20, 17, 2);c.closePath();c.fillStyle = armed(e, t) ? '#ff4a3a' : f('#9a4ac8');c.fill();c.strokeStyle = OUT;c.lineWidth = 1.4;c.stroke();
+  for (const [x, y, r] of [[-8, -6, 3], [5, -10, 3.6], [10, -2, 2.4], [-2, -1, 2]]) E(c, x, y, r, r * .8, '#f4e4ff', null);c.restore();
+  for (let i = 0; i < 4; i++) {const ph = (t * .8 + i / 4) % 1;c.globalAlpha = 1 - ph;glowDot(c, Math.sin(i * 3 + t) * 10, -30 - ph * 18, 5, '#c8ff8a88');}c.globalAlpha = 1;
+}
+// Volcano: a magma golem with glowing cracks.
+function magmaGolem(c, th, f, t, e) {
+  const step = Math.sin(t * 4) * 3, rock = f('#3a2a2a'), lava = f('#ff7a2a');
+  for (const s of [-1, 1]) {limb(c, s * 9, -14, s * 10 + step * s, -2, rock, 9);}
+  P(c, [[-20, -12], [-12, -4], [14, -6], [20, -22], [14, -46], [-6, -50], [-20, -36]], rock);
+  glowDot(c, -1, -28, 22, '#ff5a1a44');for (const [a, b, x, y] of [[-12, -38, -4, -26], [-4, -26, -10, -12], [-4, -26, 8, -18], [8, -18, 6, -40]]) {L(c, a, b, x, y, lava, 2.4);}
+  limb(c, -16, -36, -24, -16, rock, 8);E(c, -24, -14, 7, 6, rock);
+  P(c, [[4, -48], [18, -52], [24, -42], [16, -36], [4, -38]], rock);glowEyes(c, 15, -44, 3.6, 1.8, '#ffd27a');
+  for (let i = 0; i < 3; i++) {const ph = (t + i / 3) % 1;c.globalAlpha = 1 - ph;E(c, -6 + i * 8, -52 - ph * 14, 2.2, 2.2, '#ffb03a', null);}c.globalAlpha = 1;
+  swingArm(c, 14, -34, lift(e), rock, 8, () => {E(c, 0, 0, 10, 9, rock);L(c, -5, -3, 4, 4, lava, 2);});
+}
+// Ice: a yeti.
+function yeti(c, th, f, t, e) {
+  const step = Math.sin(t * 5) * 3, fur = f('#f4f8ff');
+  for (const s of [-1, 1]) {limb(c, s * 9, -14, s * 10 + step * s, -2, fur, 9);E(c, s * 10 + step * s, -1, 7, 3.4, f('#8fb4d8'));}
+  E(c, -2, -32, 20, 22, fur);for (let i = 0; i < 5; i++) P(c, [[-18 + i * 8, -16], [-14 + i * 8, -10], [-10 + i * 8, -16]], fur, null);
+  limb(c, -15, -36, -24, -16, fur, 9);
+  E(c, 10, -50, 12, 11, fur);E(c, 14, -47, 8, 7, f('#8fb4d8'));for (const s of [-1, 1]) P(c, [[8 + s * 5, -58], [8 + s * 12, -66], [8 + s * 8, -55]], f('#dbe6f2'), OUT, 1);
+  eyes(c, 15, -49, 1.8, 3.2, th, f, true);P(c, [[11, -42], [20, -42], [16, -39]], '#1a2a4a', OUT, .8);fangs(c, 15.5, -42, 1.6, f);
+  swingArm(c, 12, -38, lift(e), fur, 9, () => {E(c, 0, 0, 8, 7, fur);for (const k of [-1, 0, 1]) P(c, [[k * 4 - 1.5, 5], [k * 4, 10], [k * 4 + 1.5, 5]], f('#cfe2f1'), OUT, .8);});
+}
+// Temple: a stone guardian statue, a scarab bomber and a spitting cobra.
+function stoneGuardian(c, th, f, t, e) {
+  const step = Math.sin(t * 4) * 2, stone = f('#cfa45e'), gold = f('#ffd25a');
+  for (const s of [-1, 1]) P(c, [[s * 12 - 5 + step * s, 0], [s * 12 + 5 + step * s, 0], [s * 10 + 4, -14], [s * 10 - 4, -14]], stone);
+  P(c, [[-18, -14], [18, -14], [20, -44], [-20, -44]], stone);P(c, [[-18, -20], [18, -20], [18, -24], [-18, -24]], gold, OUT, 1);E(c, 0, -34, 5, 5, f('#d23a3a'), OUT, 1);
+  P(c, [[-24, -46], [-14, -50], [-14, -40], [-24, -36]], stone);
+  P(c, [[-2, -46], [18, -46], [18, -64], [-2, -64]], stone);P(c, [[-4, -64], [20, -64], [16, -72], [0, -72]], gold);
+  glowEyes(c, 9, -56, 4, 1.6, '#ff3a2a');L(c, 2, -50, 16, -50, OUT, 2);
+  swingArm(c, 16, -40, lift(e), stone, 8, () => {L(c, 0, 8, 0, -30, OUT, 6);L(c, 0, 8, 0, -30, f('#7a4a1a'), 3.5);P(c, [[0, -44], [6, -30], [-6, -30]], gold);});
+}
+function scarab(c, th, f, t, e) {
+  const walk = Math.sin(t * 20) * 2;
+  for (const x of [-7, 0, 7]) for (const s of [-1, 1]) L(c, x, -6, x + walk * s, 0, OUT, 1.6);
+  c.save();if (e.warn) c.scale(1 + Math.sin(t * 40) * .06, 1 + Math.sin(t * 40) * .06);
+  E(c, -1, -9, 13, 9, armed(e, t) ? '#ff4a3a' : f('#2a6a5a'));L(c, -1, -17, -1, -1, OUT, 1.2);E(c, -5, -13, 4, 2.4, '#ffffff40', null);
+  E(c, 13, -8, 5, 4.5, f('#1e4a40'));for (const s of [-1, 1]) L(c, 16, -10, 21, -12 + s * 3, OUT, 1.4);glowEyes(c, 15, -9, 1.6, 1, '#ffd25a');
+  E(c, -3, -20, 6, 5, f('#d29a22'));c.beginPath();c.moveTo(-3, -25);c.quadraticCurveTo(2, -31, 0, -34);c.strokeStyle = '#6a4a2a';c.lineWidth = 2;c.stroke();
+  glowDot(c, 0, -35, 7 + Math.sin(t * 20) * 2, '#ffd27aaa');c.restore();
+}
+function cobra(c, th, f, t, e) {
+  const sway = Math.sin(t * 3) * 3, body = f('#b8922a'), charge = e.warn ? 1 : 0;
+  E(c, 0, -5, 16, 6, body);E(c, 0, -11, 12, 5, body);
+  c.beginPath();c.moveTo(-4, -12);c.quadraticCurveTo(-6 + sway, -26, 2 + sway, -36);c.strokeStyle = OUT;c.lineWidth = 10;c.stroke();c.strokeStyle = body;c.lineWidth = 7;c.stroke();
+  c.save();c.translate(2 + sway, -40);E(c, 0, 0, 12, 14, f('#d29a22'));E(c, 0, 1, 7, 10, f('#fff0a8'), null);
+  for (const y of [-4, 2]) P(c, [[-4, y], [0, y + 4], [4, y]], f('#d23a3a'), null);
+  E(c, 5, -9, 6, 5, body);glowEyes(c, 6, -10, 2.4, 1.2, '#ff3a2a');
+  L(c, 10, -7, 15, -6, '#d23a3a', 1.2);glowDot(c, 13, -7, 6 + charge * 6, `${th.glow}aa`);c.restore();
+}
+// Moon: a werewolf, a ghost swarm, a floating eye and a shadow orb.
+function werewolf(c, th, f, t, e) {
+  const step = Math.sin(t * 6) * 3, fur = f('#3a3258');
+  for (const s of [-1, 1]) {limb(c, s * 8, -14, s * 10 + step * s, -2, fur, 7);}
+  E(c, -2, -30, 16, 19, fur);for (let i = 0; i < 4; i++) P(c, [[-14 + i * 5, -46], [-12 + i * 5, -54], [-9 + i * 5, -46]], fur, null);
+  limb(c, -12, -36, -20, -16, fur, 7);for (const k of [-1, 0, 1]) L(c, -20, -16, -22 + k * 3, -10, f('#e8e4ff'), 1.6);
+  E(c, 10, -48, 10, 9, fur);P(c, [[14, -50], [28, -44], [26, -40], [14, -42]], fur);E(c, 27, -44, 2, 1.8, OUT, null);
+  for (const s of [0, 7]) P(c, [[2 + s, -54], [4 + s, -64], [8 + s, -55]], fur);
+  glowEyes(c, 13, -50, 2.6, 1.3, '#ffe08a');fangs(c, 21, -41, 1.6, f);
+  swingArm(c, 12, -38, lift(e), fur, 7, () => {for (const k of [-1, 0, 1]) P(c, [[k * 4 - 1.5, 0], [k * 5, 10], [k * 4 + 1.5, 0]], f('#e8e4ff'), OUT, .8);});
+}
+function ghost(c, th, f, t, e) {
+  const hover = Math.sin(t * 5) * 3;c.translate(0, -18 + hover);c.globalAlpha = .88;
+  c.beginPath();c.moveTo(-9, 2);c.bezierCurveTo(-11, -16, 11, -16, 9, 2);for (let i = 0; i < 4; i++) c.lineTo(9 - (i + .5) * 4.5, 6 + Math.sin(t * 10 + i) * 3), c.lineTo(9 - (i + 1) * 4.5, 2);
+  c.closePath();c.fillStyle = f('#d8dcff');c.fill();c.strokeStyle = OUT;c.lineWidth = 1.2;c.stroke();c.globalAlpha = 1;
+  for (const s of [-1, 1]) E(c, 2 + s * 3, -6, 1.8, 2.6, '#1e1840', null);E(c, 2, 0, 2, 2.6, '#1e1840', null);glowDot(c, 0, -4, 12, '#b48aff44');
+}
+function floatingEye(c, th, f, t, e) {
+  const hover = Math.sin(t * 2.5) * 3, charge = e.warn ? 1 : 0;c.translate(0, -30 + hover);
+  for (let i = 0; i < 4; i++) {c.beginPath();c.moveTo(-9 + i * 6, 8);c.quadraticCurveTo(-11 + i * 6 + Math.sin(t * 4 + i) * 4, 18, -9 + i * 6, 26);c.strokeStyle = OUT;c.lineWidth = 4;c.stroke();c.strokeStyle = f(th.body);c.lineWidth = 2.4;c.stroke();}
+  E(c, 0, 0, 15, 14, f(th.body));E(c, 3, 0, 9, 9, f('#f4f0ff'), OUT, 1);glowDot(c, 5, 0, 10 + charge * 8, '#ff5aff66');E(c, 5, 0, 4 + charge, 5 + charge, f('#c03adf'), null);E(c, 5.6, 0, 1.6, 3.2, '#12081a', null);
+  P(c, [[-12, -8], [0, -15], [14, -8], [12, -4], [0, -9], [-10, -4]], f(th.body2), OUT, 1);for (const x of [-8, 0, 8]) P(c, [[x - 2, -12], [x, -20], [x + 2, -12]], f(th.body2), OUT, .8);
+}
+function shadowOrb(c, th, f, t, e) {
+  const pulse = e.warn ? 1 + Math.sin(t * 40) * .1 : 1, hover = Math.sin(t * 6) * 2;
+  c.translate(0, -16 + hover);c.scale(pulse, pulse);glowDot(c, 0, 0, 22, armed(e, t) ? '#ff3a3a88' : '#b48aff55');
+  E(c, 0, 0, 11, 11, armed(e, t) ? '#5a0a1a' : f('#120e24'));
+  c.save();c.rotate(t * 3);c.scale(1, .35);c.beginPath();c.arc(0, 0, 17, 0, Math.PI * 1.6);c.strokeStyle = f('#b48aff');c.lineWidth = 3;c.stroke();c.restore();
+  glowEyes(c, 2, -1, 3.4, 1.6, '#e8e4ff');
+}
+// Crystal: a crystal golem, a shard cluster, a crystal moth and a crystal turret.
+function crystalGolem(c, th, f, t, e) {
+  const step = Math.sin(t * 4) * 2, body = f(th.body), dark = f(th.body2), pink = f(th.accent);
+  for (const s of [-1, 1]) P(c, [[s * 10 - 5 + step * s, 0], [s * 10 + 5 + step * s, 0], [s * 8 + 4, -16], [s * 8 - 4, -16]], dark);
+  P(c, [[-18, -16], [18, -16], [22, -38], [8, -52], [-12, -50], [-22, -36]], body);P(c, [[-6, -46], [6, -48], [2, -24], [-4, -26]], f(th.glow), null);
+  for (const [x, y, h] of [[-16, -48, 16], [-6, -52, 22], [6, -50, 14]]) P(c, [[x - 4, y + 4], [x, y - h], [x + 4, y + 4]], pink);
+  P(c, [[-22, -36], [-28, -18], [-20, -16]], dark);
+  P(c, [[4, -50], [20, -52], [22, -62], [8, -64]], body);glowEyes(c, 14, -57, 3.4, 1.5, th.eye);
+  swingArm(c, 16, -38, lift(e), dark, 7, () => {P(c, [[-6, 2], [6, 2], [0, -26]], pink);P(c, [[-2, 0], [2, 0], [0, -18]], '#ffffff88', null);});
+}
+function shardCluster(c, th, f, t, e) {
+  const walk = Math.sin(t * 16) * 2, hot = armed(e, t);
+  for (const s of [-1, 1]) L(c, s * 5, -4, s * 6 + walk * s, 0, OUT, 2);
+  c.save();if (e.warn) c.scale(1 + Math.sin(t * 40) * .08, 1 + Math.sin(t * 40) * .08);glowDot(c, 0, -14, 18, hot ? '#ff3a3a88' : `${th.glow}66`);
+  for (const [x, h, w] of [[-8, 18, 5], [8, 16, 5], [0, 26, 6], [-3, 12, 4]]) P(c, [[x - w, -4], [x + w, -4], [x + w * .4, -4 - h], [x - w * .4, -4 - h - 3]], hot ? '#ff6a5a' : f(x ? th.accent : th.body));
+  glowEyes(c, 1, -14, 3, 1.4, '#ffffff');c.restore();
+}
+function crystalMoth(c, th, f, t, e) {
+  const flap = Math.sin(t * 20), hover = Math.sin(t * 6) * 3;c.translate(0, -20 + hover);
+  for (const s of [-1, 1]) {c.save();c.scale(s, 1 - Math.abs(flap) * .3);P(c, [[1, -1], [14, -12], [18, -2], [12, 4], [2, 2]], f(th.accent));P(c, [[2, 2], [12, 6], [10, 12], [3, 6]], f(th.glow));c.restore();}
+  E(c, 0, 0, 3.4, 8, f(th.body2));for (const s of [-1, 1]) L(c, s, -7, s * 5, -13, OUT, 1);glowEyes(c, 0, -5, 1.8, 1, '#ffffff');
+}
+function crystalTurret(c, th, f, t, e) {
+  const charge = e.warn ? 1 : 0, spin = t * (2 + charge * 6);
+  P(c, [[-12, 0], [12, 0], [8, -8], [-8, -8]], f(th.body2));P(c, [[-7, -8], [7, -8], [4, -40], [0, -48], [-4, -40]], f(th.body));P(c, [[-1, -12], [2, -12], [1, -38]], '#ffffff66', null);
+  c.save();c.translate(0, -30);c.scale(1, .35);c.rotate(spin);for (let i = 0; i < 3; i++) {c.rotate(Math.PI * 2 / 3);P(c, [[12, -3], [20, 0], [12, 3]], f(th.accent), OUT, .8);}c.restore();
+  glowDot(c, 0, -52, 10 + charge * 8, `${th.accent}aa`);E(c, 0, -52, 4 + charge * 1.5, 4 + charge * 1.5, f(th.eye), OUT, 1);
+}
+const VARIANT = {
+  forest: {brute: treant, bomber: sporePuff},
+  volcano: {brute: magmaGolem},
+  ice: {brute: yeti},
+  temple: {brute: stoneGuardian, bomber: scarab, spitter: cobra},
+  moon: {brute: werewolf, imp: ghost, spitter: floatingEye, bomber: shadowOrb},
+  crystal: {brute: crystalGolem, bomber: shardCluster, imp: crystalMoth, spitter: crystalTurret}
+};
 // Guardians stand on a pulsing dark sigil; enraged ones burn red.
 function bossAura(c, e, th, time) {
-  const R = e.r * (e.mini ? 2.2 : 3), rage = !!e.rage, col = rage ? '#ff2a3a' : th.portal;
+  const R = e.r * (e.mini ? 2.2 : 3) * (e.berserk ? 1.25 : 1), rage = !!e.rage, col = rage ? '#ff2a3a' : th.portal;
   c.save();c.scale(1, .36);
   const g = c.createRadialGradient(0, 0, 0, 0, 0, R * 1.2);g.addColorStop(0, rage ? '#ff2a3a70' : '#1a0a2a70');g.addColorStop(1, '#00000000');
   c.fillStyle = g;c.beginPath();c.arc(0, 0, R * 1.2, 0, Math.PI * 2);c.fill();

@@ -85,6 +85,17 @@ export function stageQuota(stage){return 40+5*stageInfo(stage).sub;}
 export function parTime(stage){return 70+10*stageInfo(stage).sub;}
 export function effStage(stage,hard){return stage+(hard?LAST_STAGE:0);}
 // The combat power a stage expects; compared against Run#combatPower() in the UI.
+// Each world has its own monster mix: [type, weight, first sub-stage it appears in].
+export const WORLD_ROSTER=[
+  [['slime',10,1],['runner',4,2],['brute',3,3],['archer',3,4],['bomber',2,6]],
+  [['slime',6,1],['bomber',5,1],['imp',4,2],['runner',3,3],['brute',2,5],['archer',2,6]],
+  [['slime',6,1],['brute',5,1],['runner',4,2],['spitter',3,4],['archer',2,6]],
+  [['slime',5,1],['spitter',5,1],['brute',3,2],['archer',3,3],['bomber',2,5],['runner',2,6]],
+  [['imp',5,1],['runner',5,1],['spitter',3,2],['slime',3,3],['brute',3,5],['bomber',2,6]],
+  [['slime',4,1],['brute',4,1],['spitter',4,2],['runner',3,2],['archer',3,3],['bomber',3,4],['imp',3,5]]
+];
+// A world boss that is not down this many seconds after it appears goes berserk.
+export const WORLD_BOSS_HP=7500,BERSERK_AT=45;
 export function recommendedPower(stage,hard=false){return Math.round(REC_BASE*REC_GROWTH**(effStage(stage,hard)-1));}
 export const REC_BASE=130,REC_GROWTH=1.11;
 export const POTION_AT=.35,POTION_HEAL=.5,POTION_COOLDOWN=6;
@@ -119,13 +130,13 @@ eff(){return effStage(this.stage,this.hard);}
 addEnemy(type,radius=430,angle=this.rng()*Math.PI*2,{guardian=false,mini=false}={}){
   const boss=type==='boss',elite=type==='elite',eff=this.eff(),scale=STAGE_HP**(eff-1),{world}=stageInfo(this.stage);
   const BASE={runner:22,archer:30,brute:78,bomber:14,imp:9,spitter:34},RAD={brute:22,bomber:14,imp:10,spitter:15},SPD={runner:76,brute:30,bomber:68,imp:96,spitter:34};
-  let hp=boss?(mini?550:1500)*scale:(elite?(guardian?480:220):BASE[type]??24+Math.min(60,this.t-this.stageStart)*.06)*scale;
+  let hp=boss?(mini?550:WORLD_BOSS_HP)*scale:(elite?(guardian?480:220):BASE[type]??24+Math.min(60,this.t-this.stageStart)*.06)*scale;
   let bodyRadius=boss?(mini?34:42):elite?29:RAD[type]||16,speed=(boss?29:elite?31:SPD[type]||38)*Math.min(1.6,1+.01*(eff-1));
   // From world 2 some monsters roll a trait: swift, shielded, bursting on death or giant.
   let mod=null;if(!boss&&!elite&&world+(this.hard?2:0)>=2&&this.rng()<Math.min(.45,.04*(world-1)+(this.hard?.2:0)+.03)){mod=MODS[Math.floor(this.rng()*(world>=3||this.hard?4:3))];if(type==='imp'||type==='bomber')mod=null;else 
     if(mod==='swift')speed*=1.6;if(mod==='giant'){hp*=2.5;bodyRadius*=1.4;}}
   const point=enemySpawn(this.p,radius,angle,bodyRadius);
-  this.enemies.push({id:this.nextId++,type,stage:this.stage,x:point.x,y:point.y,hp,max:hp,r:bodyRadius,speed,cd:boss?3:2+this.rng()*2,slow:0,flash:0,guardian:guardian||boss,mini,mod});
+  this.enemies.push({id:this.nextId++,type,stage:this.stage,x:point.x,y:point.y,hp,max:hp,r:bodyRadius,speed,cd:boss?3:2+this.rng()*2,slow:0,flash:0,guardian:guardian||boss,mini,mod,born:this.t});
 }
 awaken(job,appearance,name){
   if(this.state!=='awakening'||!CLASSES.some(c=>c.id===job)||!['a','b'].includes(appearance))return false;
@@ -162,14 +173,14 @@ startChallenge(stage=this.cleared[this.hard?'hard':'normal']+1,hard=this.hard){
 }
 // Picks the next field monster; tougher kinds unlock as the effective stage climbs.
 spawnWave(st,info){
-  const n=this.eff(),late=st>20||info.sub>=3,table=[['slime',10],['runner',(st>10||info.sub>=2)?4:0],['archer',late?3:0],['brute',n>=3?2+Math.min(3,n/12):0],['bomber',n>=5?2:0],['imp',n>=11?2:0],['spitter',n>=14?2:0]];
+  const table=WORLD_ROSTER[(info.world-1)%WORLD_ROSTER.length].map(([k,w,from])=>[k,info.sub>=from||st>40?w:0]);
   let roll=this.rng()*table.reduce((a,[,w])=>a+w,0),type='slime';for(const [k,w] of table){if((roll-=w)<0){type=k;break;}}
   if(type==='imp'){const a=this.rng()*Math.PI*2;for(let i=0;i<4;i++)this.addEnemy('imp',430,a+(i-1.5)*.12);}else this.addEnemy(type);
 }
 // Boss attacks: slam / dash from the start, then nova rings, meteor rain and minion calls; below half HP the boss enrages.
 bossAttack(e,p){
   const mini=e.mini,rage=e.rage,pool=mini?['slam','dash','nova']:['slam','dash','nova','meteor','summon'];
-  const kind=pool[Math.floor(this.rng()*pool.length)];e.cd=Math.max(1.6,3-.3*(this.stage-1))*(rage?.65:1)*(kind==='summon'?1.6:1);
+  const kind=pool[Math.floor(this.rng()*pool.length)];e.cd=Math.max(1.6,3-.3*(this.stage-1))*(e.berserk?.45:rage?.65:1)*(kind==='summon'?1.6:1);
   if(kind==='meteor'){const pts=[];for(let i=0;i<(rage?5:3);i++){const a=this.rng()*Math.PI*2,d=i?40+this.rng()*120:0;pts.push(constrainToArena({x:p.x+Math.cos(a)*d,y:p.y+Math.sin(a)*d},10));}e.warn={kind,pts,x:p.x,y:p.y,r:70,t:1.25};}
   else if(kind==='nova'||kind==='summon')e.warn={kind,x:e.x,y:e.y,r:kind==='nova'?80:60,t:.9};
   else e.warn={x:p.x,y:p.y,t:1.1,kind,r:rage?115:95,ox:e.x,oy:e.y};
@@ -332,7 +343,7 @@ clearStage(){
 }
 end(reason){if(this.state==='ended')return;this.state='ended';this.cue('death');this.result=reason;this.emit('run_end',{reason,kills:this.kills,level:this.level,stage:this.stage,weaponTier:this.weaponTier,armorTier:this.armorTier,build:{...this.skills}});}
 damage(n,source){
-  if(this.p.inv>0||this.state!=='playing')return;n*=STAGE_HIT**(this.eff()-1)*(1-this.guard);
+  if(this.p.inv>0||this.state!=='playing')return;n*=STAGE_HIT**(this.eff()-1)*(1-this.guard)*(this.enemies.some(e=>e.berserk&&e.hp>0)?2:1);
   this.p.hp=Math.max(0,this.p.hp-n);this.p.inv=.8;this.cue('hurt');this.emit('damage_taken',{source,damage:n});this.effects.push({kind:'hurt',x:this.p.x,y:this.p.y,life:.25,max:.25});
   if(this.p.hp<=0)this.retreat();
 }
@@ -488,7 +499,8 @@ update(dt,input={x:0,y:0}){
   for(const e of this.enemies){if(e.hp<=0)continue;e.flash=Math.max(0,e.flash-dt);e.slow=Math.max(0,e.slow-dt);Object.assign(e,constrainToArena(e,e.r));e.cd-=dt;const d=Math.hypot(p.x-e.x,p.y-e.y),a=Math.atan2(p.y-e.y,p.x-e.x);if(!e.warn&&((e.type!=='archer'&&e.type!=='spitter')||d>240)){e.x+=Math.cos(a)*e.speed*(e.slow>0?.35:1)*dt;e.y+=Math.sin(a)*e.speed*(e.slow>0?.35:1)*dt;}
   Object.assign(e,constrainToArena(e,e.r));
   if(d<e.r+16&&e.type!=='bomber')this.damage(e.type==='boss'?(e.rage?28:22):e.type==='brute'?14:9,e.type);
-  if(e.type==='boss'&&!e.rage&&!e.mini&&e.hp<e.max*.5){e.rage=true;this.cue('roar');this.emit('boss_rage',{stage:this.stage});this.effects.push({kind:'slam',x:e.x,y:e.y,r:140,life:.6,max:.6});}
+  if(e.type==='boss'&&!e.rage&&!e.mini&&e.hp<e.max*.5){e.rage=true;this.cue('roar');this.emit('boss_rage',{stage:this.stage});this.effects.push({kind:'slam',x:e.x,y:e.y,r:140,life:.6,max:.6});for(let i=0;i<2;i++){this.addEnemy('elite',150,i*Math.PI);const g=this.enemies[this.enemies.length-1];g.hp=g.max=g.max*.6;}}
+  if(e.type==='boss'&&!e.mini&&!e.berserk&&this.t-(e.born??this.t)>=BERSERK_AT){e.berserk=e.rage=true;e.speed*=1.4;this.cue('roar');this.emit('boss_berserk',{stage:this.stage});this.effects.push({kind:'slam',x:e.x,y:e.y,r:180,life:.7,max:.7});}
   if(e.type==='spitter'&&e.cd<=0){e.cd=3.6;e.warn={x:p.x,y:p.y,t:.9,kind:'shot3'};}
   if(e.type==='brute'&&e.cd<=0&&d<220){e.cd=4.2;e.warn={x:p.x,y:p.y,t:1,kind:'slam',r:70,dmg:18};}
   if(e.type==='bomber'&&!e.warn&&d<62){e.warn={x:e.x,y:e.y,t:.65,kind:'boom',r:72,follow:true};}

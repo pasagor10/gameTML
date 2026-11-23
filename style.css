@@ -252,6 +252,7 @@ body[data-screen=intro] .skill-hud,body[data-screen=armory] .skill-hud{visibilit
 #game .sp-bar i{display:block;height:100%;width:0;border-radius:3px;background:linear-gradient(#ffe48a,#f0a020);transition:width .25s}
 #game .stage-plate[data-mode=farm] .sp-bar i{background:linear-gradient(#a8f0a0,#2a9a4a)}#game .stage-plate[data-mode=boss] .sp-bar i{background:linear-gradient(#ff8a7a,#c81830)}
 #game .sp-sub{margin-top:4px;font-size:10.5px;color:#cfe6ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#game .sp-sub small{font-size:10.5px;letter-spacing:0;color:#9fe3ff}
+#game #quotaText.fury{color:#ff6a5a;font-weight:800;animation:furyBlink .6s steps(2) infinite}@keyframes furyBlink{50%{color:#ffd27a}}
 #game .top-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:auto}
 #game .res{display:flex;gap:6px}
 #game .objective{top:100px;font-size:11.5px;padding:5px 14px;background:#0a1a36cc;border:1px solid #9fe3ff50;border-radius:12px;color:#e8f4ff}
