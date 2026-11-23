@@ -280,7 +280,6 @@ export function drawToonMonster(c, e, time, player) {
   if (e.slow > 0) E(c, 0, 0, e.r * 1.35, e.r * .5, '#9fe0ff40', null);
   c.save();if (faceLeft) c.scale(-1, 1);
   if (e.rage) c.translate(Math.sin(time * 40) * (e.berserk ? 3 : 1.6), 0);
-  if (e.raid) c.scale(1.6, 1.6);
   if (e.berserk) c.scale(1.12, 1.12);
   if (e.type === 'runner') runner(c, th, f, t, e);
   else if (VARIANT[th.id]?.[e.type]) VARIANT[th.id][e.type](c, th, f, t, e);
@@ -290,6 +289,7 @@ export function drawToonMonster(c, e, time, player) {
   else if (e.type === 'spitter') spitter(c, th, f, t, e);
   else if (e.type === 'archer') caster(c, th, f, t, e);
   else if (e.type === 'elite') beast(c, th, f, t, e);
+  else if (e.raid) riftLord(c, f, t, e);
   else if (e.type === 'boss') titan(c, th, f, t, e);
   else slime(c, th, f, t, e);
   c.restore();
@@ -590,6 +590,47 @@ function beast(c, th, f, t, e) {
 function titan(c, th, f, t, e) {
   const raise = e.warn ? Math.min(1, (1.1 - e.warn.t) / .6) : 0;
   ({forest: thornQueen, volcano: emberColossus, ice: frostRevenant, temple: goldenYaksha, moon: moonEmperor, crystal: crystalWyrm}[th.id] || emberColossus)(c, th, f, t, raise);
+}
+// World boss: the rift lord, a four-armed horned demon floating out of a tear in the world.
+function riftLord(c, f, t, e) {
+  const raise = e.warn ? Math.min(1, (1.1 - e.warn.t) / .6) : 0, hover = Math.sin(t * 1.6) * 6, V = '#b45aff', PINK = '#ff4adf';
+  c.scale(1.3, 1.3);
+  // The rift behind it.
+  c.save();c.translate(0, -190);c.scale(1, 1.45);
+  const rg = c.createRadialGradient(0, 0, 10, 0, 0, 120);rg.addColorStop(0, '#05010a');rg.addColorStop(.7, '#2a0a4a');rg.addColorStop(1, '#2a0a4a00');
+  c.fillStyle = rg;c.beginPath();c.ellipse(0, 0, 105, 120, 0, 0, Math.PI * 2);c.fill();
+  for (let i = 0; i < 3; i++) {c.save();c.rotate(t * (.4 + i * .25) * (i % 2 ? -1 : 1));c.setLineDash([30 - i * 6, 18]);c.strokeStyle = i ? `${V}aa` : PINK;c.lineWidth = 4 - i;c.beginPath();c.ellipse(0, 0, 100 - i * 18, 112 - i * 20, 0, 0, Math.PI * 2);c.stroke();c.restore();}
+  c.restore();
+  c.translate(0, hover - 20);
+  // Smoke tail instead of legs.
+  for (let i = 0; i < 5; i++) {const ph = (t * .7 + i / 5) % 1;c.globalAlpha = .55 * (1 - ph);E(c, Math.sin(i * 2.3 + t) * 26, -10 + ph * 16, 34 - ph * 14, 12 - ph * 4, '#2a1a40', null);}c.globalAlpha = 1;
+  P(c, [[-46, -40], [46, -40], [30, -6], [10, 4], [-12, -2], [-30, -8]], f('#1e1430'));
+  // Lower arms reaching out with chains.
+  for (const s of [-1, 1]) {
+    const reach = s > 0 ? raise * 18 : 0;limb(c, s * 52, -120, s * (88 + reach), -70, f('#2a1c44'), 18);limb(c, s * (88 + reach), -70, s * (100 + reach), -40, f('#2a1c44'), 14);
+    for (let k = -1; k <= 1; k++) P(c, [[s * (98 + reach) + k * 6, -38], [s * (102 + reach) + k * 8, -22], [s * (104 + reach) + k * 6 + s * 3, -36]], f('#efe6ff'), OUT, 1.2);
+    for (let k = 0; k < 4; k++) E(c, s * (92 + reach) + Math.sin(t * 3 + k) * 2, -56 + k * 12, 4, 6, null, '#8a8aa8', 2);
+  }
+  // Torso with runes.
+  P(c, [[-60, -150], [60, -150], [52, -90], [40, -40], [-40, -40], [-52, -90]], f('#2a1c44'));
+  P(c, [[-60, -150], [-20, -150], [-10, -60], [-40, -40], [-52, -90]], f('#1e1430'), null);
+  for (const [a, b, x, y] of [[-30, -136, -14, -104], [-14, -104, -26, -70], [26, -138, 12, -104], [12, -104, 28, -66], [0, -96, 0, -56]]) {L(c, a, b, x, y, V, 5);L(c, a, b, x, y, '#f4dcff', 1.6);}
+  glowDot(c, 0, -112, 40, `${PINK}66`);E(c, 0, -112, 13, 13, f('#ff7aff'), OUT, 1.6);E(c, 0, -112, 6, 6, '#ffffff', null);
+  for (const s of [-1, 1]) {E(c, s * 60, -146, 28, 20, f('#3a2a5a'));for (let k = 0; k < 3; k++) P(c, [[s * (44 + k * 12), -160], [s * (48 + k * 12), -182 - k * 4], [s * (54 + k * 12), -160]], f('#efe6ff'), OUT, 1.2);}
+  // Upper arms raised, holding the dark orb.
+  const orb = 22 + raise * 14 + Math.sin(t * 6) * 2;
+  for (const s of [-1, 1]) {limb(c, s * 64, -150, s * 70, -210, f('#2a1c44'), 16);limb(c, s * 70, -210, s * 34, -246 - raise * 10, f('#2a1c44'), 13);}
+  glowDot(c, 0, -258 - raise * 10, orb * 2.4, `${V}88`);E(c, 0, -258 - raise * 10, orb, orb, '#12061e', V, 3);
+  c.save();c.translate(0, -258 - raise * 10);c.rotate(t * 3);for (let k = 0; k < 3; k++) {c.rotate(Math.PI * 2 / 3);c.beginPath();c.arc(0, 0, orb * .7, 0, 1.4);c.strokeStyle = PINK;c.lineWidth = 2.4;c.stroke();}c.restore();
+  // Head: horned skull mask, three eyes, fanged jaw.
+  c.save();c.translate(0, -176);
+  c.save();c.rotate(-t * .5);c.strokeStyle = `${V}cc`;c.lineWidth = 2.5;c.beginPath();c.arc(0, -10, 54, 0, Math.PI * 2);c.stroke();for (let k = 0; k < 10; k++) {c.rotate(Math.PI / 5);P(c, [[50, -4], [60, 0], [50, 4]], V, null);}c.restore();
+  for (const s of [-1, 1]) {P(c, [[s * 16, -26], [s * 44, -44], [s * 62, -78], [s * 58, -100], [s * 50, -74], [s * 34, -52], [s * 14, -34]], f('#e8dcc8'), OUT, 2);for (const k of [.3, .55, .8]) L(c, s * (16 + 40 * k), -28 - 50 * k, s * (22 + 40 * k), -34 - 50 * k, '#9a8a78', 2);}
+  P(c, [[-30, -30], [30, -30], [34, 0], [22, 22], [-22, 22], [-34, 0]], f('#3a2a5a'));P(c, [[-24, -26], [24, -26], [26, -6], [-26, -6]], f('#1e1430'), null);
+  for (const [x, y, r] of [[-13, -14, 5], [13, -14, 5], [0, -24, 4]]) {glowDot(c, x, y, r * 4, '#ff2a5a88');E(c, x, y, r, r * .8, '#ff3a6a', null);E(c, x, y, r * .35, r * .35, '#ffffff', null);}
+  P(c, [[-22, 6], [22, 6], [16, 22], [-16, 22]], '#12061e', OUT, 1.4);for (let k = 0; k < 5; k++) P(c, [[-18 + k * 9, 6], [-14 + k * 9, 14], [-10 + k * 9, 6]], '#fffaf0', OUT, .8);
+  c.restore();
+  for (let i = 0; i < 8; i++) {const ph = (t * .5 + i / 8) % 1;c.globalAlpha = 1 - ph;glowDot(c, Math.sin(i * 1.9 + t) * 80, -60 - ph * 220, 5, i % 2 ? `${V}cc` : `${PINK}cc`);}c.globalAlpha = 1;
 }
 function crownSpikes(c, f, y, w, h, col, gem) {
   P(c, [[-w, y], [-w - 2, y - h], [-w * .5, y - h * .5], [0, y - h * 1.3], [w * .5, y - h * .5], [w + 2, y - h], [w, y]], f(col), OUT, 1.4);

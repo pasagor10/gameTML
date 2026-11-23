@@ -82,6 +82,7 @@ export function xpNeed(level){return Math.round(4+4*level+.35*level*level);}
 // ---- World map (v0.19): 6 worlds × 10 stages. Each stage asks for a kill quota, then a guardian:
 // an elite, a mini-boss on stage 5 and the world boss on stage 10. Losing sends the hero back to farm
 // the last cleared stage; clearing all 60 opens Hard mode, which continues the difficulty curve.
+export const ALLY_HIT_CD=.45,ALLY_ASSIST=1.6,ALLY_REACH=320;
 export const WORLDS=6,STAGES_PER_WORLD=10,LAST_STAGE=60,FARM_RETRY=120;
 export const WORLD_NAMES=['ป่าพงไพร','ภูเขาไฟคำราม','ธารน้ำแข็ง','วิหารทองคำ','ดินแดนจันทรา','ถ้ำคริสตัล'];
 export const STAGE_HP=1.16,STAGE_HIT=1.075,STAGE_GOLD=1.06;
@@ -118,7 +119,7 @@ constructor(rng=Math.random,profile=null){
   this.t=0;this.maxHp=100;this.p={x:0,y:0,hp:100,inv:0};this.enemies=[];this.gems=[];this.shots=[];this.effects=[];this.events=[];this.cues=[];this.zones=[];this.delayed=[];
   this.skills={};this.level=1;this.xp=0;this.need=xpNeed(1);this.kills=0;this.state='playing';this.spawn=0;this.attack=0;this.swing=0;this.aim=0;this.cooldowns={};this.castGlow={};this.droneClock=0;this.nextId=0;this.slots=[];this.skillPoints=0;
   this.stage=1;this.hard=false;this.cleared={normal:0,hard:0};this.stars={};this.mode='challenge';this.stageKills=0;this.quota=stageQuota(1);this.farmClock=0;this.autoChallenge=true;this.stageFailed=false;this.stageStart=0;this.bossSpawned=false;this.eliteSpawned=false;this.bossesDefeated=0;
-  this.potionAt=POTION_AT;this.weaponTier=0;this.weaponPlus=0;this.armorTier=0;this.guard=0;this.ringBonus=0;this.bag=[];this.equipped={weapon:null,armor:null,helmet:null,ring:null};this.nextItemId=1;this.gold=0;this.goldEarned=0;this.coins=[];this.pose=null;this.supplies={potion:0,luck:0,guard:0,egg:0};this.buffs={xp:0,gold:0};this.potionClock=0;this.shopStock=[];this.shopClock=0;this.loot=[];this.magnetClock=0;this.magnetCharges=0;this.magnetGranted={normal:0,hard:0};this.raid=null;this.raidJoined=-1;this.clock=()=>Date.now();this.pets=[];this.petLv={};this.petId=null;this.petPity=0;this.petPos=null;this.holdPicks=false;this.awaitingClass=false;this.reviveOnDefeat=false;this.retreats=0;this.xpEarned=0;this.name=cleanHeroName(profile?.name)||'TILMO';
+  this.potionAt=POTION_AT;this.weaponTier=0;this.weaponPlus=0;this.armorTier=0;this.guard=0;this.ringBonus=0;this.bag=[];this.equipped={weapon:null,armor:null,helmet:null,ring:null};this.nextItemId=1;this.gold=0;this.goldEarned=0;this.coins=[];this.pose=null;this.supplies={potion:0,luck:0,guard:0,egg:0};this.buffs={xp:0,gold:0};this.potionClock=0;this.shopStock=[];this.shopClock=0;this.loot=[];this.magnetClock=0;this.magnetCharges=0;this.magnetGranted={normal:0,hard:0};this.raid=null;this.raidJoined=-1;this.allies=[];this.allyCd={};this.clock=()=>Date.now();this.pets=[];this.petLv={};this.petId=null;this.petPity=0;this.petPos=null;this.holdPicks=false;this.awaitingClass=false;this.reviveOnDefeat=false;this.retreats=0;this.xpEarned=0;this.name=cleanHeroName(profile?.name)||'TILMO';
   this.firstMoved=false;this.firstKill=false;this.evolved={};
   this.emit('run_start');for(let i=0;i<4;i++)this.addEnemy('slime',130+i*25,i*Math.PI/2);
 }
@@ -209,9 +210,43 @@ raidStep(dt){
   const R=this.raid;R.t-=dt;R.tick-=dt;
   for(const x of R.raiders)x.dmg+=R.pace*x.rate*(.6+this.rng()*.8)*dt;
   const b=this.enemies.find(e=>e.raid);
+  if(b)R.raiders.forEach((x,i)=>this.raiderStep(x,i,b,dt));
   if(b&&R.tick<=0){R.tick=.35;const x=R.raiders[Math.floor(this.rng()*R.raiders.length)];this.effects.push({kind:'number',x:b.x+(this.rng()-.5)*90,y:b.y-b.r*2-20-this.rng()*40,life:.6,max:.6,value:R.pace*x.rate*(1+this.rng()*2),crit:false,ally:true});}
   if(R.t<=0)this.finishRaid(false);
 }
+// Raiders run to their class range around the boss, circle it, dodge its warning zones and attack.
+raiderStep(x,i,b,dt){
+  if(x.x===undefined){const a=this.rng()*Math.PI*2,d=300+this.rng()*120;Object.assign(x,{x:b.x+Math.cos(a)*d,y:b.y+Math.sin(a)*d*.6,ang:a,cd:this.rng()*1.5,atk:0,face:1,moving:true,spin:(i%2?1:-1)*(.15+this.rng()*.25)});}
+  x.ang+=x.spin*dt;x.cd-=dt;x.atk=Math.max(0,x.atk-dt);
+  const range=(x.job==='knight'?140:x.job==='mage'?230:310)+(i%3)*22;let tx=b.x+Math.cos(x.ang)*range,ty=b.y+Math.sin(x.ang)*range*.6,dodging=false;
+  const w=b.warn;if(w)for(const m of w.kind==='meteor'?w.pts:[w]){const R=(w.r||95)+28,d=Math.hypot(tx-m.x,ty-m.y);if(d<R){const k=(R+10)/(d||1);tx=m.x+(tx-m.x)*k;ty=m.y+(ty-m.y)*k;dodging=true;}}
+  const d=Math.hypot(tx-x.x,ty-x.y),sp=(dodging?230:150)*dt;if(d>3){const st=Math.min(d,sp);x.x+=(tx-x.x)/d*st;x.y+=(ty-x.y)/d*st;}
+  x.moving=d>4;x.face=b.x>x.x?1:-1;
+  if(x.cd<=0&&d<30){x.cd=.55+this.rng()*.7;x.atk=.25;const a=Math.atan2(b.y-80-(x.y-30),b.x-x.x);
+    if(x.job==='knight')this.effects.push({kind:'slash',x:x.x+x.face*18,y:x.y,r:50,tier:x.tier,life:.25,max:.25});
+    else if(x.job==='mage')this.effects.push({kind:'lightning',x:x.x,y:x.y-40,tx:b.x+(this.rng()-.5)*60,ty:b.y-90-this.rng()*80,life:.2,max:.2});
+    else this.effects.push({kind:'muzzle',x:x.x+Math.cos(a)*26,y:x.y-30+Math.sin(a)*26,a,tier:x.tier,life:.08,max:.08});
+    if(this.rng()<.08)this.effects.push({kind:'explosion',x:b.x+(this.rng()-.5)*120,y:b.y-60-this.rng()*120,r:60,lv:2,style:x.job==='mage'?'arcane':'fire',life:.45,max:.45});}
+}
+// Party members in the same world fight your local monsters with their own strength.
+allyStep(dt){
+  for(const a of this.allies){
+    const cd=(this.allyCd[a.id]??Math.random()*ALLY_HIT_CD)-dt;this.allyCd[a.id]=cd;if(cd>0)continue;
+    const reach=a.job==='knight'?ALLY_REACH*.6:a.job==='mage'?ALLY_REACH*.85:ALLY_REACH;let target=null,best=reach;
+    for(const e of this.enemies){if(e.hp<=0||e.raid)continue;const d=Math.hypot(e.x-a.x,e.y-a.y)-e.r;if(d<best){best=d;target=e;}}
+    if(!target){this.allyCd[a.id]=.2;continue;}
+    this.allyCd[a.id]=ALLY_HIT_CD;a.swing=.25;a.face=target.x>a.x?1:-1;
+    if(a.job==='mage')this.effects.push({kind:'lightning',x:a.x,y:a.y-40,tx:target.x,ty:target.y-target.r,life:.2,max:.2});
+    else if(a.job==='gunner'){const ang=Math.atan2(target.y-(a.y-30),target.x-a.x);this.effects.push({kind:'muzzle',x:a.x+Math.cos(ang)*26,y:a.y-30+Math.sin(ang)*26,a:ang,tier:a.tier||0,life:.08,max:.08});this.effects.push({kind:'dashline',x:a.x,y:a.y-30,tx:target.x,ty:target.y-target.r*.5,lv:1,width:6,color:'#ffe08a',life:.12,max:.12});}
+    else this.effects.push({kind:'slash',x:target.x,y:target.y-target.r*.5,r:50,tier:a.tier||0,life:.25,max:.25});
+    this.hit(target,Math.max(0,a.hit||0)*ALLY_ASSIST);
+  }
+}
+// What a party member sees of you; sent to the relay several times a second.
+partyState(){const top=this.cleared[this.hard?'hard':'normal'];return {name:this.name,job:this.job,app:this.appearance,tier:this.weaponTier,armor:this.armorLook??-1,helmet:this.helmetTier??-1,lv:this.level,cp:this.combatPower(),hit:(9+this.level*.8)*this.power(),stage:this.stage,hard:this.hard,cleared:top,raid:this.mode==='raid',x:Math.round(this.p.x),y:Math.round(this.p.y),mv:!!this.moving,atk:this.swing>0,face:this.facing<0?-1:1,dir:this.direction,hp:Math.max(0,this.p.hp/this.maxHp)};}
+// Travel to a friend's stage: farm it when already cleared, otherwise challenge it if allowed.
+canHelp(stage,hard=false){return !!stage&&this.mode!=='raid'&&(stage<=this.cleared[hard?'hard':'normal']||this.canChallenge(stage,hard));}
+helpAt(stage,hard=false){if(!this.canHelp(stage,hard))return false;if(stage<=this.cleared[hard?'hard':'normal'])return this.farmAt(stage,hard)!==false;return !!this.startChallenge(stage,hard);}
 raidBoard(){const R=this.raid;if(!R)return [];return [...R.raiders.map(x=>({...x})),{name:this.name,job:this.job,lv:this.level,dmg:R.dmg,you:true}].sort((a,b)=>b.dmg-a.dmg);}
 finishRaid(fell){
   const R=this.raid;if(!R)return;const board=this.raidBoard(),rank=board.findIndex(x=>x.you)+1;
@@ -578,6 +613,7 @@ update(dt,input={x:0,y:0}){
   this.basicAttack(dt,speed*(1+.08*(this.skills.quickdraw||0)),area);
   this.tickSkills(dt*speed,area);
   this.drones(dt);
+  if(this.mode!=='raid')this.allyStep(dt);
   if(this.slots.includes('fire')&&this.skills.fire){const count=this.evolved.inferno?6:1+this.skills.fire,sp=this.skillPower();for(let i=0;i<count;i++){const a=this.t*2.4+i*Math.PI*2/count,x=p.x+Math.cos(a)*85*area,y=p.y+Math.sin(a)*85*area;for(const e of this.enemies)if(e.hp>0&&Math.hypot(e.x-x,e.y-y)<e.r+18)this.hit(e,dt*(this.evolved.inferno?110:65)*sp,true);}}
   for(const z of this.zones){z.life-=dt;if(z.follow){z.x=p.x;z.y=p.y;}if(z.kind==='mine'){if(z.life>0&&this.within(z.trigger,z).length){z.life=0;this.blast(z.x,z.y,z.trigger,z.dmg,z.lv,'fire');}continue;}for(const e of this.within(z.r,z)){this.hit(e,z.dps*dt,true);if(z.slows)e.slow=Math.max(e.slow,.4);if(z.pull&&e.type!=='boss'){const d=Math.hypot(z.x-e.x,z.y-e.y)||1,step=Math.min(d,z.pull*dt);e.x+=(z.x-e.x)/d*step;e.y+=(z.y-e.y)/d*step;}}}
   this.zones=this.zones.filter(z=>z.life>0);
