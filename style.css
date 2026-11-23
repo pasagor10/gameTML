@@ -334,3 +334,7 @@ body[data-screen=intro] .skill-hud,body[data-screen=armory] .skill-hud{visibilit
 .potion-setting output{min-width:44px;text-align:center;font:800 16px 'Chakra Petch',sans-serif;color:#fff;background:#e0283a;border:2px solid #fff;border-radius:10px;padding:2px 6px}
 @media(max-width:600px){.potion-setting{flex-wrap:wrap;gap:8px}.potion-setting input{flex-basis:70%}}
 #game .stats .buffs{display:inline-flex;align-items:center;gap:4px}
+.char-left .potion-setting{margin:10px 0 0;flex-wrap:wrap;gap:8px;padding:8px 12px}
+.char-left .potion-setting .ps-ico{width:32px;height:32px}
+.char-left .potion-setting .ps-text{flex:1 1 120px}
+.char-left .potion-setting input{flex:1 1 140px}
