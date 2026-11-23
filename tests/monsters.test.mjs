@@ -26,3 +26,9 @@ test('selling many pieces at once skips worn gear and picks out junk',()=>{
 test('shop supplies stay affordable in the last stages',async()=>{
   const {supplyPrice}=await import('../src/shop.js');
   assert.ok(supplyPrice('potion',38)<1500,`stage 38 potion ${supplyPrice('potion',38)}`);assert.ok(supplyPrice('xp',60)<25000);assert.ok(supplyPrice('potion',10)>supplyPrice('potion',1));});
+test('defeats never slide the hero below the first stage of the current world',()=>{
+  const r=new Run(()=>.5);r.cleared.normal=31;assert.ok(r.startChallenge(32));
+  r.p.inv=0;r.damage(1e9,'boss');assert.equal(r.mode,'farm');assert.equal(r.stage,31,'4-2 fails → farm 4-1');
+  for(let i=0;i<3;i++){r.p.inv=0;r.damage(1e9,'boss');}assert.equal(r.stage,31,'farming defeats stay put');
+  r.cleared.normal=30;assert.ok(r.startChallenge(31));r.p.inv=0;r.damage(1e9,'boss');assert.equal(r.stage,31,'4-1 fails → farm 4-1, not 3-10');
+  const w1=new Run(()=>.5);w1.cleared.normal=2;w1.startChallenge(3);w1.p.inv=0;w1.damage(1e9,'slime');assert.equal(w1.stage,2);});

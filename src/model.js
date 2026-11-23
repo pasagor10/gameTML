@@ -233,8 +233,8 @@ summonBoss(){
   if(this.mode==='farm')this.startChallenge();
   this.stageKills=Math.max(this.stageKills,this.quota);this.emit('boss_summoned',{stage:this.stage});return true;
 }
-farmAt(stage,hard=this.hard){
-  const top=Math.max(1,this.cleared[hard?'hard':'normal']);if(hard&&this.cleared.normal<LAST_STAGE)return false;
+farmAt(stage,hard=this.hard,floor=1){
+  const top=Math.max(1,floor,this.cleared[hard?'hard':'normal']);if(hard&&this.cleared.normal<LAST_STAGE)return false;
   this.hard=hard;this.stage=Math.max(1,Math.min(stage,top));this.mode='farm';this.farmClock=0;this.resetField();this.emit('farm_start',{stage:this.stage,hard});return true;
 }
 // ---- Gear: four slots (weapon, armour, helmet, ring) filled from the bag.
@@ -335,7 +335,9 @@ openPending(){
 // A defeat never ends the game: the hero falls back to farm the stage below.
 retreat(){
   this.retreats++;this.p.hp=this.maxHp;this.p.inv=2;const failed=this.stage;
-  this.farmAt(this.mode==='challenge'?failed-1:failed-1,this.hard);this.stageFailed=true;
+  // A failed challenge drops one stage, never below the world's first stage; falling while
+  // farming keeps the same stage so repeated defeats do not slide the hero down.
+  const floor=(stageInfo(failed).world-1)*STAGES_PER_WORLD+1;this.farmAt(this.mode==='challenge'?Math.max(floor,failed-1):failed,this.hard,floor);this.stageFailed=true;
   this.emit('retreat',{stage:failed});this.emit('stage_failed',{stage:failed,hard:this.hard});this.cue('portal');
   this.effects.push({kind:'ascend',x:this.p.x,y:this.p.y,life:1.2,max:1.2});
 }
