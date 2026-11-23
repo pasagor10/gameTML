@@ -23,3 +23,6 @@ test('selling many pieces at once skips worn gear and picks out junk',()=>{
   const junk=r.junkIds();assert.ok(junk.includes(weak.id)&&junk.includes(other.id));assert.ok(!junk.includes(good.id)&&!junk.includes(worn.id));
   const gold=r.gold,got=r.sellItems([weak.id,other.id,worn.id]);assert.ok(got>0);assert.equal(r.gold,gold+got);
   assert.ok(r.bag.some(i=>i.id===worn.id),'worn piece kept');assert.ok(!r.bag.some(i=>i.id===weak.id||i.id===other.id));assert.equal(r.sellItems([]),0);});
+test('shop supplies stay affordable in the last stages',async()=>{
+  const {supplyPrice}=await import('../src/shop.js');
+  assert.ok(supplyPrice('potion',38)<1500,`stage 38 potion ${supplyPrice('potion',38)}`);assert.ok(supplyPrice('xp',60)<25000);assert.ok(supplyPrice('potion',10)>supplyPrice('potion',1));});
