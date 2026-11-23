@@ -45,8 +45,10 @@ export function drawToonHero(c, x, y, o = {}) {
   const S = HERO_TOON_SCALE;
   c.save();c.translate(x, y);
   E(c, 0, 1, 22, 7.5, '#10303055', null);
-  if (tier >= 2 && job !== 'novice') {c.save();c.globalAlpha = .35 + .2 * Math.sin(time * 4);c.beginPath();c.ellipse(0, 1, 27 + tier * 2, 9 + tier * .6, 0, 0, Math.PI * 2);c.strokeStyle = accent;c.lineWidth = 2.2;c.shadowColor = accent;c.shadowBlur = 12;c.stroke();c.restore();}
+  const auraLv = job === 'novice' ? 0 : tier, auraCol = tier === 5 ? `hsl(${(time * 80) % 360} 95% 72%)` : accent;
+  if (auraLv >= 2) groundAura(c, auraLv, auraCol, time);
   c.scale(left ? -S : S, S);
+  if (auraLv >= 1) auraBack(c, auraLv, auraCol, time);
   if (inv > 0 && Math.floor(inv * 15) % 2) c.globalAlpha *= .45;
   // Skill poses: where the hands go, how the weapon is held, and how the body leans.
   const q = pose ? 1 - pose.life / pose.max : 0, pk = pose?.kind;
@@ -89,9 +91,12 @@ export function drawToonHero(c, x, y, o = {}) {
     const lift = Math.max(0, s * sw) * 4, fx = s * 5 + s * sw * 4;
     limb(c, s * 5, -14, fx, -3 - lift, fit.pants, 5.5);
     E(c, fx + 1.5, -1.5 - lift, 4.6, 3, fit.boots);E(c, fx + 2.6, -2.6 - lift, 1.8, .9, '#ffffff55', null);
+    L(c, fx - 2.2, -5 - lift, fx + 3.2, -5 - lift, job === 'knight' ? fit.plate2 : fit.top2, 2.2);
+    if (job === 'knight') {const kx = (s * 5 + fx) / 2, ky = (-14 + -3 - lift) / 2;E(c, kx, ky, 3, 2.6, fit.plate, OUT, 1);E(c, kx - .6, ky - .8, 1, .7, '#ffffff99', null);}
   }
   // Back arm.
-  const backArm = () => {limb(c, -10, -28, bx, by, fit.sleeve, 5);E(c, bx, by + 1, 2.8, 2.8, glove);if (pk === 'raise') glowDot(c, bx, by, 9, `${accent}cc`);};
+  const cuff = (x1, y1, x2, y2) => {const t = .78;E(c, x1 + (x2 - x1) * t, y1 + (y2 - y1) * t, 3.2, 3.2, job === 'knight' ? fit.plate2 : fit.top2, OUT, 1);};
+  const backArm = () => {limb(c, -10, -28, bx, by, fit.sleeve, 5);cuff(-10, -28, bx, by);E(c, bx, by + 1, 2.8, 2.8, glove);if (pk === 'raise') glowDot(c, bx, by, 9, `${accent}cc`);};
   if (!back) backArm();
   // Torso by class.
   if (job === 'mage') {
@@ -108,8 +113,10 @@ export function drawToonHero(c, x, y, o = {}) {
   }
   // Side shading gives the torso volume.
   P(c, job === 'mage' ? [[-11, -31], [-5, -31], [-6, -6], [-15, -7]] : [[-11, -31], [-5, -31], [-5.5, -13], [-12, -13]], '#0a0a2a30', null);
+  if (armor < 0) outfitDetail(c, job, fit, accent, time);
   // Worn armour is drawn over the class outfit, one look per tier.
   if (armor >= 0) wornArmor(c, armor, time);
+  if (job === 'gunner' || job === 'novice') {E(c, -9, -12.5, 3, 2.6, '#7a5230', OUT, 1);L(c, -10.5, -13.5, -7.5, -13.5, '#c89a5a', 1);}
   // In back view both arms hang under the cape, so they go on before it.
   if (back) {backArm();limb(c, 10, -28, 14 + sw * 4, -17, fit.sleeve, 5);E(c, 14 + sw * 4, -16, 2.8, 2.8, glove);}
   // Scarf wrapped at the neck.
@@ -152,10 +159,73 @@ export function drawToonHero(c, x, y, o = {}) {
   }
   // Front arm (holds the weapon).
   if (pk === 'raise' || pk === 'thrust') glowDot(c, ax, ay, 10, `${accent}cc`);
-  if (!back) {limb(c, 10, -28, ax, ay, fit.sleeve, 5);weapon();E(c, ax, ay, 3, 3, glove);}
+  if (!back) {limb(c, 10, -28, ax, ay, fit.sleeve, 5);cuff(10, -28, ax, ay);weapon();E(c, ax, ay, 3, 3, glove);}
+  if (auraLv >= 3) auraMotes(c, auraLv, auraCol, time);
   c.restore();
 }
 
+function outfitDetail(c, job, fit, accent, time) {
+  if (job === 'knight') { // tabard crest + pauldron rivets
+    P(c, [[-4, -25], [4, -25], [4, -20], [0, -17], [-4, -20]], accent, OUT, .9);L(c, 0, -24, 0, -18.5, '#ffffff', 1);L(c, -2.4, -22, 2.4, -22, '#ffffff', 1);
+    for (const sx of [-1, 1]) for (const dx of [10, 13]) E(c, sx * dx, -30.5, .9, .9, '#ffe39a', null);
+  } else if (job === 'mage') { // glowing hem runes and high collar
+    P(c, [[-8, -31], [-11, -36], [-4, -32]], fit.top2, OUT, 1);P(c, [[8, -31], [11, -36], [4, -32]], fit.top2, OUT, 1);
+    c.save();c.globalAlpha = .65 + .35 * Math.sin(time * 4);
+    for (let i = 0; i < 5; i++) {const x = -10 + i * 5, y = -9 + Math.abs(i - 2) * .6;E(c, x, y, 1.3, 1.3, accent, null);if (i % 2 === 0) L(c, x - 1.4, y - 2.4, x + 1.4, y - 2.4, accent, .9);}
+    c.restore();
+  } else if (job === 'gunner') { // bandolier with brass shells
+    L(c, -10, -31, 10, -15, OUT, 4.6);L(c, -10, -31, 10, -15, '#6a4422', 3);
+    for (let i = 0; i < 5; i++) {const t = .12 + i * .18, x = -10 + 20 * t, y = -31 + 16 * t;c.save();c.translate(x, y);c.rotate(-.65);c.fillStyle = '#ffd25a';c.fillRect(-.9, -2.6, 1.8, 3.4);c.strokeStyle = OUT;c.lineWidth = .5;c.strokeRect(-.9, -2.6, 1.8, 3.4);c.restore();}
+  } else { // patched tunic
+    P(c, [[4, -24], [8, -24], [8, -20], [4, -20]], '#b88a5a', OUT, .8);L(c, 4.5, -23.5, 7.5, -20.5, '#5e4630', .6);
+  }
+}
+// ---- Auras grow with weapon tier: Rare glow + rune ring, Epic rising motes, Legendary flame
+// mantle, Mythic rainbow light pillar.
+function groundAura(c, lv, col, time) {
+  c.save();c.scale(1, .34);
+  const R = 30 + lv * 3, pulse = .55 + .25 * Math.sin(time * 4);
+  const g = c.createRadialGradient(0, 0, 0, 0, 0, R * 1.3);g.addColorStop(0, col);g.addColorStop(1, '#00000000');
+  c.globalAlpha = .28 * pulse;c.fillStyle = g;c.beginPath();c.arc(0, 0, R * 1.3, 0, Math.PI * 2);c.fill();
+  c.globalAlpha = .55 * pulse;c.strokeStyle = '#1e1a2e';c.lineWidth = 5;c.beginPath();c.arc(0, 0, R, 0, Math.PI * 2);c.stroke();
+  c.globalAlpha = .9 * pulse;c.strokeStyle = col;c.lineWidth = 2.6;c.beginPath();c.arc(0, 0, R, 0, Math.PI * 2);c.stroke();
+  c.lineWidth = 3.2;c.setLineDash([7, 9]);c.lineDashOffset = -time * 30;c.beginPath();c.arc(0, 0, R * .72, 0, Math.PI * 2);c.stroke();
+  // Rune ticks orbiting the ring.
+  c.setLineDash([]);c.globalAlpha = .9 * pulse;
+  for (let i = 0; i < 6; i++) {const a = time * 1.2 + i * Math.PI / 3, x = Math.cos(a) * R, y = Math.sin(a) * R;c.save();c.translate(x, y);c.rotate(a);c.fillStyle = '#1e1a2e';c.fillRect(-2.5, -6.5, 5, 13);c.fillStyle = col;c.fillRect(-1.5, -5, 3, 10);c.restore();}
+  c.restore();
+}
+function auraBack(c, lv, col, time) {
+  c.save();c.globalCompositeOperation = 'lighter';
+  // Soft body glow.
+  const g = c.createRadialGradient(0, -34, 4, 0, -34, 42 + lv * 3);g.addColorStop(0, col);g.addColorStop(1, '#00000000');
+  c.globalAlpha = .16 + lv * .035 + .05 * Math.sin(time * 3);c.fillStyle = g;c.beginPath();c.arc(0, -34, 42 + lv * 3, 0, Math.PI * 2);c.fill();
+  if (lv >= 5) { // light pillar
+    const h = 150, pg = c.createLinearGradient(0, 0, 0, -h);pg.addColorStop(0, col);pg.addColorStop(1, '#00000000');
+    c.globalAlpha = .22 + .08 * Math.sin(time * 5);c.fillStyle = pg;c.beginPath();c.moveTo(-17, 0);c.lineTo(17, 0);c.lineTo(9, -h);c.lineTo(-9, -h);c.closePath();c.fill();
+  }
+  if (lv >= 4) { // flickering flame mantle hugging the silhouette
+    for (const layer of [0, 1]) {
+      const fg = c.createLinearGradient(0, 2, 0, -88);fg.addColorStop(0, col);fg.addColorStop(.7, layer ? '#ffffff60' : `${col}`);fg.addColorStop(1, '#00000000');
+      c.globalAlpha = layer ? .22 : .32;c.fillStyle = fg;c.beginPath();c.moveTo(-14, 2);
+      const steps = 9, W = layer ? 18 : 24;
+      for (let i = 0; i <= steps; i++) {const t = i / steps, y = -t * (82 + layer * 6), w = W * Math.sin(Math.PI * (.15 + t * .85)) + 3 * Math.sin(time * 9 + i * 1.7 + layer);c.lineTo(-w, y);}
+      for (let i = steps; i >= 0; i--) {const t = i / steps, y = -t * (82 + layer * 6), w = W * Math.sin(Math.PI * (.15 + t * .85)) + 3 * Math.sin(time * 8 + i * 1.3 + 2 + layer);c.lineTo(w, y);}
+      c.closePath();c.fill();
+    }
+  }
+  c.restore();
+}
+function auraMotes(c, lv, col, time) {
+  c.save();c.strokeStyle = '#1e1a2e80';c.lineWidth = .6;
+  const n = 5 + lv * 2;
+  for (let i = 0; i < n; i++) {
+    const ph = (time * (.45 + (i % 3) * .12) + i / n) % 1, x = Math.sin(i * 2.4) * (13 + (i % 4) * 3) + Math.sin(time * 2 + i) * 2.5, y = -2 - ph * 78, r = (1 - ph) * 2.4 + .6;
+    c.globalAlpha = Math.sin(ph * Math.PI);c.fillStyle = i % 4 ? col : '#ffffff';
+    c.beginPath();c.moveTo(x, y - r * 2);c.lineTo(x + r * .6, y - r * .6);c.lineTo(x + r * 2, y);c.lineTo(x + r * .6, y + r * .6);c.lineTo(x, y + r * 2);c.lineTo(x - r * .6, y + r * .6);c.lineTo(x - r * 2, y);c.lineTo(x - r * .6, y - r * .6);c.closePath();c.fill();c.stroke();
+  }
+  c.restore();
+}
 // Armour on the torso (x -12..12, y -31..-15) and shoulders.
 const ARMOR_TOON = [['#c9b48a', '#8a6a44'], ['#a8683a', '#5a3418'], ['#d8e2ee', '#6a7a92'], ['#9fe6ff', '#2a7ab8'], ['#d4473e', '#6a1418'], ['#fff0ff', '#a05ac8']];
 function wornArmor(c, t, time) {
