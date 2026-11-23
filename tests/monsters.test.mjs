@@ -16,3 +16,10 @@ test('bosses enrage below half HP and use their wider attack set',()=>{
   assert.equal(r.enemies.filter(e=>e.type==='elite').length,2,'rage calls two elite guards');
   r.p.inv=0;r.damage(10,'test');const calm=r.maxHp-r.p.hp;r.p.hp=r.maxHp;boss.born=r.t-46;r.update(.05);assert.ok(boss.berserk,'berserk after the timer');
   r.p.inv=0;r.damage(10,'test');assert.ok(Math.abs((r.maxHp-r.p.hp)-calm*2)<.01,'berserk doubles incoming damage');});
+test('selling many pieces at once skips worn gear and picks out junk',()=>{
+  const r=new Run(()=>.5);r.level=30;r.job='knight';
+  const worn=r.addItem({kind:'armor',tier:2,job:null});r.equipped.armor=worn.id;
+  const weak=r.addItem({kind:'armor',tier:1,job:null}),good=r.addItem({kind:'armor',tier:3,job:null}),other=r.addItem({kind:'weapon',tier:2,job:'mage'});
+  const junk=r.junkIds();assert.ok(junk.includes(weak.id)&&junk.includes(other.id));assert.ok(!junk.includes(good.id)&&!junk.includes(worn.id));
+  const gold=r.gold,got=r.sellItems([weak.id,other.id,worn.id]);assert.ok(got>0);assert.equal(r.gold,gold+got);
+  assert.ok(r.bag.some(i=>i.id===worn.id),'worn piece kept');assert.ok(!r.bag.some(i=>i.id===weak.id||i.id===other.id));assert.equal(r.sellItems([]),0);});

@@ -345,3 +345,8 @@ body[data-screen=intro] .skill-hud,body[data-screen=armory] .skill-hud{visibilit
 #game .stage-plate .objective.sp-tip{position:static;transform:none;width:auto;max-width:none;margin:5px 0 0;padding:3px 8px;font-size:10.5px;line-height:1.4;background:#00000045;border:0;border-radius:8px;color:#ffe0a0;white-space:normal}
 #game .stage-plate .objective.sp-tip:empty{display:none}
 #game #bossbar{display:none!important}
+
+#overlay .sell-toggle{margin-left:6px;background:#3a2a10;border:1px solid #ffd25a88;color:#ffe08a;border-radius:20px;padding:6px 12px;font-size:12px;font-weight:700;white-space:nowrap}
+#overlay .sell-toggle[aria-pressed=true]{background:#ffd25a;color:#3a2a10}
+.inv-cell.picked{outline:3px solid #ffd25a!important;outline-offset:1px}.inv-cell.picked::after{content:'✓';position:absolute;right:2px;bottom:1px;width:16px;height:16px;border-radius:50%;background:#ffd25a;color:#3a2a10;font:900 11px/16px sans-serif;text-align:center}
+.sell-card .gold-txt{color:#ffd56a}.sell-quick button{font-size:12px;padding:6px 8px}

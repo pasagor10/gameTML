@@ -225,6 +225,14 @@ sellItem(id){
   const item=this.bag.find(i=>i.id===id);if(!item||Object.values(this.equipped).includes(id))return false;
   this.bag=this.bag.filter(i=>i!==item);const price=sellPrice(item);this.gold+=price;this.cue('coin');this.emit('item_sold',{name:itemName(item),price});return price;
 }
+// Sells several bag pieces at once (worn pieces are skipped); returns the gold earned.
+sellItems(ids){
+  const want=new Set(ids),worn=new Set(Object.values(this.equipped)),sold=this.bag.filter(i=>want.has(i.id)&&!worn.has(i.id));if(!sold.length)return 0;
+  const total=sold.reduce((a,i)=>a+sellPrice(i),0);this.bag=this.bag.filter(i=>!sold.includes(i));this.gold+=total;this.cue('coin');this.emit('items_sold',{count:sold.length,price:total});return total;
+}
+// Pieces that can never help this hero: other classes' weapons and anything no better than what is worn.
+junkIds(){const worn=new Set(Object.values(this.equipped)),score=i=>i.tier*100+i.plus;
+  return this.bag.filter(i=>!worn.has(i.id)&&((i.kind==='weapon'&&this.job!=='novice'&&i.job!==this.job)||(this.gearItem(i.kind)&&score(i)<=score(this.gearItem(i.kind))))).map(i=>i.id);}
 // Enhancing costs gold and can fail from +3 up; a luck stone adds 25% and a guard stone keeps a
 // +6-or-higher piece from dropping a level on failure. Returns 'success', 'fail', 'drop' or false.
 enhanceChance(slot,luck=false){const item=this.gearItem(slot);if(!item||item.plus>=MAX_PLUS)return 0;return Math.min(1,ENHANCE_RATE[item.plus]+(luck&&this.supplies.luck>0?.25:0));}
