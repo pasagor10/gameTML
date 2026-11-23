@@ -197,3 +197,20 @@ small.good,.shop-text small.good{color:#9aff8a}small.warn,.shop-text small.warn,
 @keyframes pulse{50%{box-shadow:0 0 4px #ffd56a44}}
 .map-foot{display:flex;flex-direction:column;gap:4px;margin-top:10px;font-size:12px}.map-foot label{display:flex;gap:6px;align-items:center}.map-foot small{opacity:.7}
 @media(max-width:760px){.sk-body{grid-template-columns:1fr}.sk-groups{max-height:34vh}.world-tabs{grid-template-columns:repeat(3,1fr)}.st-grid{grid-template-columns:repeat(5,1fr);gap:5px;padding:8px}.st-node{min-height:64px}.st-node b{font-size:13px}.slot-bar{gap:4px}.play-actions button{font-size:15px}}
+
+/* v0.19.1 skill bar with cooldowns */
+.skill-hud{position:absolute;bottom:140px;right:22px;display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:none}
+.skill-slots{display:flex;gap:6px;pointer-events:auto}
+.skill-slot{position:relative;width:50px;height:50px;border-radius:12px;border:2px solid #79d6fa90;background:linear-gradient(160deg,#1d4a78,#0a2440);color:#e8fbff;padding:0;overflow:hidden;box-shadow:0 3px 10px #0008;transition:transform .12s}
+.skill-slot .ic{font-size:24px;line-height:46px;display:block;text-shadow:0 0 8px #8fe0ff}
+.skill-slot .cd{position:absolute;inset:0;border-radius:10px}
+.skill-slot em{position:absolute;inset:0;display:grid;place-items:center;font:800 16px 'Chakra Petch',sans-serif;font-style:normal;color:#fff;text-shadow:0 0 4px #000,0 0 2px #000}
+.skill-slot small{position:absolute;right:3px;bottom:1px;font:700 10px 'Chakra Petch',sans-serif;letter-spacing:0;color:#ffe08a;text-shadow:0 0 3px #000}
+.skill-slot.ready{border-color:#ffe08a;box-shadow:0 0 12px #ffe08a80}
+.skill-slot.always{border-color:#ff9a5a}.skill-slot.always em{font-size:12px;place-items:start;padding:2px 4px;color:#ffc08a}
+.skill-slot.casting{transform:scale(1.14);border-color:#fff;box-shadow:0 0 20px #fff,0 0 30px #8fe0ff}
+.skill-slot.empty{border-style:dashed;opacity:.5;font-size:20px}
+.skill-cast{font:700 13px 'Noto Sans Thai',sans-serif;color:#fff3c4;background:#0a2440d8;border:1px solid #ffe08a80;border-radius:14px;padding:3px 12px;opacity:0;transform:translateY(4px);transition:opacity .15s,transform .15s}
+.skill-cast.on{opacity:1;transform:none}
+body[data-screen=intro] .skill-hud,body[data-screen=armory] .skill-hud{visibility:hidden}
+@media(max-width:600px){.skill-hud{bottom:126px;right:12px}.skill-slot{width:44px;height:44px}.skill-slot .ic{font-size:21px;line-height:40px}.skill-slot em{font-size:16px}}

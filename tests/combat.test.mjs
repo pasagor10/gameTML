@@ -25,8 +25,8 @@ test('pause excludes time; re-skill refunds every point for gold; vigor raises H
   const r=new Run();r.state='paused';r.update(.05);assert.equal(r.t,0);r.state='playing';
   r.level=20;r.skillPoints=19;assert.ok(r.learn('vigor'));assert.equal(r.maxHp,115);r.autoLearn();assert.equal(r.skillPoints,0);assert.equal(r.spentPoints(),19);
   r.gold=0;assert.equal(r.respec(),false,'needs gold');r.gold=1e6;assert.ok(r.respec());assert.equal(r.skillPoints,19);assert.deepEqual(r.skills,{});assert.deepEqual(r.slots,[]);assert.equal(r.maxHp,100);});
-test('all four shared active skills damage enemies once slotted; frost applies slow',()=>{for(const id of ['fire','ice','spark','gust']){const r=new Run(()=>.2);r.enemies=[];r.spawn=1000;r.skills[id]=3;r.slots=[id];r.addEnemy('elite',id==='fire'?85:130,0);const e=r.enemies[0],hp=e.hp;r.skillClock=2;advance(r,.8);assert.ok(e.hp<hp,id);if(id==='ice')assert.ok(e.slow>0);}
-  const idle=new Run(()=>.2);idle.enemies=[];idle.spawn=1000;idle.skills.gust=3;idle.addEnemy('elite',130,0);const e=idle.enemies[0];idle.skillClock=2;idle.attack=99;idle.update(.05);assert.equal(e.hp,e.max,'unslotted skills do not cast');});
+test('all four shared active skills damage enemies once slotted; frost applies slow',()=>{for(const id of ['fire','ice','spark','gust']){const r=new Run(()=>.2);r.enemies=[];r.spawn=1000;r.skills[id]=3;r.slots=[id];r.addEnemy('elite',id==='fire'?85:130,0);const e=r.enemies[0],hp=e.hp;advance(r,.8);assert.ok(e.hp<hp,id);if(id==='ice')assert.ok(e.slow>0);}
+  const idle=new Run(()=>.2);idle.enemies=[];idle.spawn=1000;idle.skills.gust=3;idle.addEnemy('elite',130,0);const e=idle.enemies[0];idle.attack=99;idle.update(.05);assert.equal(e.hp,e.max,'unslotted skills do not cast');});
 test('level ten pauses for class and appearance, then play resumes',()=>{const r=new Run();assert.equal(r.job,'novice');assert.equal(r.awaken('mage','b'),false);r.level=9;r.xp=r.need;r.checkLevel();assert.equal(r.level,10);assert.equal(r.state,'awakening');const time=r.t;r.update(.05);assert.equal(r.t,time);assert.equal(r.awaken('invalid','a'),false);assert.equal(r.awaken('mage','invalid'),false);assert.equal(r.awaken('mage','b'),true);assert.equal(r.job,'mage');assert.equal(r.appearance,'b');assert.equal(r.state,'playing');assert.equal(r.events.filter(e=>e.type==='class_chosen').length,1);});
 test('saved class persists into a fresh run but run levels reset',()=>{const r=new Run(Math.random,{job:'ranger',appearance:'b'});assert.equal(r.job,'gunner','old ranger saves become gunner');assert.equal(r.level,1);r.level=9;r.xp=r.need;r.checkLevel();assert.equal(r.state,'playing');assert.equal(r.skillPoints,1);assert.equal(new Run(Math.random,{job:'cheat'}).job,'novice');});
 test('gunner shoots at distant target and knight has stronger melee; looks do not alter damage',()=>{for(const look of ['a','b']){const r=new Run(()=>.5,{job:'gunner',appearance:look});r.enemies=[];r.spawn=1000;r.addEnemy('elite',240,0);advance(r,.7);assert.ok(r.enemies[0].hp<r.enemies[0].max);assert.equal(r.enemies[0].slow,0);}const damage=[];for(const job of ['novice','knight']){const r=new Run(()=>.5,{job});r.enemies=[];r.addEnemy('elite',60,0);r.update(.05);damage.push(r.enemies[0].max-r.enemies[0].hp);}assert.ok(damage[1]>damage[0]);});
@@ -36,4 +36,10 @@ test('continuous damage keeps exact HP loss while bounding floating-number alloc
  assert.equal(before-enemy.hp,30);assert.equal(r.effects.filter(f=>f.kind==='number').length,1);assert.equal(r.effects[0].value,30);
  enemy.damageText.life=.1;r.hit(enemy,1,true);assert.equal(r.effects.filter(f=>f.kind==='number').length,2);
  r.hit(enemy,10);assert.equal(r.effects.filter(f=>f.kind==='number').length,3);assert.equal(before-enemy.hp,41);
+});
+test('each slotted skill runs its own cooldown; bigger skills recharge slower and hit harder',()=>{
+  const r=new Run(()=>.3,{job:'mage'});r.enemies=[];r.spawn=1000;r.attack=99;r.skills={nova:2,meteor:2};r.slots=['nova','meteor'];
+  r.update(.05);assert.ok(r.castGlow.nova>0,'first slot casts at once');assert.ok(Math.abs(r.cooldowns.nova-r.skillCooldown('nova'))<.06);assert.ok(r.cooldowns.meteor>0&&!r.castGlow.meteor,'second slot is staggered');
+  assert.ok(r.skillCooldown('meteor')>r.skillCooldown('nova'));
+  r.skills.manaflow=5;assert.ok(r.skillCooldown('nova')<2.24*.75);
 });

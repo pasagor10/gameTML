@@ -18,7 +18,7 @@ test('class skills open after awakening and other classes never get them',()=>{
 });
 test('every class active skill damages enemies',()=>{
   for(const s of SKILLS.filter(s=>s.job&&s.kind==='active')){
-    let seed=7;const r=new Run(()=>((seed=(seed*1664525+1013904223)>>>0)/4294967296),{job:s.job});r.enemies=[];r.spawn=1000;r.attack=999;r.skills[s.id]=3;r.slots=[s.id];r.addEnemy('elite',110,0);const e=r.enemies[0],hp=e.hp;r.skillClock=2;
+    let seed=7;const r=new Run(()=>((seed=(seed*1664525+1013904223)>>>0)/4294967296),{job:s.job});r.enemies=[];r.spawn=1000;r.attack=999;r.skills[s.id]=3;r.slots=[s.id];r.addEnemy('elite',110,0);const e=r.enemies[0],hp=e.hp;
     for(let i=0;i<60;i++){r.update(.05);r.attack=999;}
     assert.ok(e.hp<hp,s.id);
   }

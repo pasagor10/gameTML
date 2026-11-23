@@ -56,6 +56,11 @@ const SKILL_META={fire:[3,1],ice:[3,1],spark:[3,3],gust:[3,5],area:[3,4],haste:[
   might:[20,8],vigor:[20,8]};
 for(const s of SKILLS){const [max,req]=SKILL_META[s.id];s.max=max;s.req=req;}
 export const BOOSTS=[];
+// Each cast skill has its own cooldown (multiples of the 1.4s base). A longer cooldown hits
+// proportionally harder per cast, so damage per second stays the same. fire/drone run constantly.
+export const SKILL_CD={ice:1,spark:1,gust:1.4,whirl:2,wave:1,judgement:1.8,meteor:2.2,vortex:2.4,nova:1.6,scatter:1,grenade:1.6,
+  charge:1.4,quake:1.8,bladerain:2,blizzard2:2.4,thunder:1.6,beam:1.4,rocket:1.2,mine:2.6,barrage:2};
+export const BASE_CD=1.4;
 export function maxLevel(skill){return skill.max;}
 // Equipped active skills cast in combat; passives always apply.
 export function activeSlots(job){return job==='novice'?2:4;}
@@ -95,7 +100,7 @@ constructor(rng=Math.random,profile=null){
   this.rng=rng;this.job=normalizeJob(profile?.job);this.appearance=profile?.appearance==='b'?'b':'a';
   this.facing=1;this.direction='se';this.moving=false;this.motionDistance=0;this.vel={x:0,y:0};
   this.t=0;this.maxHp=100;this.p={x:0,y:0,hp:100,inv:0};this.enemies=[];this.gems=[];this.shots=[];this.effects=[];this.events=[];this.cues=[];this.zones=[];this.delayed=[];
-  this.skills={};this.level=1;this.xp=0;this.need=xpNeed(1);this.kills=0;this.state='playing';this.spawn=0;this.attack=0;this.swing=0;this.aim=0;this.skillClock=0;this.droneClock=0;this.nextId=0;this.slots=[];this.skillPoints=0;
+  this.skills={};this.level=1;this.xp=0;this.need=xpNeed(1);this.kills=0;this.state='playing';this.spawn=0;this.attack=0;this.swing=0;this.aim=0;this.cooldowns={};this.castGlow={};this.droneClock=0;this.nextId=0;this.slots=[];this.skillPoints=0;
   this.stage=1;this.hard=false;this.cleared={normal:0,hard:0};this.stars={};this.mode='challenge';this.stageKills=0;this.quota=stageQuota(1);this.farmClock=0;this.autoChallenge=true;this.stageFailed=false;this.stageStart=0;this.bossSpawned=false;this.eliteSpawned=false;this.bossesDefeated=0;
   this.weaponTier=0;this.weaponPlus=0;this.armorTier=0;this.guard=0;this.ringBonus=0;this.bag=[];this.equipped={weapon:null,armor:null,helmet:null,ring:null};this.nextItemId=1;this.gold=0;this.goldEarned=0;this.coins=[];this.pose=null;this.supplies={potion:0,luck:0,guard:0};this.buffs={xp:0,gold:0};this.potionClock=0;this.shopStock=[];this.shopClock=0;this.loot=[];this.magnetClock=0;this.holdPicks=false;this.awaitingClass=false;this.reviveOnDefeat=false;this.retreats=0;this.xpEarned=0;this.name=cleanHeroName(profile?.name)||'TILMO';
   this.firstMoved=false;this.firstKill=false;this.evolved={};
@@ -354,8 +359,8 @@ basicAttack(dt,speed,area){
   if(knight&&tier>=2){const n=tier>=3?3:1,wa=Math.atan2(target.y-(p.y-20),target.x-p.x);for(let i=0;i<n;i++)this.fire(p.x,p.y-20,wa+(i-(n-1)/2)*.28,380,{life:.8,style:'crescent',tier,damage:dmg*.7,radius:24});}
 }
 
-castSkills(area){
-  const p=this.p,s={},sp=this.skillPower();for(const id of this.slots)if(this.skills[id])s[id]=this.skills[id];
+castSkills(area,ids=this.slots,mult=1){
+  const p=this.p,s={},sp=this.skillPower()*mult;for(const id of ids)if(this.skills[id])s[id]=this.skills[id];
   // The hero strikes a pose for the grandest skill in the volley (class skills first).
   let lead=null;for(const id of Object.keys(s))if(SKILL_POSE[id]&&(!lead||(SKILLS.find(k=>k.id===id).job?10:0)+s[id]>(SKILLS.find(k=>k.id===lead).job?10:0)+s[lead]))lead=id;
   if(lead)this.pose={kind:SKILL_POSE[lead],life:.5,max:.5};
@@ -384,6 +389,18 @@ castSkills(area){
   if(s.rocket){const lv=s.rocket,e=this.nearest(450);if(e){this.cue('shot',{heavy:true});const a=Math.atan2(e.y-(p.y-30),e.x-p.x),n=1+Math.floor(lv/2);for(let i=0;i<n;i++)this.fire(p.x,p.y-30,a+(i-(n-1)/2)*.16,460,{life:1,style:'rocket',lv,tier:this.weaponTier,pierce:0,damage:(50+20*lv)*sp,blast:(60+6*lv)*area});}}
   if(s.mine){const lv=s.mine;this.cue('swing',{volume:.5});for(let i=0;i<lv+1;i++){const a=this.rng()*Math.PI*2,d=60+this.rng()*70;this.zones.push({kind:'mine',lv,x:p.x+Math.cos(a)*d,y:p.y+Math.sin(a)*d*.7,r:16,trigger:(70+6*lv)*area,dmg:(60+25*lv)*sp,life:8,max:8});}}
   if(s.barrage){const lv=s.barrage,e=this.nearest(400);if(e){this.cue('shot',{heavy:true});const x=e.x,y=e.y;for(let k=0;k<5+2*lv;k++)this.later(k*.08,()=>this.blast(x+(this.rng()-.5)*110,y+(this.rng()-.5)*70,40*area,(18+8*lv)*sp,Math.min(lv,3),'fire'));}}
+}
+// Full cooldown of a cast skill in seconds (before haste), shortened by mana flow.
+skillCooldown(id){return BASE_CD*SKILL_CD[id]*(1-.06*(this.skills.manaflow||0));}
+// Counts each slotted skill down on its own; a fresh slot starts staggered so skills do not all fire at once.
+tickSkills(dt,area){
+  for(const id in this.castGlow){this.castGlow[id]-=dt;if(this.castGlow[id]<=0)delete this.castGlow[id];}
+  this.slots.forEach((id,i)=>{
+    if(!SKILL_CD[id]||!this.skills[id])return;
+    if(this.cooldowns[id]===undefined)this.cooldowns[id]=.35*i;
+    this.cooldowns[id]-=dt;if(this.cooldowns[id]>0)return;
+    this.cooldowns[id]=this.skillCooldown(id);this.castGlow[id]=.45;this.castSkills(area,[id],SKILL_CD[id]);
+  });
 }
 // Straight-line strike (charge, beam): hits everything within `width` of the segment.
 line(x,y,a,len,width,damage,lv,color){
@@ -436,7 +453,7 @@ update(dt,input={x:0,y:0}){
   if(this.t>=8&&!this.welcome){this.welcome=true;for(let i=0;i<5;i++){const point=constrainToArena({x:p.x+Math.cos(i*1.25)*40,y:p.y+Math.sin(i*1.25)*40},8);this.gems.push({...point,value:1});}this.emit('crystal_burst');}
   const speed=1+(this.skills.haste||0)*.15,area=1+(this.skills.area||0)*.2;
   this.basicAttack(dt,speed*(1+.08*(this.skills.quickdraw||0)),area);
-  this.skillClock+=dt*speed;if(this.skillClock>=1.4*(1-.06*(this.skills.manaflow||0))){this.skillClock=0;this.castSkills(area);}
+  this.tickSkills(dt*speed,area);
   this.drones(dt);
   if(this.slots.includes('fire')&&this.skills.fire){const count=this.evolved.inferno?6:1+this.skills.fire,sp=this.skillPower();for(let i=0;i<count;i++){const a=this.t*2.4+i*Math.PI*2/count,x=p.x+Math.cos(a)*85*area,y=p.y+Math.sin(a)*85*area;for(const e of this.enemies)if(e.hp>0&&Math.hypot(e.x-x,e.y-y)<e.r+18)this.hit(e,dt*(this.evolved.inferno?110:65)*sp,true);}}
   for(const z of this.zones){z.life-=dt;if(z.follow){z.x=p.x;z.y=p.y;}if(z.kind==='mine'){if(z.life>0&&this.within(z.trigger,z).length){z.life=0;this.blast(z.x,z.y,z.trigger,z.dmg,z.lv,'fire');}continue;}for(const e of this.within(z.r,z)){this.hit(e,z.dps*dt,true);if(z.slows)e.slow=Math.max(e.slow,.4);if(z.pull&&e.type!=='boss'){const d=Math.hypot(z.x-e.x,z.y-e.y)||1,step=Math.min(d,z.pull*dt);e.x+=(z.x-e.x)/d*step;e.y+=(z.y-e.y)/d*step;}}}
