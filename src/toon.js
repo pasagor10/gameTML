@@ -45,6 +45,7 @@ export function drawToonHero(c, x, y, o = {}) {
   const S = HERO_TOON_SCALE;
   c.save();c.translate(x, y);
   E(c, 0, 1, 22, 7.5, '#10303055', null);
+  if (tier >= 2 && job !== 'novice') {c.save();c.globalAlpha = .35 + .2 * Math.sin(time * 4);c.beginPath();c.ellipse(0, 1, 27 + tier * 2, 9 + tier * .6, 0, 0, Math.PI * 2);c.strokeStyle = accent;c.lineWidth = 2.2;c.shadowColor = accent;c.shadowBlur = 12;c.stroke();c.restore();}
   c.scale(left ? -S : S, S);
   if (inv > 0 && Math.floor(inv * 15) % 2) c.globalAlpha *= .45;
   // Skill poses: where the hands go, how the weapon is held, and how the body leans.
@@ -61,6 +62,8 @@ export function drawToonHero(c, x, y, o = {}) {
   c.translate(0, bob + lift);c.rotate(lean);
   if (squash !== 1) c.scale(Math.abs(squash) < .2 ? .2 * Math.sign(squash || 1) : squash, 1);
   const flutter = Math.sin(time * 7 + phase) * 3;
+  const scarf = job === 'novice' ? '#e0505e' : accent, scarfDark = job === 'novice' ? '#7a1a28' : OUT;
+  const glove = job === 'knight' ? '#8d9bb0' : job === 'gunner' ? '#5a3a20' : SKIN;
   const weapon = () => {
     const hx = back ? -15 : ax, hy = back ? (attacking ? -27 : -19) : ay;
     c.save();c.translate(hx, hy);c.scale(1 / S, 1 / S);
@@ -74,6 +77,8 @@ export function drawToonHero(c, x, y, o = {}) {
   const behind = () => {
     if (job === 'knight' || job === 'novice') P(c, [[-9, -31], [9, -31], [13 - flutter, -6], [3, -9], [-4, -5], [-14 - flutter, -8]], fit.cape);
     if (job === 'gunner') P(c, [[-11, -18], [11, -18], [13 + flutter * .5, -3], [0, -6], [-13 + flutter * .5, -3]], fit.top2);
+    if (back) P(c, [[-4, -31], [4, -31], [6 + flutter * .8, -13], [1, -16], [-3 + flutter * .8, -11]], scarf, scarfDark, 1.2);
+    else P(c, [[-5, -33], [4, -33], [-12 - flutter * 1.2, -27], [-25 - flutter * 2, -24 + flutter * .6], [-17 - flutter, -31]], scarf, scarfDark, 1.2);
     if (armor === 5) for (const s of [-1, 1]) P(c, [[s * 6, -30], [s * 26, -46 - flutter], [s * 30, -30], [s * 22, -20], [s * 8, -22]], '#fff0ff', '#a05ac8', 1.2);
     if (appearance === 'b') {P(c, [[-15, -54], [-21, -34], [-17, -18], [-8, -26], [8, -26], [17, -18], [21, -34], [15, -54]], HAIR.b[0], HAIR.b[1]);
       P(c, [[12, -58], [26, -52 + flutter], [30, -36 + flutter], [22, -42], [14, -48]], HAIR.b[0], HAIR.b[1]);}
@@ -83,11 +88,11 @@ export function drawToonHero(c, x, y, o = {}) {
   for (const s of [-1, 1]) {
     const lift = Math.max(0, s * sw) * 4, fx = s * 5 + s * sw * 4;
     limb(c, s * 5, -14, fx, -3 - lift, fit.pants, 5.5);
-    E(c, fx + 1.5, -1.5 - lift, 4.6, 3, fit.boots);
+    E(c, fx + 1.5, -1.5 - lift, 4.6, 3, fit.boots);E(c, fx + 2.6, -2.6 - lift, 1.8, .9, '#ffffff55', null);
   }
   // Back arm.
-  limb(c, -10, -28, bx, by, fit.sleeve, 5);E(c, bx, by + 1, 2.8, 2.8, SKIN);
-  if (pk === 'raise') glowDot(c, bx, by, 9, `${accent}cc`);
+  const backArm = () => {limb(c, -10, -28, bx, by, fit.sleeve, 5);E(c, bx, by + 1, 2.8, 2.8, glove);if (pk === 'raise') glowDot(c, bx, by, 9, `${accent}cc`);};
+  if (!back) backArm();
   // Torso by class.
   if (job === 'mage') {
     P(c, [[-11, -31], [11, -31], [15, -7], [0, -5], [-15, -7]], fit.top);
@@ -101,8 +106,14 @@ export function drawToonHero(c, x, y, o = {}) {
     if (job === 'novice') P(c, [[-9, -31], [9, -31], [0, -24]], fit.top2, OUT, 1);
     L(c, -12, -14, 12, -14, '#5a3f2a', 3.5);E(c, 0, -14, 2.4, 2.2, accent, OUT, 1);
   }
+  // Side shading gives the torso volume.
+  P(c, job === 'mage' ? [[-11, -31], [-5, -31], [-6, -6], [-15, -7]] : [[-11, -31], [-5, -31], [-5.5, -13], [-12, -13]], '#0a0a2a30', null);
   // Worn armour is drawn over the class outfit, one look per tier.
   if (armor >= 0) wornArmor(c, armor, time);
+  // In back view both arms hang under the cape, so they go on before it.
+  if (back) {backArm();limb(c, 10, -28, 14 + sw * 4, -17, fit.sleeve, 5);E(c, 14 + sw * 4, -16, 2.8, 2.8, glove);}
+  // Scarf wrapped at the neck.
+  P(c, [[-10, -32], [10, -32], [9, -27], [-9, -27]], scarf, scarfDark, 1.1);if (!back) {P(c, [[4, -28], [10, -18 + flutter * .3], [6, -17], [1, -27]], scarf, scarfDark, 1);E(c, 4, -28.5, 2.8, 2.4, scarf, scarfDark, 1);}
   // Head.
   const fx = back ? 0 : 1.5;
   E(c, 0, -46, 17, 15.5, SKIN);
@@ -114,12 +125,14 @@ export function drawToonHero(c, x, y, o = {}) {
   } else {
     // Face: big anime eyes, blush, small mouth.
     for (const s of [-1, 1]) {E(c, fx + s * 6, -44, 3.4, 4.4, '#2b2f4a', null);E(c, fx + s * 6, -43, 2.4, 3, job === 'mage' ? '#7a5ad0' : job === 'gunner' ? '#2a9a8a' : '#3a8cd0', null);E(c, fx + s * 6 - 1, -45.5, 1.1, 1.3, '#fff', null);E(c, fx + s * 9, -39.5, 2.6, 1.2, '#f39a9a80', null);}
-    L(c, fx - 1.5, -38.5, fx + 1.5, -38.8, '#a85e62', 1.2);
+    for (const s of [-1, 1]) {L(c, fx + s * 3.6, -49.3, fx + s * 9.4, -51.6, hairDark, 1.7);L(c, fx + s * 2.6, -47.6, fx + s * 9.6, -48.4, '#1e1a2e', 1.6);}
+    c.beginPath();c.moveTo(fx - 2.4, -38.4);c.quadraticCurveTo(fx + .5, -37.2, fx + 2.8, -39.6);c.strokeStyle = '#a85e62';c.lineWidth = 1.3;c.lineCap = 'round';c.stroke();
     // Spiky fringe.
     P(c, [[-18, -46], [-17, -56], [-10, -63], [-3, -60], [3, -64], [10, -61], [17, -56], [18, -46], [13, -51], [8, -47], [4, -53], [-1, -48], [-5, -53], [-10, -48], [-13, -52]], hair, hairDark);
+    c.beginPath();c.moveTo(-11, -58);c.quadraticCurveTo(-3, -63, 7, -60);c.strokeStyle = '#ffffffb0';c.lineWidth = 1.6;c.lineCap = 'round';c.stroke();
   }
   // A worn helmet replaces the class headgear.
-  if (helmet >= 0) wornHelmet(c, helmet, time, flutter);
+  if (helmet >= 0) wornHelmet(c, helmet, time, flutter, back);
   else if (job === 'mage') {
     P(c, [[-21, -55], [21, -55], [16, -52], [-16, -52]], fit.hat2);
     P(c, [[-13, -55], [13, -55], [5, -72], [10 + flutter * .4, -84], [-3, -74], [-9, -64]], fit.hat);
@@ -139,8 +152,7 @@ export function drawToonHero(c, x, y, o = {}) {
   }
   // Front arm (holds the weapon).
   if (pk === 'raise' || pk === 'thrust') glowDot(c, ax, ay, 10, `${accent}cc`);
-  if (!back) {limb(c, 10, -28, ax, ay, fit.sleeve, 5);if (!back) weapon();E(c, ax, ay, 3, 3, SKIN);}
-  else limb(c, 10, -28, 14 + sw * 4, -17, fit.sleeve, 5);
+  if (!back) {limb(c, 10, -28, ax, ay, fit.sleeve, 5);weapon();E(c, ax, ay, 3, 3, glove);}
   c.restore();
 }
 
@@ -158,15 +170,15 @@ function wornArmor(c, t, time) {
     if (t === 5) {for (let i = 0; i < 3; i++) E(c, -4 + i * 4, -24, 1.8, 1.8, `hsl(${(time * 120 + i * 90) % 360} 90% 65%)`, null);glowDot(c, 0, -24, 11, '#fff1ff88');}}
 }
 // Helmets on the head (centre 0,-46; crown at about y -62).
-function wornHelmet(c, t, time, flutter) {
+function wornHelmet(c, t, time, flutter, back = false) {
   if (t === 0) {L(c, -17, -53, 17, -53, OUT, 5);L(c, -17, -53, 17, -53, '#d4473e', 3.4);P(c, [[-16, -53], [-25, -48 + flutter * .5], [-22, -45], [-15, -50]], '#d4473e', OUT, 1);return;}
   if (t === 1) {c.beginPath();c.moveTo(-18, -50);c.quadraticCurveTo(-17, -68, 0, -68);c.quadraticCurveTo(17, -68, 18, -50);c.closePath();c.fillStyle = '#a8683a';c.fill();c.strokeStyle = OUT;c.lineWidth = 1.4;c.stroke();P(c, [[-20, -51], [20, -51], [22, -48], [-22, -48]], '#5a3418', OUT, 1);return;}
-  if (t === 2) {c.beginPath();c.moveTo(-19, -46);c.quadraticCurveTo(-19, -70, 0, -70);c.quadraticCurveTo(19, -70, 19, -46);c.lineTo(14, -46);c.lineTo(13, -52);c.lineTo(-13, -52);c.lineTo(-14, -46);c.closePath();c.fillStyle = '#d8e2ee';c.fill();c.strokeStyle = OUT;c.lineWidth = 1.4;c.stroke();
-    L(c, 0, -52, 0, -44, '#6a7a92', 2.4);P(c, [[-2, -70], [2, -70], [6, -80 + flutter * .3], [-1, -76]], '#d4473e', OUT, 1);return;}
-  if (t === 3) {P(c, [[-17, -54], [-16, -63], [-10, -58], [-5, -70], [0, -60], [5, -70], [10, -58], [16, -63], [17, -54]], '#9fe6ff', '#2a7ab8', 1.2);P(c, [[0, -64], [2.5, -60], [0, -56], [-2.5, -60]], '#ffffff', '#2a7ab8', .8);glowDot(c, 0, -60, 12, '#bff0ff66');return;}
+  if (t === 2) {c.beginPath();c.moveTo(-19, -46);c.quadraticCurveTo(-19, -70, 0, -70);c.quadraticCurveTo(19, -70, 19, -46);if (back) c.lineTo(-19, -46);else {c.lineTo(14, -46);c.lineTo(13, -52);c.lineTo(-13, -52);c.lineTo(-14, -46);}c.closePath();c.fillStyle = '#d8e2ee';c.fill();c.strokeStyle = OUT;c.lineWidth = 1.4;c.stroke();
+    if (back) L(c, 0, -69, 0, -47, '#9aa8bc', 2);else L(c, 0, -52, 0, -44, '#6a7a92', 2.4);P(c, [[-2, -70], [2, -70], [6, -80 + flutter * .3], [-1, -76]], '#d4473e', OUT, 1);return;}
+  if (t === 3) {P(c, [[-17, -54], [-16, -63], [-10, -58], [-5, -70], [0, -60], [5, -70], [10, -58], [16, -63], [17, -54]], '#9fe6ff', '#2a7ab8', 1.2);if (!back) P(c, [[0, -64], [2.5, -60], [0, -56], [-2.5, -60]], '#ffffff', '#2a7ab8', .8);glowDot(c, 0, -60, 12, '#bff0ff66');return;}
   if (t === 4) {for (const s of [-1, 1]) P(c, [[s * 13, -60], [s * 24, -76], [s * 22, -64], [s * 17, -56]], '#f4e4c4', OUT, 1.1);
     c.beginPath();c.moveTo(-19, -47);c.quadraticCurveTo(-19, -70, 0, -70);c.quadraticCurveTo(19, -70, 19, -47);c.lineTo(-19, -47);c.closePath();c.fillStyle = '#d4473e';c.fill();c.strokeStyle = OUT;c.lineWidth = 1.4;c.stroke();
-    P(c, [[-12, -52], [-4, -54], [-5, -49], [-12, -49]], '#ffd25a', OUT, .8);P(c, [[12, -52], [4, -54], [5, -49], [12, -49]], '#ffd25a', OUT, .8);return;}
+    if (!back) {P(c, [[-12, -52], [-4, -54], [-5, -49], [-12, -49]], '#ffd25a', OUT, .8);P(c, [[12, -52], [4, -54], [5, -49], [12, -49]], '#ffd25a', OUT, .8);}else P(c, [[0, -70], [3, -62], [0, -48], [-3, -62]], '#9a1828', OUT, .8);return;}
   c.beginPath();c.ellipse(0, -76, 15, 4, 0, 0, Math.PI * 2);c.strokeStyle = '#ffe9a8';c.lineWidth = 2.4;c.stroke();glowDot(c, 0, -76, 14, '#fff6c066');
   P(c, [[-16, -54], [-15, -64], [-9, -59], [0, -70], [9, -59], [15, -64], [16, -54]], '#ffe39a', '#a8782a', 1.2);
   for (let i = 0; i < 3; i++) E(c, -7 + i * 7, -58, 1.9, 1.9, `hsl(${(time * 120 + i * 90) % 360} 90% 65%)`, null);
