@@ -464,3 +464,6 @@ body[data-screen=intro] #raidBoard,body[data-screen=intro] #skillHud,body[data-s
 .npc-tag{font-style:normal;font-size:9px;font-weight:800;padding:1px 5px;border-radius:6px;background:#5a6a8a;color:#fff;vertical-align:middle;letter-spacing:.5px}
 .on-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#5ce07a;margin-left:5px;vertical-align:middle;box-shadow:0 0 6px #5ce07a}
 .rank-h{font-size:13px;margin:10px 0 6px;color:#ffe08a}
+
+/* Restore-code box on the pause screen. */
+.restore-box{margin-top:12px;text-align:left;font-size:13px}.restore-box summary{cursor:pointer;opacity:.8;text-align:center}.restore-box .party-code-in{margin-top:8px}

@@ -4,10 +4,12 @@ const topups=new TopupStore(process.env.TOPUP_DB_PATH||'data/topup.sqlite');cons
 import http from 'node:http';
 import {attachParty} from './party.mjs';
 import {Metrics,metricsRoutes} from './metrics.mjs';
+import {RestoreStore,restoreRoutes,restorePath} from './restore.mjs';
+const restores=restoreRoutes(new RestoreStore(restorePath()));
 const metrics=new Metrics(process.env.METRICS_PATH||'data/metrics.json');let hub;const routes=metricsRoutes(metrics,()=>hub);
 
 const port = Number(process.env.PARTY_PORT || 5191);
-const server = http.createServer(async(req, res) => {if(await payments(req,res)||await routes(req,res))return;res.writeHead(200, {'Content-Type': 'text/plain'});res.end('tilmo party ok');});
+const server = http.createServer(async(req, res) => {if(await payments(req,res)||await routes(req,res)||await restores(req,res))return;res.writeHead(200, {'Content-Type': 'text/plain'});res.end('tilmo party ok');});
 hub = attachParty(server);
 setInterval(()=>metrics.flush(),10000).unref();
 for(const sig of ['SIGTERM','SIGINT'])process.on(sig,()=>{metrics.flush();topups.close();process.exit(0);});
