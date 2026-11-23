@@ -11,8 +11,8 @@ export const BUFFS = {
   xp: {icon: '📜', ico: 'scroll', name: 'คัมภีร์ EXP x2', desc: 'EXP ที่เก็บได้ ×2 นาน 5 นาที', price: 300, seconds: 300},
   gold: {icon: '🍀', ico: 'clover', name: 'เครื่องรางทอง x2', desc: 'เงินที่เก็บได้ ×2 นาน 5 นาที', price: 300, seconds: 300}
 };
-// Gear prices by tier; Mythic is never sold, only dropped.
-export const GEAR_PRICE = [60, 240, 900, 3000, 9000];
+// Gear follows hero level through Eternal; drops remain an alternative to buying.
+export const GEAR_PRICE = [60, 240, 900, 3000, 9000, 18000, 32000, 50000, 75000, 110000, 160000];
 export const SHOP_SIZE = 6, SHOP_REFRESH = 600;
 // Consumables cost more in later stages, growing a little faster than gold drops (STAGE_GOLD 1.06)
 // so they stay a choice without ever pricing the hero out.
@@ -24,13 +24,13 @@ export const ENHANCE_RATE = [1, 1, 1, .9, .8, .7, .6, .5, .4, .3];
 // From +6 a failed attempt also drops the piece one level, unless a guard stone is used.
 export const DROP_FROM = 6;
 
-// The best tier the hero can wear now, capped below Mythic.
+// The best tier the hero can wear now.
 export function shopTier(level) {let t = 0;for (let i = 0; i < GEAR_PRICE.length; i++) if (level >= REQ_LEVEL[i]) t = i;return t;}
 export function rollStock(level, job, rng) {
   const top = shopTier(level), kinds = job === 'novice' ? ['armor', 'helmet', 'ring'] : ['weapon', 'weapon', 'armor', 'helmet', 'ring'];
   return Array.from({length: SHOP_SIZE}, (_, i) => {
     const kind = i < kinds.length ? kinds[i] : kinds[Math.floor(rng() * kinds.length)];
-    const tier = Math.max(0, top - (rng() < .45 ? 1 : 0));
+    const tier = i < kinds.length ? top : Math.max(0, top - (rng() < .45 ? 1 : 0));
     return {kind, tier, job: kind === 'weapon' ? job : null, price: GEAR_PRICE[tier], sold: false};
   });
 }

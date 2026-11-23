@@ -4,7 +4,7 @@ import {directionFor} from './sprite-layout.js';
 import {TIERS} from './weapons.js';
 import {PETS,petDef,petStats,petUpgradeCost,MAX_PET_LV,PET_HIT_CD,PET_PRICE,PITY,eggPrice,dupeRefund,rollEgg} from './pets.js';
 import {RAID_TIME,RAID_EGGS,RAID_STONES,raidWindow,raidOpen,rollRankGear,raidGearChance,RAID_MIN_SHARE} from './raid.js';
-import {SUPPLIES,BUFFS,SHOP_REFRESH,ENHANCE_RATE,DROP_FROM,rollStock,supplyPrice,refreshPrice} from './shop.js';
+import {SUPPLIES,BUFFS,SHOP_REFRESH,ENHANCE_RATE,DROP_FROM,rollStock,shopTier,supplyPrice,refreshPrice} from './shop.js';
 
 export const CLASSES=[
 {id:'knight',icon:'⚔',name:'นักดาบ',en:'SWORDMASTER',desc:'ฟันกวาดฝูงระยะใกล้ แรงที่สุด อาวุธระดับ Epic ปล่อยคลื่นดาบทะลุ',tag:'ดาบ · ประชิด · โจมตีหนัก'},
@@ -47,6 +47,17 @@ export const SKILLS=[
 {id:'barrage',job:'gunner',kind:'active',icon:'☄',name:'ฝนกระสุน',desc:'ยิงกระสุนถล่มพื้นที่เป้าหมายรัว ๆ',tag:'มือปืน · พื้นที่'},
 {id:'deadeye',job:'gunner',kind:'passive',icon:'◎',name:'ตาเหยี่ยว',desc:'โอกาสคริติคอล (ดาเมจ ×2) +5% ต่อเลเวล',tag:'มือปืน · ติดตัว'},
 {id:'quickdraw',job:'gunner',kind:'passive',icon:'»',name:'มือไว',desc:'โจมตีปกติเร็วขึ้น 8% ต่อเลเวล',tag:'มือปืน · ติดตัว'},
+// Ascended skills give late-game heroes a new use for saved skill points.
+{id:'heavensword',job:'knight',kind:'active',icon:'⚜',name:'ดาบพิพากษาสวรรค์',desc:'ดาบเทพฟาดเป้าหมายและระเบิดรอบจุดกระแทก ดาเมจเพิ่มทุกระดับ',tag:'ขั้นเทพ · ระเบิดศักดิ์สิทธิ์'},
+{id:'dragonstorm',job:'knight',kind:'active',icon:'🐉',name:'พายุมังกรดาบ',desc:'พายุดาบติดตามตัว กวาดศัตรูรอบตัวต่อเนื่อง 3 วินาที',tag:'ขั้นเทพ · รอบตัว · ต่อเนื่อง'},
+{id:'worldsplitter',job:'knight',kind:'active',icon:'✴',name:'ผ่าโลกนิรันดร์',desc:'ฟันคลื่นดาบยักษ์ทะลุศัตรูในแนวและผลักศัตรูรอบตัว',tag:'ขั้นเทพ · แนวตรง · ทะลุ'},
+{id:'starfall',job:'mage',kind:'active',icon:'🌠',name:'ดาราถล่มโลก',desc:'ดาวตกสามระลอกถล่มบริเวณเป้าหมาย ระเบิดกว้างและรุนแรง',tag:'ขั้นเทพ · พื้นที่ · หลายระลอก'},
+{id:'singularity',job:'mage',kind:'active',icon:'🌌',name:'หลุมดำจักรวาล',desc:'เรียกหลุมดำดูดศัตรูและทำดาเมจต่อเนื่อง 4 วินาที',tag:'ขั้นเทพ · ดึงดูด · ต่อเนื่อง'},
+{id:'divinenova',job:'mage',kind:'active',icon:'☀',name:'มหาโนวาสุริยัน',desc:'ระเบิดแสงรอบตัวสองระลอก เผาศัตรูเป็นวงกว้าง',tag:'ขั้นเทพ · รอบตัว · สองระลอก'},
+{id:'orbital',job:'gunner',kind:'active',icon:'🛰',name:'ปืนใหญ่ดาวเทียม',desc:'ยิงลำแสงจากวงโคจรใส่จุดเป้าหมายสามระลอก',tag:'ขั้นเทพ · พื้นที่ · ระดมยิง'},
+{id:'annihilation',job:'gunner',kind:'active',icon:'🚀',name:'ขีปนาวุธล้างสนาม',desc:'ปล่อยจรวดหลายลูกพุ่งเข้าหาศัตรู ระเบิดสร้างดาเมจเป็นวง',tag:'ขั้นเทพ · จรวด · ระเบิด'},
+{id:'railgun',job:'gunner',kind:'active',icon:'⌁',name:'เรลกันนิรันดร์',desc:'ยิงลำแสงพลังงานสองแนวทะลุฝูงศัตรู',tag:'ขั้นเทพ · แนวตรง · ทะลุ'},
+{id:'ascension',kind:'passive',icon:'✵',name:'พลังจุติ',desc:'ดาเมจทุกอย่าง +5% และ HP สูงสุด +25 ต่อระดับ ใช้แต้มที่สะสมต่อยอดได้ถึง 30 ระดับ',tag:'Lv.70 · ทุกอาชีพ · ติดตัว'},
 // Shared long-run passives (formerly endless boost cards).
 {id:'might',kind:'passive',icon:'✊',name:'พลังไร้ขีดจำกัด',desc:'ดาเมจทุกอย่าง +10% ต่อเลเวล',tag:'ทุกอาชีพ · ติดตัว'},
 {id:'vigor',kind:'passive',icon:'♥',name:'หัวใจคริสตัล',desc:'HP สูงสุด +15 ต่อเลเวล',tag:'ทุกอาชีพ · ติดตัว'}];
@@ -55,17 +66,18 @@ const SKILL_META={fire:[3,1],ice:[3,1],spark:[3,3],gust:[3,5],area:[3,4],haste:[
   whirl:[5,10],wave:[5,10],judgement:[5,12],charge:[5,15],quake:[5,20],bladerain:[5,30],ironwill:[5,14],bloodlust:[5,25],
   meteor:[5,10],vortex:[5,10],nova:[5,12],blizzard2:[5,15],thunder:[5,20],beam:[5,30],manaflow:[5,14],arcanemind:[5,25],
   scatter:[5,10],grenade:[5,10],drone:[5,12],rocket:[5,15],mine:[5,20],barrage:[5,30],deadeye:[5,14],quickdraw:[5,25],
+  heavensword:[10,70],dragonstorm:[10,75],worldsplitter:[10,80],starfall:[10,70],singularity:[10,75],divinenova:[10,80],orbital:[10,70],annihilation:[10,75],railgun:[10,80],ascension:[30,70],
   might:[20,8],vigor:[20,8]};
 for(const s of SKILLS){const [max,req]=SKILL_META[s.id];s.max=max;s.req=req;}
 export const BOOSTS=[];
 // Each cast skill has its own cooldown (multiples of the 1.4s base). A longer cooldown hits
 // proportionally harder per cast, so damage per second stays the same. fire/drone run constantly.
 export const SKILL_CD={ice:1,spark:1,gust:1.4,whirl:2,wave:1,judgement:1.8,meteor:2.2,vortex:2.4,nova:1.6,scatter:1,grenade:1.6,
-  charge:1.4,quake:1.8,bladerain:2,blizzard2:2.4,thunder:1.6,beam:1.4,rocket:1.2,mine:2.6,barrage:2};
+  charge:1.4,quake:1.8,bladerain:2,blizzard2:2.4,thunder:1.6,beam:1.4,rocket:1.2,mine:2.6,barrage:2,heavensword:5,dragonstorm:5,worldsplitter:6,starfall:5,singularity:6,divinenova:6,orbital:5,annihilation:5,railgun:6};
 export const BASE_CD=1.4;
 export function maxLevel(skill){return skill.max;}
 // Equipped active skills cast in combat; passives always apply.
-export function activeSlots(job){return job==='novice'?2:4;}
+export function activeSlots(job,level=1){return job==='novice'?2:level>=70?8:4;}
 export function respecCost(level){return Math.round(30*level*level/5+50);}
 // Hero names: two syllables, re-rollable on the class screen.
 const NAME_HEAD=['ไค','ริว','เอล','ซาร์','ลูน','คิระ','มิ','โนวา','เรน','ทิล','อาร์','ซีน','เวล','ฟิน','ไอ','โร'];
@@ -117,7 +129,7 @@ export const GEM_BASE={slime:1,runner:1,archer:2,elite:10,boss:30,brute:3,bomber
 export function evolutions(skills){return {inferno:skills.fire===3&&skills.area>=2,blizzard:skills.ice===3&&skills.haste>=2};}
 
 const SPEED=145,ACCEL=28;
-const SKILL_POSE={whirl:'spin',wave:'slash',judgement:'raise',meteor:'raise',vortex:'thrust',nova:'raise',scatter:'recoil',grenade:'throw',drone:'raise',ice:'thrust',spark:'raise',gust:'spin',charge:'thrust',quake:'slash',bladerain:'raise',blizzard2:'raise',thunder:'raise',beam:'thrust',rocket:'recoil',mine:'throw',barrage:'recoil'};
+const SKILL_POSE={whirl:'spin',wave:'slash',judgement:'raise',meteor:'raise',vortex:'thrust',nova:'raise',scatter:'recoil',grenade:'throw',drone:'raise',ice:'thrust',spark:'raise',gust:'spin',charge:'thrust',quake:'slash',bladerain:'raise',blizzard2:'raise',thunder:'raise',beam:'thrust',rocket:'recoil',mine:'throw',barrage:'recoil',heavensword:'raise',dragonstorm:'spin',worldsplitter:'slash',starfall:'raise',singularity:'raise',divinenova:'raise',orbital:'raise',annihilation:'recoil',railgun:'recoil'};
 const MODS=['swift','shield','burst','giant'];
 
 export class Run{
@@ -135,9 +147,9 @@ emit(type,data={}){this.events.push({type,t:Math.round(this.t*100)/100,...data})
 // Sound cues for the renderer to play; the model stays silent and testable.
 cue(name,arg){if(this.cues.length<48)this.cues.push(arg?{name,arg}:{name});}
 weaponPower(){return this.job==='novice'?1:TIERS[this.weaponTier].power*(1+.08*this.weaponPlus);}
-power(){return this.weaponPower()*(1+.1*(this.skills.might||0))*(1+this.ringBonus);}
+power(){return this.weaponPower()*(1+.1*(this.skills.might||0))*(1+this.ringBonus)*(1+.05*(this.skills.ascension||0));}
 // Skills scale with half the weapon's growth so the weapon stays the main upgrade.
-skillPower(){const weapon=this.weaponPower();return (1+(weapon-1)*.5)*(1+.1*(this.skills.might||0))*(1+this.ringBonus)*(1+.08*(this.skills.arcanemind||0));}
+skillPower(){const weapon=this.weaponPower();return (1+(weapon-1)*.5)*(1+.1*(this.skills.might||0))*(1+this.ringBonus)*(1+.08*(this.skills.arcanemind||0))*(1+.05*(this.skills.ascension||0));}
 // One number for the UI: offence (gear, passives, skill levels) times the square root of toughness.
 combatPower(){const levels=Object.values(this.skills).reduce((a,b)=>a+b,0),offence=this.power()*(1+.012*this.level)*(1+.03*levels),tough=this.maxHp/(1-this.guard);return Math.round(offence*Math.sqrt(tough)*6);}
 eff(){return effStage(this.stage,this.hard);}
@@ -160,23 +172,23 @@ awaken(job,appearance,name){
   this.state='playing';return true;
 }
 // ---- Skills: every level gives a skill point. Points raise skills up to their max (class skills
-// need the class and a hero level). Up to 4 learnt actives sit in slots and cast; passives always apply.
+// need the class and a hero level). Up to 8 learnt actives after Lv.70 sit in slots and cast; passives always apply.
 skill(id){return SKILLS.find(s=>s.id===id);}
 spentPoints(){return Object.values(this.skills).reduce((a,b)=>a+b,0);}
 canLearn(id){const s=this.skill(id);return !!s&&this.skillPoints>0&&(!s.job||s.job===this.job)&&this.level>=s.req&&(this.skills[id]||0)<s.max;}
 learn(id){
   if(!this.canLearn(id))return false;const s=this.skill(id);this.skills[id]=(this.skills[id]||0)+1;this.skillPoints--;
-  if(s.kind==='active'&&!this.slots.includes(id)&&this.slots.length<activeSlots(this.job))this.slots.push(id);
+  if(s.kind==='active'&&!this.slots.includes(id)&&this.slots.length<activeSlots(this.job,this.level))this.slots.push(id);
   this.applyGear();this.checkEvolutions();this.cue('equip');this.emit('skill_learned',{id,level:this.skills[id]});return true;
 }
 checkEvolutions(){const evo=evolutions(this.skills);for(const key of Object.keys(evo))if(evo[key]&&!this.evolved[key]){this.evolved[key]=true;this.emit('evolution_unlocked',{id:key});}}
-equipSkill(id){const s=this.skill(id);if(!s||s.kind!=='active'||!this.skills[id]||this.slots.includes(id)||this.slots.length>=activeSlots(this.job))return false;this.slots.push(id);this.emit('slots_changed');return true;}
+equipSkill(id){const s=this.skill(id);if(!s||s.kind!=='active'||!this.skills[id]||this.slots.includes(id)||this.slots.length>=activeSlots(this.job,this.level))return false;this.slots.push(id);this.emit('slots_changed');return true;}
 unequipSkill(id){if(!this.slots.includes(id))return false;this.slots=this.slots.filter(x=>x!==id);this.emit('slots_changed');return true;}
 // Re-skill: pay gold to get every point back.
 respec(){const cost=respecCost(this.level),spent=this.spentPoints();if(!spent||this.gold<cost)return false;this.gold-=cost;this.skillPoints+=spent;this.skills={};this.slots=[];this.evolved={};this.applyGear();this.cue('portal');this.emit('respec',{cost});return true;}
 // Spends every point: class actives first, then shared actives while slots are free, then passives.
 autoLearn(){
-  const order=s=>(s.kind==='active'?(this.slots.includes(s.id)?100:this.slots.length<activeSlots(this.job)?(s.job?80:50):-1):s.job?40:s.id==='might'?35:s.id==='vigor'?30:20)-s.req*.01+(this.skills[s.id]||0)*.1;
+  const order=s=>(s.id==='ascension'&&(this.skills.ascension||0)<15?300:0)+(s.req>=70&&s.kind==='active'&&this.slots.length<activeSlots(this.job,this.level)?120:0)+(s.kind==='active'?(this.slots.includes(s.id)?100:this.slots.length<activeSlots(this.job,this.level)?(s.job?80:50):-1):s.job?40:s.id==='might'?35:s.id==='vigor'?30:20)-s.req*.01+(this.skills[s.id]||0)*.1;
   let n=0;while(this.skillPoints>0&&n++<400){let best=null;for(const s of SKILLS)if(this.canLearn(s.id)&&order(s)>=0&&(!best||order(s)>order(best)))best=s;if(!best)break;this.learn(best.id);}
 }
 // ---- Stages.
@@ -242,7 +254,7 @@ allyStep(dt){
   }
 }
 // What a party member sees of you; sent to the relay several times a second.
-partyState(){const top=this.cleared[this.hard?'hard':'normal'];return {name:this.name,job:this.job,app:this.appearance,tier:this.weaponTier,armor:this.armorLook??-1,helmet:this.helmetTier??-1,lv:this.level,cp:this.combatPower(),hit:(9+this.level*.8)*this.power(),stage:this.stage,hard:this.hard,cleared:top,raid:this.mode==='raid',x:Math.round(this.p.x),y:Math.round(this.p.y),mv:!!this.moving,atk:this.swing>0,face:this.facing<0?-1:1,dir:this.direction,hp:Math.max(0,this.p.hp/this.maxHp),...this.raidPresence()};}
+partyState(){const top=this.cleared[this.hard?'hard':'normal'];return {name:this.name,job:this.job,app:this.appearance,tier:this.weaponTier,plus:this.weaponPlus|0,armor:this.armorLook??-1,helmet:this.helmetTier??-1,lv:this.level,cp:this.combatPower(),hit:(9+this.level*.8)*this.power(),stage:this.stage,hard:this.hard,cleared:top,raid:this.mode==='raid',x:Math.round(this.p.x),y:Math.round(this.p.y),mv:!!this.moving,atk:this.swing>0,face:this.facing<0?-1:1,dir:this.direction,hp:Math.max(0,this.p.hp/this.maxHp),...this.raidPresence()};}
 raidPresence(){const b=this.raid&&this.enemies.find(e=>e.raid);return b?{rw:this.raidJoined,dmg:Math.round(this.raid.dmg),rx:Math.round(this.p.x-b.x),ry:Math.round(this.p.y-b.y)}:{};}
 // Travel to a friend's stage: farm it when already cleared, otherwise challenge it if allowed.
 canHelp(stage,hard=false){return !!stage&&this.mode!=='raid'&&(stage<=this.cleared[hard?'hard':'normal']||this.canChallenge(stage,hard));}
@@ -317,7 +329,7 @@ applyGear(){
   if(w&&w.job!==this.job)this.equipped.weapon=null;
   const weapon=this.gearItem('weapon');this.weaponTier=weapon?weapon.tier:0;this.weaponPlus=weapon?weapon.plus:0;
   this.armorTier=a?a.tier:0;this.helmetTier=h?h.tier:-1;this.armorLook=a?a.tier:-1;this.guard=Math.min(.6,(a?itemStats(a).guard:0)+.04*(this.skills.ironwill||0));this.ringBonus=r?itemStats(r).dmg:0;
-  const hp=100+15*(this.skills.vigor||0)+(a?itemStats(a).hp:0)+(h?itemStats(h).hp:0),gain=hp-this.maxHp;
+  const hp=100+25*(this.skills.ascension||0)+15*(this.skills.vigor||0)+(a?itemStats(a).hp:0)+(h?itemStats(h).hp:0),gain=hp-this.maxHp;
   this.maxHp=hp;this.p.hp=Math.max(1,Math.min(hp,this.p.hp+Math.max(0,gain)));
 }
 addItem({kind,tier,job}){
@@ -357,7 +369,7 @@ enhance(slot,{luck=false,guard=false}={}){
   this.cue('hurt');this.emit('enhance_failed',{slot,plus:item.plus,name:itemName(item),dropped:risky&&!saved});return risky&&!saved?'drop':'fail';
 }
 // ---- Town shop. Stock is rolled on first visit and refreshed free every 10 minutes of play.
-ensureShop(){if(!this.shopStock.length||this.shopClock<=0){this.shopStock=rollStock(this.level,this.job,this.rng);this.shopClock=SHOP_REFRESH;}return this.shopStock;}
+ensureShop(){if(!this.shopStock.length||this.shopClock<=0||Math.max(...this.shopStock.map(s=>s.tier))<shopTier(this.level)){this.shopStock=rollStock(this.level,this.job,this.rng);this.shopClock=SHOP_REFRESH;}return this.shopStock;}
 refreshShop(){const cost=refreshPrice(this.stage);if(this.gold<cost)return false;this.gold-=cost;this.shopStock=rollStock(this.level,this.job,this.rng);this.shopClock=SHOP_REFRESH;this.cue('coin');return true;}
 buyGear(index){
   const offer=this.shopStock[index];if(!offer||offer.sold||this.gold<offer.price||this.bag.length>=BAG_MAX)return false;
@@ -466,8 +478,10 @@ clearStage(){
   else{if(!hard&&first)this.emit('hard_unlocked');this.farmAt(LAST_STAGE,hard);}
 }
 end(reason){if(this.state==='ended')return;this.state='ended';this.cue('death');this.result=reason;this.emit('run_end',{reason,kills:this.kills,level:this.level,stage:this.stage,weaponTier:this.weaponTier,armorTier:this.armorTier,build:{...this.skills}});}
+// Normal world-six mobs soften by 35%; boss tuning, Hard and raids keep their own curves.
+lateMobDamageScale(boss){return !this.hard&&this.mode!=='raid'&&this.stage>=51&&!(boss?.damageScale<1) ? .65 : 1;}
 damage(n,source){
-  if(this.p.inv>0||this.state!=='playing')return;const boss=this.enemies.find(e=>e.type==='boss'&&e.hp>0),berserk=this.enemies.find(e=>e.berserk&&e.hp>0);n*=STAGE_HIT**(this.eff()-1)*(1-this.guard)*(boss?.damageScale??1)*(berserk?berserk.berserkScale??2:1)*(this.mode==='raid'?.5:1);
+  if(this.p.inv>0||this.state!=='playing')return;const boss=this.enemies.find(e=>e.type==='boss'&&e.hp>0),berserk=this.enemies.find(e=>e.berserk&&e.hp>0);n*=STAGE_HIT**(this.eff()-1)*(1-this.guard)*(boss?.damageScale??1)*(berserk?berserk.berserkScale??2:1)*(this.mode==='raid'?.5:1)*this.lateMobDamageScale(boss);
   this.p.hp=Math.max(0,this.p.hp-n);this.p.inv=.8;this.cue('hurt');this.emit('damage_taken',{source,damage:n});this.effects.push({kind:'hurt',x:this.p.x,y:this.p.y,life:.25,max:.25});
   if(this.p.hp<=0){if(this.mode==='raid')this.finishRaid(true);else this.retreat();}
 }
@@ -476,7 +490,7 @@ nearest(range,from=this.p){let best=null,bestD=range;for(const e of this.enemies
 within(r,from=this.p){return this.enemies.filter(e=>e.hp>0&&Math.hypot(e.x-from.x,e.y-from.y)<r+e.r*.5);}
 closestList(r,count){return this.within(r).sort((a,b)=>Math.hypot(a.x-this.p.x,a.y-this.p.y)-Math.hypot(b.x-this.p.x,b.y-this.p.y)).slice(0,count);}
 later(t,fn){this.delayed.push({t,fn});}
-blast(x,y,r,damage,lv=1,style='fire'){this.cue(style==='holy'?'smite':'slam',{volume:.7});this.effects.push({kind:'explosion',x,y,r,lv,style,life:.4+.04*lv,max:.4+.04*lv});for(const e of this.within(r,{x,y}))this.hit(e,damage);}
+blast(x,y,r,damage,lv=1,style='fire',skill=null){this.cue(style==='holy'?'smite':'slam',{volume:.7});this.effects.push({kind:'explosion',x,y,r,lv,style,skill,life:.4+.04*lv,max:.4+.04*lv});for(const e of this.within(r,{x,y}))this.hit(e,damage);}
 fire(x,y,angle,speed,props){this.shots.push({x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,friendly:true,hit:new Set(),...props});}
 
 move(dt,input){
@@ -549,6 +563,15 @@ castSkills(area,ids=this.slots,mult=1){
   if(s.rocket){const lv=s.rocket,e=this.nearest(450);if(e){this.cue('shot',{heavy:true});const a=Math.atan2(e.y-(p.y-30),e.x-p.x),n=1+Math.floor(lv/2);for(let i=0;i<n;i++)this.fire(p.x,p.y-30,a+(i-(n-1)/2)*.16,460,{life:1,style:'rocket',lv,tier:this.weaponTier,pierce:0,damage:(50+20*lv)*sp,blast:(60+6*lv)*area});}}
   if(s.mine){const lv=s.mine;this.cue('swing',{volume:.5});for(let i=0;i<lv+1;i++){const a=this.rng()*Math.PI*2,d=60+this.rng()*70;this.zones.push({kind:'mine',lv,x:p.x+Math.cos(a)*d,y:p.y+Math.sin(a)*d*.7,r:16,trigger:(70+6*lv)*area,dmg:(60+25*lv)*sp,life:8,max:8});}}
   if(s.barrage){const lv=s.barrage,e=this.nearest(400);if(e){this.cue('shot',{heavy:true});const x=e.x,y=e.y;for(let k=0;k<5+2*lv;k++)this.later(k*.08,()=>this.blast(x+(this.rng()-.5)*110,y+(this.rng()-.5)*70,40*area,(18+8*lv)*sp,Math.min(lv,3),'fire'));}}
+
+  // Ascended casts use bounded volleys and the existing renderer's large effects.
+  if(s.heavensword||s.starfall||s.orbital){const id=s.heavensword?'heavensword':s.starfall?'starfall':'orbital',lv=s[id],e=this.nearest(600);if(e){this.cue('holy');const x=e.x,y=e.y,n=id==='heavensword'?1:3;for(let k=0;k<n;k++){const delay=.35+k*.25;this.effects.push({kind:id==='starfall'?'meteor':'blade',skill:id,lv:5,x,y,r:160*area,life:delay,max:delay});this.later(delay,()=>this.blast(x,y,(140+5*lv)*area,(id==='heavensword'?220+45*lv:95+20*lv)*sp,5,id==='starfall'?'fire':'holy',id));}}}
+  if(s.dragonstorm){const lv=s.dragonstorm;this.cue('slash');this.zones.push({kind:'whirl',skill:'dragonstorm',lv:5,follow:true,x:p.x,y:p.y,r:(185+5*lv)*area,life:3,max:3,dps:(90+18*lv)*sp});}
+  if(s.singularity){const lv=s.singularity,e=this.nearest(600);if(e){this.cue('spell');this.zones.push({kind:'vortex',skill:'singularity',lv:5,x:e.x,y:e.y,r:(180+5*lv)*area,life:4,max:4,dps:(65+14*lv)*sp,pull:150});}}
+  if(s.divinenova){const lv=s.divinenova;this.cue('holy');for(let k=0;k<2;k++)this.later(k*.35,()=>{const r=(260+8*lv)*area;this.effects.push({kind:'nova',skill:'divinenova',lv:5,x:this.p.x,y:this.p.y,r,life:.7,max:.7});for(const e of this.within(r))this.hit(e,(150+30*lv)*sp);});}
+  if(s.worldsplitter||s.railgun){const lv=s.worldsplitter||s.railgun,e=this.nearest(750);if(e){this.cue(s.worldsplitter?'slash':'shot');const a=Math.atan2(e.y-p.y,e.x-p.x);for(let k=0;k<(s.railgun?2:1);k++)this.line(p.x,p.y,a+(k-.5)*(s.railgun?.08:0),750*area,65+3*lv,(250+45*lv)*sp,5,s.railgun?'#9fffff':'#ffe6a0',s.railgun?'railgun':'worldsplitter');if(s.worldsplitter)for(const e of this.within(220*area)){const a=Math.atan2(e.y-p.y,e.x-p.x);e.x+=Math.cos(a)*70;e.y+=Math.sin(a)*70;}}}
+  if(s.annihilation){const lv=s.annihilation,e=this.nearest(650);if(e){this.cue('shot',{heavy:true});const a=Math.atan2(e.y-p.y,e.x-p.x);for(let k=0;k<5;k++)this.fire(p.x,p.y-20,a+(k-2)*.1,520,{life:1.5,style:'rocket',skill:'annihilation',lv:5,tier:this.weaponTier,pierce:0,damage:(65+14*lv)*sp,blast:150*area});}}
+
 }
 // Full cooldown of a cast skill in seconds (before haste), shortened by mana flow.
 skillCooldown(id){return BASE_CD*SKILL_CD[id]*(1-.06*(this.skills.manaflow||0));}
@@ -563,8 +586,8 @@ tickSkills(dt,area){
   });
 }
 // Straight-line strike (charge, beam): hits everything within `width` of the segment.
-line(x,y,a,len,width,damage,lv,color){
-  const tx=x+Math.cos(a)*len,ty=y+Math.sin(a)*len;this.effects.push({kind:'dashline',x,y,tx,ty,lv,width,color,life:.35,max:.35});
+line(x,y,a,len,width,damage,lv,color,skill=null){
+  const tx=x+Math.cos(a)*len,ty=y+Math.sin(a)*len;this.effects.push({kind:'dashline',x,y,tx,ty,lv,width,color,skill,life:.35,max:.35});
   for(const e of this.enemies){if(e.hp<=0)continue;const u=Math.max(0,Math.min(1,((e.x-x)*(tx-x)+(e.y-y)*(ty-y))/(len*len)));if(Math.hypot(e.x-(x+(tx-x)*u),e.y-(y+(ty-y)*u))<width+e.r)this.hit(e,damage);}
 }
 

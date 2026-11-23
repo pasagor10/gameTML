@@ -5,9 +5,9 @@ import {TIERS,REQ_LEVEL,weaponName} from '../src/weapons.js';
 import {directionFor,animationFrame} from '../src/sprite-layout.js';
 const advance=(r,seconds)=>{for(let i=0;i<seconds*20&&r.state==='playing';i++)r.update(.05);};
 
-test('only swordmaster, sorcerer and gunner are playable; each has six actives and two passives of its own',()=>{
+test('only swordmaster, sorcerer and gunner are playable; each has nine actives and two passives of its own',()=>{
   assert.deepEqual(CLASSES.map(c=>c.id),['knight','mage','gunner']);
-  for(const c of CLASSES){const own=SKILLS.filter(s=>s.job===c.id);assert.equal(own.filter(s=>s.kind==='active').length,6);assert.equal(own.filter(s=>s.kind==='passive').length,2);}
+  for(const c of CLASSES){const own=SKILLS.filter(s=>s.job===c.id);assert.equal(own.filter(s=>s.kind==='active').length,9);assert.equal(own.filter(s=>s.kind==='passive').length,2);}
   for(const s of SKILLS){assert.ok(s.max>=3&&s.req>=1,s.id);}
 });
 test('class skills open after awakening and other classes never get them',()=>{
@@ -141,7 +141,7 @@ test('town shop sells gear, potions, buffs and stones for gold',async()=>{
   const i=stock.findIndex(o=>o.kind==='weapon'),before=r.gold,item=r.buyGear(i);assert.ok(item);assert.equal(r.gold,before-stock[i].price);assert.equal(r.buyGear(i),false,'sold out');
   assert.ok(r.buySupply('potion',5));assert.equal(r.supplies.potion,5);assert.ok(r.buySupply('xp'));assert.equal(r.buffs.xp,300);
   assert.ok(r.buySupply('luck'));assert.equal(r.supplies.luck,1);assert.equal(r.buySupply('nope'),false);
-  const g=r.gold;assert.ok(r.refreshShop());assert.equal(r.gold,g-refreshPrice(1));assert.ok(supplyPrice('potion',3)>supplyPrice('potion',1));assert.equal(GEAR_PRICE.length,5);
+  const g=r.gold;assert.ok(r.refreshShop());assert.equal(r.gold,g-refreshPrice(1));assert.ok(supplyPrice('potion',3)>supplyPrice('potion',1));assert.equal(GEAR_PRICE.length,TIERS.length);
   // EXP buff doubles crystals; the potion drinks itself at low HP.
   r.gems=[{x:r.p.x,y:r.p.y,value:3}];const xp=r.xpEarned;r.update(.05);assert.equal(r.xpEarned-xp,6);
   r.p.hp=r.maxHp*.2;r.update(.05);assert.equal(r.supplies.potion,4);assert.ok(r.p.hp>r.maxHp*.6);

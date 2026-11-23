@@ -85,14 +85,57 @@ export function loadWeaponArt() {
 }
 
 // Origin = the hand grip; the weapon points up (negative y). Sized for the in-game hero (~150px tall).
-export function drawWeapon(c, job, tier = 0, time = 0, {attacking = false} = {}) {
+export function drawWeapon(c, job, tier = 0, time = 0, {attacking = false, plus = 0} = {}) {
   tier = Math.max(0, Math.min(TIERS.length - 1, tier));const t = TIERS[tier], gun = job === 'gunner';
   const art = bitmap(job === 'novice' || !PAINT_BOUNDS[job] ? 'novice' : job, job === 'novice' ? 0 : tier);
   c.save();
   if (tier >= 1 && job !== 'novice') glowDot(c, gun ? 18 : 0, gun ? -6 : job === 'mage' ? -64 : -30, 16 + Math.min(tier, 8) * 4, `${tier === 5 ? '#ffffff' : t.glow}${tier >= 4 ? '88' : '50'}`);
+  if (art && plus > 0) plusAura(c, art, job === 'novice' ? 'novice' : job, tier, plus, time);
   if (art) c.drawImage(art.canvas, art.x, art.y, art.w, art.h);
+  if (art && plus >= 7) plusSparks(c, art, plus, time);
   if (gun && attacking) glowDot(c, GUN_TIP[artTier(tier)] + 4, -5, 10 + Math.min(tier, 7) * 2, '#fff4b0');
   if (job !== 'novice') {c.save();if (gun) c.translate(20, 14);else if (job === 'mage') c.translate(0, -36);sparkle(c, tier, time, gun ? 22 : 26);c.restore();}
+  c.restore();
+}
+
+// ---- Enhancement (+N) glow on the held weapon: a soft silhouette glow cached per weapon and
+// level band, pulsing behind the art. +1-3 white, +4-6 blue, +7-9 gold with sparks, +10 rainbow.
+const PLUS_BANDS = [[1, '#ffffff', .6], [4, '#4ab4ff', .9], [7, '#ffc23a', 1], [10, '#ff8ae0', 1]];
+const plusBand = plus => PLUS_BANDS.filter(([from]) => plus >= from).pop();
+const auraCache = new Map(), AURA_PAD = 10;
+function auraBitmap(key, art, color, blur, layers) {
+  let m = auraCache.get(key);if (m) return m;
+  m = document.createElement('canvas');const pad = AURA_PAD * CACHE_SCALE;m.width = art.canvas.width + pad * 2;m.height = art.canvas.height + pad * 2;
+  const c = m.getContext('2d'), far = m.width * 2;
+  // Draw only the shadow: the art itself lands off-canvas, its blurred silhouette lands at the pad.
+  // Stacking layers turns a faint blur into a solid glow.
+  c.shadowColor = color;c.shadowBlur = blur * CACHE_SCALE;c.shadowOffsetX = far;
+  for (let i = 0; i < layers; i++) c.drawImage(art.canvas, pad - far, pad);
+  auraCache.set(key, m);return m;
+}
+function plusAura(c, art, job, tier, plus, time) {
+  const [from, color, strength] = plusBand(plus);
+  const pulse = .7 + .3 * Math.sin(time * (from >= 7 ? 5 : 3.2));
+  const put = (col, alpha) => {
+    const box = [art.x - AURA_PAD, art.y - AURA_PAD, art.w + AURA_PAD * 2, art.h + AURA_PAD * 2];
+    c.globalCompositeOperation = 'lighter';c.globalAlpha = alpha * pulse;c.drawImage(auraBitmap(`${job}-${tier}-${col}-halo`, art, col, from >= 7 ? 8 : from >= 4 ? 6 : 4.5, 6), ...box);c.globalCompositeOperation = 'source-over';
+    c.globalAlpha = Math.min(1, alpha * (.6 + .4 * pulse));c.drawImage(auraBitmap(`${job}-${tier}-${col}-rim`, art, col, 1.3, 5), ...box);
+  };
+  c.save();
+  if (from >= 10) { // cycles pink -> cyan -> gold
+    const cols = ['#ff6ad0', '#4ae0ff', '#ffd23a'], ph = (time * .8) % 3, i = Math.floor(ph), f = ph - i;
+    put(cols[i], 1 - f);put(cols[(i + 1) % 3], f);
+  }
+  else put(color, strength);
+  c.restore();
+}
+function plusSparks(c, art, plus, time) {
+  const n = plus >= 10 ? 7 : 4;c.save();c.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < n; i++) {
+    const ph = (time * .9 + i / n) % 1, x = art.x + art.w * (.2 + .6 * ((i * .618) % 1)) + Math.sin(time * 3 + i) * 2, y = art.y + art.h * (1 - ph), r = 1.2 + 1.6 * Math.sin(ph * Math.PI);
+    c.globalAlpha = Math.sin(ph * Math.PI);c.fillStyle = plus >= 10 ? rainbow(time, i * 50) : i % 2 ? '#fff6c0' : '#ffcf4a';
+    c.beginPath();c.moveTo(x, y - r * 2);c.lineTo(x + r * .5, y - r * .5);c.lineTo(x + r * 2, y);c.lineTo(x + r * .5, y + r * .5);c.lineTo(x, y + r * 2);c.lineTo(x - r * .5, y + r * .5);c.lineTo(x - r * 2, y);c.lineTo(x - r * .5, y - r * .5);c.closePath();c.fill();
+  }
   c.restore();
 }
 

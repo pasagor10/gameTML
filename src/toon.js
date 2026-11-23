@@ -7,14 +7,40 @@ import {RUN_STRIDE} from './sprite-layout.js';
 import {TIERS, drawWeapon} from './weapons.js';
 
 const OUT = '#2b2133';
-function E(c, x, y, rx, ry, fill, stroke = OUT, width = 1.4) {
-  c.beginPath();c.ellipse(x, y, Math.abs(rx), Math.abs(ry), 0, 0, Math.PI * 2);
-  if (fill) {c.fillStyle = fill;c.fill();}
+// Default outline width; the hero raises it while drawing so it reads as a bold sticker-like chibi.
+let LW = 1.4;
+// Soft cel shading: while SHADE is on, a solid #rrggbb fill becomes a gradient lit from the top-left
+// (lighter highlight -> base colour -> darker shadow). Gradients are cached by colour and rounded
+// box, so a moving hero reuses a small set instead of allocating new ones every frame.
+let SHADE = false;
+const shadeCache = new Map();
+// Fixed-coordinate gradients (skin, hair) are built once and reused.
+const gradCache = new Map();
+const grad = (key, make) => {let g = gradCache.get(key);if (!g) {g = make();gradCache.set(key, g);}return g;};
+const mix = (hex, to, t) => {const n = parseInt(hex.slice(1), 16), r = n >> 16, g = n >> 8 & 255, b = n & 255;
+  return `rgb(${Math.round(r + (to[0] - r) * t)},${Math.round(g + (to[1] - g) * t)},${Math.round(b + (to[2] - b) * t)})`;};
+function shaded(c, fill, x0, y0, x1, y1) {
+  if (!SHADE || typeof fill !== 'string' || fill.length !== 7 || fill[0] !== '#' || y1 - y0 < 3.5) return fill;
+  const k = `${fill}|${Math.round(x0)}|${Math.round(y0)}|${Math.round(x1)}|${Math.round(y1)}`;
+  let g = shadeCache.get(k);
+  if (!g) {
+    if (shadeCache.size > 3000) shadeCache.clear();
+    g = c.createLinearGradient(x0 + (x1 - x0) * .2, y0, x0 + (x1 - x0) * .75, y1);
+    g.addColorStop(0, mix(fill, [255, 252, 240], .32));g.addColorStop(.45, fill);g.addColorStop(1, mix(fill, [40, 24, 70], .3));
+    shadeCache.set(k, g);
+  }
+  return g;
+}
+function E(c, x, y, rx, ry, fill, stroke = OUT, width = LW) {
+  rx = Math.abs(rx);ry = Math.abs(ry);
+  c.beginPath();c.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+  if (fill) {c.fillStyle = shaded(c, fill, x - rx, y - ry, x + rx, y + ry);c.fill();}
   if (stroke) {c.strokeStyle = stroke;c.lineWidth = width;c.stroke();}
 }
-function P(c, pts, fill, stroke = OUT, width = 1.4) {
-  c.beginPath();pts.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y));c.closePath();
-  if (fill) {c.fillStyle = fill;c.fill();}
+function P(c, pts, fill, stroke = OUT, width = LW) {
+  c.beginPath();let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  pts.forEach(([x, y], i) => {i ? c.lineTo(x, y) : c.moveTo(x, y);if (x < x0) x0 = x;if (x > x1) x1 = x;if (y < y0) y0 = y;if (y > y1) y1 = y;});c.closePath();
+  if (fill) {c.fillStyle = shaded(c, fill, x0, y0, x1, y1);c.fill();}
   if (stroke) {c.strokeStyle = stroke;c.lineWidth = width;c.lineJoin = 'round';c.stroke();}
 }
 function L(c, x, y, x2, y2, color, width, cap = 'round') {c.beginPath();c.moveTo(x, y);c.lineTo(x2, y2);c.strokeStyle = color;c.lineWidth = width;c.lineCap = cap;c.stroke();}
@@ -26,23 +52,28 @@ function glowDot(c, x, y, r, color) {
 }
 
 // ---------------------------------------------------------------- hero
-const SKIN = '#ffe2c6', SKIN_DARK = '#f0b996';
+const SKIN = '#ffe4cc', SKIN_DARK = '#f6b99a';
+// Bright, saturated outfits in the style of the TILMO key art.
 const OUTFIT = {
-  novice: {top: '#8a6a4a', top2: '#5e4630', pants: '#3c3a4f', boots: '#6b4a32', cape: '#d04a58', sleeve: '#8a6a4a'},
-  knight: {top: '#3b5f9a', top2: '#24406e', pants: '#2b3550', boots: '#8d9bb0', cape: '#d04a58', sleeve: '#d8e2ee', plate: '#e4ebf3', plate2: '#93a2b8'},
-  mage: {top: '#6a4bb0', top2: '#3d2a70', pants: '#2e2450', boots: '#4a3570', cape: '#6a4bb0', sleeve: '#7d5cc4', hat: '#5a3fa0', hat2: '#2f2160'},
-  gunner: {top: '#2d8a80', top2: '#185a54', pants: '#3a3428', boots: '#6b4a32', cape: '#2d8a80', sleeve: '#2d8a80', vest: '#8a5a32', hat: '#8a5a32', hat2: '#5a3a20'}
+  novice: {top: '#b07a48', top2: '#6e4a2c', pants: '#3a4a8a', boots: '#7a4e30', cape: '#e8434f', sleeve: '#b07a48'},
+  knight: {top: '#3f74d0', top2: '#24479a', pants: '#2c3c78', boots: '#9aa8c2', cape: '#e8434f', sleeve: '#dfe9f6', plate: '#eef4fb', plate2: '#9fb0c8'},
+  mage: {top: '#7b55da', top2: '#43298c', pants: '#33246a', boots: '#56389a', cape: '#7b55da', sleeve: '#8c66e6', hat: '#6a46cc', hat2: '#33207a'},
+  gunner: {top: '#25a896', top2: '#13685c', pants: '#4a3a2a', boots: '#7a4e30', cape: '#25a896', sleeve: '#25a896', vest: '#a8683a', hat: '#a8683a', hat2: '#683e1e'}
 };
-const HAIR = {a: ['#f1f4fb', '#9aa6c4'], b: ['#f3e6f0', '#b49ab8']};
+const HAIR = {a: ['#f4f6fd', '#8e9cc4'], b: ['#fbe8f3', '#b68ab8']};
+const EYE = {mage: ['#4a2aa8', '#a98cff'], gunner: ['#0e6a5e', '#4fe0c4'], other: ['#1a4fa8', '#5cc6ff']};
 export const HERO_TOON_SCALE = 1.45;
+// Chibi proportions: the head (and everything worn on it) is enlarged around the neck.
+const HEAD_SCALE = 1.3, NECK_Y = -32;
 
 export function drawToonHero(c, x, y, o = {}) {
-  const {time = 0, moving = false, job = 'novice', appearance = 'a', inv = 0, direction = 'se', distance, attacking = false, tier = 0, pose = null, armor = -1, helmet = -1} = o;
+  const {time = 0, moving = false, job = 'novice', appearance = 'a', inv = 0, direction = 'se', distance, attacking = false, tier = 0, plus = 0, pose = null, armor = -1, helmet = -1} = o;
   const left = ['sw', 'w', 'nw'].includes(direction), back = ['n', 'ne', 'nw'].includes(direction);
   const phase = moving ? (distance !== undefined ? distance / RUN_STRIDE * Math.PI * 2 : time * 13) : 0;
   const sw = moving ? Math.sin(phase) : 0, bob = moving ? -Math.abs(Math.cos(phase)) * 3 : Math.sin(time * 3) * 1.1;
   const fit = OUTFIT[job] || OUTFIT.novice, accent = job === 'novice' ? '#ffd56a' : (tier === 5 ? '#ffd8f6' : TIERS[tier].color);
   const S = HERO_TOON_SCALE;
+  LW = 1.9;SHADE = true;
   c.save();c.translate(x, y);
   E(c, 0, 1, 22, 7.5, '#10303055', null);
   const auraLv = job === 'novice' ? 0 : tier, auraCol = tier === 5 ? `hsl(${(time * 80) % 360} 95% 72%)` : accent;
@@ -72,7 +103,7 @@ export function drawToonHero(c, x, y, o = {}) {
     if (wr !== null) c.rotate(wr);
     else if (job === 'gunner') c.rotate(attacking ? -.18 : .05);
     else c.rotate(attacking ? (job === 'mage' ? -.25 : -1.1) : (job === 'mage' ? .08 : .35));
-    drawWeapon(c, job, tier, time, {attacking});c.restore();
+    drawWeapon(c, job, tier, time, {attacking, plus});c.restore();
   };
   if (back) weapon();
   // Cape / coat tails / long hair behind the body (in front of it when seen from behind).
@@ -82,21 +113,30 @@ export function drawToonHero(c, x, y, o = {}) {
     if (back) P(c, [[-4, -31], [4, -31], [6 + flutter * .8, -13], [1, -16], [-3 + flutter * .8, -11]], scarf, scarfDark, 1.2);
     else P(c, [[-5, -33], [4, -33], [-12 - flutter * 1.2, -27], [-25 - flutter * 2, -24 + flutter * .6], [-17 - flutter, -31]], scarf, scarfDark, 1.2);
     if (armor === 5) for (const s of [-1, 1]) P(c, [[s * 6, -30], [s * 26, -46 - flutter], [s * 30, -30], [s * 22, -20], [s * 8, -22]], '#fff0ff', '#a05ac8', 1.2);
-    if (appearance === 'b') {P(c, [[-15, -54], [-21, -34], [-17, -18], [-8, -26], [8, -26], [17, -18], [21, -34], [15, -54]], HAIR.b[0], HAIR.b[1]);
-      P(c, [[12, -58], [26, -52 + flutter], [30, -36 + flutter], [22, -42], [14, -48]], HAIR.b[0], HAIR.b[1]);}
+    if (appearance === 'b') { // long, soft wavy hair falling behind the shoulders
+      const [h0, h1] = HAIR.b, f = flutter * .5;
+      const g = grad('longHair', () => {const lg = c.createLinearGradient(0, -60, 0, -16);lg.addColorStop(0, '#ffffff');lg.addColorStop(.35, h0);lg.addColorStop(1, h1);return lg;});
+      c.beginPath();c.moveTo(-20, -58);c.bezierCurveTo(-27, -46, -25, -30, -23 + f, -19);
+      c.quadraticCurveTo(-19 + f, -14, -16 + f, -19);c.quadraticCurveTo(-12, -13, -8, -19);c.quadraticCurveTo(-4, -14, 0, -19);
+      c.quadraticCurveTo(4, -14, 8, -19);c.quadraticCurveTo(12, -13, 16 + f, -19);c.quadraticCurveTo(19 + f, -14, 23 + f, -19);
+      c.bezierCurveTo(25, -30, 27, -46, 20, -58);c.closePath();
+      c.fillStyle = g;c.fill();c.strokeStyle = h1;c.lineWidth = LW;c.lineJoin = 'round';c.stroke();c.strokeStyle = OUT;c.lineWidth = LW * .55;c.stroke();
+      c.lineCap = 'round';c.strokeStyle = h1;c.lineWidth = 1;
+      for (const s of [-1, 1]) {c.beginPath();c.moveTo(s * 20, -46);c.quadraticCurveTo(s * 22, -34, s * 18.5 + f, -22);c.stroke();}
+    }
   };
   if (!back) behind();
   // Legs: alternate lift and swing with the stride.
   for (const s of [-1, 1]) {
     const lift = Math.max(0, s * sw) * 4, fx = s * 5 + s * sw * 4;
-    limb(c, s * 5, -14, fx, -3 - lift, fit.pants, 5.5);
-    E(c, fx + 1.5, -1.5 - lift, 4.6, 3, fit.boots);E(c, fx + 2.6, -2.6 - lift, 1.8, .9, '#ffffff55', null);
+    limb(c, s * 5, -14, fx, -3 - lift, fit.pants, 7);L(c, s * 5 - 1.6, -13, fx - 1.6, -5 - lift, '#ffffff30', 1.6);
+    E(c, fx + 1.5, -1.8 - lift, 5.8, 3.8, fit.boots);E(c, fx + 3, -3.6 - lift, 2.2, 1.1, '#ffffffa0', null);
     L(c, fx - 2.2, -5 - lift, fx + 3.2, -5 - lift, job === 'knight' ? fit.plate2 : fit.top2, 2.2);
     if (job === 'knight') {const kx = (s * 5 + fx) / 2, ky = (-14 + -3 - lift) / 2;E(c, kx, ky, 3, 2.6, fit.plate, OUT, 1);E(c, kx - .6, ky - .8, 1, .7, '#ffffff99', null);}
   }
   // Back arm.
   const cuff = (x1, y1, x2, y2) => {const t = .78;E(c, x1 + (x2 - x1) * t, y1 + (y2 - y1) * t, 3.2, 3.2, job === 'knight' ? fit.plate2 : fit.top2, OUT, 1);};
-  const backArm = () => {limb(c, -10, -28, bx, by, fit.sleeve, 5);cuff(-10, -28, bx, by);E(c, bx, by + 1, 2.8, 2.8, glove);if (pk === 'raise') glowDot(c, bx, by, 9, `${accent}cc`);};
+  const backArm = () => {limb(c, -10, -28, bx, by, fit.sleeve, 6.2);cuff(-10, -28, bx, by);E(c, bx, by + 1, 3.4, 3.4, glove);if (pk === 'raise') glowDot(c, bx, by, 9, `${accent}cc`);};
   if (!back) backArm();
   // Torso by class.
   if (job === 'mage') {
@@ -118,25 +158,42 @@ export function drawToonHero(c, x, y, o = {}) {
   if (armor >= 0) wornArmor(c, armor, time);
   if (job === 'gunner' || job === 'novice') {E(c, -9, -12.5, 3, 2.6, '#7a5230', OUT, 1);L(c, -10.5, -13.5, -7.5, -13.5, '#c89a5a', 1);}
   // In back view both arms hang under the cape, so they go on before it.
-  if (back) {backArm();limb(c, 10, -28, 14 + sw * 4, -17, fit.sleeve, 5);E(c, 14 + sw * 4, -16, 2.8, 2.8, glove);}
+  if (back) {backArm();limb(c, 10, -28, 14 + sw * 4, -17, fit.sleeve, 6.2);E(c, 14 + sw * 4, -16, 3.4, 3.4, glove);}
   // Scarf wrapped at the neck.
   P(c, [[-10, -32], [10, -32], [9, -27], [-9, -27]], scarf, scarfDark, 1.1);if (!back) {P(c, [[4, -28], [10, -18 + flutter * .3], [6, -17], [1, -27]], scarf, scarfDark, 1);E(c, 4, -28.5, 2.8, 2.4, scarf, scarfDark, 1);}
-  // Head.
+  // Head: drawn enlarged around the neck so hats and helmets scale with it.
+  const headOn = () => {c.save();c.translate(0, NECK_Y);c.scale(HEAD_SCALE, HEAD_SCALE);c.translate(0, -NECK_Y);};
+  headOn();
   const fx = back ? 0 : 1.5;
-  E(c, 0, -46, 17, 15.5, SKIN);
+  const skin = grad('skin', () => {const g = c.createRadialGradient(-6, -54, 3, 0, -46, 20);g.addColorStop(0, '#fff3e6');g.addColorStop(.6, SKIN);g.addColorStop(1, SKIN_DARK);return g;});
+  E(c, 0, -46, 17, 15.5, skin);
   const [hair, hairDark] = HAIR[appearance] || HAIR.a;
+  const hairFill = grad(`hair${appearance}`, () => {const g = c.createLinearGradient(0, -66, 0, -36);g.addColorStop(0, '#ffffff');g.addColorStop(.45, hair);g.addColorStop(1, hairDark);return g;});
   if (back) {
-    E(c, 0, -48, 17.5, 15.5, hair, hairDark);
-    P(c, [[-18, -46], [-19, -56], [-12, -64], [-4, -61], [3, -66], [11, -62], [18, -56], [19, -46], [14, -36], [6, -40], [0, -34], [-6, -40], [-14, -36]], hair, hairDark);
-    behind();
+    hairBack(c, hairFill, hairDark);
+    c.restore();behind();headOn();
   } else {
-    // Face: big anime eyes, blush, small mouth.
-    for (const s of [-1, 1]) {E(c, fx + s * 6, -44, 3.4, 4.4, '#2b2f4a', null);E(c, fx + s * 6, -43, 2.4, 3, job === 'mage' ? '#7a5ad0' : job === 'gunner' ? '#2a9a8a' : '#3a8cd0', null);E(c, fx + s * 6 - 1, -45.5, 1.1, 1.3, '#fff', null);E(c, fx + s * 9, -39.5, 2.6, 1.2, '#f39a9a80', null);}
-    for (const s of [-1, 1]) {L(c, fx + s * 3.6, -49.3, fx + s * 9.4, -51.6, hairDark, 1.7);L(c, fx + s * 2.6, -47.6, fx + s * 9.6, -48.4, '#1e1a2e', 1.6);}
-    c.beginPath();c.moveTo(fx - 2.4, -38.4);c.quadraticCurveTo(fx + .5, -37.2, fx + 2.8, -39.6);c.strokeStyle = '#a85e62';c.lineWidth = 1.3;c.lineCap = 'round';c.stroke();
-    // Spiky fringe.
-    P(c, [[-18, -46], [-17, -56], [-10, -63], [-3, -60], [3, -64], [10, -61], [17, -56], [18, -46], [13, -51], [8, -47], [4, -53], [-1, -48], [-5, -53], [-10, -48], [-13, -52]], hair, hairDark);
-    c.beginPath();c.moveTo(-11, -58);c.quadraticCurveTo(-3, -63, 7, -60);c.strokeStyle = '#ffffffb0';c.lineWidth = 1.6;c.lineCap = 'round';c.stroke();
+    // Face: big glossy anime eyes, soft blush and a small smile.
+    const [irisDark, irisLight] = EYE[job] || EYE.other;
+    for (const s of [-1, 1]) {
+      const ex = fx + s * 6.2, ey = -43.6;
+      E(c, ex + s * 3.6, -39.2, 3.4, 1.9, '#ff8f9a66', null);
+      E(c, ex, ey, 3.9, 5, '#24203a', null);
+      const iris = grad(`iris${irisDark}`, () => {const g = c.createLinearGradient(0, ey - 4, 0, ey + 4.6);g.addColorStop(0, irisDark);g.addColorStop(1, irisLight);return g;});
+      E(c, ex, ey + .5, 3, 4, iris, null);
+      E(c, ex, ey + .9, 1.5, 2, '#14102a', null);
+      E(c, ex - 1.2, ey - 1.6, 1.5, 1.8, '#ffffff', null);
+      E(c, ex + 1.3, ey + 2.2, .8, .8, '#ffffffd0', null);
+      // Lash line hugging the top of the eye, with a small flick at the outer corner.
+      c.beginPath();c.ellipse(ex, ey, 4.1, 5.2, 0, Math.PI * 1.08, Math.PI * 1.92);c.strokeStyle = '#1e1a2e';c.lineWidth = 2.2;c.lineCap = 'round';c.stroke();
+      L(c, ex + s * 3.7, ey - 2.6, ex + s * 5.4, ey - 3.8, '#1e1a2e', 1.4);
+    }
+    c.beginPath();c.moveTo(fx - 2.2, -37.6);c.quadraticCurveTo(fx + .4, -35.4, fx + 2.6, -37.8);c.strokeStyle = '#a2464e';c.lineWidth = 1.3;c.lineCap = 'round';c.stroke();
+    // Soft shadow under the fringe.
+    c.save();c.beginPath();c.ellipse(0, -46, 17, 15.5, 0, 0, Math.PI * 2);c.clip();E(c, 0, -53, 18, 5, '#e99c8255', null);c.restore();
+    // Fluffy rounded hair with tufted bangs, side locks and a glossy shine band.
+    hairFront(c, hairFill, hairDark);
+    if (appearance === 'b' && helmet < 0) {for (const [hx, hy, r] of [[13.5, -57, 2.6], [16, -53.5, 2.2], [11, -53.5, 2.2]]) E(c, hx, hy, r, r, '#ff8fb8', OUT, 1.1);E(c, 13.5, -55, 1.5, 1.5, '#ffe27a', OUT, .8);}
   }
   // A worn helmet replaces the class headgear.
   if (helmet >= 0) wornHelmet(c, helmet, time, flutter, back);
@@ -155,15 +212,47 @@ export function drawToonHero(c, x, y, o = {}) {
     for (const s of [-1, 1]) P(c, [[s * 15, -57], [s * 22, -64], [s * 21, -56]], fit.plate, OUT, 1);
   } else {
     L(c, -16, -55, 16, -55, '#8b6239', 3.4);
-    if (!back) for (const gx of [-7, 7]) {E(c, gx, -56, 5, 4, '#ffda80', OUT, 1);E(c, gx, -56, 3.2, 2.5, '#459fc9', null);}
+    if (!back) for (const gx of [-7, 7]) {E(c, gx, -56, 5, 4, '#ffda80', OUT, 1.2);E(c, gx, -56, 3.2, 2.5, '#459fc9', null);E(c, gx - 1.2, -57, 1.1, .8, '#e6fbff', null);}
   }
+  c.restore();
   // Front arm (holds the weapon).
   if (pk === 'raise' || pk === 'thrust') glowDot(c, ax, ay, 10, `${accent}cc`);
-  if (!back) {limb(c, 10, -28, ax, ay, fit.sleeve, 5);cuff(10, -28, ax, ay);weapon();E(c, ax, ay, 3, 3, glove);}
+  if (!back) {limb(c, 10, -28, ax, ay, fit.sleeve, 6.2);cuff(10, -28, ax, ay);weapon();E(c, ax, ay, 3.5, 3.5, glove);}
   if (auraLv >= 3) auraMotes(c, auraLv, auraCol, time);
   c.restore();
+  LW = 1.4;SHADE = false;
 }
 
+// Hair shapes in head space (head centre 0,-46, radius 17 x 15.5).
+function hairDome(c) {
+  c.moveTo(-17.6, -39);c.quadraticCurveTo(-21, -48, -18.5, -56);c.bezierCurveTo(-16, -68, 16, -68, 18.5, -56);c.quadraticCurveTo(21, -48, 17.6, -39);
+}
+function hairFront(c, fill, dark) {
+  c.beginPath();hairDome(c);
+  // Side lock up to the bangs, then rounded tufts across the forehead from right to left.
+  c.quadraticCurveTo(15.5, -44, 14.5, -50);
+  c.quadraticCurveTo(13.5, -46.5, 10.5, -48);c.quadraticCurveTo(9, -50, 6.5, -52);
+  c.quadraticCurveTo(5.5, -47.5, 1.5, -48);c.quadraticCurveTo(0, -50, -2.5, -52);
+  c.quadraticCurveTo(-4, -48, -8, -48.5);c.quadraticCurveTo(-9.5, -50, -12, -51);
+  c.quadraticCurveTo(-13, -47.5, -14.5, -49.5);c.quadraticCurveTo(-15.5, -44, -17.6, -39);
+  c.closePath();c.fillStyle = fill;c.fill();c.strokeStyle = dark;c.lineWidth = LW;c.lineJoin = 'round';c.stroke();
+  c.strokeStyle = OUT;c.lineWidth = LW * .55;c.stroke();
+  // Strand lines and shine.
+  c.lineCap = 'round';c.strokeStyle = dark;c.lineWidth = 1;
+  for (const [x1, y1, x2, y2, cx, cy] of [[6.5, -52, 9, -60, 9, -56], [-2.5, -52, -1, -61, -2.5, -57], [-12, -51, -12, -59, -13.5, -55]]) {c.beginPath();c.moveTo(x1, y1);c.quadraticCurveTo(cx, cy, x2, y2);c.stroke();}
+  c.beginPath();c.moveTo(-13, -58.5);c.quadraticCurveTo(-3, -65, 9, -61.5);c.strokeStyle = '#ffffffe0';c.lineWidth = 2.4;c.stroke();
+  E(c, 13, -60, 1.3, 1, '#ffffff', null);E(c, -15.5, -55, .9, 1.4, '#ffffffb0', null);
+}
+function hairBack(c, fill, dark) {
+  c.beginPath();hairDome(c);
+  c.quadraticCurveTo(16, -35, 11, -35.5);c.quadraticCurveTo(8, -39, 5.5, -35);c.quadraticCurveTo(2, -31, -1, -34.5);
+  c.quadraticCurveTo(-4, -38, -7, -34.5);c.quadraticCurveTo(-11, -32, -12.5, -35.5);c.quadraticCurveTo(-16, -35, -17.6, -39);
+  c.closePath();c.fillStyle = fill;c.fill();c.strokeStyle = dark;c.lineWidth = LW;c.lineJoin = 'round';c.stroke();
+  c.strokeStyle = OUT;c.lineWidth = LW * .55;c.stroke();
+  c.lineCap = 'round';c.strokeStyle = dark;c.lineWidth = 1;
+  for (const x of [-8, 0, 8]) {c.beginPath();c.moveTo(x * 1.2, -38);c.quadraticCurveTo(x * .6, -50, x * .5, -60);c.stroke();}
+  c.beginPath();c.moveTo(-12, -58);c.quadraticCurveTo(-2, -64.5, 10, -59.5);c.strokeStyle = '#ffffffd0';c.lineWidth = 2.4;c.stroke();
+}
 function outfitDetail(c, job, fit, accent, time) {
   if (job === 'knight') { // tabard crest + pauldron rivets
     P(c, [[-4, -25], [4, -25], [4, -20], [0, -17], [-4, -20]], accent, OUT, .9);L(c, 0, -24, 0, -18.5, '#ffffff', 1);L(c, -2.4, -22, 2.4, -22, '#ffffff', 1);

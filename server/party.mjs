@@ -15,7 +15,7 @@ export function cleanState(s = {}) {
   if(!s || typeof s!=='object')s={};
   return {
     name: String(s.name || 'TILMO').slice(0, 16), job: ['knight', 'mage', 'gunner', 'novice'].includes(s.job) ? s.job : 'novice',
-    app: s.app === 'b' ? 'b' : 'a', tier: num(s.tier, 0, TOP_TIER) | 0, armor: num(s.armor, -1, TOP_TIER, -1) | 0, helmet: num(s.helmet, -1, TOP_TIER, -1) | 0,
+    app: s.app === 'b' ? 'b' : 'a', tier: num(s.tier, 0, TOP_TIER) | 0, plus: num(s.plus, 0, 10) | 0, armor: num(s.armor, -1, TOP_TIER, -1) | 0, helmet: num(s.helmet, -1, TOP_TIER, -1) | 0,
     lv: num(s.lv, 1, 999, 1) | 0, cp: num(s.cp, 0, 1e15), hit: num(s.hit, 0, 1e15), stage: num(s.stage, 1, 60, 1) | 0, hard: !!s.hard,
     cleared: num(s.cleared, 0, 60) | 0, raid: !!s.raid, x: num(s.x, -5000, 5000), y: num(s.y, -5000, 5000), mv: !!s.mv, atk: !!s.atk,
     face: s.face < 0 ? -1 : 1, dir: ['e', 'n', 'ne', 'nw', 's', 'se', 'sw', 'w'].includes(s.dir) ? s.dir : 'se', hp: num(s.hp, 0, 1, 1),

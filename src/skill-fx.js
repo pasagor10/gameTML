@@ -1,13 +1,13 @@
 // Canvas visuals for class attacks, class skills, drones and tiered projectiles.
 // Every class-skill visual reads `lv` (1–5): bigger, more layers and particles each level,
-// gold accents from Lv.3 and a prismatic finale at Lv.5.
+// Lightweight Canvas effects: clear silhouettes, restrained glow and bounded screen coverage.
 import {TIERS} from './weapons.js';
 
 const tierColor = (tier, time, fallback = '#8eeaff') => tier === 5 ? `hsl(${(time * 90) % 360} 95% 70%)` : tier >= 0 && TIERS[tier] ? TIERS[tier].color : fallback;
-const prism = (time, offset = 0) => `hsl(${(time * 140 + offset) % 360} 100% 72%)`;
+const prism = (_time, offset = 0) => ['#b3dfff','#d4b7ef','#ffe3a0'][Math.floor(Math.abs(offset)/40)%3];
 const level = f => Math.max(1, Math.min(5, f.lv || 1));
 // Base colour per level: the skill's own colour, warmer gold from Lv.3, prismatic at Lv.5.
-const accent = (lv, base, time, offset = 0) => lv >= 5 ? prism(time, offset) : lv >= 3 ? '#ffd36a' : base;
+const accent = (_lv, base) => base;
 
 function glow(c, x, y, r, color) {
   if (r <= 0) return;
@@ -51,8 +51,9 @@ export function drawShot(c, s, time) {
     const big = 1 + (lv - 1) * .16, col = s.lv ? accent(lv, color, time) : color;
     c.save();c.translate(s.x, s.y);c.rotate(a);c.scale(big, big * .9);
     glow(c, 0, 0, 30 + lv * 4, `${TIERS[Math.max(0, s.tier || 0)].glow}66`);
+    c.save();c.globalAlpha*=.18;c.fillStyle=col;c.beginPath();c.arc(-8,0,24,-1.2,1.2);c.quadraticCurveTo(5,0,-8+Math.cos(-1.2)*24,Math.sin(-1.2)*24);c.closePath();c.fill();c.restore();
     // afterimages trail the blade from Lv.2
-    for (let k = Math.min(3, lv - 1); k > 0; k--) {c.globalAlpha = .18 * (4 - k);c.strokeStyle = col;c.lineWidth = 6;c.beginPath();c.arc(-8 - k * 12, 0, 20, -1.1, 1.1);c.stroke();}
+    for (let k = Math.min(2, lv - 1); k > 0; k--) {c.globalAlpha = .18 * (4 - k);c.strokeStyle = col;c.lineWidth = 6;c.beginPath();c.arc(-8 - k * 12, 0, 20, -1.1, 1.1);c.stroke();}
     c.globalAlpha = 1;
     for (let i = 0; i < 3; i++) {c.strokeStyle = i === 2 ? '#ffffff' : col;c.globalAlpha = .45 + i * .25;c.lineWidth = 9 - i * 3;c.beginPath();c.arc(-8, 0, 22 - i * 2, -1.2, 1.2);c.stroke();}
     if (lv >= 4) {c.globalAlpha = 1;for (let i = 0; i < 3; i++) star(c, -14 - i * 9, Math.sin(time * 20 + i) * 8, 3, '#fffbe0');}
@@ -69,14 +70,19 @@ export function drawShot(c, s, time) {
   return false;
 }
 
-export function drawZone(c, z, time) {
+export function drawZone(c,z,time){
+  c.save();c.globalAlpha*=.48;
+  drawCanvasZone(c,{...z,r:Math.min(z.r,150)},time);
+  c.restore();
+}
+function drawCanvasZone(c, z, time) {
   const q = z.life / z.max, lv = level(z);
-  c.save();c.globalAlpha = Math.min(1, q * 3);
+  c.save();c.globalAlpha *= Math.min(1, q * 3);
   if (z.kind === 'whirl') {
     c.translate(z.x, z.y - 18);
     if (lv >= 4) {c.save();c.translate(0, 18);runeCircle(c, z.r * .95, accent(lv, '#9fe0ff', time), time, 1.5);c.restore();}
     glow(c, 0, 0, z.r * (1 + lv * .05), lv >= 3 ? '#ffd36a40' : '#9fe0ff40');
-    const arcs = 2 + lv;
+    const arcs = Math.min(4,2+lv);
     for (let i = 0; i < arcs; i++) {
       const a = time * (12 + lv * 2) + i * Math.PI * 2 / arcs;
       c.strokeStyle = i === 0 ? '#ffffff' : accent(lv, '#bfefff', time, i * 50);c.lineWidth = 7 - Math.min(4, i * 1.2) + lv * .4;c.lineCap = 'round';
@@ -89,19 +95,19 @@ export function drawZone(c, z, time) {
         c.fillStyle = prism(time, i * 60);c.beginPath();c.moveTo(0, -16);c.lineTo(4, 0);c.lineTo(0, 6);c.lineTo(-4, 0);c.closePath();c.fill();c.restore();
       }
     }
-    if (lv >= 3) for (let i = 0; i < lv * 3; i++) {const a = time * 9 + i * 2.4, r = z.r * (.4 + (i % 4) * .17);glow(c, Math.cos(a) * r, Math.sin(a) * r * .55, 4, '#fff3c0dd');}
+    if (lv >= 3) for (let i = 0; i < Math.min(6,lv*3); i++) {const a = time * 9 + i * 2.4, r = z.r * (.4 + (i % 4) * .17);glow(c, Math.cos(a) * r, Math.sin(a) * r * .55, 4, '#fff3c0dd');}
   } else if (z.kind === 'vortex') {
     c.translate(z.x, z.y);
     if (lv >= 4) runeCircle(c, z.r * 1.05, accent(lv, '#c99cff', time), time, -1);
     glow(c, 0, 0, z.r * (1.1 + lv * .06), lv >= 5 ? '#ff7ad955' : '#7b3dff55');
     c.fillStyle = '#12052acc';c.beginPath();c.ellipse(0, 0, z.r * (.24 + lv * .02), z.r * (.15 + lv * .012), 0, 0, Math.PI * 2);c.fill();
-    const arms = 3 + lv;
+    const arms = Math.min(4,3+lv);
     for (let i = 0; i < arms; i++) {
       const a = -time * (4 + lv * .6) + i * Math.PI * 2 / arms;
       c.strokeStyle = lv >= 5 ? prism(time, i * 45) : i % 2 ? '#c99cff' : '#7ef3ff';c.lineWidth = 2.5 + lv * .3;
       c.beginPath();for (let k = 0; k <= 20; k++) {const t = k / 20, r = z.r * (1 - t * .85), b = a + t * 4;const x = Math.cos(b) * r, y = Math.sin(b) * r * .6;k ? c.lineTo(x, y) : c.moveTo(x, y);}c.stroke();
     }
-    if (lv >= 3) for (let i = 0; i < lv * 3; i++) { // stars being swallowed
+    if (lv >= 3) for (let i = 0; i < Math.min(6,lv*3); i++) { // stars being swallowed
       const t = ((time * .8 + i * .137) % 1), a = i * 2.39 - time * 3, r = z.r * (1.1 - t);
       star(c, Math.cos(a) * r, Math.sin(a) * r * .6, 2 + (1 - t) * 3, lv >= 5 ? prism(time, i * 30) : '#fff1ff');
     }
@@ -110,8 +116,8 @@ export function drawZone(c, z, time) {
     c.translate(z.x, z.y);
     if (lv >= 4) runeCircle(c, z.r, accent(lv, '#bfefff', time), time, .8);
     glow(c, 0, 0, z.r * 1.1, '#bfe9ff44');ring(c, 0, 0, z.r, '#e6f7ffcc', 3);
-    for (let i = 0; i < 14 + lv * 4; i++) {const t = (time * (1.4 + (i % 3) * .3) + i * .37) % 1, a = i * 2.4, r = z.r * ((i * 37 % 100) / 100);
-      const x = Math.cos(a) * r - 30 + t * 60, y = Math.sin(a) * r * .62 - 60 + t * 70;c.globalAlpha = Math.min(1, q * 3) * (1 - t);star(c, x, y, 3 + (i % 3), lv >= 5 ? prism(time, i * 25) : '#ffffff');}
+    for (let i = 0; i < 10 + lv * 2; i++) {const t = (time * (1.4 + (i % 3) * .3) + i * .37) % 1, a = i * 2.4, r = z.r * ((i * 37 % 100) / 100);
+      const x = Math.cos(a) * r - 30 + t * 60, y = Math.sin(a) * r * .62 - 60 + t * 70;c.globalAlpha = .48 * Math.min(1, q * 3) * (1 - t);star(c, x, y, 3 + (i % 3), lv >= 5 ? prism(time, i * 25) : '#ffffff');}
   } else if (z.kind === 'mine') { // blinking disc
     c.translate(z.x, z.y);c.fillStyle = '#00000040';c.beginPath();c.ellipse(0, 4, 14, 5, 0, 0, Math.PI * 2);c.fill();
     c.fillStyle = '#4b5a3a';c.strokeStyle = '#1c2616';c.lineWidth = 1.6;c.beginPath();c.ellipse(0, 0, 12, 7, 0, 0, Math.PI * 2);c.fill();c.stroke();
@@ -137,8 +143,20 @@ export function drawDrone(c, d, time, tier) {
 }
 
 // Returns true when handled; the caller falls back to the original effect renderer.
-export function drawSkillEffect(c, f, time) {
+export function drawSkillEffect(c,f,time){
+  c.save();c.globalAlpha*=.65;
+  const handled=drawCanvasSkillEffect(c,{...f,r:f.r?Math.min(f.r,160):f.r,width:f.width?Math.min(f.width,26):f.width},time);
+  c.restore();return handled;
+}
+function drawCanvasSkillEffect(c, f, time) {
   const q = 1 - f.life / f.max, lv = level(f);
+  if (f.kind === 'lightning') {
+    // Compact forked bolt and a small contact spark, with no screen-wide flash.
+    const dx=f.tx-f.x,dy=f.ty-f.y;c.strokeStyle='#c8baff';c.lineWidth=3;c.lineJoin='round';c.beginPath();c.moveTo(f.x,f.y);
+    for(let i=1;i<6;i++){const t=i/6,bend=Math.sin(i*9+f.x)*9;c.lineTo(f.x+dx*t+bend,f.y+dy*t-bend*.4);}c.lineTo(f.tx,f.ty);c.stroke();
+    c.strokeStyle='#f4f4ff';c.lineWidth=1;c.beginPath();c.moveTo(f.x+dx*.55,f.y+dy*.55);c.lineTo(f.x+dx*.55+16,f.y+dy*.55-12);c.stroke();
+    star(c,f.tx,f.ty,7*(1-q)+2,'#e9e2ff');return true;
+  }
   if (f.kind === 'arcane') {
     const color = tierColor(f.tier ?? 0, time, '#c46bff');
     c.translate(f.x, f.y);glow(c, 0, 0, f.r, '#b06bff33');
@@ -155,10 +173,10 @@ export function drawSkillEffect(c, f, time) {
   if (f.kind === 'dashline') { // charge / beam: a bright streak along the struck line
     const col = f.color || '#bfefff', w = (f.width || 30) * (1 - q * .6);
     c.globalAlpha *= 1 - q;c.lineCap = 'round';
-    c.strokeStyle = `${col}55`;c.lineWidth = w * 2;c.beginPath();c.moveTo(f.x, f.y);c.lineTo(f.tx, f.ty);c.stroke();
-    c.strokeStyle = col;c.lineWidth = w * .8;c.beginPath();c.moveTo(f.x, f.y);c.lineTo(f.tx, f.ty);c.stroke();
+    c.strokeStyle = `${col}55`;c.lineWidth = w * 1.3;c.beginPath();c.moveTo(f.x, f.y);c.lineTo(f.tx, f.ty);c.stroke();
+    c.strokeStyle = col;c.lineWidth = w * .55;c.beginPath();c.moveTo(f.x, f.y);c.lineTo(f.tx, f.ty);c.stroke();
     c.strokeStyle = '#ffffff';c.lineWidth = w * .25;c.beginPath();c.moveTo(f.x, f.y);c.lineTo(f.tx, f.ty);c.stroke();
-    for (let i = 0; i < 4 + lv * 2; i++) {const u = (i + .5) / (4 + lv * 2);glow(c, f.x + (f.tx - f.x) * u, f.y + (f.ty - f.y) * u + Math.sin(i * 3 + time * 20) * w * .5, 6 + lv, lv >= 5 ? prism(time, i * 30) : '#ffffffaa');}
+    for (let i = 0; i < 4 + Math.min(lv,2)*2; i++) {const u = (i + .5) / (4 + Math.min(lv,2)*2);glow(c, f.x + (f.tx - f.x) * u, f.y + (f.ty - f.y) * u + Math.sin(i * 3 + time * 20) * w * .5, 6 + lv, lv >= 5 ? prism(time, i * 30) : '#ffffffaa');}
     return true;
   }
   if (f.kind === 'explosion' && f.style === 'earth') { // ground slam: cracks and flying rocks
@@ -172,20 +190,20 @@ export function drawSkillEffect(c, f, time) {
     const holy = f.style === 'holy';
     c.translate(f.x, f.y);
     if (lv >= 4) {c.save();c.globalAlpha *= 1 - q;runeCircle(c, f.r * 1.1, holy ? '#fff3b0' : '#ffb24e', time, holy ? 2 : -2);c.restore();}
-    glow(c, 0, 0, f.r * (.6 + q * .6) * (1 + lv * .05), holy ? (lv >= 5 ? '#ffffffdd' : '#fff1b0cc') : lv >= 5 ? '#ff7ad9cc' : '#ffb24ecc');
+    glow(c, 0, 0, f.r * (.35 + q * .4), holy ? '#fff1b055' : '#ffb24e55');
     ring(c, 0, 0, f.r * (.3 + q * .8), holy ? '#ffffff' : '#fff1c0', (6 + lv) * (1 - q) + 1);
     if (lv >= 3) ring(c, 0, 0, f.r * (.15 + q * 1.1), accent(lv, holy ? '#ffe68a' : '#ff9a4a', time), 3 * (1 - q) + .5);
-    const bits = 6 + lv * 2;
+    const bits = 6 + Math.min(lv,2);
     for (let i = 0; i < bits; i++) {const a = i * Math.PI * 2 / bits + lv, r = f.r * q * (1 + (i % 2) * .2);glow(c, Math.cos(a) * r, Math.sin(a) * r * .62 - q * lv * 6, 5 + lv, lv >= 5 ? prism(time, i * 30) : holy ? '#fff6c8cc' : '#ff7a3acc');}
-    if (holy && lv >= 3) {c.globalAlpha *= (1 - q);c.fillStyle = '#fffbe0aa';c.fillRect(-6 - lv, -220, 12 + lv * 2, 220);} // pillar of light
+
     return true;
   }
   if (f.kind === 'blade') { // light sword falling onto the target
-    const s = 1 + (lv - 1) * .2, col = accent(lv, '#ffcf5a', time);
+    const s = 1 + (lv - 1) * .1, col = accent(lv, '#ffcf5a', time);
     c.translate(f.x, f.y);const drop = (1 - Math.min(1, q * 1.4)) * (160 + lv * 20);
     if (lv >= 4) {c.save();c.globalAlpha *= .8;runeCircle(c, 34 * s, col, time, 3);c.restore();}
     glow(c, 0, 0, 40 * s, lv >= 3 ? '#ffe9a0aa' : '#ffe9a066');
-    if (lv >= 3) {c.save();c.globalAlpha *= .35;c.fillStyle = '#fffbe0';c.fillRect(-7 * s, -drop - 260, 14 * s, 260);c.restore();}
+
     c.translate(0, -drop);c.scale(s, s);c.fillStyle = '#fffbe8';c.strokeStyle = col;c.lineWidth = 2;
     c.beginPath();c.moveTo(-5, -70);c.lineTo(5, -70);c.lineTo(6, -12);c.lineTo(0, 0);c.lineTo(-6, -12);c.closePath();c.fill();c.stroke();
     c.fillStyle = col;c.fillRect(-14, -74, 28, 5);
@@ -193,22 +211,25 @@ export function drawSkillEffect(c, f, time) {
     return true;
   }
   if (f.kind === 'meteor') {
-    c.translate(f.x, f.y);c.save();c.globalAlpha = .5 + Math.sin(time * 20) * .15;
-    c.fillStyle = lv >= 5 ? '#ff3a8a55' : '#ff5a3a55';c.beginPath();c.ellipse(0, 0, f.r, f.r * .62, 0, 0, Math.PI * 2);c.fill();c.restore();
+    c.translate(f.x, f.y);c.save();c.globalAlpha *= .3;
+    c.fillStyle = '#ff9a3a22';c.beginPath();c.ellipse(0, 0, f.r, f.r * .62, 0, 0, Math.PI * 2);c.fill();c.restore();
     ring(c, 0, 0, f.r, '#ffd9a0', 2.5);ring(c, 0, 0, f.r * q, '#ff8a5a', 2);
     if (lv >= 4) runeCircle(c, f.r * .9, accent(lv, '#ffb24e', time), time, 2);
-    const fall = (1 - q) * (260 + lv * 30), size = 1 + (lv - 1) * .25, mx = fall * .5, my = -fall;
-    for (let k = 1; k <= 2 + lv; k++) glow(c, mx + k * 9 * size, my - k * 18 * size, (16 - k * 1.5) * size, lv >= 5 ? prism(time, k * 40) + '' : '#ff8a3a88'); // fiery tail
-    glow(c, mx, my, 26 * size, '#ffb24eee');glow(c, mx, my, 12 * size, '#fff7d0');
+    const fall = (1 - q) * (260 + lv * 30), size = 1 + (lv - 1) * .1, mx = fall * .5, my = -fall;
+    for (let k = 1; k <= Math.min(4,2+lv); k++) glow(c, mx + k * 9 * size, my - k * 18 * size, (16 - k * 1.5) * size, lv >= 5 ? prism(time, k * 40) + '' : '#ff8a3a88'); // fiery tail
+    glow(c, mx, my, 23 * size, '#ffb24e88');
+    // Small faceted core adds weight without covering the target.
+    c.save();c.translate(mx,my);c.rotate(q*2);c.fillStyle='#a45b3c';c.strokeStyle='#ffd18a';c.lineWidth=1.5;
+    c.beginPath();for(let i=0;i<6;i++){const a=i*Math.PI/3,r=(i%2?10:13)*size;i?c.lineTo(Math.cos(a)*r,Math.sin(a)*r):c.moveTo(Math.cos(a)*r,Math.sin(a)*r);}c.closePath();c.fill();c.stroke();c.restore();
     return true;
   }
   if (f.kind === 'nova') {
     c.translate(f.x, f.y);
-    const rings = Math.min(4, lv);
-    for (let i = 0; i < rings; i++) {const t = Math.max(0, q - i * .12);ring(c, 0, 0, f.r * t, i === 0 ? '#ffffff' : accent(lv, '#e6c8ff', time, i * 70), (14 - i * 3) * (1 - t) + 2);}
+    const rings = Math.min(2, lv);
+    for (let i = 0; i < rings; i++) {const t = Math.max(0, q - i * .12);ring(c, 0, 0, f.r * t, i === 0 ? '#ffffff' : accent(lv, '#e6c8ff', time, i * 70), (6 - i * 2) * (1 - t) + 1);}
     glow(c, 0, 0, f.r * q, lv >= 5 ? '#ff7ad930' : '#c99cff30');
-    if (lv >= 3) for (let i = 0; i < 6 + lv * 2; i++) {const a = i * Math.PI * 2 / (6 + lv * 2) + time;c.strokeStyle = accent(lv, '#fff1ff', time, i * 20);c.lineWidth = 2;c.beginPath();c.moveTo(Math.cos(a) * f.r * q * .5, Math.sin(a) * f.r * q * .31);c.lineTo(Math.cos(a) * f.r * q, Math.sin(a) * f.r * q * .62);c.stroke();}
-    if (lv >= 5) star(c, 0, -30, 26 * (1 - q), '#ffffffee');
+    if (lv >= 3) for (let i = 0; i < 6 + Math.min(lv,2); i++) {const a = i * Math.PI * 2 / (6 + lv * 2) + time;c.strokeStyle = accent(lv, '#fff1ff', time, i * 20);c.lineWidth = 2;c.beginPath();c.moveTo(Math.cos(a) * f.r * q * .5, Math.sin(a) * f.r * q * .31);c.lineTo(Math.cos(a) * f.r * q, Math.sin(a) * f.r * q * .62);c.stroke();}
+    if (lv >= 5) star(c, 0, -30, 14 * (1 - q), '#ffffffee');
     return true;
   }
   if (f.kind === 'lob') { // grenade arc

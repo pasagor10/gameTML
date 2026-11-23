@@ -133,7 +133,7 @@ small.good,.shop-text small.good{color:#9aff8a}small.warn,.shop-text small.warn,
 .eq-helmet{grid-area:helmet}.eq-weapon{grid-area:weapon}.eq-armor{grid-area:armor}.eq-ring{grid-area:ring}
 .eq-slot{position:relative;width:64px;height:76px;border-radius:12px;border:2px dashed #79d6fa70;background:#0c1a3acc;padding:3px 3px 0;display:flex;flex-direction:column;align-items:center;gap:1px}
 .eq-slot.filled{border:2px solid var(--rar);box-shadow:0 0 12px var(--rar)}
-.eq-slot canvas{width:54px;height:54px;border-radius:8px}.eq-slot small{font-size:10px;color:#bfe6f2}
+.eq-slot canvas{width:54px;height:54px;border-radius:8px}.eq-slot small{font-size:10px;color:#bfe6f2}.eq-slot small .eq-plus{color:#8fd4ff;font-weight:800}.eq-slot small .eq-plus.hi{color:#ffd25a;text-shadow:0 0 6px #ffb02e}
 .eq-ghost{width:54px;height:54px;display:grid;place-items:center;font-size:26px;opacity:.35}
 .eq-slot[aria-pressed=true],.inv-cell[aria-pressed=true]{outline:3px solid #fff;outline-offset:1px}
 .char-stats{list-style:none;margin:8px 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:6px}
@@ -200,7 +200,7 @@ small.good,.shop-text small.good{color:#9aff8a}small.warn,.shop-text small.warn,
 
 /* v0.19.1 skill bar with cooldowns */
 .skill-hud{position:absolute;bottom:140px;right:22px;display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:none}
-.skill-slots{display:flex;gap:6px;pointer-events:auto}
+.skill-slots{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;pointer-events:auto}
 .skill-slot{position:relative;width:50px;height:50px;border-radius:12px;border:2px solid #79d6fa90;background:linear-gradient(160deg,#1d4a78,#0a2440);color:#e8fbff;padding:0;overflow:hidden;box-shadow:0 3px 10px #0008;transition:transform .12s}
 .skill-slot .ic{font-size:24px;line-height:46px;display:block;text-shadow:0 0 8px #8fe0ff}
 .skill-slot .cd{position:absolute;inset:0;border-radius:10px}
@@ -439,3 +439,11 @@ body[data-screen=intro] #raidBoard,body[data-screen=intro] #skillHud,body[data-s
 
 /* Gold packs and gem top-up are switched off in the HUD for now. */
 #game .hud #goldPacksBtn,#game .hud #topupBtn{display:none}
+
+/* AI-painted skill atlas shared by all skill surfaces, downloaded once. */
+#game .ai-skill{display:block;flex-shrink:0;box-sizing:border-box;background-image:url('/assets/ui/skills/skill-atlas-v1.webp');background-size:var(--skill-w) var(--skill-h);background-position:var(--skill-x) var(--skill-y);background-repeat:no-repeat;background-color:#080e20;border-radius:9px;border:1px solid #e6c47599;box-shadow:inset 0 0 5px #0008,0 2px 5px #0005;text-shadow:none}
+#game .sk-tile .ai-skill{width:48px;height:48px;margin-bottom:3px}
+#game .sk-icon.big.ai-skill{width:72px;height:72px;border-radius:13px;border-color:#ffe4a6}
+#game .skill-slot .ic.ai-skill{width:100%;height:100%;border:0;border-radius:9px}
+#game .sk-slot .ai-skill{width:42px;height:42px}
+#game .sk-tile.locked .ai-skill{filter:grayscale(.9) brightness(.65)}

@@ -61,7 +61,7 @@ function ring(c, tier) {
 }
 function L(c, x, y, x2, y2, color, w) {c.beginPath();c.moveTo(x, y);c.lineTo(x2, y2);c.strokeStyle = color;c.lineWidth = w;c.lineCap = 'round';c.stroke();}
 
-// Draws a framed item tile filling the canvas. `plus` adds a +N badge.
+// Draws a framed item tile filling the canvas. An enhanced item gets a +N badge.
 export function drawItemIcon(c, item, size) {
   const t = TIERS[item.tier];
   if (item.kind === 'weapon') {drawWeaponIcon(c, item.job, item.tier, 0, size);}
@@ -74,8 +74,28 @@ export function drawItemIcon(c, item, size) {
     c.restore();
     c.strokeStyle = item.tier === 5 ? rainbow(1) : t.color;c.lineWidth = Math.max(2, size / 24);c.strokeRect(c.lineWidth / 2, c.lineWidth / 2, size - c.lineWidth, size - c.lineWidth);
   }
-  if (item.plus) {
-    const f = Math.round(size * .2);c.save();c.font = `800 ${f}px "Chakra Petch",sans-serif`;c.textAlign = 'right';c.textBaseline = 'top';
-    c.lineWidth = f * .25;c.strokeStyle = '#1e1a2e';c.strokeText(`+${item.plus}`, size - size * .07, size * .05);c.fillStyle = item.plus >= 7 ? '#ffd25a' : '#ffffff';c.fillText(`+${item.plus}`, size - size * .07, size * .05);c.restore();
+  if (item.plus) plusBadge(c, item.plus, size);
+}
+// Enhancement badge: a pill in the top-right corner that gets brighter with the level
+// (+1-3 slate, +4-6 blue, +7-9 gold with a glowing frame, +10 rainbow).
+const PLUS_LOOK = [[1, ['#4a5a7a', '#2e3a56'], '#ffffff'], [4, ['#3ab0ff', '#1a5ad0'], '#ffffff'], [7, ['#ffe27a', '#ff9a2a'], '#3a1a00'], [10, null, '#ffffff']];
+function plusBadge(c, plus, size) {
+  const [, fill, ink] = PLUS_LOOK.filter(([from]) => plus >= from).pop();
+  c.save();
+  if (plus >= 7) { // glowing inner frame for high enhancements
+    const w = Math.max(3, size / 16);c.shadowColor = plus >= 10 ? '#ff8ae0' : '#ffcf4a';c.shadowBlur = size / 7;
+    c.strokeStyle = plus >= 10 ? '#ffd8f6' : '#ffe27a';c.lineWidth = w;c.strokeRect(w / 2, w / 2, size - w, size - w);c.shadowBlur = 0;
   }
+  const text = `+${plus}`, f = Math.round(size * .31);
+  c.font = `800 ${f}px "Chakra Petch",sans-serif`;
+  const tw = c.measureText(text).width, h = f * 1.15, w = tw + f * .55, x = size - w - size * .03, y = size * .03, r = h / 2;
+  const g = c.createLinearGradient(x, y, x, y + h);
+  if (fill) {g.addColorStop(0, fill[0]);g.addColorStop(1, fill[1]);}
+  else ['#ff6a8a', '#ffd25a', '#5ae0a0', '#5ab4ff', '#c46bff'].forEach((col, i, a) => g.addColorStop(i / (a.length - 1), col));
+  c.beginPath();c.moveTo(x + r, y);c.arcTo(x + w, y, x + w, y + h, r);c.arcTo(x + w, y + h, x, y + h, r);c.arcTo(x, y + h, x, y, r);c.arcTo(x, y, x + w, y, r);c.closePath();
+  c.fillStyle = g;c.fill();c.lineWidth = Math.max(1.5, size / 40);c.strokeStyle = '#1e1a2e';c.stroke();
+  c.textAlign = 'center';c.textBaseline = 'middle';c.fillStyle = ink;
+  if (plus >= 10) {c.lineWidth = f * .18;c.strokeStyle = '#1e1a2e';c.strokeText(text, x + w / 2, y + h / 2 + f * .04);}
+  c.fillText(text, x + w / 2, y + h / 2 + f * .04);
+  c.restore();
 }
