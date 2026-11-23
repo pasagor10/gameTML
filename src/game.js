@@ -11,6 +11,7 @@ import {TIERS,REQ_LEVEL,TIER_PERKS,WEAPON_NAMES,weaponName,drawWeaponIcon,loadWe
 import {drawShot,drawZone,drawDrone,drawSkillEffect} from './skill-fx.js';
 import {loadMonsters,drawMonster,skinFor,BOSS_NAMES} from './monsters.js';
 import {sfx,music,setSound,setMusic,soundOn,unlockAudio,prepareMusic} from './sound.js';
+import {applyIcons,setIcon} from './ui-icons.js';
 import {drawHero,drawFire,drawEffect,glow,setArtStyle,artStyle} from './art.js';
 import {drawToonMonster,drawToonArena,themeFor} from './toon.js';
 // ?art=painted switches back to the generated sprites and painted forest (remembered per device).
@@ -117,12 +118,13 @@ function drawTownBanner(cv){const c=cv.getContext('2d'),W=cv.width,H=cv.height,g
   for(const x of [250,630]){c.strokeStyle='#5a3a20';c.lineWidth=3;c.beginPath();c.moveTo(x,H);c.lineTo(x,H-120);c.stroke();c.fillStyle='#ffb03a';c.beginPath();c.ellipse(x,H-112,9,12,0,0,7);c.fill();c.fillStyle='#ffe9a855';c.beginPath();c.arc(x,H-112,22,0,7);c.fill();}}
 function flushCues(){for(const cue of run.cues)sfx(cue.name,cue.arg);run.cues.length=0;}
 function pause(){if(run.state==='inventory'){closeBag();return;}if(run.state==='shop'){closeShop();return;}if(run.state==='skills'||run.state==='map'){closePanel();return;}if(!started||!['playing','paused'].includes(run.state))return;if(run.state==='playing'){run.state='paused';run.emit('pause');}else{run.state='playing';run.emit('resume');}uiState='';}
-function syncAuto(){$('auto').setAttribute('aria-pressed',String(autoPlay));$('auto').querySelector('.bi').textContent=autoPlay?'⏸':'▶';}syncAuto();
+applyIcons();
+function syncAuto(){$('auto').setAttribute('aria-pressed',String(autoPlay));setIcon($('auto').querySelector('.bi'),autoPlay?'hold':'play');}syncAuto();
 $('auto').onclick=()=>{autoPlay=!autoPlay;run.reviveOnDefeat=autoPlay;try{localStorage.setItem('tilmo-auto',autoPlay?'1':'0');}catch{}syncAuto();beep();toast(autoPlay?'AUTO เปิด • พับจอได้ ตัวละครเล่นต่อเอง':'AUTO ปิด • ควบคุมเอง');};
 $('bagBtn').onclick=openBag;$('skillBtn').onclick=()=>openPanel('skills');$('mapBtn').onclick=()=>openPanel('map');$('townBtn').onclick=openShop;$('potionBtn').onclick=()=>{if(started&&run.usePotion()){flushCues();toast('ดื่มยาฟื้นพลัง!');}};
 $('magnet').onclick=()=>{if(started&&run.magnet())toast('ดูด EXP ทั้งสนาม!');};
 function syncMagnet(){const left=Math.ceil(run.magnetClock),ready=started&&run.state==='playing'&&left<=0;$('magnet').disabled=!ready;$('magnet').querySelector('.bl').textContent=left>0?`${left}s`:'ดูด EXP';$('magnet').classList.toggle('cooling',left>0);}
-$('pause').onclick=pause;$('sound').onclick=()=>{const on=!soundOn();setSound(on);setMusic(on);unlockAudio();syncSoundButton();beep();};function syncSoundButton(){$('sound').textContent=soundOn()?'♪':'♫';$('sound').setAttribute('aria-label',soundOn()?'ปิดเสียง':'เปิดเสียง');}syncSoundButton();
+$('pause').onclick=pause;$('sound').onclick=()=>{const on=!soundOn();setSound(on);setMusic(on);unlockAudio();syncSoundButton();beep();};function syncSoundButton(){setIcon($('sound'),soundOn()?'sound':'mute');$('sound').setAttribute('aria-label',soundOn()?'ปิดเสียง':'เปิดเสียง');}syncSoundButton();
 addEventListener('keydown',e=>{if(e.target instanceof HTMLInputElement)return;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys.add(e.key.toLowerCase());if(e.repeat)return;if(e.key==='Escape')pause();if(e.key.toLowerCase()==='b'){if(run.state==='inventory')closeBag();else openBag();}if(e.key.toLowerCase()==='t'){if(run.state==='shop')closeShop();else openShop();}if(e.key.toLowerCase()==='q'&&started&&run.usePotion())flushCues();if(e.key.toLowerCase()==='k'){if(run.state==='skills')closePanel();else openPanel('skills');}if(e.key.toLowerCase()==='m'){if(run.state==='map')closePanel();else openPanel('map');}});addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
 function clearInput(){keys.clear();pointer=null;move={x:0,y:0};$('stick').style.transform='';}
 addEventListener('blur',()=>{clearInput();if(started&&run.state==='playing'&&!autoPlay)pause();});

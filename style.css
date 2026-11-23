@@ -305,3 +305,18 @@ body[data-screen=intro] .skill-hud,body[data-screen=armory] .skill-hud{visibilit
   #game .objective{top:150px}#game #bossbar{top:150px}
 }
 @media(max-width:600px){#game .stage-banner{top:86px}#game .objective{top:138px}#game #bossbar{top:138px}}
+/* ===== v0.20.1 painted-style icons ===== */
+.uicon{display:block;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 2px 0 #0007)}
+#game .play-actions .bi{width:30px;height:30px;font-size:0;filter:none}
+#game .play-actions .act:hover .bi{transform:scale(1.1) rotate(-4deg)}
+#game .hud .sys button{display:grid;place-items:center;padding:6px}
+#game .ri{display:inline-block;width:24px;height:24px;flex:none;vertical-align:middle}
+#game .res-pill{height:30px;padding:0 12px 0 2px}
+#game .res-pill.gold{background:linear-gradient(#5a3a08f0,#2a1a02f0);border-color:#ffd23a;box-shadow:0 3px 8px #0007,inset 0 1px 0 #ffe88a60}
+#game .res-pill.gold b{color:#ffd23a;text-shadow:0 1px 0 #6a3a00,0 0 8px #ffb80080;font-size:14px}
+#game .res-pill.kills b{color:#f0ecf8}
+#game .power-pill{display:inline-flex;align-items:center;gap:3px}#game .power-pill .ri{width:16px;height:16px}
+#game .bar{overflow:visible;margin-left:9px}#game .bar i{border-radius:6px}
+#game .bar-ico{position:absolute;left:-12px;top:50%;width:20px;height:20px;transform:translateY(-50%);z-index:2}
+#game .xp-bar .bar-ico{width:15px;height:15px;left:-10px}
+@media(max-width:600px){#game .play-actions .bi{width:25px;height:25px}#game .ri{width:18px;height:18px}#game .res-pill{height:24px}#game .res-pill.gold b{font-size:12px}#game .bar-ico{width:16px;height:16px;left:-10px}#game .xp-bar .bar-ico{width:12px;height:12px;left:-8px}#game .hud .sys button{padding:4px}}
