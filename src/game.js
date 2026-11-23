@@ -170,7 +170,7 @@ function hudExtras(){
   const g=run.enemies.find(e=>e.guardian&&e.hp>0),mode=run.mode==='farm'?'farm':g?'boss':'kill';$('stagePlate').dataset.mode=mode;$('summonBtn').hidden=!run.canSummon();$('summonBtn').lastChild.textContent=mode==='farm'?'ท้าบอสด่านถัดไป':'เรียกบอส';$('stageMode').dataset.mode=mode;
   $('stageMode').textContent=mode==='farm'?'ฟาร์ม':mode==='boss'?'บอส!':run.hard?'ท้า · ยาก':'ท้าด่าน';$('quotaGoal').textContent=mode==='farm'?'⚔️':'👑';
   if(mode==='farm'){$('quotaFill').style.width=`${Math.min(100,run.farmClock/FARM_RETRY*100)}%`;$('quotaText').textContent=run.canChallenge()?(run.autoChallenge?`ท้าด่านใหม่ใน ${Math.max(0,Math.ceil(FARM_RETRY-run.farmClock))} วิ`:'เปิดแผนที่เพื่อท้าด่าน'):'เก็บเลเวลและไอเทม';}
-  else if(g){$('quotaFill').style.width=`${g.hp/g.max*100}%`;$('quotaText').textContent='โค่นผู้พิทักษ์ด่าน!';}
+  else if(g){$('quotaFill').style.width=`${g.hp/g.max*100}%`;$('quotaText').textContent=`${$('bossName').textContent.split(' · ')[0]} · HP ${Math.ceil(g.hp/g.max*100)}%`;}
   else{$('quotaFill').style.width=`${Math.min(100,run.stageKills/run.quota*100)}%`;$('quotaText').textContent=`ล้มศัตรู ${Math.min(run.stageKills,run.quota)} / ${run.quota}`;}
   const key=[run.job,run.appearance,run.weaponTier,run.armorLook,run.helmetTier].join();if(key===portraitKey)return;portraitKey=key;
   const c=$('portraitArt').getContext('2d');c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,112,112);c.translate(56,178);c.scale(1.45,1.45);

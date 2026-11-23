@@ -340,3 +340,7 @@ body[data-screen=intro] .skill-hud,body[data-screen=armory] .skill-hud{visibilit
 #game .sp-summon:hover{filter:brightness(1.12)}#game .sp-summon:active{transform:translateY(2px);box-shadow:0 1px 0 #5a0a18}
 @keyframes summonGlow{50%{box-shadow:0 3px 0 #5a0a18,0 0 20px #ff6a7aa0}}
 @media(max-width:600px){#game .hud .sp-summon{font-size:11px;padding:3px 10px 3px 6px;margin-top:4px}}
+/* objective lives inside the stage plate; the plate's bar replaces the old floating boss bar */
+#game .stage-plate .objective.sp-tip{position:static;transform:none;width:auto;max-width:none;margin:5px 0 0;padding:3px 8px;font-size:10.5px;line-height:1.4;background:#00000045;border:0;border-radius:8px;color:#ffe0a0;white-space:normal}
+#game .stage-plate .objective.sp-tip:empty{display:none}
+#game #bossbar{display:none!important}
