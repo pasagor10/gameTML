@@ -275,17 +275,94 @@ export function drawToonMonster(c, e, time, player) {
   const th = themeFor(e.stage), flash = e.flash > 0, f = col => flash ? '#fff6dc' : col;
   const t = time + e.id * .37, faceLeft = player.x < e.x;
   c.save();c.translate(e.x, e.y);
+  if (e.type === 'boss') bossAura(c, e, th, time);
   E(c, 0, 2, e.r * 1.1, e.r * .38, '#10303045', null);
   if (e.slow > 0) E(c, 0, 0, e.r * 1.35, e.r * .5, '#9fe0ff40', null);
   c.save();if (faceLeft) c.scale(-1, 1);
+  if (e.rage) c.translate(Math.sin(time * 40) * 1.6, 0);
   if (e.type === 'runner') runner(c, th, f, t, e);
+  else if (e.type === 'brute') brute(c, th, f, t, e);
+  else if (e.type === 'bomber') bomber(c, th, f, t, e);
+  else if (e.type === 'imp') imp(c, th, f, t, e);
+  else if (e.type === 'spitter') spitter(c, th, f, t, e);
   else if (e.type === 'archer') caster(c, th, f, t, e);
   else if (e.type === 'elite') beast(c, th, f, t, e);
   else if (e.type === 'boss') titan(c, th, f, t, e);
   else slime(c, th, f, t, e);
   c.restore();
-  hpBar(c, e, e.type === 'elite' ? -82 : -e.r * 3.4);
+  if (e.rage) rageEmbers(c, e, time);
+  hpBar(c, e, e.type === 'elite' ? -82 : e.type === 'brute' ? -70 : e.type === 'imp' ? -48 : e.type === 'spitter' ? -66 : -e.r * 3.4);
   c.restore();
+}
+// Guardians stand on a pulsing dark sigil; enraged ones burn red.
+function bossAura(c, e, th, time) {
+  const R = e.r * (e.mini ? 2.2 : 3), rage = !!e.rage, col = rage ? '#ff2a3a' : th.portal;
+  c.save();c.scale(1, .36);
+  const g = c.createRadialGradient(0, 0, 0, 0, 0, R * 1.2);g.addColorStop(0, rage ? '#ff2a3a70' : '#1a0a2a70');g.addColorStop(1, '#00000000');
+  c.fillStyle = g;c.beginPath();c.arc(0, 0, R * 1.2, 0, Math.PI * 2);c.fill();
+  c.globalAlpha = .7 + .25 * Math.sin(time * (rage ? 10 : 4));c.strokeStyle = '#1e1a2e';c.lineWidth = 7;c.beginPath();c.arc(0, 0, R, 0, Math.PI * 2);c.stroke();
+  c.strokeStyle = col;c.lineWidth = 3.5;c.stroke();
+  c.save();c.rotate(time * (rage ? 1.6 : .6));for (let i = 0; i < 8; i++) {c.rotate(Math.PI / 4);c.beginPath();c.moveTo(R * .62, 0);c.lineTo(R * .86, -7);c.lineTo(R * .86, 7);c.closePath();c.fillStyle = col;c.fill();}c.restore();
+  c.setLineDash([10, 12]);c.lineDashOffset = time * 40;c.lineWidth = 2.5;c.beginPath();c.arc(0, 0, R * .5, 0, Math.PI * 2);c.stroke();
+  c.restore();
+}
+function rageEmbers(c, e, time) {
+  c.save();
+  for (let i = 0; i < 10; i++) {const ph = (time * .9 + i / 10) % 1, x = Math.sin(i * 2.1 + time) * e.r * 1.4, y = -e.r * .5 - ph * e.r * 5;c.globalAlpha = Math.sin(ph * Math.PI);E(c, x, y, 2.6 * (1 - ph) + 1, 2.6 * (1 - ph) + 1, i % 3 ? '#ff5a2a' : '#ffd27a', null);}
+  c.restore();
+}
+function fangs(c, x, y, w, f) {for (let i = 0; i < 3; i++) P(c, [[x - w + i * w, y], [x - w + i * w + w * .5, y + w * .9], [x - w + i * w + w, y]], f('#fffaf0'), OUT, .8);}
+// Brute: a hunched ogre with a heavy club it slams down.
+function brute(c, th, f, t, e) {
+  const step = Math.sin(t * 5), raise = e.warn ? Math.min(1, (1 - e.warn.t) / .6) : 0;
+  for (const s of [-1, 1]) {limb(c, s * 9, -16, s * 10 + step * s * 3, -2, f(th.body2), 8);E(c, s * 10 + step * s * 3, -2, 6, 3.2, f(OUT), null);}
+  E(c, -3, -30, 21, 19, f(th.body));E(c, -6, -38, 11, 6, '#ffffff22', null);
+  P(c, [[-18, -40], [-8, -46], [2, -44], [-4, -36]], f(th.body2), OUT, 1);
+  for (let i = 0; i < 3; i++) P(c, [[-18 + i * 8, -46], [-14 + i * 8, -56], [-10 + i * 8, -46]], f(th.stone), OUT, 1);
+  limb(c, -16, -32, -22, -14, f(th.body), 8);
+  E(c, 12, -42, 11, 10, f(th.body));
+  for (const s of [-1, 1]) P(c, [[12 + s * 6, -50], [12 + s * 11, -62], [12 + s * 9, -48]], f('#efe6d0'), OUT, 1);
+  eyes(c, 14, -44, 2.2, 4, th, f, true);glowDot(c, 15, -44, 8, '#ff3a2a55');
+  P(c, [[6, -36], [20, -36], [18, -32], [8, -32]], f('#3a1a1a'), OUT, .8);fangs(c, 13, -36, 3, f);
+  c.save();c.translate(14, -30);c.rotate(.6 - raise * 2.2);limb(c, 0, 0, 10, 16, f(th.body), 8);c.translate(10, 18);
+  L(c, 0, 0, 0, -32, OUT, 8);L(c, 0, 0, 0, -32, f('#7a5a3a'), 5);E(c, 0, -36, 8, 11, f('#8a6a4a'));for (const k of [-1, 1]) P(c, [[k * 7, -40], [k * 13, -42], [k * 8, -34]], f('#d8d0c0'), OUT, .8);
+  c.restore();
+}
+// Bomber: a walking bomb with a lit fuse; flashes red before it blows.
+function bomber(c, th, f, t, e) {
+  const arm = !!e.warn, pulse = arm ? 1 + Math.sin(t * 40) * .08 : 1, hop = Math.abs(Math.sin(t * 12)) * 2;
+  c.translate(0, -hop);for (const s of [-1, 1]) E(c, s * 6, -1, 4, 2.6, f(th.body2));
+  c.save();c.translate(0, -14);c.scale(pulse, pulse);
+  E(c, 0, 0, 13, 13, arm && Math.sin(t * 30) > 0 ? '#ff4a3a' : f('#2a2a3a'));E(c, -4, -5, 4, 3, '#ffffff40', null);
+  L(c, -12, 2, 12, 2, f(th.accent), 3);
+  eyes(c, 3, -2, 2.2, 4, th, f, true);P(c, [[-2, 5], [8, 5], [3, 8]], f('#1a0a0a'), OUT, .8);
+  P(c, [[-3, -13], [3, -13], [3, -10], [-3, -10]], f('#8a8a9a'));
+  c.beginPath();c.moveTo(0, -13);c.quadraticCurveTo(6, -20, 3, -24);c.strokeStyle = '#6a4a2a';c.lineWidth = 2;c.stroke();
+  glowDot(c, 3, -25, 8 + Math.sin(t * 20) * 2, '#ffd27aaa');E(c, 3, -25, 2.2, 2.2, '#fff4c0', null);
+  c.restore();
+}
+// Imp: a tiny winged devil that swarms in packs.
+function imp(c, th, f, t, e) {
+  const flap = Math.sin(t * 22), hover = Math.sin(t * 6) * 3;
+  c.translate(0, -20 + hover);
+  for (const s of [-1, 1]) {c.save();c.scale(s, 1);c.rotate(flap * .4);P(c, [[2, -2], [14, -12], [16, -2], [11, 2], [6, 0]], f(th.body2));c.restore();}
+  P(c, [[-4, 4], [-12, 10 + flap * 2], [-14, 6]], f(th.body2), OUT, .8);
+  E(c, 0, 0, 7.5, 7.5, f(th.body));
+  for (const s of [-1, 1]) P(c, [[s * 3, -6], [s * 6, -13], [s * 6, -5]], f(th.stone), OUT, .8);
+  for (const s of [-1, 1]) E(c, 2 + s * 2.8, -1, 1.5, 1.8, '#ff3a2a', null);glowDot(c, 2, -1, 7, '#ff3a2a55');
+  fangs(c, 2, 3, 1.6, f);
+}
+// Spitter: a horned hex-caster that fires a three-way spread.
+function spitter(c, th, f, t, e) {
+  const hover = Math.sin(t * 3) * 2, charge = e.warn ? 1 : 0;
+  c.translate(0, hover);
+  P(c, [[-13, -1], [13, -1], [9, -30], [-9, -30]], f(th.body2));
+  for (let i = 0; i < 3; i++) L(c, -9 + i * 9, -4, -7 + i * 9, -14, f(th.accent), 1.4);
+  P(c, [[-12, -28], [12, -28], [8, -44], [-8, -44]], f(th.body));
+  for (const s of [-1, 1]) P(c, [[s * 7, -42], [s * 15, -56], [s * 11, -40]], f('#efe6d0'), OUT, 1);
+  E(c, 0, -34, 7.5, 6, f('#1a1226'), OUT, 1);for (const s of [-1, 1]) E(c, 1 + s * 3, -34.5, 1.5, 1.8, th.glow, null);glowDot(c, 1, -34, 9, `${th.glow}88`);
+  L(c, 14, 2, 18, -46, OUT, 4);L(c, 14, 2, 18, -46, f('#6a4a2a'), 2.2);
+  for (let i = 0; i < 3; i++) {const a = t * 4 + i * 2.1, ox = 18 + Math.cos(a) * 9, oy = -50 + Math.sin(a) * 4;glowDot(c, ox, oy, 6 + charge * 4, `${th.glow}aa`);E(c, ox, oy, 2.4 + charge, 2.4 + charge, f(th.glow), OUT, .8);}
 }
 function eyes(c, x, y, r, gap, th, f, angry = false) {
   for (const s of [-1, 1]) {E(c, x + s * gap, y, r, r * 1.2, f('#ffffff'), OUT, 1);E(c, x + s * gap + r * .25, y + r * .1, r * .6, r * .75, f(th.eye === '#2b2133' ? '#2b2133' : th.eye), null);
@@ -296,7 +373,7 @@ function slime(c, th, f, t, e) {
   c.beginPath();c.moveTo(-w, 0);c.bezierCurveTo(-w * 1.05, -h * 1.3, w * 1.05, -h * 1.3, w, 0);c.closePath();
   const g = c.createLinearGradient(0, -h, 0, 0);g.addColorStop(0, f(th.slime[0]));g.addColorStop(1, f(th.slime[1]));c.fillStyle = g;c.fill();c.strokeStyle = OUT;c.lineWidth = 1.5;c.stroke();
   E(c, -w * .4, -h * .7, w * .22, h * .14, '#ffffff90', null);
-  eyes(c, w * .15, -h * .5, 2.6, 5.5, th, f);
+  eyes(c, w * .15, -h * .5, 2.6, 5.5, th, f, true);fangs(c, w * .15, -h * .22, 1.8, f);
   // Theme topper.
   const top = -h * .98;
   if (th.id === 'forest') {L(c, 0, top, 2, top - 7, '#4f8146', 2);E(c, 6, top - 8, 5, 2.6, f('#80b95b'), OUT, 1);}
@@ -326,7 +403,7 @@ function runner(c, th, f, t, e) {
   const ear = th.id === 'ice' ? 12 : 7;
   for (const dx of [0, 6]) P(c, [[8 + dx, -29], [9 + dx, -29 - ear], [13 + dx, -30]], f(th.body2));
   E(c, 20, -22, 2, 1.6, OUT, null);
-  eyes(c, 15, -26, 1.8, 3, th, f, true);
+  eyes(c, 15, -26, 1.8, 3, th, f, true);P(c, [[14, -19], [19, -19], [16.5, -15.5]], f('#fffaf0'), OUT, .7);
   if (th.id === 'crystal') for (const s of [-1, 1]) P(c, [[2 + s * 6, -25], [s * 7, -33], [5 + s * 5, -24]], f(th.accent), OUT, 1);
   if (th.id === 'temple') {L(c, 5, -20, 9, -18, '#d23a3a', 3);}
 }
@@ -337,7 +414,7 @@ function caster(c, th, f, t, e) {
   // Hood / cap.
   if (th.id === 'forest') {E(c, 0, -34, 17, 10, f('#d24a3a'));for (const [x, y] of [[-8, -37], [5, -39], [10, -33]]) E(c, x, y, 2.4, 1.8, '#ffe4be', null);E(c, 0, -26, 9, 7, f('#f1d5b0'));}
   else {P(c, [[-12, -24], [12, -24], [6, -42], [0, -46], [-6, -42]], f(th.body));E(c, 0, -28, 8, 6.5, f(th.id === 'ice' ? '#dff4ff' : '#2b2133'), OUT, 1);}
-  eyes(c, 1, -28, 1.8, 3.2, th, f, true);
+  eyes(c, 1, -28, 1.8, 3.2, th, f, true);glowDot(c, 1, -28, 9, '#ff5a4a44');
   // Orb.
   const ox = 13, oy = -20, r = 4 + charge * 2 + Math.sin(t * 8) * .6;
   limb(c, 6, -16, ox - 2, oy + 2, f(th.body2), 3);
@@ -359,7 +436,8 @@ function beast(c, th, f, t, e) {
   E(c, 40, -30, 6, 5, f(th.body2), OUT, 1);
   for (const s of [-1, 1]) E(c, 39 + s * 1.6, -31, 1, 1.4, OUT, null);
   eyes(c, 30, -40, 2.6, 5, th, f, true);
-  if (angry) glowDot(c, 30, -40, 14, '#ff6a5a55');
+  glowDot(c, 30, -40, angry ? 18 : 11, angry ? '#ff3a2a88' : '#ff6a5a55');for (const s of [-1, 1]) E(c, 30 + s * 5 + .6, -39.6, 1.2, 1.4, '#ff3a2a', null);
+  fangs(c, 38, -27, 2.2, f);
   // tusks / horns
   P(c, [[36, -26], [46, -20], [40, -25]], f('#fff4dc'), OUT, 1);
   P(c, [[22, -45], [18, -58], [27, -48]], f(th.id === 'temple' ? '#ffd25a' : '#efe6d0'), OUT, 1);

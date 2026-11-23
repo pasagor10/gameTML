@@ -25,7 +25,7 @@ export const RING = [
 export const BAG_MAX = 60, MAX_PLUS = 10;
 // Normal monsters rarely drop; elites always drop one piece and guardians a better one.
 export const DROP_CHANCE = {slime:.012, runner:.015, archer:.02, elite:1, boss:1};
-export const GOLD_DROP = {slime:1, runner:1, archer:2, elite:25, boss:120};
+export const GOLD_DROP = {slime:1, runner:1, archer:2, elite:25, boss:120,brute:5,bomber:2,imp:1,spitter:3};
 const BASE_TIER = {elite:1, boss:2};
 const SELL = [8, 30, 100, 260, 650, 1400];
 
