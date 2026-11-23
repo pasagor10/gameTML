@@ -102,7 +102,7 @@ constructor(rng=Math.random,profile=null){
   this.t=0;this.maxHp=100;this.p={x:0,y:0,hp:100,inv:0};this.enemies=[];this.gems=[];this.shots=[];this.effects=[];this.events=[];this.cues=[];this.zones=[];this.delayed=[];
   this.skills={};this.level=1;this.xp=0;this.need=xpNeed(1);this.kills=0;this.state='playing';this.spawn=0;this.attack=0;this.swing=0;this.aim=0;this.cooldowns={};this.castGlow={};this.droneClock=0;this.nextId=0;this.slots=[];this.skillPoints=0;
   this.stage=1;this.hard=false;this.cleared={normal:0,hard:0};this.stars={};this.mode='challenge';this.stageKills=0;this.quota=stageQuota(1);this.farmClock=0;this.autoChallenge=true;this.stageFailed=false;this.stageStart=0;this.bossSpawned=false;this.eliteSpawned=false;this.bossesDefeated=0;
-  this.weaponTier=0;this.weaponPlus=0;this.armorTier=0;this.guard=0;this.ringBonus=0;this.bag=[];this.equipped={weapon:null,armor:null,helmet:null,ring:null};this.nextItemId=1;this.gold=0;this.goldEarned=0;this.coins=[];this.pose=null;this.supplies={potion:0,luck:0,guard:0};this.buffs={xp:0,gold:0};this.potionClock=0;this.shopStock=[];this.shopClock=0;this.loot=[];this.magnetClock=0;this.holdPicks=false;this.awaitingClass=false;this.reviveOnDefeat=false;this.retreats=0;this.xpEarned=0;this.name=cleanHeroName(profile?.name)||'TILMO';
+  this.potionAt=POTION_AT;this.weaponTier=0;this.weaponPlus=0;this.armorTier=0;this.guard=0;this.ringBonus=0;this.bag=[];this.equipped={weapon:null,armor:null,helmet:null,ring:null};this.nextItemId=1;this.gold=0;this.goldEarned=0;this.coins=[];this.pose=null;this.supplies={potion:0,luck:0,guard:0};this.buffs={xp:0,gold:0};this.potionClock=0;this.shopStock=[];this.shopClock=0;this.loot=[];this.magnetClock=0;this.holdPicks=false;this.awaitingClass=false;this.reviveOnDefeat=false;this.retreats=0;this.xpEarned=0;this.name=cleanHeroName(profile?.name)||'TILMO';
   this.firstMoved=false;this.firstKill=false;this.evolved={};
   this.emit('run_start');for(let i=0;i<4;i++)this.addEnemy('slime',130+i*25,i*Math.PI/2);
 }
@@ -215,6 +215,8 @@ buySupply(id,count=1){
   if(id in BUFFS)this.buffs[id]+=BUFFS[id].seconds*count;else this.supplies[id]+=count;
   this.cue('coin');this.emit('bought',{id,count});return true;
 }
+// Auto-drink threshold as a fraction of max HP (0 turns auto-drinking off).
+setPotionAt(v){this.potionAt=Math.max(0,Math.min(.9,Math.round(Number(v)*20)/20||0));return this.potionAt;}
 usePotion(){if(this.supplies.potion<=0||this.potionClock>0||this.p.hp>=this.maxHp||this.state!=='playing')return false;this.supplies.potion--;this.potionClock=POTION_COOLDOWN;this.p.hp=Math.min(this.maxHp,this.p.hp+this.maxHp*POTION_HEAL);this.cue('equip');this.effects.push({kind:'ascend',x:this.p.x,y:this.p.y,life:.6,max:.6});this.emit('potion',{left:this.supplies.potion});return true;}
 // Wears the best piece the hero's level allows in any slot that it improves.
 equipBest(){
@@ -228,8 +230,8 @@ equipBest(){
 // The best piece in the bag that is still level-locked, for the HUD hint.
 lockedUpgrade(){let best=null;for(const item of this.bag){const cur=this.gearItem(item.kind);if(item.tier>(cur?cur.tier:-1)&&(item.kind!=='weapon'||item.job===this.job)&&!canEquip(item,this.level,this.job)&&(!best||item.tier>best.tier))best=item;}return best;}
 // Gold and gear carry over to the next run.
-stash(){return {gold:this.gold,bag:structuredClone(this.bag),equipped:{...this.equipped},nextItemId:this.nextItemId,supplies:{...this.supplies}};}
-loadStash(st){if(!st)return;this.gold=st.gold||0;this.bag=structuredClone(st.bag||[]);this.equipped={weapon:null,armor:null,helmet:null,ring:null,...(st.equipped||{})};this.nextItemId=Math.max(st.nextItemId||1,...this.bag.map(i=>i.id+1));this.supplies={potion:0,luck:0,guard:0,...(st.supplies||{})};this.applyGear();this.p.hp=this.maxHp;}
+stash(){return {gold:this.gold,bag:structuredClone(this.bag),equipped:{...this.equipped},nextItemId:this.nextItemId,supplies:{...this.supplies},potionAt:this.potionAt};}
+loadStash(st){if(!st)return;this.gold=st.gold||0;this.bag=structuredClone(st.bag||[]);this.equipped={weapon:null,armor:null,helmet:null,ring:null,...(st.equipped||{})};this.nextItemId=Math.max(st.nextItemId||1,...this.bag.map(i=>i.id+1));this.supplies={potion:0,luck:0,guard:0,...(st.supplies||{})};if(typeof st.potionAt==='number')this.setPotionAt(st.potionAt);this.applyGear();this.p.hp=this.maxHp;}
 // Pulls every crystal and drop on the field to the hero; once per minute of play.
 magnet(){if(this.state!=='playing'||this.magnetClock>0)return false;this.magnetClock=MAGNET_COOLDOWN;for(const g of this.gems)g.pull=true;for(const g of this.coins)g.pull=true;for(const l of this.loot)l.pull=true;this.cue('portal');this.emit('magnet');this.effects.push({kind:'gust',x:this.p.x,y:this.p.y,r:220,life:.5,max:.5});return true;}
 checkLevel(){
@@ -257,7 +259,7 @@ retreat(){
 }
 // Plain snapshot for saving; the stage restarts on restore and enemies respawn.
 serialize(){
-  const keep=['job','appearance','name','t','stage','hard','cleared','stars','mode','autoChallenge','bossesDefeated','level','xp','need','kills','skills','slots','skillPoints','bag','equipped','nextItemId','gold','goldEarned','evolved','welcome','firstMoved','firstKill','magnetClock','awaitingClass','retreats','xpEarned','supplies','buffs','shopStock','shopClock'];
+  const keep=['job','appearance','name','t','stage','hard','cleared','stars','mode','autoChallenge','bossesDefeated','level','xp','need','kills','skills','slots','skillPoints','bag','equipped','nextItemId','gold','goldEarned','evolved','welcome','firstMoved','firstKill','magnetClock','awaitingClass','retreats','xpEarned','supplies','buffs','shopStock','shopClock','potionAt'];
   const out={v:4,hp:this.p.hp};for(const k of keep)out[k]=structuredClone(this[k]);return out;
 }
 static restore(snap,rng=Math.random){
@@ -469,7 +471,7 @@ update(dt,input={x:0,y:0}){
   }
   for(const s of this.shots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;if(s.friendly){for(const e of this.enemies){if(s.life<=0)break;if(e.hp>0&&!s.hit.has(e.id)&&Math.hypot(s.x-e.x,s.y-e.y)<e.r+(s.radius||10)){s.hit.add(e.id);this.hit(e,s.damage);if(s.slows)e.slow=1.6;if(s.blast)this.blast(s.x,s.y,s.blast,s.damage*.5);if(s.pierce!==undefined&&s.pierce--<=0)s.life=0;}}}else if(Math.hypot(s.x-p.x,s.y-p.y)<22){this.damage(12,'arrow');s.life=0;}}
   this.magnetClock=Math.max(0,this.magnetClock-dt);this.shopClock=Math.max(0,this.shopClock-dt);this.buffs.xp=Math.max(0,this.buffs.xp-dt);this.buffs.gold=Math.max(0,this.buffs.gold-dt);
-  this.potionClock=Math.max(0,this.potionClock-dt);if(this.p.hp>0&&this.p.hp<this.maxHp*POTION_AT)this.usePotion();
+  this.potionClock=Math.max(0,this.potionClock-dt);if(this.p.hp>0&&this.p.hp<this.maxHp*this.potionAt)this.usePotion();
   for(const g of this.gems){const d=Math.hypot(p.x-g.x,p.y-g.y);if(g.pull&&d>=120){const step=Math.min(d,900*dt);g.x+=(p.x-g.x)/(d||1)*step;g.y+=(p.y-g.y)/(d||1)*step;}else if(d<120){const step=Math.min(d,Math.max(90,280-d)*dt);g.x+=(p.x-g.x)/(d||1)*step;g.y+=(p.y-g.y)/(d||1)*step;}if(d<20){const xp=g.value*(this.buffs.xp>0?2:1);this.xp+=xp;this.xpEarned+=xp;g.collected=true;this.cue('coin',{volume:g.gold?.8:.35});if(g.gold)this.effects.push({kind:'xpText',x:g.x,y:g.y-20,life:.9,max:.9,value:xp});}}
   for(const l of this.loot){const d=Math.hypot(p.x-l.x,p.y-l.y);if(d<90||l.pull){const step=Math.min(d,(l.pull?900:220)*dt);l.x+=(p.x-l.x)/(d||1)*step;l.y+=(p.y-l.y)/(d||1)*step;}if(d<24){l.collected=true;const {kind,tier,job}=l;this.addItem({kind,tier,job});this.cue('loot',TIERS[tier].id);this.emit('loot_pickup',{kind,tier,name:itemName(l)});this.equipBest();}}
   this.loot=this.loot.filter(l=>!l.collected);

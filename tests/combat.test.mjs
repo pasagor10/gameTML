@@ -43,3 +43,9 @@ test('each slotted skill runs its own cooldown; bigger skills recharge slower an
   assert.ok(r.skillCooldown('meteor')>r.skillCooldown('nova'));
   r.skills.manaflow=5;assert.ok(r.skillCooldown('nova')<2.24*.75);
 });
+test('auto-potion threshold is adjustable, can be turned off, and is kept in the stash',()=>{
+  const r=new Run();r.supplies.potion=3;r.enemies=[];r.spawn=1000;
+  assert.equal(r.setPotionAt(.6),.6);r.p.hp=r.maxHp*.55;r.update(.05);assert.equal(r.supplies.potion,2,'drinks below 60%');
+  r.setPotionAt(0);r.potionClock=0;r.p.hp=5;r.update(.05);assert.equal(r.supplies.potion,2,'off never drinks');
+  assert.equal(r.setPotionAt(5),.9);const n=new Run();n.loadStash({...r.stash(),potionAt:.45});assert.equal(n.potionAt,.45);
+});

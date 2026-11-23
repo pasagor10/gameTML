@@ -3,13 +3,13 @@
 import {REQ_LEVEL} from './weapons.js';
 
 export const SUPPLIES = {
-  potion: {icon: '🧪', name: 'ยาฟื้นพลัง', desc: 'ฟื้น HP 50% · ดื่มเองเมื่อ HP ต่ำกว่า 35%', price: 40},
-  luck: {icon: '🔷', name: 'หินนำโชค', desc: 'โอกาสตีบวกสำเร็จ +25% (ใช้ครั้งละ 1 ก้อน)', price: 150},
-  guard: {icon: '🔶', name: 'หินคุ้มครอง', desc: 'ตีบวกพลาดแล้วไม่ลดขั้น (ใช้ครั้งละ 1 ก้อน)', price: 250}
+  potion: {icon: '🧪', ico: 'potion', name: 'ยาฟื้นพลัง', desc: 'ฟื้น HP 50%', price: 40},
+  luck: {icon: '🔷', ico: 'luck', name: 'หินนำโชค', desc: 'โอกาสตีบวกสำเร็จ +25% (ใช้ครั้งละ 1 ก้อน)', price: 150},
+  guard: {icon: '🔶', ico: 'guard', name: 'หินคุ้มครอง', desc: 'ตีบวกพลาดแล้วไม่ลดขั้น (ใช้ครั้งละ 1 ก้อน)', price: 250}
 };
 export const BUFFS = {
-  xp: {icon: '📜', name: 'คัมภีร์ EXP x2', desc: 'EXP ที่เก็บได้ ×2 นาน 5 นาที', price: 300, seconds: 300},
-  gold: {icon: '🍀', name: 'เครื่องรางทอง x2', desc: 'เงินที่เก็บได้ ×2 นาน 5 นาที', price: 300, seconds: 300}
+  xp: {icon: '📜', ico: 'scroll', name: 'คัมภีร์ EXP x2', desc: 'EXP ที่เก็บได้ ×2 นาน 5 นาที', price: 300, seconds: 300},
+  gold: {icon: '🍀', ico: 'clover', name: 'เครื่องรางทอง x2', desc: 'เงินที่เก็บได้ ×2 นาน 5 นาที', price: 300, seconds: 300}
 };
 // Gear prices by tier; Mythic is never sold, only dropped.
 export const GEAR_PRICE = [60, 240, 900, 3000, 9000];

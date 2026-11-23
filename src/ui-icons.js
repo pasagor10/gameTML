@@ -48,6 +48,22 @@ const ICONS = {
   power: g => `<defs>${lin(g + 'a', [[0, '#ffffff'], [1, '#9ab8d8']])}</defs>
     <path d="M10 8l30 30M54 8L24 38" stroke="${O}" stroke-width="9" stroke-linecap="round"/><path d="M10 8l30 30M54 8L24 38" stroke="url(#${g}a)" stroke-width="5" stroke-linecap="round"/>
     <path d="M34 34l12 12M30 34L18 46" stroke="#ffc23a" stroke-width="7" stroke-linecap="round"/><path d="M42 50l8 8M22 50l-8 8" stroke="#8a4a1a" stroke-width="6" stroke-linecap="round"/><circle cx="51" cy="57" r="4" fill="#ffd25a" stroke="${O}" stroke-width="2"/><circle cx="13" cy="57" r="4" fill="#ffd25a" stroke="${O}" stroke-width="2"/>`,
+  scroll: g => `<defs>${lin(g + 'a', [[0, '#fff4d0'], [1, '#e0bf7a']])}${lin(g + 'b', [[0, '#c48a4a'], [1, '#7a4a1a']])}</defs>
+    <path d="M14 12h34c4 0 6 3 6 6v32c0 4 2 6 4 6H22c-4 0-6-3-6-6V18c0-3-1-6-2-6z" fill="url(#${g}a)" stroke="${O}" stroke-width="3" stroke-linejoin="round"/>
+    <rect x="8" y="8" width="12" height="12" rx="6" fill="url(#${g}b)" stroke="${O}" stroke-width="3"/><rect x="48" y="50" width="12" height="10" rx="5" fill="url(#${g}b)" stroke="${O}" stroke-width="3"/>
+    <path d="M24 24h22M24 31h22M24 38h14" stroke="#b8945a" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="42" cy="45" r="8" fill="#e02a3a" stroke="${O}" stroke-width="2.5"/><text x="42" y="49" text-anchor="middle" font-size="10" font-weight="900" fill="#fff" font-family="sans-serif">x2</text>`,
+  clover: g => `<defs>${rad(g + 'a', [[0, '#c8ff9a'], [.6, '#3ac84a'], [1, '#14782a']])}</defs>
+    <path d="M32 34c4 10 6 18 12 24" stroke="${O}" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M32 34c4 10 6 18 12 24" stroke="#2a9a3a" stroke-width="3" fill="none" stroke-linecap="round"/>
+    ${[0, 90, 180, 270].map(r => `<path transform="rotate(${r} 32 32)" d="M32 30c-3-8-14-10-16-3-2 6 4 10 8 10-4 2-6 8 0 9 6 1 8-8 8-16z" fill="url(#${g}a)" stroke="${O}" stroke-width="2.8" stroke-linejoin="round"/>`).join('')}
+    <circle cx="32" cy="32" r="4.5" fill="#ffd23a" stroke="${O}" stroke-width="2"/>${shine(22, 20, 4, 2.5)}`,
+  luck: g => `<defs>${lin(g + 'a', [[0, '#c8f4ff'], [.5, '#3a9aff'], [1, '#1a3ab8']], 1, 1)}</defs>
+    <path d="M32 4l22 18-8 30H18l-8-30z" fill="url(#${g}a)" stroke="${O}" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M10 22h44M32 4l-8 18 8 30 8-30zM18 52l6-30M46 52l-6-30" stroke="#ffffff70" stroke-width="1.8" fill="none"/>${shine(22, 16, 5, 2.5)}
+    <path d="M52 50l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#fffbe0" stroke="#3a9aff" stroke-width="1.2"/>`,
+  guard: g => `<defs>${lin(g + 'a', [[0, '#ffe0a0'], [.5, '#ff9a2a'], [1, '#b8480a']], 1, 1)}${lin(g + 'b', [[0, '#e8eef6'], [1, '#8a9ab0']])}</defs>
+    <path d="M32 4l22 8v18c0 14-10 24-22 30C20 54 10 44 10 30V12z" fill="url(#${g}b)" stroke="${O}" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M32 14l12 12-12 22-12-22z" fill="url(#${g}a)" stroke="${O}" stroke-width="2.8" stroke-linejoin="round"/><path d="M20 26h24M32 14v34" stroke="#ffffff70" stroke-width="1.5"/>${shine(20, 14, 5, 2.5)}`,
   heart: g => `<defs>${rad(g + 'a', [[0, '#ffb0b8'], [.5, '#ff3a50'], [1, '#a80a24']])}</defs><path d="M32 56S6 40 6 22C6 13 13 8 20 8c6 0 10 4 12 8 2-4 6-8 12-8 7 0 14 5 14 14 0 18-26 34-26 34z" fill="url(#${g}a)" stroke="${O}" stroke-width="3.5" stroke-linejoin="round"/>${shine(18, 19, 5, 3.5)}`,
   crystal: g => `<defs>${lin(g + 'a', [[0, '#f0d0ff'], [1, '#7a2ae0']], 1, 1)}</defs><path d="M32 4l18 18-18 38-18-38z" fill="url(#${g}a)" stroke="${O}" stroke-width="3.5" stroke-linejoin="round"/><path d="M14 22h36M32 4l-7 18 7 38 7-38z" stroke="#ffffff80" stroke-width="1.8" fill="none"/>`
 };
