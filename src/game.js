@@ -320,7 +320,7 @@ setInterval(()=>{if(document.hidden&&started&&awaySince){const now=performance.n
 // The run is saved every few seconds and when the page hides, so a refresh resumes it.
 const SAVE_KEY='tilmo-save';
 function saveRun(){if(!started)return;try{mergeGoldGrants(run,characterStore.active,localStorage);characterStore.setItem('tilmo-stash',JSON.stringify(run.stash()));if(run.state==='ended')characterStore.removeItem(SAVE_KEY);else characterStore.setItem(SAVE_KEY,JSON.stringify({at:Date.now(),auto:autoPlay,run:run.serialize()}));return true;}catch{return false;}}
-function loadSave(){try{const save=JSON.parse(characterStore.getItem(SAVE_KEY)||'null');return save?.run?.v===4?save:null;}catch{return null;}}
+function loadSave(){try{const save=JSON.parse(characterStore.getItem(SAVE_KEY)||'null');return [4,5].includes(save?.run?.v)?save:null;}catch{return null;}}
 setInterval(saveRun,5000);addEventListener('pagehide',saveRun);
 canvas.addEventListener('pointerdown',e=>{if(run.state!=='playing'||!started)return;pointer={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId);});canvas.addEventListener('pointermove',e=>{if(!pointer||e.pointerId!==pointer.id)return;const dx=e.clientX-pointer.x,dy=e.clientY-pointer.y,l=Math.hypot(dx,dy);move={x:dx/Math.max(42,l),y:dy/Math.max(42,l)};$('stick').style.transform=`translate(${move.x*30}px,${move.y*30}px)`;});canvas.addEventListener('pointerup',clearInput);canvas.addEventListener('pointercancel',clearInput);
 // ---- Skills and world map panels; the field waits while they are open.
