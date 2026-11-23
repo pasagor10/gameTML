@@ -867,3 +867,50 @@ export function drawToonArena(c, time, stage = 1) {
   }
   c.globalAlpha = 1;
 }
+
+// ---------------------------------------------------------------- pets
+// Small companions drawn facing right with their feet at (0, 0); `moving` adds a run cycle.
+export function drawToonPet(c, id, time, moving = false, face = 1) {
+  const run = moving ? time * 16 : time * 3, bob = moving ? Math.abs(Math.sin(run)) * 2.2 : Math.sin(time * 3) * .6;
+  c.save();E(c, 0, 1, 11, 3.6, '#10303040', null);c.scale(face, 1);c.translate(0, -bob);
+  const feet = (col, xs) => {for (const [x, ph] of xs) {const s = moving ? Math.sin(run + ph) * 2.5 : 0;L(c, x, -5, x + s, 0, col, 2.2);}};
+  if (id === 'chick') {
+    feet('#e08a2a', [[-2, 0], [3, Math.PI]]);E(c, 0, -9, 8, 7.5, '#ffe14a');E(c, -3, -8, 3.6, 2.6, '#f4c42a', OUT, 1);
+    P(c, [[7, -11], [12, -9.5], [7, -8]], '#ff9a2a', OUT, 1);E(c, 3.5, -12, 1.3, 1.6, OUT, null);P(c, [[-1, -16], [1, -20], [2, -16]], '#ffe14a', OUT, 1);
+  } else if (id === 'cat') {
+    feet('#d0702a', [[-6, 0], [-2, Math.PI], [3, 0], [6, Math.PI]]);
+    c.beginPath();c.moveTo(-9, -9);c.quadraticCurveTo(-17, -14 + Math.sin(time * 5) * 3, -13, -22);c.strokeStyle = OUT;c.lineWidth = 4.4;c.stroke();c.strokeStyle = '#ff9a3a';c.lineWidth = 2.6;c.stroke();
+    E(c, -1, -9, 10, 5.5, '#ff9a3a');for (const x of [-4, 0]) L(c, x, -14, x + 1, -10, '#c4561a', 1.4);
+    E(c, 8, -14, 6, 5.5, '#ff9a3a');for (const x of [4, 10]) P(c, [[x - 2, -18], [x, -23], [x + 2.5, -18]], '#ff9a3a', OUT, 1);
+    for (const x of [7, 10.5]) E(c, x, -14.5, 1.1, 1.5, OUT, null);E(c, 12.5, -12.5, 1, .8, '#ff6a8a', null);
+  } else if (id === 'fox') {
+    feet('#8a2a10', [[-6, 0], [-2, Math.PI], [3, 0], [6, Math.PI]]);
+    c.save();c.translate(-9, -10);c.rotate(-.5 + Math.sin(time * 6) * .25);E(c, -7, 0, 9, 4.6, '#ff6a2a');E(c, -14, 0, 3.4, 3, '#fff4e0', OUT, 1);c.restore();
+    E(c, -1, -9, 9.5, 5.5, '#ff6a2a');E(c, 2, -7, 5, 2.6, '#fff4e0', null);
+    E(c, 8, -14, 5.5, 5, '#ff6a2a');P(c, [[11, -15], [17, -12.5], [11, -11]], '#ff6a2a', OUT, 1);E(c, 16.5, -12.6, 1, .9, OUT, null);
+    for (const x of [4, 9]) P(c, [[x - 2, -17], [x, -24], [x + 2.5, -17]], '#ff6a2a', OUT, 1);E(c, 9, -15, 1.1, 1.4, OUT, null);
+    for (let i = 0; i < 3; i++) {const ph = (time * 1.2 + i / 3) % 1;c.globalAlpha = 1 - ph;glowDot(c, -16 + i * 3, -14 - ph * 12, 3.4, '#ffb03aaa');}c.globalAlpha = 1;
+  } else if (id === 'owl') {
+    c.translate(0, -10 + Math.sin(time * 5) * 2);const flap = Math.sin(time * 14) * .5;
+    for (const s of [-1, 1]) {c.save();c.scale(s, 1);c.rotate(flap);P(c, [[4, -6], [16, -12], [14, -2], [6, 0]], '#3a4a8a');c.restore();}
+    E(c, 0, -6, 8, 9, '#4a5aa8');E(c, 0, -3, 5, 5.6, '#c8d0ff', null);for (const s of [-1, 1]) P(c, [[s * 4, -14], [s * 7, -19], [s * 7.5, -12]], '#4a5aa8', OUT, 1);
+    for (const s of [-1, 1]) {E(c, s * 3.4, -10, 3.2, 3.2, '#fff8d0', OUT, 1);E(c, s * 3.4 + .6, -10, 1.6, 1.8, OUT, null);}P(c, [[-1.2, -7.5], [1.2, -7.5], [0, -5]], '#ffb03a', OUT, .8);
+    for (let i = 0; i < 3; i++) {const a = time * 2 + i * 2.1;glowDot(c, Math.cos(a) * 14, -6 + Math.sin(a) * 6, 4, '#fff4a8cc');}
+  } else if (id === 'dragon') {
+    c.translate(0, -12 + Math.sin(time * 4) * 2);const flap = Math.sin(time * 10) * .5;
+    for (const s of [-1, 1]) {c.save();c.translate(-2, -8);c.scale(s * .9 + (s < 0 ? 0 : .1), 1);c.rotate(-flap);P(c, [[0, 0], [12, -12], [18, -6], [14, -2], [16, 3], [6, 2]], '#b8222e');c.restore();}
+    c.beginPath();c.moveTo(-8, -2);c.quadraticCurveTo(-18, 2, -20, -6 + Math.sin(time * 5) * 2);c.strokeStyle = OUT;c.lineWidth = 4.6;c.stroke();c.strokeStyle = '#e8384a';c.lineWidth = 2.8;c.stroke();
+    E(c, -1, -4, 9, 6.5, '#e8384a');E(c, 1, -2, 5, 3.6, '#ffd27a', null);
+    E(c, 8, -11, 6.5, 5.5, '#e8384a');P(c, [[12, -12], [18, -10], [12, -8]], '#e8384a', OUT, 1);for (const x of [5, 9]) P(c, [[x - 1.5, -15], [x - 3, -21], [x + 1.5, -15.5]], '#fff0c0', OUT, 1);
+    E(c, 9.5, -12.5, 1.3, 1.6, '#ffe08a', null);glowDot(c, 19, -10, 5 + Math.sin(time * 9) * 1.5, '#ffb03aaa');
+  } else if (id === 'qilin') {
+    glowDot(c, 0, -14, 26, '#ffe39a55');feet('#a8650f', [[-7, 0], [-3, Math.PI], [4, 0], [8, Math.PI]]);
+    c.beginPath();c.moveTo(-10, -12);c.quadraticCurveTo(-20, -10, -18, -20 + Math.sin(time * 5) * 2);c.strokeStyle = OUT;c.lineWidth = 4.6;c.stroke();c.strokeStyle = '#ff8ae0';c.lineWidth = 2.8;c.stroke();
+    E(c, -1, -11, 11, 6.5, '#ffd25a');for (const x of [-6, -1, 4]) E(c, x, -12, 2, 1.6, '#ffb52e', null);
+    P(c, [[4, -14], [9, -24], [14, -22], [10, -12]], '#ffd25a');E(c, 13, -23, 5.5, 4.6, '#ffd25a');P(c, [[16, -24], [21, -22], [16, -20]], '#ffd25a', OUT, 1);
+    for (let i = 0; i < 4; i++) P(c, [[6 + i * 2, -26 + i * 2], [2 + i * 2, -30 + i * 2 + Math.sin(time * 6 + i) * 1.5], [9 + i * 2, -24 + i * 2]], `hsl(${(i * 70 + time * 120) % 360} 90% 70%)`, OUT, .8);
+    P(c, [[12, -27], [14, -35], [15.5, -27]], '#fff4c0', OUT, 1);E(c, 14.5, -23.5, 1.1, 1.4, OUT, null);
+    for (let i = 0; i < 4; i++) {const ph = (time * .9 + i / 4) % 1;c.globalAlpha = 1 - ph;glowDot(c, Math.sin(i * 2.4) * 14, -4 - ph * 30, 3, `hsl(${i * 80} 90% 75%)`);}c.globalAlpha = 1;
+  }
+  c.restore();
+}
