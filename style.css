@@ -320,3 +320,7 @@ body[data-screen=intro] .skill-hud,body[data-screen=armory] .skill-hud{visibilit
 #game .bar-ico{position:absolute;left:-12px;top:50%;width:20px;height:20px;transform:translateY(-50%);z-index:2}
 #game .xp-bar .bar-ico{width:15px;height:15px;left:-10px}
 @media(max-width:600px){#game .play-actions .bi{width:25px;height:25px}#game .ri{width:18px;height:18px}#game .res-pill{height:24px}#game .res-pill.gold b{font-size:12px}#game .bar-ico{width:16px;height:16px;left:-10px}#game .xp-bar .bar-ico{width:12px;height:12px;left:-8px}#game .hud .sys button{padding:4px}}
+/* gold coin icon inline with prices */
+.coin-i{display:inline-block;width:1.15em;height:1.15em;vertical-align:-.22em;margin-right:.15em}
+.coin-i .uicon{filter:drop-shadow(0 1px 0 #0006)}
+.bag-gold{color:#ffd23a!important;text-shadow:0 1px 0 #6a3a00,0 0 8px #ffb80060}
