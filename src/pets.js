@@ -11,7 +11,14 @@ export const PETS = [
   {id: 'qilin', tier: 5, name: 'กิเลนทอง', speed: 340, reach: 78, range: 680, loot: true, bonus: .2}
 ];
 export const petDef = id => PETS.find(p => p.id === id) || null;
-export function petPerks(p) {return [`เร็ว ${p.speed}`, `ระยะ ${p.range}`, p.loot ? 'เก็บไอเทมด้วย' : '', p.bonus ? `เงิน +${p.bonus * 100}%` : ''].filter(Boolean).join(' · ');}
+// Pets also fight: each hit deals this share of the hero's base hit, growing 15% per pet level.
+export const PET_ATK = [.25, .35, .5, .7, .95, 1.3], MAX_PET_LV = 10, PET_HIT_CD = .8;
+export function petStats(p, lv = 1) {
+  const k = lv - 1;
+  return {...p, lv, speed: Math.round(p.speed * (1 + .03 * k)), range: Math.round(p.range * (1 + .02 * k)), reach: p.reach, atk: PET_ATK[p.tier] * (1 + .15 * k)};
+}
+export function petUpgradeCost(p, lv, stage) {return Math.round(150 * (p.tier + 1) * 1.55 ** (lv - 1) * priceScale(stage) / 10) * 10;}
+export function petPerks(p) {return [`โจมตี ${Math.round(p.atk * 100)}%`, `เร็ว ${p.speed}`, `ระยะ ${p.range}`, p.loot ? 'เก็บไอเทมด้วย' : '', p.bonus ? `เงิน +${p.bonus * 100}%` : ''].filter(Boolean).join(' · ');}
 // The chick is always for sale; everything else comes from eggs.
 export const PET_PRICE = 600;
 // Hatch odds by tier (Common → Mythic). Every PITY eggs without Legendary or better guarantees one.

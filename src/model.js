@@ -2,7 +2,7 @@ import {constrainToArena,enemySpawn} from './arena.js';
 import {ARMOR,SLOTS,BAG_MAX,MAX_PLUS,GOLD_DROP,rollDrop,canEquip,itemName,itemStats,sellPrice,enhanceCost} from './loot.js';
 import {directionFor} from './sprite-layout.js';
 import {TIERS} from './weapons.js';
-import {PETS,petDef,PET_PRICE,PITY,eggPrice,dupeRefund,rollEgg} from './pets.js';
+import {PETS,petDef,petStats,petUpgradeCost,MAX_PET_LV,PET_HIT_CD,PET_PRICE,PITY,eggPrice,dupeRefund,rollEgg} from './pets.js';
 import {SUPPLIES,BUFFS,SHOP_REFRESH,ENHANCE_RATE,DROP_FROM,rollStock,supplyPrice,refreshPrice} from './shop.js';
 
 export const CLASSES=[
@@ -72,9 +72,9 @@ const NAME_TAIL=['มอส','เรีย','ดิน','ลอส','นา','�
 export function randomHeroName(rng=Math.random){return NAME_HEAD[Math.floor(rng()*NAME_HEAD.length)]+NAME_TAIL[Math.floor(rng()*NAME_TAIL.length)];}
 export function cleanHeroName(name){return String(name||'').replace(/[<>&"'`]/g,'').replace(/\s+/g,' ').trim().slice(0,12);}
 export const MAGNET_COOLDOWN=60;
-// From stage MAGNET_LIMIT_FROM the magnet runs on charges: each new stage reached adds MAGNET_GRANT,
-// unused charges carry over, and uses are MAGNET_GAP seconds apart.
-export const MAGNET_LIMIT_FROM=4,MAGNET_GRANT=10,MAGNET_GAP=3;
+// From stage MAGNET_LIMIT_FROM the magnet runs on charges: reaching that stage gives MAGNET_START,
+// every later new stage adds MAGNET_GRANT, unused charges carry over, and uses are MAGNET_GAP seconds apart.
+export const MAGNET_LIMIT_FROM=4,MAGNET_START=10,MAGNET_GRANT=1,MAGNET_GAP=3;
 // ---- Balance (v0.17). Levels need steadily more EXP; enemies, their hits and their gold grow
 // geometrically per stage, so progress eventually walls until gear is bought, found or enhanced.
 export function xpNeed(level){return Math.round(4+4*level+.35*level*level);}
@@ -117,7 +117,7 @@ constructor(rng=Math.random,profile=null){
   this.t=0;this.maxHp=100;this.p={x:0,y:0,hp:100,inv:0};this.enemies=[];this.gems=[];this.shots=[];this.effects=[];this.events=[];this.cues=[];this.zones=[];this.delayed=[];
   this.skills={};this.level=1;this.xp=0;this.need=xpNeed(1);this.kills=0;this.state='playing';this.spawn=0;this.attack=0;this.swing=0;this.aim=0;this.cooldowns={};this.castGlow={};this.droneClock=0;this.nextId=0;this.slots=[];this.skillPoints=0;
   this.stage=1;this.hard=false;this.cleared={normal:0,hard:0};this.stars={};this.mode='challenge';this.stageKills=0;this.quota=stageQuota(1);this.farmClock=0;this.autoChallenge=true;this.stageFailed=false;this.stageStart=0;this.bossSpawned=false;this.eliteSpawned=false;this.bossesDefeated=0;
-  this.potionAt=POTION_AT;this.weaponTier=0;this.weaponPlus=0;this.armorTier=0;this.guard=0;this.ringBonus=0;this.bag=[];this.equipped={weapon:null,armor:null,helmet:null,ring:null};this.nextItemId=1;this.gold=0;this.goldEarned=0;this.coins=[];this.pose=null;this.supplies={potion:0,luck:0,guard:0};this.buffs={xp:0,gold:0};this.potionClock=0;this.shopStock=[];this.shopClock=0;this.loot=[];this.magnetClock=0;this.magnetCharges=0;this.magnetGranted={normal:0,hard:0};this.pets=[];this.petId=null;this.petPity=0;this.petPos=null;this.holdPicks=false;this.awaitingClass=false;this.reviveOnDefeat=false;this.retreats=0;this.xpEarned=0;this.name=cleanHeroName(profile?.name)||'TILMO';
+  this.potionAt=POTION_AT;this.weaponTier=0;this.weaponPlus=0;this.armorTier=0;this.guard=0;this.ringBonus=0;this.bag=[];this.equipped={weapon:null,armor:null,helmet:null,ring:null};this.nextItemId=1;this.gold=0;this.goldEarned=0;this.coins=[];this.pose=null;this.supplies={potion:0,luck:0,guard:0};this.buffs={xp:0,gold:0};this.potionClock=0;this.shopStock=[];this.shopClock=0;this.loot=[];this.magnetClock=0;this.magnetCharges=0;this.magnetGranted={normal:0,hard:0};this.pets=[];this.petLv={};this.petId=null;this.petPity=0;this.petPos=null;this.holdPicks=false;this.awaitingClass=false;this.reviveOnDefeat=false;this.retreats=0;this.xpEarned=0;this.name=cleanHeroName(profile?.name)||'TILMO';
   this.firstMoved=false;this.firstKill=false;this.evolved={};
   this.emit('run_start');for(let i=0;i<4;i++)this.addEnemy('slime',130+i*25,i*Math.PI/2);
 }
@@ -177,8 +177,11 @@ startChallenge(stage=this.cleared[this.hard?'hard':'normal']+1,hard=this.hard){
 }
 // ---- Magnet charges and pets.
 magnetLimited(){return this.stage>=MAGNET_LIMIT_FROM;}
-grantMagnet(stage,hard){const k=hard?'hard':'normal';if(stage<MAGNET_LIMIT_FROM||stage<=this.magnetGranted[k])return;this.magnetGranted[k]=stage;this.magnetCharges+=MAGNET_GRANT;this.emit('magnet_charges',{added:MAGNET_GRANT,total:this.magnetCharges});}
-pet(){return this.pets.includes(this.petId)?petDef(this.petId):null;}
+grantMagnet(stage,hard){const k=hard?'hard':'normal';if(stage<MAGNET_LIMIT_FROM||stage<=this.magnetGranted[k])return;const add=this.magnetGranted[k]<MAGNET_LIMIT_FROM?MAGNET_START:MAGNET_GRANT;this.magnetGranted[k]=stage;this.magnetCharges+=add;this.emit('magnet_charges',{added:add,total:this.magnetCharges});}
+pet(){return this.pets.includes(this.petId)?petStats(petDef(this.petId),this.petLv[this.petId]||1):null;}
+petLevel(id){return this.petLv[id]||1;}
+petUpgradePrice(id){const d=petDef(id);return d?petUpgradeCost(d,this.petLevel(id),this.stage):Infinity;}
+upgradePet(id){if(!this.pets.includes(id)||this.petLevel(id)>=MAX_PET_LV)return false;const cost=this.petUpgradePrice(id);if(this.gold<cost)return false;this.gold-=cost;this.petLv[id]=this.petLevel(id)+1;this.cue('equip');this.emit('pet_level',{id,lv:this.petLv[id]});return true;}
 setPet(id){if(id!==null&&!this.pets.includes(id))return false;this.petId=id;this.petPos=null;this.emit('pet_set',{id});return true;}
 buyPet(){if(this.pets.includes('chick')||this.gold<PET_PRICE)return false;this.gold-=PET_PRICE;this.pets.push('chick');if(!this.pet())this.setPet('chick');this.cue('coin');this.emit('pet_hatched',{id:'chick',tier:0,fresh:true});return true;}
 // Hatches n eggs; new pets join the collection (and the best one is sent out), duplicates refund gold.
@@ -195,11 +198,15 @@ petsLeftToPity(){return PITY-this.petPity;}
 petStep(dt){
   const def=this.pet(),p=this.p;if(!def){this.petPos=null;return;}
   if(!this.petPos||Math.hypot(this.petPos.x-p.x,this.petPos.y-p.y)>900)this.petPos={x:p.x-30,y:p.y+12,face:1,moving:false};
-  const q=this.petPos;let best=null,bd=Infinity;
-  const look=arr=>{for(const g of arr){if(g.pull||g.collected)continue;const dh=Math.hypot(g.x-p.x,g.y-p.y);if(dh<110||dh>def.range)continue;const d=Math.hypot(g.x-q.x,g.y-q.y);if(d<bd){bd=d;best=g;}}};
-  look(this.gems);look(this.coins);if(def.loot)look(this.loot);
+  const q=this.petPos;let best=null,bd=Infinity;q.cd=Math.max(0,(q.cd||0)-dt);q.bite=Math.max(0,(q.bite||0)-dt);
+  const foe=r=>{let f=null,fd=Infinity;for(const e of this.enemies){if(e.hp<=0)continue;const dh=Math.hypot(e.x-p.x,e.y-p.y);if(dh>r)continue;const d=Math.hypot(e.x-q.x,e.y-q.y);if(d<fd){fd=d;f=e;}}return f;};
+  // Defend first when something is at the hero, then fetch, then hunt nearby monsters.
+  let target=foe(150);
+  if(!target){const look=arr=>{for(const g of arr){if(g.pull||g.collected)continue;const dh=Math.hypot(g.x-p.x,g.y-p.y);if(dh<110||dh>def.range)continue;const d=Math.hypot(g.x-q.x,g.y-q.y);if(d<bd){bd=d;best=g;}}};
+    look(this.gems);look(this.coins);if(def.loot)look(this.loot);if(!best)target=foe(def.range*.6);}
+  if(target){const d=Math.hypot(target.x-q.x,target.y-q.y);if(d<target.r+16){if(q.cd<=0){q.cd=PET_HIT_CD;q.bite=.15;this.hit(target,(12+this.level)*this.power()*def.atk);}best={x:q.x,y:q.y};q.face=target.x>q.x?1:-1;}else best={x:target.x-(target.x>q.x?1:-1)*(target.r+8),y:target.y};}
   const tx=best?best.x:p.x-34*(this.facing<0?-1:1),ty=best?best.y:p.y+14,d=Math.hypot(tx-q.x,ty-q.y);
-  if(d>2){const step=Math.min(d,(best?def.speed:Math.max(def.speed,d*2.5))*dt);q.x+=(tx-q.x)/d*step;q.y+=(ty-q.y)/d*step;if(Math.abs(tx-q.x)>1)q.face=tx>q.x?1:-1;}
+  if(d>2){const step=Math.min(d,(best?def.speed:Math.max(def.speed,d*2.5))*dt);q.x+=(tx-q.x)/d*step;q.y+=(ty-q.y)/d*step;if(!target&&Math.abs(tx-q.x)>1)q.face=tx>q.x?1:-1;}
   q.moving=d>4;
   const grab=arr=>{for(const g of arr)if(!g.pull&&Math.hypot(g.x-q.x,g.y-q.y)<def.reach)g.pull=true;};
   grab(this.gems);grab(this.coins);if(def.loot)grab(this.loot);
@@ -305,8 +312,8 @@ equipBest(){
 // The best piece in the bag that is still level-locked, for the HUD hint.
 lockedUpgrade(){let best=null;for(const item of this.bag){const cur=this.gearItem(item.kind);if(item.tier>(cur?cur.tier:-1)&&(item.kind!=='weapon'||item.job===this.job)&&!canEquip(item,this.level,this.job)&&(!best||item.tier>best.tier))best=item;}return best;}
 // Gold and gear carry over to the next run.
-stash(){return {pets:[...this.pets],petId:this.petId,petPity:this.petPity,gold:this.gold,bag:structuredClone(this.bag),equipped:{...this.equipped},nextItemId:this.nextItemId,supplies:{...this.supplies},potionAt:this.potionAt};}
-loadStash(st){if(!st)return;this.gold=st.gold||0;this.bag=structuredClone(st.bag||[]);this.equipped={weapon:null,armor:null,helmet:null,ring:null,...(st.equipped||{})};this.nextItemId=Math.max(st.nextItemId||1,...this.bag.map(i=>i.id+1));this.supplies={potion:0,luck:0,guard:0,...(st.supplies||{})};if(typeof st.potionAt==='number')this.setPotionAt(st.potionAt);if(Array.isArray(st.pets)){this.pets=st.pets.filter(id=>petDef(id));this.petId=st.petId??null;this.petPity=st.petPity||0;}this.applyGear();this.p.hp=this.maxHp;}
+stash(){return {pets:[...this.pets],petLv:{...this.petLv},petId:this.petId,petPity:this.petPity,gold:this.gold,bag:structuredClone(this.bag),equipped:{...this.equipped},nextItemId:this.nextItemId,supplies:{...this.supplies},potionAt:this.potionAt};}
+loadStash(st){if(!st)return;this.gold=st.gold||0;this.bag=structuredClone(st.bag||[]);this.equipped={weapon:null,armor:null,helmet:null,ring:null,...(st.equipped||{})};this.nextItemId=Math.max(st.nextItemId||1,...this.bag.map(i=>i.id+1));this.supplies={potion:0,luck:0,guard:0,...(st.supplies||{})};if(typeof st.potionAt==='number')this.setPotionAt(st.potionAt);if(Array.isArray(st.pets)){this.pets=st.pets.filter(id=>petDef(id));this.petId=st.petId??null;this.petPity=st.petPity||0;this.petLv={...(st.petLv||{})};}this.applyGear();this.p.hp=this.maxHp;}
 // Pulls every crystal and drop on the field to the hero; once per minute of play.
 magnet(){if(this.state!=='playing'||this.magnetClock>0)return false;if(this.magnetLimited()){if(this.magnetCharges<=0)return false;this.magnetCharges--;this.magnetClock=MAGNET_GAP;}else this.magnetClock=MAGNET_COOLDOWN;for(const g of this.gems)g.pull=true;for(const g of this.coins)g.pull=true;for(const l of this.loot)l.pull=true;this.cue('portal');this.emit('magnet');this.effects.push({kind:'gust',x:this.p.x,y:this.p.y,r:220,life:.5,max:.5});return true;}
 checkLevel(){
@@ -334,7 +341,7 @@ retreat(){
 }
 // Plain snapshot for saving; the stage restarts on restore and enemies respawn.
 serialize(){
-  const keep=['job','appearance','name','t','stage','hard','cleared','stars','mode','autoChallenge','bossesDefeated','level','xp','need','kills','skills','slots','skillPoints','bag','equipped','nextItemId','gold','goldEarned','evolved','welcome','firstMoved','firstKill','magnetClock','awaitingClass','retreats','xpEarned','supplies','buffs','shopStock','shopClock','potionAt','magnetCharges','magnetGranted','pets','petId','petPity'];
+  const keep=['job','appearance','name','t','stage','hard','cleared','stars','mode','autoChallenge','bossesDefeated','level','xp','need','kills','skills','slots','skillPoints','bag','equipped','nextItemId','gold','goldEarned','evolved','welcome','firstMoved','firstKill','magnetClock','awaitingClass','retreats','xpEarned','supplies','buffs','shopStock','shopClock','potionAt','magnetCharges','magnetGranted','pets','petLv','petId','petPity'];
   const out={v:4,hp:this.p.hp};for(const k of keep)out[k]=structuredClone(this[k]);return out;
 }
 static restore(snap,rng=Math.random){
