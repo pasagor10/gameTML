@@ -12,7 +12,7 @@ let LW = 1.4;
 // Soft cel shading: while SHADE is on, a solid #rrggbb fill becomes a gradient lit from the top-left
 // (lighter highlight -> base colour -> darker shadow). Gradients are cached by colour and rounded
 // box, so a moving hero reuses a small set instead of allocating new ones every frame.
-let SHADE = false;
+let SHADE = false, SHADE_MIN = 3.5;
 const shadeCache = new Map();
 // Fixed-coordinate gradients (skin, hair) are built once and reused.
 const gradCache = new Map();
@@ -20,11 +20,14 @@ const grad = (key, make) => {let g = gradCache.get(key);if (!g) {g = make();grad
 const mix = (hex, to, t) => {const n = parseInt(hex.slice(1), 16), r = n >> 16, g = n >> 8 & 255, b = n & 255;
   return `rgb(${Math.round(r + (to[0] - r) * t)},${Math.round(g + (to[1] - g) * t)},${Math.round(b + (to[2] - b) * t)})`;};
 function shaded(c, fill, x0, y0, x1, y1) {
-  if (!SHADE || typeof fill !== 'string' || fill.length !== 7 || fill[0] !== '#' || y1 - y0 < 3.5) return fill;
-  const k = `${fill}|${Math.round(x0)}|${Math.round(y0)}|${Math.round(x1)}|${Math.round(y1)}`;
+  if (!SHADE || typeof fill !== 'string' || fill.length !== 7 || fill[0] !== '#' || y1 - y0 < SHADE_MIN) return fill;
+  // Snap the box to a 4-unit grid: animated shapes reuse a handful of gradients instead of
+  // missing the cache every frame (the shift is invisible on a soft gradient).
+  x0 = Math.round(x0 / 4) * 4;y0 = Math.round(y0 / 4) * 4;x1 = Math.round(x1 / 4) * 4 || 4;y1 = Math.max(y0 + 4, Math.round(y1 / 4) * 4);
+  const k = `${fill}|${x0}|${y0}|${x1}|${y1}`;
   let g = shadeCache.get(k);
   if (!g) {
-    if (shadeCache.size > 3000) shadeCache.clear();
+    if (shadeCache.size > 8000) shadeCache.clear();
     g = c.createLinearGradient(x0 + (x1 - x0) * .2, y0, x0 + (x1 - x0) * .75, y1);
     g.addColorStop(0, mix(fill, [255, 252, 240], .32));g.addColorStop(.45, fill);g.addColorStop(1, mix(fill, [40, 24, 70], .3));
     shadeCache.set(k, g);
@@ -366,6 +369,7 @@ function hpBar(c, e, y) {
 export function drawToonMonster(c, e, time, player) {
   const th = themeFor(e.stage), flash = e.flash > 0, f = col => flash ? '#fff6dc' : col;
   const t = time + e.id * .37, faceLeft = player.x < e.x;
+  LW = 1.8;SHADE = !flash;SHADE_MIN = 9; // only bodies: crowds of monsters stay cheap
   c.save();c.translate(e.x, e.y);
   if (e.type === 'boss') bossAura(c, e, th, time);
   E(c, 0, 2, e.r * 1.1, e.r * .38, '#10303045', null);
@@ -387,6 +391,7 @@ export function drawToonMonster(c, e, time, player) {
   c.restore();
   if (e.rage) rageEmbers(c, e, time);
   if (e.berserk) {c.save();c.globalAlpha = .25 + .2 * Math.sin(time * 12);glowDot(c, 0, -e.r * 2.2, e.r * 3.2, '#ff1a2a');c.restore();}
+  LW = 1.4;SHADE = false;SHADE_MIN = 3.5;
   hpBar(c, e, e.type === 'elite' ? -82 : e.type === 'brute' ? -80 : e.type === 'imp' ? -48 : e.type === 'spitter' ? -66 : -e.r * 3.4);
   c.restore();
 }
@@ -408,7 +413,7 @@ function treant(c, th, f, t, e) {
 }
 function sporePuff(c, th, f, t, e) {
   const pulse = e.warn ? 1 + Math.sin(t * 40) * .1 : 1, hop = Math.abs(Math.sin(t * 10)) * 2;
-  c.translate(0, -hop);E(c, 0, -8, 7, 8, f('#f1d5b0'));eyes(c, 2, -9, 1.8, 3, th, f, true);
+  c.translate(0, -hop);E(c, 0, -8, 7, 8, f('#f1d5b0'));eyes(c, 2, -9, 1.8, 3.2, th, f);blush(c, 2, -5, 1.4, 4.5);
   c.save();c.translate(0, -16);c.scale(pulse, pulse);
   c.beginPath();c.moveTo(-17, 2);c.bezierCurveTo(-17, -20, 17, -20, 17, 2);c.closePath();c.fillStyle = armed(e, t) ? '#ff4a3a' : f('#9a4ac8');c.fill();c.strokeStyle = OUT;c.lineWidth = 1.4;c.stroke();
   for (const [x, y, r] of [[-8, -6, 3], [5, -10, 3.6], [10, -2, 2.4], [-2, -1, 2]]) E(c, x, y, r, r * .8, '#f4e4ff', null);c.restore();
@@ -478,7 +483,7 @@ function ghost(c, th, f, t, e) {
   const hover = Math.sin(t * 5) * 3;c.translate(0, -18 + hover);c.globalAlpha = .88;
   c.beginPath();c.moveTo(-9, 2);c.bezierCurveTo(-11, -16, 11, -16, 9, 2);for (let i = 0; i < 4; i++) c.lineTo(9 - (i + .5) * 4.5, 6 + Math.sin(t * 10 + i) * 3), c.lineTo(9 - (i + 1) * 4.5, 2);
   c.closePath();c.fillStyle = f('#d8dcff');c.fill();c.strokeStyle = OUT;c.lineWidth = 1.2;c.stroke();c.globalAlpha = 1;
-  for (const s of [-1, 1]) E(c, 2 + s * 3, -6, 1.8, 2.6, '#1e1840', null);E(c, 2, 0, 2, 2.6, '#1e1840', null);glowDot(c, 0, -4, 12, '#b48aff44');
+  glowDot(c, 0, -4, 12, '#b48aff44');eyes(c, 1.5, -6, 1.6, 3.4, th, f);blush(c, 1.5, -2.5, 1.4, 5.2);E(c, 1.5, -.5, 1.3, 1.6, f('#3a1a4a'), null);
 }
 function floatingEye(c, th, f, t, e) {
   const hover = Math.sin(t * 2.5) * 3, charge = e.warn ? 1 : 0;c.translate(0, -30 + hover);
@@ -582,10 +587,10 @@ function imp(c, th, f, t, e) {
   c.translate(0, -20 + hover);
   for (const s of [-1, 1]) {c.save();c.scale(s, 1);c.rotate(flap * .4);P(c, [[2, -2], [14, -12], [16, -2], [11, 2], [6, 0]], f(th.body2));c.restore();}
   P(c, [[-4, 4], [-12, 10 + flap * 2], [-14, 6]], f(th.body2), OUT, .8);
-  E(c, 0, 0, 7.5, 7.5, f(th.body));
-  for (const s of [-1, 1]) P(c, [[s * 3, -6], [s * 6, -13], [s * 6, -5]], f(th.stone), OUT, .8);
-  for (const s of [-1, 1]) E(c, 2 + s * 2.8, -1, 1.5, 1.8, '#ff3a2a', null);glowDot(c, 2, -1, 7, '#ff3a2a55');
-  fangs(c, 2, 3, 1.6, f);
+  for (const s of [-1, 1]) P(c, [[s * 3, -6], [s * 7, -14], [s * 7.5, -4]], f(th.body), OUT, 1);
+  E(c, 0, 0, 8.5, 8.2, f(th.body));E(c, -3, -4, 2.6, 1.6, '#ffffff80', null);
+  eyes(c, 1.5, -.5, 1.6, 3.2, th, f);blush(c, 1.5, 3, 1.4, 5);
+  c.beginPath();c.moveTo(.2, 4.2);c.quadraticCurveTo(1.5, 5.6, 2.8, 4.2);c.strokeStyle = f('#3a1a2a');c.lineWidth = 1;c.lineCap = 'round';c.stroke();
 }
 // Spitter: a horned hex-caster that fires a three-way spread.
 function spitter(c, th, f, t, e) {
@@ -599,16 +604,35 @@ function spitter(c, th, f, t, e) {
   L(c, 14, 2, 18, -46, OUT, 4);L(c, 14, 2, 18, -46, f('#6a4a2a'), 2.2);
   for (let i = 0; i < 3; i++) {const a = t * 4 + i * 2.1, ox = 18 + Math.cos(a) * 9, oy = -50 + Math.sin(a) * 4;glowDot(c, ox, oy, 6 + charge * 4, `${th.glow}aa`);E(c, ox, oy, 2.4 + charge, 2.4 + charge, f(th.glow), OUT, .8);}
 }
+// Big glossy chibi eyes: dark oval, a tinted iris at the bottom and two highlights.
+// `angry` adds a short slanted brow (tough monsters and bosses only).
 function eyes(c, x, y, r, gap, th, f, angry = false) {
-  for (const s of [-1, 1]) {E(c, x + s * gap, y, r, r * 1.2, f('#ffffff'), OUT, 1);E(c, x + s * gap + r * .25, y + r * .1, r * .6, r * .75, f(th.eye === '#2b2133' ? '#2b2133' : th.eye), null);
-    if (angry) L(c, x + s * gap - r * 1.2, y - r * 1.6 - s * r * .2, x + s * gap + r * 1.1, y - r * 1.3 + s * r * .3, OUT, 1.6);}
+  const R = r * 1.3, iris = th.eye === '#2b2133' ? '#6a5ad0' : th.eye;
+  for (const s of [-1, 1]) {
+    const ex = x + s * gap;
+    E(c, ex, y, R, R * 1.25, f('#221c36'), null);
+    E(c, ex + R * .1, y + R * .45, R * .7, R * .6, f(iris), null);
+    E(c, ex - R * .3, y - R * .4, R * .42, R * .48, '#ffffff', null);
+    E(c, ex + R * .38, y + R * .5, R * .2, R * .2, '#ffffffcc', null);
+    if (angry) L(c, ex - R * 1.1, y - R * 1.75 - s * R * .3, ex + R * 1.05, y - R * 1.35 + s * R * .3, f(OUT), Math.max(1.4, R * .42));
+  }
 }
+function blush(c, x, y, rx, gap) {for (const s of [-1, 1]) E(c, x + s * gap, y, rx, rx * .5, '#ff7a9a66', null);}
 function slime(c, th, f, t, e) {
-  const squish = Math.sin(t * 5) * .08, w = e.r * 1.45 * (1 + squish), h = e.r * 1.25 * (1 - squish);
-  c.beginPath();c.moveTo(-w, 0);c.bezierCurveTo(-w * 1.05, -h * 1.3, w * 1.05, -h * 1.3, w, 0);c.closePath();
-  const g = c.createLinearGradient(0, -h, 0, 0);g.addColorStop(0, f(th.slime[0]));g.addColorStop(1, f(th.slime[1]));c.fillStyle = g;c.fill();c.strokeStyle = OUT;c.lineWidth = 1.5;c.stroke();
-  E(c, -w * .4, -h * .7, w * .22, h * .14, '#ffffff90', null);
-  eyes(c, w * .15, -h * .5, 2.6, 5.5, th, f, true);fangs(c, w * .15, -h * .22, 1.8, f);
+  const squish = Math.sin(t * 5) * .08, w = e.r * 1.3 * (1 + squish), h = e.r * 1.75 * (1 - squish);
+  // Rounded jelly dome with a soft flat base.
+  c.beginPath();c.moveTo(-w, -h * .14);c.bezierCurveTo(-w * 1.1, -h * 1.32, w * 1.1, -h * 1.32, w, -h * .14);
+  c.quadraticCurveTo(w * 1.02, 0, w * .7, 0);c.lineTo(-w * .7, 0);c.quadraticCurveTo(-w * 1.02, 0, -w, -h * .12);c.closePath();
+  const g = c.createRadialGradient(-w * .3, -h * .75, 1, 0, -h * .4, w * 1.3);g.addColorStop(0, f('#ffffff'));g.addColorStop(.25, f(th.slime[0]));g.addColorStop(1, f(th.slime[1]));
+  c.fillStyle = g;c.fill();c.strokeStyle = OUT;c.lineWidth = 1.9;c.stroke();
+  // Glossy shine.
+  c.beginPath();c.ellipse(-w * .45, -h * .62, w * .2, h * .12, -.6, 0, Math.PI * 2);c.fillStyle = '#ffffffd0';c.fill();
+  E(c, -w * .18, -h * .78, w * .06, w * .06, '#ffffffd0', null);
+  // Cute face: big eyes, blush and a little "w" mouth.
+  const fy = -h * .42;
+  eyes(c, w * .08, fy, e.r * .2, w * .34, th, f);blush(c, w * .08, fy + e.r * .42, e.r * .2, w * .58);
+  c.beginPath();const mx = w * .08, my = fy + e.r * .4, mw = e.r * .12;c.moveTo(mx - mw * 2, my);c.quadraticCurveTo(mx - mw, my + mw * 1.6, mx, my);c.quadraticCurveTo(mx + mw, my + mw * 1.6, mx + mw * 2, my);
+  c.strokeStyle = f('#3a1a2a');c.lineWidth = 1.3;c.lineCap = 'round';c.stroke();
   // Theme topper.
   const top = -h * .98;
   if (th.id === 'forest') {L(c, 0, top, 2, top - 7, '#4f8146', 2);E(c, 6, top - 8, 5, 2.6, f('#80b95b'), OUT, 1);}
@@ -625,7 +649,7 @@ function runner(c, th, f, t, e) {
     const flap = Math.sin(t * 16) * .6;
     for (const s of [-1, 1]) {c.save();c.translate(0, -26);c.scale(s, 1);c.rotate(flap * .5);P(c, [[0, 0], [10, -10], [22, -6], [28, 4], [20, 2], [14, 8], [8, 3]], f(th.body2));c.restore();}
     E(c, 0, -26, 9, 8, f(th.body));for (const s of [-1, 1]) P(c, [[s * 3, -32], [s * 7, -40], [s * 8, -31]], f(th.body));
-    eyes(c, 2, -27, 2, 3.6, th, f, true);P(c, [[-2, -33], [6, -36], [3, -31]], f(th.accent), OUT, .8);return;
+    eyes(c, 2, -27, 2, 3.8, th, f);blush(c, 2, -23, 1.8, 6);P(c, [[-2, -33], [6, -36], [3, -31]], f(th.accent), OUT, .8);return;
   }
   for (const [lx, ph] of [[-8, 0], [8, Math.PI]]) {const s = Math.sin(run + ph) * 4;limb(c, lx, -12, lx + s, -2, f(th.body2), 3.4);}
   // tail
@@ -638,7 +662,7 @@ function runner(c, th, f, t, e) {
   const ear = th.id === 'ice' ? 12 : 7;
   for (const dx of [0, 6]) P(c, [[8 + dx, -29], [9 + dx, -29 - ear], [13 + dx, -30]], f(th.body2));
   E(c, 20, -22, 2, 1.6, OUT, null);
-  eyes(c, 15, -26, 1.8, 3, th, f, true);P(c, [[14, -19], [19, -19], [16.5, -15.5]], f('#fffaf0'), OUT, .7);
+  eyes(c, 15, -26, 1.9, 3.4, th, f);blush(c, 15, -21.5, 1.6, 5);
   if (th.id === 'crystal') for (const s of [-1, 1]) P(c, [[2 + s * 6, -25], [s * 7, -33], [5 + s * 5, -24]], f(th.accent), OUT, 1);
   if (th.id === 'temple') {L(c, 5, -20, 9, -18, '#d23a3a', 3);}
 }
@@ -649,7 +673,7 @@ function caster(c, th, f, t, e) {
   // Hood / cap.
   if (th.id === 'forest') {E(c, 0, -34, 17, 10, f('#d24a3a'));for (const [x, y] of [[-8, -37], [5, -39], [10, -33]]) E(c, x, y, 2.4, 1.8, '#ffe4be', null);E(c, 0, -26, 9, 7, f('#f1d5b0'));}
   else {P(c, [[-12, -24], [12, -24], [6, -42], [0, -46], [-6, -42]], f(th.body));E(c, 0, -28, 8, 6.5, f(th.id === 'ice' ? '#dff4ff' : '#2b2133'), OUT, 1);}
-  eyes(c, 1, -28, 1.8, 3.2, th, f, true);glowDot(c, 1, -28, 9, '#ff5a4a44');
+  eyes(c, 1, -28, 1.9, 3.4, th, f);blush(c, 1, -24, 1.6, 5.5);
   // Orb.
   const ox = 13, oy = -20, r = 4 + charge * 2 + Math.sin(t * 8) * .6;
   limb(c, 6, -16, ox - 2, oy + 2, f(th.body2), 3);
