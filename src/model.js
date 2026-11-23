@@ -439,8 +439,8 @@ loadStash(st){if(!st)return;this.gold=st.gold||0;this.paidGrants=Array.isArray(s
 // Pulls every crystal and drop on the field to the hero; once per minute of play.
 magnet(){if(this.state!=='playing'||this.magnetClock>0)return false;if(this.magnetLimited()){if(this.magnetCharges<=0)return false;this.magnetCharges--;this.magnetClock=MAGNET_GAP;}else this.magnetClock=MAGNET_COOLDOWN;for(const g of this.gems)g.pull=true;for(const g of this.coins)g.pull=true;for(const l of this.loot)l.pull=true;this.cue('portal');this.emit('magnet');this.effects.push({kind:'gust',x:this.p.x,y:this.p.y,r:220,life:.5,max:.5});return true;}
 checkLevel(){
-  if(this.xp<this.need||this.state!=='playing')return;
   if(this.level>=MAX_LEVEL){this.xp=Math.min(this.xp,this.need);return;}
+  if(this.xp<this.need||this.state!=='playing')return;
   this.xp-=this.need;this.level++;this.skillPoints++;this.cue('levelUp');this.need=xpNeed(this.level);this.emit('level_up',{level:this.level});
   this.equipBest();
   if(this.level>=10&&this.job==='novice'&&!this.awaitingClass){
@@ -472,9 +472,9 @@ serialize(){
 static restore(snap,rng=Math.random){
   const r=new Run(rng,{job:snap.job,appearance:snap.appearance,name:snap.name});
   for(const [k,v] of Object.entries(snap))if(!['v','hp','maxHp','weaponTier','armorTier'].includes(k)&&k in r)r[k]=structuredClone(v);
-  r.job=normalizeJob(r.job);for(const k of ['potion','luck','guard','egg'])if(!Number.isFinite(r.supplies[k]))r.supplies[k]=0;
   // v5 (15 worlds): old Hard stage k sat at difficulty 60+k, which is now normal stage 60+k.
   if((snap.v||0)<5)migrateHard(r);
+  r.job=normalizeJob(r.job);for(const k of ['potion','luck','guard','egg'])if(!Number.isFinite(r.supplies[k]))r.supplies[k]=0;
   r.applyGear();r.p.hp=Math.max(1,Math.min(r.maxHp,snap.hp||r.maxHp));
   if(r.mode==='farm')r.farmAt(r.stage,r.hard);else if(!r.startChallenge(r.stage,r.hard))r.farmAt(r.stage,r.hard);
   r.emit('run_restored',{stage:r.stage,level:r.level});
