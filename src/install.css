@@ -1,0 +1,54 @@
+#install-help {
+  width: min(380px, calc(100vw - 48px));
+  padding: 25px;
+  background: linear-gradient(145deg, #163c60, #071d39);
+  color: #f4dfaf;
+  border: 1px solid #c3a368;
+  border-radius: 10px;
+  font:
+    14px/1.9 "Noto Sans Thai",
+    sans-serif;
+  box-shadow: 0 20px 80px #000a;
+  text-align: center;
+}
+#install-help::backdrop {
+  background: #020b12ba;
+  backdrop-filter: blur(4px);
+}
+#install-help > img {
+  width: 80px;
+  height: 80px;
+  border-radius: 16px;
+}
+#install-help h2 {
+  margin: 12px 0;
+  font:
+    24px Georgia,
+    serif;
+  letter-spacing: 2px;
+}
+#install-steps {
+  color: #c3d5cd;
+  text-align: left;
+}
+#install-help small {
+  color: #9db2a7;
+}
+#install-help button {
+  display: block;
+  margin: 18px auto 0;
+  border: 1px solid #e8c98b;
+  border-radius: 4px;
+  background: linear-gradient(#f9df9f, #c28a38);
+  color: #33230d;
+  padding: 7px 28px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.brand-mark{display:inline-block;width:.9em;height:.9em;margin-right:.15em;vertical-align:baseline;filter:drop-shadow(0 3px 12px #44dbe855)}
+#install-app{position:fixed;z-index:30;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));display:flex;align-items:center;gap:8px;padding:8px 13px;border:1px solid #b5e9ee88;border-radius:12px;background:#071d39ed;color:#e0faff;font:600 12px/1.4 sans-serif;box-shadow:0 4px 20px #00112955;cursor:pointer}
+#install-app img{width:30px;height:30px;border-radius:7px}
+#install-app[hidden],body:not([data-screen="intro"]) #install-app{display:none}
+#install-app:focus-visible,#install-help button:focus-visible{outline:3px solid #6be9ef;outline-offset:4px}
+@media(max-width:600px){#install-app{padding:5px 9px;font-size:11px}#install-app img{width:24px;height:24px}}
