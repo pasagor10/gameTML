@@ -333,3 +333,10 @@ body[data-screen=intro] .skill-hud,body[data-screen=armory] .skill-hud{visibilit
 .char-left .potion-setting .ps-ico{width:32px;height:32px}
 .char-left .potion-setting .ps-text{flex:1 1 120px}
 .char-left .potion-setting input{flex:1 1 140px}
+/* summon guardian button */
+#game .hud .sp-summon{width:auto;height:auto;white-space:nowrap;font-size:12px;pointer-events:auto;display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:4px 14px 4px 8px;border-radius:10px;border:2px solid #ffe08a;background:linear-gradient(#ff5a6a,#b01830);color:#fff;font:800 12px 'Noto Sans Thai','Chakra Petch',sans-serif;box-shadow:0 3px 0 #5a0a18,0 0 12px #ff3a4a70;animation:summonGlow 1.6s infinite}
+#game .sp-summon[hidden]{display:none}
+#game .sp-summon .ri{width:17px;height:17px}
+#game .sp-summon:hover{filter:brightness(1.12)}#game .sp-summon:active{transform:translateY(2px);box-shadow:0 1px 0 #5a0a18}
+@keyframes summonGlow{50%{box-shadow:0 3px 0 #5a0a18,0 0 20px #ff6a7aa0}}
+@media(max-width:600px){#game .hud .sp-summon{font-size:11px;padding:3px 10px 3px 6px;margin-top:4px}}

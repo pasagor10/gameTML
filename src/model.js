@@ -159,6 +159,14 @@ startChallenge(stage=this.cleared[this.hard?'hard':'normal']+1,hard=this.hard){
   if(!this.canChallenge(stage,hard))return false;this.hard=hard;this.stage=stage;this.mode='challenge';this.stageKills=0;this.quota=stageQuota(stage);this.stageFailed=false;this.resetField();
   this.emit('stage_start',{stage,hard});this.cue('portal');return true;
 }
+// Summon the stage guardian now instead of waiting for the kill quota. From farm mode this
+// starts the next uncleared stage with its guardian straight away.
+canSummon(){return this.state==='playing'&&(this.mode==='farm'?this.canChallenge():!this.bossSpawned);}
+summonBoss(){
+  if(!this.canSummon())return false;
+  if(this.mode==='farm')this.startChallenge();
+  this.stageKills=Math.max(this.stageKills,this.quota);this.emit('boss_summoned',{stage:this.stage});return true;
+}
 farmAt(stage,hard=this.hard){
   const top=Math.max(1,this.cleared[hard?'hard':'normal']);if(hard&&this.cleared.normal<LAST_STAGE)return false;
   this.hard=hard;this.stage=Math.max(1,Math.min(stage,top));this.mode='farm';this.farmClock=0;this.resetField();this.emit('farm_start',{stage:this.stage,hard});return true;

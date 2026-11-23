@@ -128,11 +128,13 @@ function pause(){if(run.state==='inventory'){closeBag();return;}if(run.state==='
 applyIcons();
 function syncAuto(){$('auto').setAttribute('aria-pressed',String(autoPlay));setIcon($('auto').querySelector('.bi'),autoPlay?'hold':'play');}syncAuto();
 $('auto').onclick=()=>{autoPlay=!autoPlay;run.reviveOnDefeat=autoPlay;try{localStorage.setItem('tilmo-auto',autoPlay?'1':'0');}catch{}syncAuto();beep();toast(autoPlay?'AUTO เปิด • พับจอได้ ตัวละครเล่นต่อเอง':'AUTO ปิด • ควบคุมเอง');};
+function summon(){if(run.summonBoss()){flushCues();toast(`เรียกผู้พิทักษ์ด่าน ${stageName()}!`);}}
+$('summonBtn').onclick=summon;
 $('bagBtn').onclick=openBag;$('skillBtn').onclick=()=>openPanel('skills');$('mapBtn').onclick=()=>openPanel('map');$('townBtn').onclick=openShop;$('potionBtn').onclick=()=>{if(started&&run.usePotion()){flushCues();toast('ดื่มยาฟื้นพลัง!');}};
 $('magnet').onclick=()=>{if(started&&run.magnet())toast('ดูด EXP ทั้งสนาม!');};
 function syncMagnet(){const left=Math.ceil(run.magnetClock),ready=started&&run.state==='playing'&&left<=0;$('magnet').disabled=!ready;$('magnet').querySelector('.bl').textContent=left>0?`${left}s`:'ดูด EXP';$('magnet').classList.toggle('cooling',left>0);}
 $('pause').onclick=pause;$('sound').onclick=()=>{const on=!soundOn();setSound(on);setMusic(on);unlockAudio();syncSoundButton();beep();};function syncSoundButton(){setIcon($('sound'),soundOn()?'sound':'mute');$('sound').setAttribute('aria-label',soundOn()?'ปิดเสียง':'เปิดเสียง');}syncSoundButton();
-addEventListener('keydown',e=>{if(e.target instanceof HTMLInputElement)return;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys.add(e.key.toLowerCase());if(e.repeat)return;if(e.key==='Escape')pause();if(e.key.toLowerCase()==='b'){if(run.state==='inventory')closeBag();else openBag();}if(e.key.toLowerCase()==='t'){if(run.state==='shop')closeShop();else openShop();}if(e.key.toLowerCase()==='q'&&started&&run.usePotion())flushCues();if(e.key.toLowerCase()==='k'){if(run.state==='skills')closePanel();else openPanel('skills');}if(e.key.toLowerCase()==='m'){if(run.state==='map')closePanel();else openPanel('map');}});addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
+addEventListener('keydown',e=>{if(e.target instanceof HTMLInputElement)return;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys.add(e.key.toLowerCase());if(e.repeat)return;if(e.key==='Escape')pause();if(e.key.toLowerCase()==='b'){if(run.state==='inventory')closeBag();else openBag();}if(e.key.toLowerCase()==='t'){if(run.state==='shop')closeShop();else openShop();}if(e.key.toLowerCase()==='q'&&started&&run.usePotion())flushCues();if(e.key.toLowerCase()==='g'&&started){summon();}if(e.key.toLowerCase()==='k'){if(run.state==='skills')closePanel();else openPanel('skills');}if(e.key.toLowerCase()==='m'){if(run.state==='map')closePanel();else openPanel('map');}});addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
 function clearInput(){keys.clear();pointer=null;move={x:0,y:0};$('stick').style.transform='';}
 addEventListener('blur',()=>{clearInput();if(started&&run.state==='playing'&&!autoPlay)pause();});
 // With AUTO on the hero keeps farming while the tab is hidden and even while the game is closed:
@@ -165,7 +167,7 @@ let portraitKey='';
 function hudExtras(){
   $('hpText').textContent=`${Math.ceil(run.p.hp).toLocaleString()}/${run.maxHp.toLocaleString()}`;$('hp').closest('.meter').classList.toggle('low',run.p.hp/run.maxHp<.3);
   $('powerVal').textContent=run.combatPower().toLocaleString();
-  const g=run.enemies.find(e=>e.guardian&&e.hp>0),mode=run.mode==='farm'?'farm':g?'boss':'kill';$('stagePlate').dataset.mode=mode;$('stageMode').dataset.mode=mode;
+  const g=run.enemies.find(e=>e.guardian&&e.hp>0),mode=run.mode==='farm'?'farm':g?'boss':'kill';$('stagePlate').dataset.mode=mode;$('summonBtn').hidden=!run.canSummon();$('summonBtn').lastChild.textContent=mode==='farm'?'ท้าบอสด่านถัดไป':'เรียกบอส';$('stageMode').dataset.mode=mode;
   $('stageMode').textContent=mode==='farm'?'ฟาร์ม':mode==='boss'?'บอส!':run.hard?'ท้า · ยาก':'ท้าด่าน';$('quotaGoal').textContent=mode==='farm'?'⚔️':'👑';
   if(mode==='farm'){$('quotaFill').style.width=`${Math.min(100,run.farmClock/FARM_RETRY*100)}%`;$('quotaText').textContent=run.canChallenge()?(run.autoChallenge?`ท้าด่านใหม่ใน ${Math.max(0,Math.ceil(FARM_RETRY-run.farmClock))} วิ`:'เปิดแผนที่เพื่อท้าด่าน'):'เก็บเลเวลและไอเทม';}
   else if(g){$('quotaFill').style.width=`${g.hp/g.max*100}%`;$('quotaText').textContent='โค่นผู้พิทักษ์ด่าน!';}

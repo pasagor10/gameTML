@@ -49,3 +49,8 @@ test('auto-potion threshold is adjustable, can be turned off, and is kept in the
   r.setPotionAt(0);r.potionClock=0;r.p.hp=5;r.update(.05);assert.equal(r.supplies.potion,2,'off never drinks');
   assert.equal(r.setPotionAt(5),.9);const n=new Run();n.loadStash({...r.stash(),potionAt:.45});assert.equal(n.potionAt,.45);
 });
+test('summoning the guardian skips the kill quota, and from farm mode jumps to the next stage',()=>{
+  const r=new Run();assert.ok(r.canSummon());assert.ok(r.summonBoss());r.update(.05);const g=r.enemies.find(e=>e.guardian);assert.ok(g);assert.equal(r.canSummon(),false,'only one guardian at a time');
+  r.hit(g,1e9);assert.equal(r.stage,2);
+  r.farmAt(1);assert.equal(r.mode,'farm');assert.ok(r.summonBoss());assert.equal(r.mode,'challenge');assert.equal(r.stage,2);r.update(.05);assert.ok(r.enemies.some(e=>e.guardian));
+});
