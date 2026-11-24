@@ -699,3 +699,5 @@ body:not([data-screen=playing]) #gameChat{display:none}
   .raid-board .rb-row:nth-of-type(n+4):not(.me){display:none}
 }
 @media(max-width:600px){body:has(#raidBoard:not([hidden])) #toast{top:58%}}
+/* No zoom: double-tap zoom off everywhere, no text auto-resize on rotate */
+html,body{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
