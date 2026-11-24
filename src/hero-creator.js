@@ -24,7 +24,7 @@ const GROUPS = {
 };
 const TABS = [['hair', 'ผม'], ['face', 'หน้าตา'], ['outfit', 'ชุด']];
 
-// root: the element to fill. opts: {title, confirmLabel, appearance, look, name, randomName(),
+// root: the element to fill. opts: {title, confirmLabel, cancelLabel, appearance, look, name, randomName(),
 // onConfirm({appearance, look, name}) -> error text or nothing, onCancel()}.
 export function openHeroCreator(root, opts) {
   injectCss();
@@ -48,7 +48,7 @@ export function openHeroCreator(root, opts) {
         <div class="hc-controls"><button id="hcLeft" aria-label="หันซ้าย">◀</button><button id="hcPose"></button><button id="hcRight" aria-label="หันขวา">▶</button></div>
         <div class="hc-name"><input id="hcName" maxlength="12" placeholder="ตั้งชื่อตัวละคร..." aria-label="ชื่อตัวละคร" value="${esc(opts.name)}"><button id="hcRollName" title="สุ่มชื่อ" aria-label="สุ่มชื่อ">🎲</button></div>
         <p id="hcError" role="alert"></p>
-        <div class="hc-actions"><button id="hcRandom" class="secondary">🎲 สุ่มหน้าตา</button><button id="hcCancel" class="secondary">กลับ</button><button id="hcConfirm" class="primary">${esc(opts.confirmLabel || 'ยืนยัน')}</button></div>
+        <div class="hc-actions"><button id="hcRandom" class="secondary">🎲 สุ่มหน้าตา</button><button id="hcCancel" class="secondary">${esc(opts.cancelLabel || 'กลับ')}</button><button id="hcConfirm" class="primary">${esc(opts.confirmLabel || 'ยืนยัน')}</button></div>
       </section>
       <div class="hc-side">${panel('face')}</div>
     </div></div>`;
