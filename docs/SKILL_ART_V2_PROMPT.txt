@@ -1,20 +1,110 @@
-TILMO skill atlas v2 — archer, assassin and cleric (33 icons + 3 spare cells)
-Save the result as: assets/ui/skills/skill-atlas-v2.png  (square, ideally 1536x1536)
+TILMO skill icons v2 — cute cartoon style for ALL 77 skills (replaces the painterly atlas)
 
---- PROMPT (copy everything below this line) ---
+7 sheets, one per group. Each sheet = 4 columns × 3 rows = 12 square cells (11 icons + 1 empty spare).
+Canvas 1024×768 (each cell 256×256). Generate each sheet separately.
 
-ONE production game skill-icon atlas for the TILMO fantasy action RPG. Polished hand-painted Korean fantasy RPG / cozy anime MMO ability icon spritesheet, matching an existing set of painterly skill icons. EXACTLY 6 columns and 6 rows: 36 equally sized SQUARE cells, no gutters, no outside margin, full canvas square (1536x1536). Every cell is a separate beautifully illustrated ability icon with a dark navy background filling the whole cell, luminous saturated magic, crisp chunky silhouette readable at 44 pixels, beveled metallic details and refined brushwork. No text, letters, numerals, labels, watermark, no UI mockup. No circular badges or frames: the art fills each square with the central symbol inset 12%. Consistent quality, lighting and camera distance across all cells. Strict left-to-right, row-major subjects:
+Attach as style reference: assets/generated/v1/slime-leaf.png  (the game's cute glossy slime)
+Save each result as: assets/ui/skills/v2/<sheet>.png
+  sheets: general, knight, mage, gunner, archer, assassin, cleric
 
-Row 1 (ARCHER, green and gold forest magic): a single glowing emerald arrow piercing straight through a line of shadows; three golden arrows fanning out in a wind gust; a ring of thorny green vines with sharp spikes erupting from the ground; a rain of glowing green arrows falling from the sky; a silver arrow riding a swirling white-teal gale; a circle of dark green bramble roots spiraling around the viewer.
+=== SHARED STYLE (put at the start of every sheet prompt) ===
 
-Row 2 (ARCHER legendary + passives): a jade dragon made of light coiled around a giant arrow flying forward; a massive storm cloud unleashing a torrent of golden arrows; an ornate celestial bow drawn with five arrows of starlight; a sharp hawk eye inside green leaves with a glowing crosshair; a crossed ornate longbow and quiver with a golden mastery laurel; EMPTY spare cell (plain dark navy only).
+ONE game skill-icon sprite sheet for TILMO, a cute chibi fantasy action RPG. Match the attached reference: chunky 2.5D cartoon, thick dark-brown outline, glossy highlights, soft cel shading, vibrant saturated candy colours, cute and friendly (not realistic, not gritty). EXACTLY 4 columns × 3 rows of equally sized SQUARE cells, no gutters, no outside margin, canvas 1024×768. Each cell is one skill icon: a single bold cartoon object or effect, centered, filling about 75% of the cell, readable at 40 pixels. Each cell has its own soft rounded radial-gradient background in the sheet's colour theme (light centre, darker edge) that fills the whole cell edge-to-edge — no frame, no border, no badge. No text, letters, numbers, watermark or UI. Same camera distance and line weight in every cell. Strict left-to-right, top-to-bottom order:
 
-Row 3 (ASSASSIN, violet and black shadow magic): three curved daggers thrown in a fan with purple trails; a black blade slicing a straight violet shadow line; a cloud of poisonous green-purple mist with a skull shape; ghostly shadow daggers striking down from above; twin bloody daggers spinning in a crimson whirl; a dark sigil of death — a purple glowing skull mark in a shadow ring.
+=== SHEET: general (theme: warm cream and sky blue backgrounds) ===
+1 a cute ring of bouncy orange fireballs circling
+2 a chunky ice-blue crystal spear with frost sparkles
+3 a zig-zag purple lightning bolt with small sparks jumping between three dots
+4 a swirly green wind gust with two leaves
+5 a big chubby red heart with a growing ring around it (bigger area)
+6 a winged blue sneaker with speed lines
+7 a glowing golden phoenix chick rising with stars
+8 a sturdy stone-and-gold giant's armour chestplate (titan body)
+9 a golden general's war banner with a crown emblem
+10 a flexing cartoon arm with a glowing golden fist and power sparkles
+11 a sparkling pink crystal heart
+12 EMPTY (plain background only)
 
-Row 4 (ASSASSIN legendary + passives): crescent daggers eclipsing a black sun with a violet corona; a giant shadow serpent made of venom mist with glowing green eyes; a storm of a thousand violet shadow blades radiating outward; a predator's slit eye glowing red in darkness; a ghostly wisp soul being pulled into a dark dagger; EMPTY spare cell (plain dark navy only).
+=== SHEET: knight (theme: steel blue and silver backgrounds; legendary cells gold) ===
+1 three cute swords spinning in a red whirlwind
+2 a silver crescent sword wave flying sideways
+3 a big glowing golden sword plunging down from a cloud
+4 a sword dashing forward with blue speed trails
+5 a fist slamming the ground making orange cracks and pebbles
+6 a rain of small shiny golden swords falling
+7 LEGENDARY: a giant winged holy sword with halo, golden rays
+8 LEGENDARY: a cute green dragon coiled around spinning swords
+9 LEGENDARY: an enormous glowing sword cleaving a small cartoon planet in half
+10 a round steel shield with a heart-shaped iron core
+11 a crimson sword with a red droplet aura
+12 EMPTY (plain background only)
 
-Row 5 (CLERIC, white-gold holy light magic): a beam of holy golden light striking down like a lance; three waves of radiant white light sweeping forward; a glowing golden sanctuary circle with runes on the ground and a soft healing glow; pillars of pure light falling from the clouds; a burning sun-gold spear thrust forward with a sunburst; a halo ring of dawn light with pink-gold glow.
+=== SHEET: mage (theme: violet and midnight blue backgrounds; legendary cells gold) ===
+1 a round flaming meteor with a smiling crack glow falling diagonally
+2 a swirling purple arcane vortex
+3 a bright blue star burst nova
+4 a fluffy snow cloud dropping snowflakes
+5 a fat yellow lightning bolt striking the ground
+6 a straight purple magic beam from a crystal wand tip
+7 LEGENDARY: a shower of three cute shooting stars with cosmic trails
+8 LEGENDARY: a black hole with a magenta ring and tiny stars being pulled in
+9 LEGENDARY: a huge golden sun bursting with rays
+10 a flowing cyan mana ribbon around a crystal orb
+11 an open magic eye inside a sapphire crown
+12 EMPTY (plain background only)
 
-Row 6 (CLERIC legendary + passives): a six-winged seraph of golden light with a radiant sword; a grand sun cathedral with a blazing solar disc above it; a huge glowing judgement cross radiating five rays of light; a golden heart shield with a holy flame of faith; an open glowing holy book with a white feather and golden sparkles; EMPTY spare cell (plain dark navy only).
+=== SHEET: gunner (theme: brass orange and teal backgrounds; legendary cells gold) ===
+1 a cartoon blunderbuss firing a fan of golden pellets
+2 a round green grenade with a cute fuse spark
+3 a little hovering robot gun drone with a blue eye
+4 a red rocket with a flame tail and a smile-shaped exhaust
+5 a round red landmine with a blinking light
+6 a burst of many brass bullets raining down
+7 LEGENDARY: a cartoon satellite firing a blue laser down
+8 LEGENDARY: five red missiles with puffy smoke trails
+9 LEGENDARY: a big futuristic railgun firing a cyan beam
+10 a sharp eagle eye inside a golden crosshair
+11 a gloved hand twirling a pistol with speed lines
+12 EMPTY (plain background only)
 
-Rows 2, 4 and 6 first three icons are LEGENDARY: especially spectacular depth, legendary detailing, bright central focal points and rich dark contrast. Keep each class's colour identity consistent (archer = emerald/gold, assassin = violet/black/poison green, cleric = white/gold/dawn pink). Keep ALL 36 subjects exactly in their assigned cells. This is the final texture atlas itself.
+=== SHEET: archer (theme: emerald and leaf green backgrounds; legendary cells gold) ===
+1 one glowing green arrow piercing straight through
+2 three golden arrows fanning out in a breeze
+3 a ring of cute thorny green vines popping from the ground
+4 a rain of green arrows falling from a little cloud
+5 a silver arrow riding a swirling white-teal gale
+6 a circle of bramble roots spiraling around
+7 LEGENDARY: a cute jade sky-dragon wrapped around a giant arrow
+8 LEGENDARY: a storm cloud pouring golden arrows
+9 LEGENDARY: an ornate star bow drawn with five starlight arrows
+10 a hawk eye between green leaves with a crosshair glint
+11 a longbow and quiver with a golden laurel
+12 EMPTY (plain background only)
+
+=== SHEET: assassin (theme: violet and deep plum backgrounds with poison-green accents; legendary cells gold) ===
+1 three curved daggers thrown in a fan with purple trails
+2 a black dagger slicing a straight violet shadow line
+3 a puff of green-purple poison mist with a cute skull face
+4 shadow daggers striking down from above
+5 twin daggers spinning in a crimson whirl
+6 a purple glowing skull mark inside a shadow ring
+7 LEGENDARY: crescent daggers eclipsing a black sun with a violet glow
+8 LEGENDARY: a cartoon shadow serpent made of venom mist with glowing green eyes
+9 LEGENDARY: a burst of many violet shadow blades radiating outward
+10 a narrow glowing red cat-like eye in darkness
+11 a tiny ghostly soul wisp being pulled into a dagger
+12 EMPTY (plain background only)
+
+=== SHEET: cleric (theme: white-gold and soft dawn-pink backgrounds; legendary cells gold) ===
+1 a beam of holy golden light striking down like a lance
+2 three soft waves of white light sweeping forward
+3 a glowing golden rune circle on the ground with a healing sparkle
+4 pillars of light falling from fluffy clouds
+5 a sun-gold spear thrust forward with a sunburst tip
+6 a halo ring of pink-gold dawn light
+7 LEGENDARY: a cute six-winged angel of light holding a radiant sword
+8 LEGENDARY: a small sun cathedral with a blazing golden disc above
+9 LEGENDARY: a big glowing cross radiating five rays
+10 a golden heart-shaped shield with a holy flame
+11 an open glowing holy book with a white feather
+12 EMPTY (plain background only)

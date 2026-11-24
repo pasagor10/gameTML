@@ -786,3 +786,5 @@ html,body{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adju
   #game .skills-panel .sk-hint p{font-size:12px}
   .sk-hint-ic{width:28px;height:28px;font-size:14px}
 }
+/* Symbol fallback for skills that have no artwork yet */
+.class-skill-art.general{background:radial-gradient(circle at 35% 25%,#ffe3a0,#6b4d1c 72%);border-color:#ffd98a;color:#fff7dc}
