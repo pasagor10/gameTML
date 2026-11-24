@@ -13,3 +13,9 @@ test('every skill has a cell in exactly one v2 sheet, 11 per 4x3 sheet', () => {
 test('every skill renders some icon, even without artwork', () => {
   for(const s of SKILLS)assert.match(skillArt(s.id),/<span class="sk-icon/);
 });
+
+test('every skill has a cartoon SVG icon on a themed background', async () => {
+  const {skillIconSvg,SKILL_ICON_GROUPS}=await import('../src/skill-icons.js');
+  for(const s of SKILLS){const svg=skillIconSvg(s.id);assert.match(svg,/^<svg viewBox="0 0 64 64"/,s.id);assert.doesNotMatch(svg,/undefined|NaN/,s.id);assert.match(skillArt(s.id),/skill-svg/);}
+  const drawn=Object.values(SKILL_ICON_GROUPS).flat();assert.equal(new Set(drawn).size,drawn.length);
+});

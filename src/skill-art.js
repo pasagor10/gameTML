@@ -1,5 +1,6 @@
 import {EXTRA_SKILLS} from './extra-classes.js';
 import {SKILLS} from './model.js';
+import {skillIconSvg,skillIconGroup} from './skill-icons.js';
 
 // v2 cartoon icons: one 4 × 3 sheet per group (1024 × 768, 256 px cells), row-major, cell 12 spare.
 // Prompts: docs/SKILL_ART_V2_PROMPT.txt. Files: assets/ui/skills/v2/<sheet>.webp
@@ -30,6 +31,9 @@ export const SKILL_ART_IDS = [
 const COLS=[0,200,392,582,774,966,1161], ROWS=[0,192,381,566,756,930,1130,1354];
 
 export function skillArt(id, classes='sk-icon') {
+ // Cartoon SVG icons (src/skill-icons.js) match the game's toon look and win over everything below.
+ const svg=skillIconSvg(id);
+ if(svg)return `<span class="${classes} skill-svg ${skillIconGroup(id)}" aria-hidden="true">${svg}</span>`;
  const sheet=SHEET_OF[id];
  if(sheet&&READY_SHEETS.has(sheet[0])){
   const [name,i]=sheet,col=i%4,row=Math.floor(i/4);
