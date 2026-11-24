@@ -490,7 +490,7 @@ if(artStyle==='painted')loadMonsters().then(()=>{needsRender=true;});
 // ?debug exposes the live run for browser checks of later stages and weapon tiers.
 if(new URLSearchParams(location.search).has('debug'))window.tilmoDebug=()=>run;
 // The cutout knight loads its part pictures after start: redraw the class cards when they arrive.
-whenCutoutReady.then(()=>{needsRender=true;if(document.querySelector('.awakening'))renderAwakening(!started);else if($('characterSlots')&&$('start'))bindIntro();});
+whenCutoutReady.then(()=>{needsRender=true;portraitKey='';if(document.querySelector('.awakening'))renderAwakening(!started);else if($('characterSlots')&&$('start'))bindIntro();});
 (artStyle==='painted'?loadSprites():Promise.resolve()).then(()=>{needsRender=true;if(spriteStatus.ready&&document.querySelector(".awakening"))renderAwakening(!started);});
 
 (artStyle==='painted'?loadSceneArt():Promise.resolve()).then(()=>{needsRender=true;canvas.dataset.arena=sceneStatus.ground?"forest":"fallback";canvas.dataset.slime=sceneStatus.slime?"painted":"fallback";});
