@@ -9,7 +9,9 @@ import {drawWeapon} from './weapons.js';
 
 const DIR = '/assets/sprites/heroes/cutout-knight/';
 const D = Math.PI / 180;
-let rig = null, ready = false;
+let rig = null, ready = false, resolveReady;
+// Resolves once every part picture is in, so one-shot drawings (class cards, lobby) can redraw.
+export const whenCutoutReady = new Promise(r => {resolveReady = r;});
 const raster = new Map(); // art name -> canvas at rig.res
 const tinted = new Map(); // `${art}|${colour}|${shade}` -> canvas
 
@@ -26,7 +28,7 @@ function load() {
         const cv = document.createElement('canvas');cv.width = w * rig.res;cv.height = h * rig.res;
         cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
         raster.set(name, cv);
-        if (--left === 0) ready = true;
+        if (--left === 0) {ready = true;resolveReady();}
       };
       img.onerror = () => {left = -1;};
       img.src = `${DIR}${art.file}`;
@@ -113,7 +115,7 @@ function face({pose, attacking, time, back}) {
   if (kind === 'raise') return {eyes: 'happy', mouth: 'open'};
   if (kind || attacking) return {eyes: 'focus', mouth: 'flat'};
   // Blink for a moment every few seconds.
-  return {eyes: (time % 3.4) < .12 ? 'closed' : 'round', mouth: 'smile'};
+  return {eyes: (time % 3.4) > 3.28 ? 'closed' : 'round', mouth: 'smile'};
 }
 
 // Draw the knight with its feet at (0,0) in the caller's space, `size` px per rig unit.

@@ -70,7 +70,7 @@ export const HERO_TOON_SCALE = 1.45;
 // Chibi proportions: the head (and everything worn on it) is enlarged around the neck.
 const HEAD_SCALE = 1.3, NECK_Y = -32;
 // Pixels per cutout rig unit: the cutout knight stands as tall as the code-drawn heroes.
-const CUTOUT_SIZE = .7;
+const CUTOUT_SIZE = .82;
 
 export function drawToonHero(c, x, y, o = {}) {
   const {time = 0, moving = false, job = 'novice', appearance = 'a', inv = 0, direction = 'se', distance, attacking = false, tier = 0, plus = 0, pose = null, armor = -1, helmet = -1} = o;
