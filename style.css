@@ -681,3 +681,4 @@ body:not([data-screen=playing]) #gameChat{display:none}
 #game .skill-hud #next:empty{display:none}
 @media(max-width:760px){#game footer .hint{display:none}}
 @media(max-width:600px){.raid-board{bottom:186px}}
+#game .skill-hud #next{transform-origin:100% 50%;max-width:calc(100vw - 30px)}
