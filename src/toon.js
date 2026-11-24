@@ -5,7 +5,7 @@
 import {ARENA_SIZE, ARENA_HALF, ARENA_POLYGON} from './arena.js';
 import {RUN_STRIDE} from './sprite-layout.js';
 import {TIERS, drawWeapon} from './weapons.js';
-import {cutoutReady, drawCutoutKnight} from './cutout.js';
+import {cutoutReady, drawCutoutHero} from './cutout.js';
 
 const OUT = '#2b2133';
 // Default outline width; the hero raises it while drawing so it reads as a bold sticker-like chibi.
@@ -69,11 +69,13 @@ const EYE = {mage: ['#4a2aa8', '#a98cff'], gunner: ['#0e6a5e', '#4fe0c4'], other
 export const HERO_TOON_SCALE = 1.45;
 // Chibi proportions: the head (and everything worn on it) is enlarged around the neck.
 const HEAD_SCALE = 1.3, NECK_Y = -32;
-// Pixels per cutout rig unit: the cutout knight stands as tall as the code-drawn heroes.
+// Pixels per cutout rig unit: the cutout hero stands as tall as the code-drawn heroes.
+// Novices and knights are drawn by the cutout rig in the look the player made (hero-look.js).
+const CUTOUT_JOBS = ['novice', 'knight'];
 const CUTOUT_SIZE = .82;
 
 export function drawToonHero(c, x, y, o = {}) {
-  const {time = 0, moving = false, job = 'novice', appearance = 'a', inv = 0, direction = 'se', distance, attacking = false, tier = 0, plus = 0, pose = null, armor = -1, helmet = -1, swing = null} = o;
+  const {time = 0, moving = false, job = 'novice', appearance = 'a', inv = 0, direction = 'se', distance, attacking = false, tier = 0, plus = 0, pose = null, armor = -1, helmet = -1, swing = null, look = ''} = o;
   const left = ['sw', 'w', 'nw'].includes(direction), back = ['n', 'ne', 'nw'].includes(direction);
   const phase = moving ? (distance !== undefined ? distance / RUN_STRIDE * Math.PI * 2 : time * 13) : 0;
   const sw = moving ? Math.sin(phase) : 0, bob = moving ? -Math.abs(Math.cos(phase)) * 3 : Math.sin(time * 3) * 1.1;
@@ -84,12 +86,12 @@ export function drawToonHero(c, x, y, o = {}) {
   E(c, 0, 1, 22, 7.5, '#10303055', null);
   const auraLv = job === 'novice' ? 0 : tier, auraCol = tier === 5 ? `hsl(${(time * 80) % 360} 95% 72%)` : accent;
   if (auraLv >= 2) groundAura(c, auraLv, auraCol, time);
-  // Knight: the cutout rig (cutout.js) once its part pictures are loaded.
-  if (job === 'knight' && cutoutReady()) {
+  // The cutout rig (cutout.js) once its part pictures are loaded.
+  if (CUTOUT_JOBS.includes(job) && cutoutReady()) {
     c.save();c.scale(S, S);if (auraLv >= 1) auraBack(c, auraLv, auraCol, time);c.restore();
     if (inv > 0 && Math.floor(inv * 15) % 2) c.globalAlpha *= .45;
-    drawCutoutKnight(c, {time, moving, phase, attacking, swing, pose, left, back, tier, plus, size: CUTOUT_SIZE,
-      colours: {hair: (HAIR[appearance] || HAIR.a)[0], cloth: OUTFIT.knight.top, scarf: accent, eyes: EYE.other[0]}});
+    drawCutoutHero(c, {time, moving, phase, attacking, swing, pose, left, back, tier, plus, job, size: CUTOUT_SIZE,
+      look, appearance, scarf: job === 'novice' ? '#e0505e' : accent});
     if (auraLv >= 3) {c.save();c.scale(S, S);auraMotes(c, auraLv, auraCol, time);c.restore();}
     c.restore();LW = 1.4;SHADE = false;return;
   }

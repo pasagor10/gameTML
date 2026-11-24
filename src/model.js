@@ -2,6 +2,7 @@ import {constrainToArena,enemySpawn} from './arena.js';
 import {ARMOR,SLOTS,BAG_MAX,MAX_PLUS,GOLD_DROP,rollDrop,canEquip,itemName,itemStats,sellPrice,enhanceCost} from './loot.js';
 import {directionFor} from './sprite-layout.js';
 import {TIERS} from './weapons.js';
+import {cleanLook} from './hero-look.js';
 import {PETS,petDef,petStats,petUpgradeCost,MAX_PET_LV,PET_HIT_CD,PET_PRICE,PITY,eggPrice,dupeRefund,rollEgg} from './pets.js';
 import {RAID_TIME,RAID_EGGS,RAID_STONES,raidWindow,raidOpen,rollRankGear,raidGearChance,RAID_MIN_SHARE} from './raid.js';
 import {SUPPLIES,BUFFS,SHOP_REFRESH,ENHANCE_RATE,DROP_FROM,rollStock,shopTier,supplyPrice,refreshPrice} from './shop.js';
@@ -172,7 +173,7 @@ const MODS=['swift','shield','burst','giant'];
 
 export class Run{
 constructor(rng=Math.random,profile=null){
-  this.rng=rng;this.job=normalizeJob(profile?.job);this.appearance=profile?.appearance==='b'?'b':'a';
+  this.rng=rng;this.job=normalizeJob(profile?.job);this.appearance=profile?.appearance==='b'?'b':'a';this.look=cleanLook(profile?.look,this.appearance);
   this.facing=1;this.direction='se';this.moving=false;this.motionDistance=0;this.vel={x:0,y:0};
   this.t=0;this.maxHp=100;this.p={x:0,y:0,hp:100,inv:0};this.enemies=[];this.gems=[];this.shots=[];this.effects=[];this.events=[];this.cues=[];this.zones=[];this.delayed=[];
   this.skills={};this.level=1;this.xp=0;this.need=xpNeed(1);this.kills=0;this.state='playing';this.spawn=0;this.attack=0;this.swing=0;this.aim=0;this.cooldowns={};this.castGlow={};this.droneClock=0;this.nextId=0;this.slots=[];this.skillPoints=0;
@@ -292,7 +293,7 @@ allyStep(dt){
   }
 }
 // What a party member sees of you; sent to the relay several times a second.
-partyState(){const top=this.cleared[this.hard?'hard':'normal'];return {name:this.name,job:this.job,app:this.appearance,tier:this.weaponTier,plus:this.weaponPlus|0,armor:this.armorLook??-1,helmet:this.helmetTier??-1,lv:this.level,cp:this.combatPower(),hit:(9+this.level*.8)*this.power(),stage:this.stage,hard:this.hard,cleared:top,raid:this.mode==='raid',x:Math.round(this.p.x),y:Math.round(this.p.y),mv:!!this.moving,atk:this.swing>0,face:this.facing<0?-1:1,dir:this.direction,hp:Math.max(0,this.p.hp/this.maxHp),...this.raidPresence()};}
+partyState(){const top=this.cleared[this.hard?'hard':'normal'];return {name:this.name,job:this.job,app:this.appearance,look:this.look,tier:this.weaponTier,plus:this.weaponPlus|0,armor:this.armorLook??-1,helmet:this.helmetTier??-1,lv:this.level,cp:this.combatPower(),hit:(9+this.level*.8)*this.power(),stage:this.stage,hard:this.hard,cleared:top,raid:this.mode==='raid',x:Math.round(this.p.x),y:Math.round(this.p.y),mv:!!this.moving,atk:this.swing>0,face:this.facing<0?-1:1,dir:this.direction,hp:Math.max(0,this.p.hp/this.maxHp),...this.raidPresence()};}
 raidPresence(){const b=this.raid&&this.enemies.find(e=>e.raid);return b?{rw:this.raidJoined,dmg:Math.round(this.raid.dmg),rx:Math.round(this.p.x-b.x),ry:Math.round(this.p.y-b.y)}:{};}
 // Travel to a friend's stage: farm it when already cleared, otherwise challenge it if allowed.
 canHelp(stage,hard=false){return !!stage&&this.mode!=='raid'&&(stage<=this.cleared[hard?'hard':'normal']||this.canChallenge(stage,hard));}
@@ -466,11 +467,11 @@ retreat(){
 }
 // Plain snapshot for saving; the stage restarts on restore and enemies respawn.
 serialize(){
-  const keep=['job','appearance','name','t','stage','hard','cleared','stars','mode','autoChallenge','bossesDefeated','level','xp','need','kills','skills','slots','skillPoints','bag','equipped','nextItemId','gold','paidGrants','goldEarned','evolved','welcome','firstMoved','firstKill','magnetClock','awaitingClass','retreats','xpEarned','supplies','buffs','shopStock','shopClock','potionAt','magnetCharges','magnetGranted','pets','petLv','petId','petPity','raidJoined'];
+  const keep=['job','appearance','look','name','t','stage','hard','cleared','stars','mode','autoChallenge','bossesDefeated','level','xp','need','kills','skills','slots','skillPoints','bag','equipped','nextItemId','gold','paidGrants','goldEarned','evolved','welcome','firstMoved','firstKill','magnetClock','awaitingClass','retreats','xpEarned','supplies','buffs','shopStock','shopClock','potionAt','magnetCharges','magnetGranted','pets','petLv','petId','petPity','raidJoined'];
   const out={v:5,hp:this.p.hp};for(const k of keep)out[k]=structuredClone(this[k]);return out;
 }
 static restore(snap,rng=Math.random){
-  const r=new Run(rng,{job:snap.job,appearance:snap.appearance,name:snap.name});
+  const r=new Run(rng,{job:snap.job,appearance:snap.appearance,name:snap.name,look:snap.look});
   for(const [k,v] of Object.entries(snap))if(!['v','hp','maxHp','weaponTier','armorTier'].includes(k)&&k in r)r[k]=structuredClone(v);
   // v5 (15 worlds): old Hard stage k sat at difficulty 60+k, which is now normal stage 60+k.
   if((snap.v||0)<5)migrateHard(r);

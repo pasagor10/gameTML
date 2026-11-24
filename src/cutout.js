@@ -1,11 +1,13 @@
-// Cutout (paper-doll) knight: separate part pictures (face, eyes, mouth, hair, torso, arms, legs)
+// Cutout (paper-doll) hero: separate part pictures (face, eyes, mouth, hair, torso, arms, legs)
 // from assets/sprites/heroes/cutout-knight/ placed on a small bone skeleton and posed in code
 // every frame. Poses are worked out from the same inputs drawToonHero gets (time, stride,
-// attacking, skill pose), so there is no per-hero state and any number of knights can share it.
-// The weapon is still the tiered knight weapon from weapons.js, held in the rig's hand.
+// attacking, skill pose), so there is no per-hero state and any number of heroes can share it.
+// Which hair, eyes, mouth, skin and outfit are drawn comes from the hero's look (hero-look.js),
+// and the weapon is the hero's tiered class weapon from weapons.js, held in the rig's hand.
 // Until the pictures are in (or outside a browser) cutoutReady() is false and toon.js keeps
-// drawing the old code-drawn knight.
+// drawing the old code-drawn hero.
 import {drawWeapon} from './weapons.js';
+import {resolveLook} from './hero-look.js';
 
 const DIR = '/assets/sprites/heroes/cutout-knight/';
 const D = Math.PI / 180;
@@ -286,7 +288,7 @@ function poseRaw({time, moving, phase, attacking, pose, swing}) {
   return P;
 }
 
-function face({pose, attacking, time, back}) {
+function face({pose, attacking, time, back}, look) {
   if (back) return {eyes: null, mouth: null};
   const kind = pose?.kind;
   if (pose?.skill && MOVES[pose.skill]) return {eyes: 'focus', mouth: 'open'};
@@ -294,7 +296,7 @@ function face({pose, attacking, time, back}) {
   if (kind === 'raise') return {eyes: 'happy', mouth: 'open'};
   if (kind || attacking) return {eyes: 'focus', mouth: attacking && !kind ? 'open' : 'flat'};
   // Blink for a moment every few seconds.
-  return {eyes: (time % 3.4) > 3.28 ? 'closed' : 'round', mouth: 'smile'};
+  return {eyes: (time % 3.4) > 3.28 ? 'closed' : look.eyes, mouth: look.mouth};
 }
 
 // Blade trail: a crescent swept by the sword tip from where the strike began to where the arm is
@@ -314,11 +316,16 @@ function smear(c, at, {from, to, k, q, R = 64}, tint) {
   c.restore();
 }
 
-// Draw the knight with its feet at (0,0) in the caller's space, `size` px per rig unit.
-// o: drawToonHero's options plus phase, left, back, colours {hair, cloth, scarf, eyes}.
-export function drawCutoutKnight(c, o) {
-  const {size, colours, tier = 0, plus = 0, time = 0, attacking = false} = o;
-  const P = poseFor(o), f = face(o);
+// Draw a hero with its feet at (0,0) in the caller's space, `size` px per rig unit.
+// o: drawToonHero's options plus phase, left, back, `look` (a hero-look.js code or resolveLook()
+// result), `scarf` colour and `job` (whose tiered weapon is held).
+export function drawCutoutHero(c, o) {
+  const {size, tier = 0, plus = 0, time = 0, attacking = false, job = 'knight'} = o;
+  const look = typeof o.look === 'object' && o.look ? o.look : resolveLook(o.look, o.appearance);
+  const outfit = rig.slots.outfit[look.outfit] || rig.slots.outfit.hood, hair = rig.slots.hair[look.hair] || rig.slots.hair.tousled;
+  const colours = {hair: look.hairColour, eyes: look.eyeColour, cloth: look.outfitColour, skin: look.skin,
+    pants: outfit.pants || look.outfitColour, scarf: o.scarf || '#e0574a'};
+  const P = poseFor(o), f = face(o, look);
   // A spinning skill turns the knight round: mirror against the facing it started with.
   const left = P.turn ? P.turn.left !== o.left : o.left, back = P.turn ? P.turn.back : o.back;
   if (P.turn && back) {f.eyes = null;f.mouth = null;}
@@ -328,7 +335,6 @@ export function drawCutoutKnight(c, o) {
       lx = bx + (p.x || 0), ly = by + (p.y || 0), cr = Math.cos(par.r * D), sr = Math.sin(par.r * D);
     world[name] = {x: par.x + lx * cr - ly * sr, y: par.y + lx * sr + ly * cr, r: par.r + (p.r || 0)};
   }
-  const looks = {headwear: 'hood', eyes: f.eyes, mouth: f.mouth, weapon: 'sword'};
   c.save();c.scale(left ? -size : size, size);
   // Landing squash: wider and shorter, feet stay on the ground.
   if (P.squash) c.scale(1 + P.squash * .035, 1 - P.squash * .035);
@@ -338,19 +344,20 @@ export function drawCutoutKnight(c, o) {
     c.drawImage(partCanvas(name, art.tint ? colours[art.tint] : null, shade), -fr.pivot[0], -fr.pivot[1], fr.size[0], fr.size[1]);
     c.restore();
   };
-  // The knight's own tiered weapon replaces the rig's sword picture.
+  // The hero's own tiered weapon replaces the rig's sword picture.
   const weapon = () => {
     const b = world.hand;
     c.save();c.translate(b.x, b.y);c.rotate((b.r + 70) * D);c.scale(1 / size, 1 / size);
-    drawWeapon(c, 'knight', tier, time, {attacking, plus});c.restore();
+    drawWeapon(c, job, tier, time, {attacking, plus});c.restore();
   };
   if (P.fx) for (const e of P.fx) effect(c, e, world, colours.scarf, true);
-  // Headwear: the onesie hood (or plain hair) behind the head, bangs over the face, hood rim and trim on top.
-  const hw = rig.slots.headwear[looks.headwear];
+  // Headwear: the outfit's hood (or the hair's back) behind the head, bangs over the face, hood rim
+  // and trim on top.
+  const hw = rig.slots.headwear[outfit.headwear], headBack = hw.back || hair.back;
   // A sword raised overhead goes behind the big chibi head instead of across the face.
   const behindHead = back || P.weaponBehind;
   if (behindHead) weapon();
-  if (!back) part(hw.back, 'head');
+  if (!back) part(headBack, 'head');
   part('upper', 'armB', 0, .78);part('fore', 'foreB', 0, .78);part('fist', 'foreB', 0, .86);
   const leg = (side, shade = 1) => {
     part('foot', 'foot' + side, 0, shade < 1 ? .8 : 1);part('shin', 'shin' + side, 0, shade < 1 ? .8 : 1);part('thigh', 'leg' + side, 0, shade);
@@ -358,15 +365,16 @@ export function drawCutoutKnight(c, o) {
   leg('B', .78);
   if (!back) part('scarf-tail', 'tail');
   leg('F');
-  part('torso', 'torso');part('belt', 'torso');part('scarf', 'torso');
+  for (const art of outfit.torso) part(art, 'torso');
+  part('belt', 'torso');part('scarf', 'torso');
   part('face', 'head');
   // From behind the hood's back covers its face rim and only the ears stick out.
-  if (back) {if (hw.front) part(hw.front, 'head');part(hw.back, 'head');part('scarf-tail', 'tail');}
+  if (back) {if (hw.front) part(hw.front, 'head');part(headBack, 'head');part('scarf-tail', 'tail');}
   else {
-    const eyes = rig.slots.eyes[looks.eyes] || {};
+    const eyes = rig.slots.eyes[f.eyes] || {};
     for (const layer of ['base', 'iris', 'shine']) if (eyes[layer]) part(eyes[layer], 'head');
-    part(rig.slots.mouth[looks.mouth].art, 'head');
-    part(hw.bangs, 'head');
+    part((rig.slots.mouth[f.mouth] || rig.slots.mouth.smile).art, 'head');
+    part(hair.front, 'head');
     if (hw.front) part(hw.front, 'head');
     if (hw.trim) part(hw.trim, 'head');
   }
@@ -432,3 +440,5 @@ function effect(c, e, world, tint, behind) {
   }
   c.restore();
 }
+
+export const drawCutoutKnight = drawCutoutHero;
