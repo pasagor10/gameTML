@@ -87,7 +87,7 @@ function poseFor({time, moving, phase, attacking, pose}) {
     set('legF', lerp(-6, -28, k));set('legB', lerp(6, 22, k));
   } else if (kind === 'raise') {
     const k = Math.sin(q * Math.PI);
-    set('armF', 175);set('hand', 115);set('armB', -175);P.hips.y -= 4 * k;set('head', -6);
+    set('armF', 205);set('hand', 95);set('armB', -175);P.hips.y -= 4 * k;set('head', -6);
   } else if (kind === 'spin') {
     set('armF', 265);set('hand', 105);set('armB', 90);lean(4);
   } else if (kind === 'thrust') {
@@ -129,7 +129,7 @@ export function drawCutoutKnight(c, o) {
       lx = bx + (p.x || 0), ly = by + (p.y || 0), cr = Math.cos(par.r * D), sr = Math.sin(par.r * D);
     world[name] = {x: par.x + lx * cr - ly * sr, y: par.y + lx * sr + ly * cr, r: par.r + (p.r || 0)};
   }
-  const looks = {headwear: 'hair', eyes: f.eyes, mouth: f.mouth, weapon: 'sword'};
+  const looks = {headwear: 'hood', eyes: f.eyes, mouth: f.mouth, weapon: 'sword'};
   c.save();c.scale(left ? -size : size, size);
   const part = (name, bone, rot = 0, shade = 1) => {
     const art = rig.arts[name], fr = rig.frames[art.frame], b = world[bone];
@@ -143,20 +143,25 @@ export function drawCutoutKnight(c, o) {
     c.save();c.translate(b.x, b.y);c.rotate((b.r + 70) * D);c.scale(1 / size, 1 / size);
     drawWeapon(c, 'knight', tier, time, {attacking, plus});c.restore();
   };
+  // Headwear: the onesie hood (or plain hair) behind the head, bangs over the face, hood rim and trim on top.
+  const hw = rig.slots.headwear[looks.headwear];
   if (back) weapon();
-  if (!back) part('hair-back', 'head');
+  if (!back) part(hw.back, 'head');
   part('sleeve', 'armB', 0, .78);part('hand', 'armB', 0, .86);
-  part('leg', 'legB', 0, .78);
+  part('leg', 'legB', 0, .78);part('boot', 'legB', 0, .8);
   if (!back) part('scarf-tail', 'tail');
-  part('leg', 'legF');
+  part('leg', 'legF');part('boot', 'legF');
   part('torso', 'torso');part('belt', 'torso');part('scarf', 'torso');
   part('face', 'head');
-  if (back) {part('hair-back', 'head');part('scarf-tail', 'tail');}
+  // From behind the hood's back covers its face rim and only the ears stick out.
+  if (back) {if (hw.front) part(hw.front, 'head');part(hw.back, 'head');part('scarf-tail', 'tail');}
   else {
     const eyes = rig.slots.eyes[looks.eyes] || {};
     for (const layer of ['base', 'iris', 'shine']) if (eyes[layer]) part(eyes[layer], 'head');
     part(rig.slots.mouth[looks.mouth].art, 'head');
-    part('hair-front', 'head');
+    part(hw.bangs, 'head');
+    if (hw.front) part(hw.front, 'head');
+    if (hw.trim) part(hw.trim, 'head');
   }
   if (!back) weapon();
   part('sleeve', 'armF');part('hand', 'armF');

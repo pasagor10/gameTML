@@ -3,110 +3,474 @@
   "about": "Cutout (paper-doll) hero: separate part pictures placed on a bone skeleton and animated in code by public/cutout-rig.js. Every picture in a frame shares that frame's size and pivot, so a part can be redrawn (SVG or PNG) without touching offsets.",
   "res": 3,
   "frames": {
-    "head": { "size": [96, 92], "pivot": [48, 86] },
-    "torso": { "size": [64, 58], "pivot": [32, 48] },
-    "tail": { "size": [30, 34], "pivot": [24, 4] },
-    "arm": { "size": [20, 36], "pivot": [10, 6] },
-    "leg": { "size": [28, 40], "pivot": [11, 3] },
-    "sword": { "size": [18, 76], "pivot": [9, 62] }
+    "head": {
+      "size": [
+        96,
+        92
+      ],
+      "pivot": [
+        48,
+        86
+      ]
+    },
+    "torso": {
+      "size": [
+        64,
+        58
+      ],
+      "pivot": [
+        32,
+        48
+      ]
+    },
+    "tail": {
+      "size": [
+        30,
+        34
+      ],
+      "pivot": [
+        24,
+        4
+      ]
+    },
+    "arm": {
+      "size": [
+        20,
+        36
+      ],
+      "pivot": [
+        10,
+        6
+      ]
+    },
+    "leg": {
+      "size": [
+        28,
+        40
+      ],
+      "pivot": [
+        11,
+        3
+      ]
+    },
+    "sword": {
+      "size": [
+        18,
+        76
+      ],
+      "pivot": [
+        9,
+        62
+      ]
+    }
   },
   "bones": [
-    ["root", null, 0, 0],
-    ["hips", "root", 0, -35],
-    ["legB", "hips", -6, 0],
-    ["legF", "hips", 6, 0],
-    ["torso", "hips", 0, 0],
-    ["tail", "torso", -10, -35],
-    ["armB", "torso", -15, -33],
-    ["armF", "torso", 13, -33],
-    ["hand", "armF", 0, 21],
-    ["head", "torso", 0, -38]
+    [
+      "root",
+      null,
+      0,
+      0
+    ],
+    [
+      "hips",
+      "root",
+      0,
+      -35
+    ],
+    [
+      "legB",
+      "hips",
+      -6,
+      0
+    ],
+    [
+      "legF",
+      "hips",
+      6,
+      0
+    ],
+    [
+      "torso",
+      "hips",
+      0,
+      0
+    ],
+    [
+      "tail",
+      "torso",
+      -10,
+      -35
+    ],
+    [
+      "armB",
+      "torso",
+      -15,
+      -33
+    ],
+    [
+      "armF",
+      "torso",
+      13,
+      -33
+    ],
+    [
+      "hand",
+      "armF",
+      0,
+      21
+    ],
+    [
+      "head",
+      "torso",
+      0,
+      -38
+    ]
   ],
   "arts": {
-    "face": { "file": "face.svg", "frame": "head" },
-    "eyes-round": { "file": "eyes-round.svg", "frame": "head" },
-    "iris-round": { "file": "iris-round.svg", "frame": "head", "tint": "eyes" },
-    "shine-round": { "file": "shine-round.svg", "frame": "head" },
-    "eyes-focus": { "file": "eyes-focus.svg", "frame": "head" },
-    "iris-focus": { "file": "iris-focus.svg", "frame": "head", "tint": "eyes" },
-    "shine-focus": { "file": "shine-focus.svg", "frame": "head" },
-    "eyes-happy": { "file": "eyes-happy.svg", "frame": "head" },
-    "eyes-closed": { "file": "eyes-closed.svg", "frame": "head" },
-    "eyes-dizzy": { "file": "eyes-dizzy.svg", "frame": "head" },
-    "eyes-wince": { "file": "eyes-wince.svg", "frame": "head" },
-    "mouth-smile": { "file": "mouth-smile.svg", "frame": "head" },
-    "mouth-open": { "file": "mouth-open.svg", "frame": "head" },
-    "mouth-cat": { "file": "mouth-cat.svg", "frame": "head" },
-    "mouth-flat": { "file": "mouth-flat.svg", "frame": "head" },
-    "hair-back": { "file": "hair-back.svg", "frame": "head", "tint": "hair" },
-    "hair-front": { "file": "hair-front.svg", "frame": "head", "tint": "hair" },
-    "hood-frog-back": { "file": "hood-frog-back.svg", "frame": "head" },
-    "hood-frog-front": { "file": "hood-frog-front.svg", "frame": "head" },
-    "hood-cat-back": { "file": "hood-cat-back.svg", "frame": "head" },
-    "hood-cat-front": { "file": "hood-cat-front.svg", "frame": "head" },
-    "torso": { "file": "torso.svg", "frame": "torso", "tint": "cloth" },
-    "belt": { "file": "belt.svg", "frame": "torso" },
-    "scarf": { "file": "scarf.svg", "frame": "torso", "tint": "scarf" },
-    "scarf-tail": { "file": "scarf-tail.svg", "frame": "tail", "tint": "scarf" },
-    "sleeve": { "file": "sleeve.svg", "frame": "arm", "tint": "cloth" },
-    "hand": { "file": "hand.svg", "frame": "arm" },
-    "leg": { "file": "leg.svg", "frame": "leg" },
-    "sword": { "file": "sword.svg", "frame": "sword" }
+    "face": {
+      "file": "face.svg",
+      "frame": "head"
+    },
+    "eyes-round": {
+      "file": "eyes-round.svg",
+      "frame": "head"
+    },
+    "iris-round": {
+      "file": "iris-round.svg",
+      "frame": "head",
+      "tint": "eyes"
+    },
+    "shine-round": {
+      "file": "shine-round.svg",
+      "frame": "head"
+    },
+    "eyes-focus": {
+      "file": "eyes-focus.svg",
+      "frame": "head"
+    },
+    "iris-focus": {
+      "file": "iris-focus.svg",
+      "frame": "head",
+      "tint": "eyes"
+    },
+    "shine-focus": {
+      "file": "shine-focus.svg",
+      "frame": "head"
+    },
+    "eyes-happy": {
+      "file": "eyes-happy.svg",
+      "frame": "head"
+    },
+    "eyes-closed": {
+      "file": "eyes-closed.svg",
+      "frame": "head"
+    },
+    "eyes-dizzy": {
+      "file": "eyes-dizzy.svg",
+      "frame": "head"
+    },
+    "eyes-wince": {
+      "file": "eyes-wince.svg",
+      "frame": "head"
+    },
+    "mouth-smile": {
+      "file": "mouth-smile.svg",
+      "frame": "head"
+    },
+    "mouth-open": {
+      "file": "mouth-open.svg",
+      "frame": "head"
+    },
+    "mouth-cat": {
+      "file": "mouth-cat.svg",
+      "frame": "head"
+    },
+    "mouth-flat": {
+      "file": "mouth-flat.svg",
+      "frame": "head"
+    },
+    "hair-back": {
+      "file": "hair-back.svg",
+      "frame": "head",
+      "tint": "hair"
+    },
+    "hair-front": {
+      "file": "hair-front.svg",
+      "frame": "head",
+      "tint": "hair"
+    },
+    "hood-frog-back": {
+      "file": "hood-frog-back.svg",
+      "frame": "head"
+    },
+    "hood-frog-front": {
+      "file": "hood-frog-front.svg",
+      "frame": "head"
+    },
+    "hood-cat-back": {
+      "file": "hood-cat-back.svg",
+      "frame": "head"
+    },
+    "hood-cat-front": {
+      "file": "hood-cat-front.svg",
+      "frame": "head"
+    },
+    "torso": {
+      "file": "torso.svg",
+      "frame": "torso",
+      "tint": "cloth"
+    },
+    "belt": {
+      "file": "belt.svg",
+      "frame": "torso"
+    },
+    "scarf": {
+      "file": "scarf.svg",
+      "frame": "torso",
+      "tint": "scarf"
+    },
+    "scarf-tail": {
+      "file": "scarf-tail.svg",
+      "frame": "tail",
+      "tint": "scarf"
+    },
+    "sleeve": {
+      "file": "sleeve.svg",
+      "frame": "arm",
+      "tint": "cloth"
+    },
+    "hand": {
+      "file": "hand.svg",
+      "frame": "arm"
+    },
+    "leg": {
+      "file": "leg.svg",
+      "frame": "leg",
+      "tint": "cloth"
+    },
+    "sword": {
+      "file": "sword.svg",
+      "frame": "sword"
+    },
+    "hood-knight-back": {
+      "file": "hood-knight-back.svg",
+      "frame": "head",
+      "tint": "cloth"
+    },
+    "hood-knight-front": {
+      "file": "hood-knight-front.svg",
+      "frame": "head",
+      "tint": "cloth"
+    },
+    "hood-knight-trim": {
+      "file": "hood-knight-trim.svg",
+      "frame": "head"
+    },
+    "boot": {
+      "file": "boot.svg",
+      "frame": "leg"
+    }
   },
   "parts": [
-    { "bone": "head", "pick": "headwear.back" },
-    { "bone": "armB", "art": "sleeve", "shade": 0.78 },
-    { "bone": "armB", "art": "hand", "shade": 0.86 },
-    { "bone": "legB", "art": "leg", "shade": 0.78 },
-    { "bone": "tail", "art": "scarf-tail" },
-    { "bone": "legF", "art": "leg" },
-    { "bone": "torso", "art": "torso" },
-    { "bone": "torso", "art": "belt" },
-    { "bone": "torso", "art": "scarf" },
-    { "bone": "head", "art": "face" },
-    { "bone": "head", "pick": "eyes.base" },
-    { "bone": "head", "pick": "eyes.iris" },
-    { "bone": "head", "pick": "eyes.shine" },
-    { "bone": "head", "pick": "mouth.art" },
-    { "bone": "head", "pick": "headwear.bangs" },
-    { "bone": "head", "pick": "headwear.front" },
-    { "bone": "hand", "pick": "weapon.art", "rot": 70 },
-    { "bone": "armF", "art": "sleeve" },
-    { "bone": "armF", "art": "hand" }
+    {
+      "bone": "head",
+      "pick": "headwear.back"
+    },
+    {
+      "bone": "armB",
+      "art": "sleeve",
+      "shade": 0.78
+    },
+    {
+      "bone": "armB",
+      "art": "hand",
+      "shade": 0.86
+    },
+    {
+      "bone": "legB",
+      "art": "leg",
+      "shade": 0.78
+    },
+    {
+      "bone": "tail",
+      "art": "scarf-tail"
+    },
+    {
+      "bone": "legF",
+      "art": "leg"
+    },
+    {
+      "bone": "torso",
+      "art": "torso"
+    },
+    {
+      "bone": "torso",
+      "art": "belt"
+    },
+    {
+      "bone": "torso",
+      "art": "scarf"
+    },
+    {
+      "bone": "head",
+      "art": "face"
+    },
+    {
+      "bone": "head",
+      "pick": "eyes.base"
+    },
+    {
+      "bone": "head",
+      "pick": "eyes.iris"
+    },
+    {
+      "bone": "head",
+      "pick": "eyes.shine"
+    },
+    {
+      "bone": "head",
+      "pick": "mouth.art"
+    },
+    {
+      "bone": "head",
+      "pick": "headwear.bangs"
+    },
+    {
+      "bone": "head",
+      "pick": "headwear.front"
+    },
+    {
+      "bone": "hand",
+      "pick": "weapon.art",
+      "rot": 70
+    },
+    {
+      "bone": "armF",
+      "art": "sleeve"
+    },
+    {
+      "bone": "armF",
+      "art": "hand"
+    }
   ],
   "slots": {
     "headwear": {
-      "hair": { "back": "hair-back", "bangs": "hair-front" },
-      "frog": { "back": "hood-frog-back", "bangs": "hair-front", "front": "hood-frog-front" },
-      "cat": { "back": "hood-cat-back", "bangs": "hair-front", "front": "hood-cat-front" }
+      "hair": {
+        "back": "hair-back",
+        "bangs": "hair-front",
+        "front": null
+      },
+      "frog": {
+        "back": "hood-frog-back",
+        "bangs": "hair-front",
+        "front": "hood-frog-front"
+      },
+      "cat": {
+        "back": "hood-cat-back",
+        "bangs": "hair-front",
+        "front": "hood-cat-front"
+      },
+      "hood": {
+        "back": "hood-knight-back",
+        "bangs": "hair-front",
+        "front": "hood-knight-front",
+        "trim": "hood-knight-trim"
+      }
     },
     "eyes": {
-      "round": { "base": "eyes-round", "iris": "iris-round", "shine": "shine-round" },
-      "focus": { "base": "eyes-focus", "iris": "iris-focus", "shine": "shine-focus" },
-      "happy": { "base": "eyes-happy" },
-      "closed": { "base": "eyes-closed" },
-      "dizzy": { "base": "eyes-dizzy" },
-      "wince": { "base": "eyes-wince" }
+      "round": {
+        "base": "eyes-round",
+        "iris": "iris-round",
+        "shine": "shine-round"
+      },
+      "focus": {
+        "base": "eyes-focus",
+        "iris": "iris-focus",
+        "shine": "shine-focus"
+      },
+      "happy": {
+        "base": "eyes-happy"
+      },
+      "closed": {
+        "base": "eyes-closed"
+      },
+      "dizzy": {
+        "base": "eyes-dizzy"
+      },
+      "wince": {
+        "base": "eyes-wince"
+      }
     },
     "mouth": {
-      "smile": { "art": "mouth-smile" },
-      "open": { "art": "mouth-open" },
-      "cat": { "art": "mouth-cat" },
-      "flat": { "art": "mouth-flat" }
+      "smile": {
+        "art": "mouth-smile"
+      },
+      "open": {
+        "art": "mouth-open"
+      },
+      "cat": {
+        "art": "mouth-cat"
+      },
+      "flat": {
+        "art": "mouth-flat"
+      }
     },
     "weapon": {
-      "sword": { "art": "sword" },
+      "sword": {
+        "art": "sword"
+      },
       "none": {}
     }
   },
   "defaults": {
-    "looks": { "headwear": "hair", "eyes": "round", "mouth": "smile", "weapon": "sword" },
-    "colors": { "hair": "#c9b6ff", "cloth": "#5c8fd6", "scarf": "#e8553e", "eyes": "#4a7bd8" }
+    "looks": {
+      "headwear": "hair",
+      "eyes": "round",
+      "mouth": "smile",
+      "weapon": "sword"
+    },
+    "colors": {
+      "hair": "#c9b6ff",
+      "cloth": "#5c8fd6",
+      "scarf": "#e8553e",
+      "eyes": "#4a7bd8"
+    }
   },
   "palettes": {
-    "hair": ["#c9b6ff", "#f4f4f8", "#3a3340", "#f2c14e", "#e88a4a", "#ff9ec7", "#6fd0c4", "#8a5a3c"],
-    "cloth": ["#5c8fd6", "#d65c5c", "#5cb86a", "#e0b04a", "#8a6ad6", "#f2efe8", "#3b3f4f"],
-    "scarf": ["#e8553e", "#f2c14e", "#4ac0e0", "#ff9ec7", "#5cb86a", "#ffffff"],
-    "eyes": ["#4a7bd8", "#9c5ad6", "#3fae6a", "#d6643a", "#c23a5a", "#6b4a2a"]
+    "hair": [
+      "#c9b6ff",
+      "#f4f4f8",
+      "#3a3340",
+      "#f2c14e",
+      "#e88a4a",
+      "#ff9ec7",
+      "#6fd0c4",
+      "#8a5a3c"
+    ],
+    "cloth": [
+      "#5c8fd6",
+      "#d65c5c",
+      "#5cb86a",
+      "#e0b04a",
+      "#8a6ad6",
+      "#f2efe8",
+      "#3b3f4f"
+    ],
+    "scarf": [
+      "#e8553e",
+      "#f2c14e",
+      "#4ac0e0",
+      "#ff9ec7",
+      "#5cb86a",
+      "#ffffff"
+    ],
+    "eyes": [
+      "#4a7bd8",
+      "#9c5ad6",
+      "#3fae6a",
+      "#d6643a",
+      "#c23a5a",
+      "#6b4a2a"
+    ]
   }
 }
