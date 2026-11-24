@@ -70,8 +70,9 @@ export const HERO_TOON_SCALE = 1.45;
 // Chibi proportions: the head (and everything worn on it) is enlarged around the neck.
 const HEAD_SCALE = 1.3, NECK_Y = -32;
 // Pixels per cutout rig unit: the cutout hero stands as tall as the code-drawn heroes.
-// Novices and knights are drawn by the cutout rig in the look the player made (hero-look.js).
-const CUTOUT_JOBS = ['novice', 'knight'];
+// Every class is drawn by the chibi cutout rig in the look the player made (hero-look.js), wearing
+// its class outfit (rig.json slots.outfit 'job-<class>'). The drunkard keeps its own caricature.
+const CUTOUT_JOBS = ['novice', 'knight', 'mage', 'gunner', 'archer', 'assassin', 'cleric'];
 const CUTOUT_SIZE = .82;
 
 export function drawToonHero(c, x, y, o = {}) {

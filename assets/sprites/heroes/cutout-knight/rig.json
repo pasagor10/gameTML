@@ -82,6 +82,26 @@
         80,
         86
       ]
+    },
+    "torsoLong": {
+      "size": [
+        72,
+        80
+      ],
+      "pivot": [
+        36,
+        48
+      ]
+    },
+    "torsoTall": {
+      "size": [
+        72,
+        92
+      ],
+      "pivot": [
+        36,
+        60
+      ]
     }
   },
   "bones": [
@@ -446,6 +466,101 @@
       "file": "vest.svg",
       "frame": "torso",
       "tint": "cloth"
+    },
+    "hair-front-shine": {
+      "file": "hair-front-shine.svg",
+      "frame": "head"
+    },
+    "hair-front-shade": {
+      "file": "hair-front-shade.svg",
+      "frame": "head"
+    },
+    "hair-back-shine": {
+      "file": "hair-back-shine.svg",
+      "frame": "head"
+    },
+    "hair-front-spiky-shine": {
+      "file": "hair-front-spiky-shine.svg",
+      "frame": "head"
+    },
+    "hair-front-spiky-shade": {
+      "file": "hair-front-spiky-shade.svg",
+      "frame": "head"
+    },
+    "hair-back-spiky-shine": {
+      "file": "hair-back-spiky-shine.svg",
+      "frame": "head"
+    },
+    "hair-front-long-shine": {
+      "file": "hair-front-long-shine.svg",
+      "frame": "head"
+    },
+    "hair-front-long-shade": {
+      "file": "hair-front-long-shade.svg",
+      "frame": "head"
+    },
+    "hair-back-long-shine": {
+      "file": "hair-back-long-shine.svg",
+      "frame": "headLong"
+    },
+    "hair-front-pony-shine": {
+      "file": "hair-front-pony-shine.svg",
+      "frame": "head"
+    },
+    "hair-front-pony-shade": {
+      "file": "hair-front-pony-shade.svg",
+      "frame": "head"
+    },
+    "hair-back-pony-shine": {
+      "file": "hair-back-pony-shine.svg",
+      "frame": "headWide"
+    },
+    "robe": {
+      "file": "robe.svg",
+      "frame": "torsoLong",
+      "tint": "cloth"
+    },
+    "mage-trim": {
+      "file": "mage-trim.svg",
+      "frame": "torsoLong"
+    },
+    "cleric-trim": {
+      "file": "cleric-trim.svg",
+      "frame": "torsoLong"
+    },
+    "coat": {
+      "file": "coat.svg",
+      "frame": "torsoLong",
+      "tint": "cloth"
+    },
+    "gunner-gear": {
+      "file": "gunner-gear.svg",
+      "frame": "torsoLong"
+    },
+    "plate": {
+      "file": "plate.svg",
+      "frame": "torso"
+    },
+    "pauldron": {
+      "file": "pauldron.svg",
+      "frame": "arm"
+    },
+    "archer-gear": {
+      "file": "archer-gear.svg",
+      "frame": "torso"
+    },
+    "quiver": {
+      "file": "quiver.svg",
+      "frame": "torsoTall"
+    },
+    "garb": {
+      "file": "garb.svg",
+      "frame": "torso",
+      "tint": "cloth"
+    },
+    "sash": {
+      "file": "sash.svg",
+      "frame": "torso"
     }
   },
   "parts": [
@@ -615,19 +730,31 @@
     "hair": {
       "tousled": {
         "front": "hair-front",
-        "back": "hair-back"
+        "back": "hair-back",
+        "shine": "hair-front-shine",
+        "shade": "hair-front-shade",
+        "backShine": "hair-back-shine"
       },
       "spiky": {
         "front": "hair-front-spiky",
-        "back": "hair-back-spiky"
+        "back": "hair-back-spiky",
+        "shine": "hair-front-spiky-shine",
+        "shade": "hair-front-spiky-shade",
+        "backShine": "hair-back-spiky-shine"
       },
       "long": {
         "front": "hair-front-long",
-        "back": "hair-back-long"
+        "back": "hair-back-long",
+        "shine": "hair-front-long-shine",
+        "shade": "hair-front-long-shade",
+        "backShine": "hair-back-long-shine"
       },
       "pony": {
         "front": "hair-front-pony",
-        "back": "hair-back-pony"
+        "back": "hair-back-pony",
+        "shine": "hair-front-pony-shine",
+        "shade": "hair-front-pony-shade",
+        "backShine": "hair-back-pony-shine"
       }
     },
     "outfit": {
@@ -653,6 +780,69 @@
           "vest"
         ],
         "pants": "#5a4434"
+      },
+      "job-knight": {
+        "headwear": "hair",
+        "torso": [
+          "torso-tunic",
+          "plate"
+        ],
+        "pants": "#2c3c78",
+        "cloth": "#3f74d0",
+        "pauldron": "pauldron"
+      },
+      "job-mage": {
+        "headwear": "hair",
+        "torso": [
+          "robe",
+          "mage-trim"
+        ],
+        "pants": "#33246a",
+        "cloth": "#7b55da",
+        "belt": false,
+        "scarf": false
+      },
+      "job-cleric": {
+        "headwear": "hair",
+        "torso": [
+          "robe",
+          "cleric-trim"
+        ],
+        "pants": "#6d867e",
+        "cloth": "#f5e8c4",
+        "belt": false,
+        "scarf": false
+      },
+      "job-gunner": {
+        "headwear": "hair",
+        "torso": [
+          "coat",
+          "gunner-gear"
+        ],
+        "pants": "#4a3a2a",
+        "cloth": "#25a896"
+      },
+      "job-archer": {
+        "headwear": "hair",
+        "torso": [
+          "torso-tunic",
+          "archer-gear"
+        ],
+        "pants": "#394a36",
+        "cloth": "#499260",
+        "back": [
+          "quiver"
+        ]
+      },
+      "job-assassin": {
+        "headwear": "hair",
+        "torso": [
+          "garb",
+          "sash"
+        ],
+        "pants": "#31273e",
+        "cloth": "#5e456f",
+        "belt": false
       }
     }
   },

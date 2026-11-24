@@ -74,6 +74,14 @@ function swingState(time, swing) {
 }
 const lerp = (a, b, t) => a + (b - a) * t;
 const REST = {armF: -10, armB: 10, hand: 0};
+// Ranged classes aim instead of swinging: the weapon's angle in degrees while aiming (0 = the art
+// as painted: guns point forward, staffs and bows stand up) and its tilt when held at rest.
+const AIM = {gunner: 0, mage: 55, cleric: 45, archer: 4};
+const GRIP = {gunner: -80, mage: -50, cleric: -50, archer: -55};
+// The face looks a little further toward where the body faces than the head picture is drawn, so
+// the head turns with the body instead of twisting at the neck: features shift forward and the far
+// eye narrows (rig units, scale).
+const TURN = {eyes: 5, eyeScale: .93, mouth: 5.5, hair: 1.5, back: -1};
 
 // Bone angles in degrees (clockwise); positive arm angles swing the hand backwards.
 // Arm angles past 180 mean the arm went over the top (a slash), not back down.
@@ -209,7 +217,7 @@ function poseFor(o) {
   return P;
 }
 
-function poseRaw({time, moving, phase, attacking, pose, swing}) {
+function poseRaw({time, moving, phase, attacking, pose, swing, job}) {
   const P = {};
   const set = (b, r = 0, x = 0, y = 0) => {P[b] = {r, x, y};};
   const flex = (f, b = f) => {P.flex = [f, b];};
@@ -264,6 +272,16 @@ function poseRaw({time, moving, phase, attacking, pose, swing}) {
     set('armF', -70 - 20 * k);set('hand', 60);set('armB', -60 - 20 * k);lean(10 * k);
   } else if (kind === 'throw') {
     if (q < .5) {set('armF', 150);set('hand', 160);lean(-6);} else {set('armF', 260);set('hand', 120);lean(10, 4);}
+  } else if (attacking && AIM[job] !== undefined) {
+    // Aim the weapon at the target with a small kick each shot; archers draw the string to the chest.
+    const s = swingState(time, swing), k = Math.sin(s.q * Math.PI);
+    P.aim = AIM[job];
+    set('armF', -84 + 6 * k);
+    if (job === 'archer') {set('armB', -72 - 6 * k);flex(6, 115);}
+    else if (job === 'gunner') {set('armB', -62);flex(8, 50);}
+    else {set('armB', 25 - 30 * k);flex(12, 30);}
+    lean(job === 'gunner' ? -5 * k : 6 * k, job === 'gunner' ? -2 * k : 1.5 * k);
+    set('legF', -16);set('legB', 14);
   } else if (attacking) {
     const s = swingState(time, swing);
     if (s.variant === 0) {
@@ -325,8 +343,9 @@ function smear(c, at, {from, to, k, q, R = 64}, tint) {
 export function drawCutoutHero(c, o) {
   const {size, tier = 0, plus = 0, time = 0, attacking = false, job = 'knight'} = o;
   const look = typeof o.look === 'object' && o.look ? o.look : resolveLook(o.look, o.appearance);
-  const outfit = rig.slots.outfit[look.outfit] || rig.slots.outfit.onesie, hair = rig.slots.hair[look.hair] || rig.slots.hair.tousled;
-  const colours = {hair: look.hairColour, eyes: look.eyeColour, cloth: look.outfitColour, skin: look.skin,
+  // Each class wears its own outfit; novices wear the one picked in the creator.
+  const outfit = rig.slots.outfit['job-' + job] || rig.slots.outfit[look.outfit] || rig.slots.outfit.onesie, hair = rig.slots.hair[look.hair] || rig.slots.hair.tousled;
+  const colours = {hair: look.hairColour, eyes: look.eyeColour, cloth: outfit.cloth || look.outfitColour, skin: look.skin,
     pants: outfit.pants || look.outfitColour, scarf: o.scarf || '#e0574a'};
   const P = poseFor(o), f = face(o, look);
   // A spinning skill turns the knight round: mirror against the facing it started with.
@@ -341,16 +360,17 @@ export function drawCutoutHero(c, o) {
   c.save();c.scale(left ? -size : size, size);
   // Landing squash: wider and shorter, feet stay on the ground.
   if (P.squash) c.scale(1 + P.squash * .035, 1 - P.squash * .035);
-  const part = (name, bone, rot = 0, shade = 1) => {
+  const part = (name, bone, rot = 0, shade = 1, dx = 0, sx = 1) => {
     const art = rig.arts[name], fr = rig.frames[art.frame], b = world[bone];
     c.save();c.translate(b.x, b.y);c.rotate((b.r + rot) * D);
+    if (dx || sx !== 1) {c.translate(dx, 0);c.scale(sx, 1);}
     c.drawImage(partCanvas(name, art.tint ? colours[art.tint] : null, shade), -fr.pivot[0], -fr.pivot[1], fr.size[0], fr.size[1]);
     c.restore();
   };
   // The hero's own tiered weapon replaces the rig's sword picture.
   const weapon = () => {
     const b = world.hand;
-    c.save();c.translate(b.x, b.y);c.rotate((b.r + 70) * D);c.scale(1 / size, 1 / size);
+    c.save();c.translate(b.x, b.y);c.rotate((P.aim !== undefined ? P.aim : b.r + 70 + (GRIP[job] || 0)) * D);c.scale(1 / size, 1 / size);
     drawWeapon(c, job, tier, time, {attacking, plus});c.restore();
   };
   if (P.fx) for (const e of P.fx) effect(c, e, world, colours.scarf, true);
@@ -360,24 +380,36 @@ export function drawCutoutHero(c, o) {
   // A sword raised overhead goes behind the big chibi head instead of across the face.
   const behindHead = back || P.weaponBehind;
   if (behindHead) weapon();
-  if (!back) part(headBack, 'head');
+  // Things worn on the back (a quiver) are behind the body, or on top of it when seen from behind.
+  if (outfit.back && !back) for (const art of outfit.back) part(art, 'torso');
+  if (!back) part(headBack, 'head', 0, 1, hw.back ? 0 : TURN.back);
   part('upper', 'armB', 0, .78);part('fore', 'foreB', 0, .78);part('fist', 'foreB', 0, .86);
+  if (outfit.pauldron) part(outfit.pauldron, 'armB', 0, .82);
   const leg = (side, shade = 1) => {
     part('foot', 'foot' + side, 0, shade < 1 ? .8 : 1);part('shin', 'shin' + side, 0, shade < 1 ? .8 : 1);part('thigh', 'leg' + side, 0, shade);
   };
   leg('B', .78);
-  if (!back) part('scarf-tail', 'tail');
+  const scarf = outfit.scarf !== false;
+  if (!back && scarf) part('scarf-tail', 'tail');
   leg('F');
   for (const art of outfit.torso) part(art, 'torso');
-  part('belt', 'torso');part('scarf', 'torso');
+  if (outfit.back && back) for (const art of outfit.back) part(art, 'torso');
+  if (outfit.belt !== false) part('belt', 'torso');
+  if (scarf) part('scarf', 'torso');
   part('face', 'head');
   // From behind the hood's back covers its face rim and only the ears stick out.
-  if (back) {if (hw.front) part(hw.front, 'head');part(headBack, 'head');part('scarf-tail', 'tail');}
-  else {
+  if (back) {
+    if (hw.front) part(hw.front, 'head');
+    part(headBack, 'head');if (!hw.back && hair.backShine) part(hair.backShine, 'head');
+    if (scarf) part('scarf-tail', 'tail');
+  } else {
+    // Hair shading: the bangs' shadow on the forehead, then the bangs, then their gloss on top.
+    if (hair.shade) part(hair.shade, 'head', 0, 1, TURN.hair);
     const eyes = rig.slots.eyes[f.eyes] || {};
-    for (const layer of ['base', 'iris', 'shine']) if (eyes[layer]) part(eyes[layer], 'head');
-    part((rig.slots.mouth[f.mouth] || rig.slots.mouth.smile).art, 'head');
-    part(hair.front, 'head');
+    for (const layer of ['base', 'iris', 'shine']) if (eyes[layer]) part(eyes[layer], 'head', 0, 1, TURN.eyes, TURN.eyeScale);
+    part((rig.slots.mouth[f.mouth] || rig.slots.mouth.smile).art, 'head', 0, 1, TURN.mouth);
+    part(hair.front, 'head', 0, 1, TURN.hair);
+    if (hair.shine) part(hair.shine, 'head', 0, 1, TURN.hair);
     if (hw.front) part(hw.front, 'head');
     if (hw.trim) part(hw.trim, 'head');
   }
@@ -385,6 +417,7 @@ export function drawCutoutHero(c, o) {
   if (P.smear) {const lean = world.armF.r - P.armF.r;smear(c, world.armF, {...P.smear, from: P.smear.from + lean, to: P.smear.to + lean}, colours.scarf);}
   if (!behindHead) weapon();
   part('upper', 'armF');part('fore', 'foreF');part('fist', 'foreF');
+  if (outfit.pauldron) part(outfit.pauldron, 'armF');
   if (P.fx) for (const e of P.fx) effect(c, e, world, colours.scarf, false);
   c.restore();
 }
