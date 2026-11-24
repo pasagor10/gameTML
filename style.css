@@ -745,3 +745,44 @@ html,body{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adju
   #game .sk-art{width:40px;height:40px}
   #game .sk-tile b{font-size:10px}
 }
+/* Skill page phase 3: one-row slot bar, compact hint card, tier detail card, desktop grid keeps the pager under the list */
+#game .skills-panel .slot-bar{display:grid;grid-template-columns:repeat(var(--n,8),minmax(0,1fr));gap:6px;margin:8px 0;padding:6px;border-radius:12px;background:#0a1626b3;border:1px solid #79d6fa2e}
+#game .skills-panel .sk-slot{--ac:#7fd6ff;position:relative;min-height:0;padding:4px 2px 3px;gap:3px;border-radius:10px;border:1px solid #ffd56a99;background:linear-gradient(170deg,#1d3550,#101d30);box-shadow:inset 0 1px 0 #ffffff12}
+#game .skills-panel .sk-slot.tier-god{--ac:#ffd36e;background:linear-gradient(170deg,#3b2c14,#1b1630)}
+#game .skills-panel .sk-slot[aria-pressed=true]{outline:2px solid #fff;outline-offset:1px}
+#game .skills-panel .sk-slot .sk-art{width:40px;height:40px}
+#game .skills-panel .sk-slot .sk-art>.sk-icon,#game .skills-panel .sk-slot .sk-art .ai-skill{width:100%;height:100%;border-radius:9px;border:1.5px solid color-mix(in srgb,var(--ac) 75%,#fff 10%)}
+#game .skills-panel .sk-slot small{max-width:100%;font-size:10px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#e6eef7}
+.sk-slot-lv{position:absolute;right:-5px;top:-5px;min-width:16px;height:16px;padding:0 3px;border-radius:8px;font:700 9.5px/16px 'Chakra Petch',sans-serif;font-style:normal;text-align:center;color:#3a2604;background:linear-gradient(#fff0b8,#e8b54b);box-shadow:0 1px 3px #0009}
+#game .skills-panel .sk-slot.empty{border:1px dashed #79d6fa55;background:#0c1a2c;box-shadow:none}
+#game .skills-panel .sk-slot.empty .sk-art{border-radius:9px;border:1.5px dashed #79d6fa40;display:grid;place-items:center}
+#game .skills-panel .sk-slot.empty .sk-art i{font:600 13px 'Chakra Petch',sans-serif;font-style:normal;color:#79d6fa80}
+#game .skills-panel .sk-slot.empty small{color:#7f98ad}
+#game .skills-panel .sk-hint{flex-direction:row;align-items:center;text-align:left;gap:10px;border:1px solid #79d6fa33;border-style:solid;background:linear-gradient(100deg,#132a40,#0d1b2c)}
+#game .skills-panel .sk-hint p{font-size:13px;line-height:1.4;color:#eaf4ff}
+#game .skills-panel .sk-hint small{display:block;font-size:10.5px;line-height:1.5;opacity:.7}
+.sk-hint-ic{flex:none;width:34px;height:34px;display:grid;place-items:center;border-radius:10px;font-size:17px;color:#3a2604;background:radial-gradient(circle at 35% 30%,#fff6cf,#f0bf4f 60%,#b77d1c);box-shadow:0 0 10px #ffd56a55}
+#game .sk-card{--ac:#7fd6ff;border:1px solid color-mix(in srgb,var(--ac) 55%,transparent);background:linear-gradient(165deg,#163049,#0d1b2c 70%)}
+#game .sk-card.tier-god{--ac:#ffd36e;background:linear-gradient(165deg,#3b2c14,#1b1630 70%);box-shadow:0 0 14px #ffc65a26}
+#game .sk-card.tier-passive{--ac:#8fe3a8;background:linear-gradient(165deg,#173c33,#0d2220 70%)}
+#game .sk-card .item-card-head b{color:var(--ac)}
+.sk-card-lv{display:flex;align-items:center;gap:6px;margin-top:3px}
+.sk-card-lv .sk-pips{justify-content:flex-start;max-width:none}
+.sk-card-lv em{font:600 10.5px 'Chakra Petch',sans-serif;font-style:normal;opacity:.75}
+#game .sk-card-lv small.sk-max{font:800 10px/1 'Chakra Petch',sans-serif;letter-spacing:1.5px;padding:2px 6px;border-radius:5px;color:#3a2604;background:linear-gradient(#fff0b8,#e8b54b);opacity:1}
+@media(min-width:761px){
+  #game .sk-body{grid-template-columns:minmax(0,1fr) 300px;grid-template-rows:minmax(0,1fr) auto}
+  #game .sk-body>.sk-groups{grid-column:1;grid-row:1}
+  #game .sk-body>.pager{grid-column:1;grid-row:2;margin:0}
+  #game .sk-body>.char-right{grid-column:2;grid-row:1/3}
+  #game .sk-groups{grid-template-columns:repeat(auto-fill,minmax(92px,1fr))}
+}
+@media(max-width:760px){
+  #game .skills-panel .slot-bar{gap:4px;padding:4px;margin:6px 0}
+  #game .skills-panel .sk-slot{padding:3px 1px;border-radius:9px}
+  #game .skills-panel .sk-slot .sk-art{width:100%;height:auto;aspect-ratio:1;max-width:40px}
+  #game .skills-panel .sk-slot small{display:none}
+  #game .skills-panel .sk-hint{padding:8px 10px}
+  #game .skills-panel .sk-hint p{font-size:12px}
+  .sk-hint-ic{width:28px;height:28px;font-size:14px}
+}
