@@ -5,6 +5,7 @@
 import {ARENA_SIZE, ARENA_HALF, ARENA_POLYGON} from './arena.js';
 import {RUN_STRIDE} from './sprite-layout.js';
 import {TIERS, drawWeapon} from './weapons.js';
+import {cutoutReady, drawCutoutKnight} from './cutout.js';
 
 const OUT = '#2b2133';
 // Default outline width; the hero raises it while drawing so it reads as a bold sticker-like chibi.
@@ -68,6 +69,8 @@ const EYE = {mage: ['#4a2aa8', '#a98cff'], gunner: ['#0e6a5e', '#4fe0c4'], other
 export const HERO_TOON_SCALE = 1.45;
 // Chibi proportions: the head (and everything worn on it) is enlarged around the neck.
 const HEAD_SCALE = 1.3, NECK_Y = -32;
+// Pixels per cutout rig unit: the cutout knight stands as tall as the code-drawn heroes.
+const CUTOUT_SIZE = .7;
 
 export function drawToonHero(c, x, y, o = {}) {
   const {time = 0, moving = false, job = 'novice', appearance = 'a', inv = 0, direction = 'se', distance, attacking = false, tier = 0, plus = 0, pose = null, armor = -1, helmet = -1} = o;
@@ -81,6 +84,15 @@ export function drawToonHero(c, x, y, o = {}) {
   E(c, 0, 1, 22, 7.5, '#10303055', null);
   const auraLv = job === 'novice' ? 0 : tier, auraCol = tier === 5 ? `hsl(${(time * 80) % 360} 95% 72%)` : accent;
   if (auraLv >= 2) groundAura(c, auraLv, auraCol, time);
+  // Knight: the cutout rig (cutout.js) once its part pictures are loaded.
+  if (job === 'knight' && cutoutReady()) {
+    c.save();c.scale(S, S);if (auraLv >= 1) auraBack(c, auraLv, auraCol, time);c.restore();
+    if (inv > 0 && Math.floor(inv * 15) % 2) c.globalAlpha *= .45;
+    drawCutoutKnight(c, {time, moving, phase, attacking, pose, left, back, tier, plus, size: CUTOUT_SIZE,
+      colours: {hair: (HAIR[appearance] || HAIR.a)[0], cloth: OUTFIT.knight.top, scarf: accent, eyes: EYE.other[0]}});
+    if (auraLv >= 3) {c.save();c.scale(S, S);auraMotes(c, auraLv, auraCol, time);c.restore();}
+    c.restore();LW = 1.4;SHADE = false;return;
+  }
   c.scale(left ? -S : S, S);
   if (auraLv >= 1) auraBack(c, auraLv, auraCol, time);
   if (inv > 0 && Math.floor(inv * 15) % 2) c.globalAlpha *= .45;
