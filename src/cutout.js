@@ -81,7 +81,8 @@ const turnAt = t => [{left: false, back: false}, {left: true, back: false}, {lef
 // One move per knight skill. q runs 0..1 over the 0.5 s skill pose; P.fx lists effects drawn around the knight.
 const MOVES = {
   // Sword Whirl: two full spins with the blade held straight out and a ring of steel around the body.
-  whirl({P, set, q}) {
+  whirl({P, set, flex, q}) {
+    flex(0, 10);
     const k = Math.sin(q * Math.PI);
     P.turn = turnAt(Math.min(1, q / .9) * 2);
     set('armF', -95, 0, 0);set('hand', OUT);set('armB', 80);P.hips.y -= 2 * k;
@@ -89,7 +90,8 @@ const MOVES = {
     P.fx.push({type: 'ring', y: -34, r: 60, a: k});
   },
   // Dragon Storm: a faster triple spin, crouched low, inside two rings.
-  dragonstorm({P, set, q}) {
+  dragonstorm({P, set, flex, q}) {
+    flex(0, 10);
     const k = Math.sin(q * Math.PI);
     P.turn = turnAt(Math.min(1, q / .95) * 3);
     set('armF', -80);set('hand', OUT);set('armB', 95);P.hips.y += 3 * k;
@@ -97,9 +99,11 @@ const MOVES = {
     P.fx.push({type: 'ring', y: -30, r: 72, a: k}, {type: 'ring', y: -30, r: 50, a: k * .7});
   },
   // Crescent Wave: a huge overhead slash that throws a moon-shaped wave off the blade.
-  wave({P, set, lean, q}) {
+  wave({P, set, lean, flex, q}) {
     const w = seg(q, 0, .25), k = seg(q, .25, .5);
-    set('armF', lerp(lerp(-10, 110, w), 290, k));set('hand', lerp(lerp(0, 150, w), 140, k));
+    flex(lerp(85 * w, 4, k), lerp(30 * w, 25, k));
+    P.weaponBehind = w > .3 && k < .3;
+    set('armF', lerp(lerp(-10, 110, w), 290, k));set('hand', lerp(lerp(0, 90, w), 140, k));
     set('armB', lerp(lerp(10, -40, w), 50, k));
     lean(lerp(-10 * w, 20, k), lerp(-3 * w, 8, k));
     set('legF', -30 * k, 4 * k);set('legB', 24 * k);
@@ -107,8 +111,9 @@ const MOVES = {
     if (q > .45) P.fx.push({type: 'crescent', x: 30 + seg(q, .45, 1) * 70, y: -40, r: 42, a: 1 - seg(q, .6, 1)});
   },
   // Judgement: point the sword at the sky, let it glow, then bring it down on the enemy.
-  judgement({P, set, lean, q}) {
+  judgement({P, set, lean, flex, q}) {
     const up = seg(q, 0, .25), down = seg(q, .7, .9);
+    flex(lerp(lerp(20, 8, up), 60, seg(q, .6, .7)) * (1 - down) + 6 * down, 15);
     set('armF', lerp(lerp(-10, 222, up), 275, down));set('hand', lerp(lerp(0, OUT, up), 140, down));
     set('armB', lerp(10, -150, up) * (1 - down) + 30 * down);
     set('head', -10 * up * (1 - down));P.hips.y -= 4 * up * (1 - down);
@@ -118,8 +123,9 @@ const MOVES = {
     if (down > 0) P.smear = {from: 222, to: P.armF.r, k: down, q: .5 + down * .3, R: 70};
   },
   // Piercing Charge: crouch back, then dash through with the blade thrust out and speed lines behind.
-  charge({P, set, lean, q}) {
+  charge({P, set, lean, flex, q}) {
     const c = seg(q, 0, .2), d = seg(q, .2, .4), r = seg(q, .8, 1);
+    flex(lerp(lerp(20, 80, c), 0, d) + 20 * r, lerp(20, 40, d));
     const out = d * (1 - r);
     set('armF', lerp(lerp(-10, 60, c), -95, d));set('hand', OUT);set('armB', lerp(10, 75, d));
     P.hips.x = lerp(-5 * c, 18, out);P.hips.y += lerp(3 * c, 1, d);
@@ -128,8 +134,9 @@ const MOVES = {
     if (d > 0) P.fx.push({type: 'speed', a: out});
   },
   // Earth Split: jump with the sword overhead in both hands and stab it into the ground.
-  quake({P, set, lean, q}) {
+  quake({P, set, lean, flex, q}) {
     const jump = seg(q, 0, .3), slam = seg(q, .3, .42);
+    flex(lerp(lerp(20, 70, jump), 10, slam), lerp(lerp(20, 70, jump), 10, slam));
     const air = jump * (1 - slam);
     set('armF', lerp(lerp(-10, 100, jump), -40, slam));set('hand', lerp(lerp(0, 120, jump), 150, slam));
     set('armB', lerp(lerp(10, 100, jump), -40, slam));
@@ -138,17 +145,20 @@ const MOVES = {
     if (q > .4) P.fx.push({type: 'shock', r: 20 + seg(q, .4, 1) * 70, a: 1 - seg(q, .55, 1)});
   },
   // Blade Rain: twirl the sword above the head like a beacon while light sparkles fall.
-  bladerain({P, set, q, time}) {
+  bladerain({P, set, flex, q, time}) {
+    flex(40, 30);
     const k = Math.sin(q * Math.PI);
     set('armF', 215);set('hand', OUT + seg(q, .05, .9) * 1080);set('armB', -165);
     P.hips.y -= 5 * Math.abs(Math.sin(q * Math.PI * 2));set('head', -10);
     P.fx.push({type: 'tipglow', r: 6, a: k}, {type: 'sparkles', a: k, t: time});
   },
   // Heaven's Sword: leap up, sword cocked behind the head in both hands, and split the ground.
-  heavensword({P, set, lean, q}) {
+  heavensword({P, set, lean, flex, q}) {
     const w = seg(q, 0, .32), k = seg(q, .32, .5);
+    flex(lerp(90 * w, 4, k), lerp(90 * w, 8, k));
+    P.weaponBehind = w > .3 && k < .3;
     const air = w * (1 - k);
-    set('armF', lerp(lerp(-10, 100, w), 292, k));set('hand', lerp(lerp(0, 120, w), 140, k));
+    set('armF', lerp(lerp(-10, 100, w), 292, k));set('hand', lerp(lerp(0, 95, w), 140, k));
     set('armB', lerp(lerp(10, 100, w), 285, k));
     P.hips.y += -14 * air + 3 * k;lean(lerp(-12 * w, 26, k), 8 * k);
     set('legF', lerp(-26 * air, -38, k), 0, -3 * air);set('legB', lerp(26 * air, 30, k), 0, -3 * air);
@@ -156,8 +166,9 @@ const MOVES = {
     if (q > .48) P.fx.push({type: 'burst', x: 52, y: -4, r: 16 + seg(q, .48, .8) * 30, a: 1 - seg(q, .6, 1)});
   },
   // World Splitter: crouch with the blade low behind, then rip a giant rising cut that splits the screen.
-  worldsplitter({P, set, lean, q}) {
+  worldsplitter({P, set, lean, flex, q}) {
     const w = seg(q, 0, .3), k = seg(q, .3, .5);
+    flex(lerp(55 * w, 4, k), lerp(55 * w, 8, k));
     set('armF', lerp(lerp(-10, 55, w), -150, k));set('hand', lerp(lerp(0, 80, w), 80, k));
     set('armB', lerp(lerp(10, 55, w), -140, k));
     P.hips.y += 5 * w * (1 - k) - 8 * k;lean(lerp(16 * w, -14, k), lerp(-4 * w, 8, k));
@@ -167,9 +178,20 @@ const MOVES = {
   }
 };
 
-function poseFor({time, moving, phase, attacking, pose, swing}) {
+// Elbows: poses set the arm (shoulder) and blade (hand) angles as if the arm were straight, plus an
+// elbow flex in degrees (P.flex, front and back). The forearm bends forward by the flex and the hand
+// is turned back by the same amount, so the blade keeps its angle while the elbow moves the fist.
+function poseFor(o) {
+  const P = poseRaw(o), [ff, fb] = P.flex || [20, 20];
+  P.foreF = {r: -ff, x: 0, y: 0};P.foreB = {r: -fb, x: 0, y: 0};
+  P.hand = {...(P.hand || {r: 0, x: 0, y: 0})};P.hand.r += ff;
+  return P;
+}
+
+function poseRaw({time, moving, phase, attacking, pose, swing}) {
   const P = {};
   const set = (b, r = 0, x = 0, y = 0) => {P[b] = {r, x, y};};
+  const flex = (f, b = f) => {P.flex = [f, b];};
   if (moving) {
     // Chibi patter: twice the cadence of the old sprites (a cycle per 48 world units, about six
     // quick steps a second at run speed) so the short legs nearly keep pace with the ground instead
@@ -186,15 +208,16 @@ function poseFor({time, moving, phase, attacking, pose, swing}) {
     set('armF', -8 + s * 5);set('armB', -s * 34 + 4);
     set('tail', 40 + Math.sin(p * 2) * 12);
     P.squash = (1 - bounce) * .9;
+    flex(28, 18 + Math.max(0, -s) * 30);
   } else {
     const s = Math.sin(time * 2.6);
     set('hips', 0, 0, s * 0.9);set('torso', s * .6);set('head', -s * 1.2);
-    set('armF', REST.armF + s * 3);set('armB', REST.armB - s * 3);set('tail', 10 + Math.sin(time * 2.6 + 1) * 6);
+    set('armF', REST.armF + s * 3);set('armB', REST.armB - s * 3);set('tail', 10 + Math.sin(time * 2.6 + 1) * 6);flex(22, 18);
   }
   const q = pose ? 1 - pose.life / pose.max : 0, kind = pose?.kind;
   const lean = (r, x = 0) => {P.torso.r += r;P.hips.x = (P.hips.x || 0) + x;};
   // Knight skills each have their own move (MOVES below); other skill poses fall back to their kind.
-  if (pose?.skill && MOVES[pose.skill]) {P.fx = [];MOVES[pose.skill]({P, set, lean, q, time});P.skill = pose.skill;return P;}
+  if (pose?.skill && MOVES[pose.skill]) {P.fx = [];MOVES[pose.skill]({P, set, lean, flex, q, time});P.skill = pose.skill;return P;}
   if (kind === 'slash') {
     // Wind-up behind, then over the top and down in front.
     const w = q < .3 ? ease(q / .3) : 1, k = q < .3 ? 0 : ease(Math.min(1, (q - .3) / .3));
@@ -221,10 +244,12 @@ function poseFor({time, moving, phase, attacking, pose, swing}) {
     if (s.variant === 0) {
       // Overhead chop: cock the blade back, then whip it over the top and lunge in.
       const w = ease(Math.min(1, s.q / .2)), k = s.k;
-      set('armF', lerp(lerp(-10, 120, w), 282, k));set('hand', lerp(lerp(0, 150, w), 138, k));
+      set('armF', lerp(lerp(-10, 120, w), 282, k));set('hand', lerp(lerp(0, 80, w), 138, k));
       set('armB', lerp(lerp(10, -35, w), 45, k));
       lean(lerp(-9 * w, 18, k), lerp(-3 * w, 8, k));P.hips.y += lerp(1.5 * w, -1.5, k);
       set('legF', lerp(-4 * w, -30, k), lerp(0, 4, k));set('legB', lerp(4 * w, 24, k));
+      flex(lerp(80 * w, 6, k), lerp(30 * w, 25, k));
+      P.weaponBehind = w > .3 && k < .3;
       P.smear = {from: 120, to: P.armF.r, k, q: s.q};
     } else {
       // Rising cut: crouch with the blade low behind, then rip it up through the front.
@@ -234,6 +259,7 @@ function poseFor({time, moving, phase, attacking, pose, swing}) {
       lean(lerp(12 * w, -12, k), lerp(-2 * w, 6, k));P.hips.y += lerp(3 * w, -3.5, k);
       set('legF', lerp(-6 * w, -26, k), lerp(0, 4, k));set('legB', lerp(8 * w, 18, k));
       set('head', lerp(4 * w, -8, k));
+      flex(lerp(65 * w, 8, k), lerp(20 * w, 30, k));
       P.smear = {from: 45, to: P.armF.r, k, q: s.q};
     }
   }
@@ -305,7 +331,7 @@ export function drawCutoutKnight(c, o) {
   const behindHead = back || P.weaponBehind;
   if (behindHead) weapon();
   if (!back) part(hw.back, 'head');
-  part('sleeve', 'armB', 0, .78);part('hand', 'armB', 0, .86);
+  part('upper', 'armB', 0, .78);part('fore', 'foreB', 0, .78);part('fist', 'foreB', 0, .86);
   part('leg', 'legB', 0, .78);part('boot', 'legB', 0, .8);
   if (!back) part('scarf-tail', 'tail');
   part('leg', 'legF');part('boot', 'legF');
@@ -324,7 +350,7 @@ export function drawCutoutKnight(c, o) {
   // The trail follows the arm in world space, so it stays on the blade while the body leans.
   if (P.smear) {const lean = world.armF.r - P.armF.r;smear(c, world.armF, {...P.smear, from: P.smear.from + lean, to: P.smear.to + lean}, colours.scarf);}
   if (!behindHead) weapon();
-  part('sleeve', 'armF');part('hand', 'armF');
+  part('upper', 'armF');part('fore', 'foreF');part('fist', 'foreF');
   if (P.fx) for (const e of P.fx) effect(c, e, world, colours.scarf, false);
   c.restore();
 }

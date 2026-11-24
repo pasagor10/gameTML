@@ -108,16 +108,28 @@
       -33
     ],
     [
+      "foreB",
+      "armB",
+      0,
+      11
+    ],
+    [
       "armF",
       "torso",
       13,
       -33
     ],
     [
-      "hand",
+      "foreF",
       "armF",
       0,
-      21
+      11
+    ],
+    [
+      "hand",
+      "foreF",
+      0,
+      10
     ],
     [
       "head",
@@ -269,6 +281,20 @@
     "boot": {
       "file": "boot.svg",
       "frame": "leg"
+    },
+    "upper": {
+      "file": "upper.svg",
+      "frame": "arm",
+      "tint": "cloth"
+    },
+    "fore": {
+      "file": "fore.svg",
+      "frame": "arm",
+      "tint": "cloth"
+    },
+    "fist": {
+      "file": "fist.svg",
+      "frame": "arm"
     }
   },
   "parts": [
