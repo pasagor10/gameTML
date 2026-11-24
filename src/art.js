@@ -4,8 +4,8 @@ import {drawToonHero} from './toon.js';
 export let artStyle='toon';
 export function setArtStyle(style){artStyle=style==='painted'?'painted':'toon';}
 // Code-native cartoon art: independent of collision sizes and combat timing.
-export function drawHero(c,x,y,{time=0,moving=false,job='novice',appearance='a',inv=0,facing=1,attacking=false,direction='se',distance,tier=0,plus=0,pose=null,armor=-1,helmet=-1}={}){
-if(artStyle==='toon'){drawToonHero(c,x,y,{time,moving,job,appearance,inv,attacking,direction,distance,tier,plus,pose,armor,helmet});return;}
+export function drawHero(c,x,y,{time=0,moving=false,job='novice',appearance='a',inv=0,facing=1,attacking=false,direction='se',distance,tier=0,plus=0,pose=null,armor=-1,helmet=-1,swing=null}={}){
+if(artStyle==='toon'){drawToonHero(c,x,y,{time,moving,job,appearance,inv,attacking,swing,direction,distance,tier,plus,pose,armor,helmet});return;}
 if(drawSpriteHero(c,x,y,{time,moving,job,appearance,inv,facing,attacking,direction,distance,tier}))return;
 c.save();c.translate(x,y);const bob=moving?Math.sin(time*13)*2:Math.sin(time*3)*1.2;
 const metal=job==='mage'?'#c5b6ff':job==='gunner'?'#a6e3c6':'#d8eafa',trim='#ffe09a',dark='#23364f',cape=job==='mage'?'#7555b8':job==='gunner'?'#248b83':'#ce4e62';

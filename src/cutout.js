@@ -58,12 +58,21 @@ function partCanvas(name, colour, shade = 1) {
 }
 
 const ease = t => 1 - (1 - t) ** 3;
+const SWING = .2; // the knight's basic swing time in model.js
+// Where a basic swing is: q runs 0..1 over the swing, k is the eased strike after a short wind-up,
+// and consecutive swings alternate between an overhead chop and a rising cut. Without the timer
+// (party allies only pass `attacking`), the swing simply loops on the clock.
+function swingState(time, swing) {
+  const left = swing == null ? SWING - (time % SWING) : Math.min(SWING, swing);
+  const q = 1 - left / SWING, start = time - q * SWING;
+  return {q, k: q < .2 ? 0 : ease(Math.min(1, (q - .2) / .3)), variant: Math.floor(start / .37) % 2};
+}
 const lerp = (a, b, t) => a + (b - a) * t;
 const REST = {armF: -10, armB: 10, hand: 0};
 
 // Bone angles in degrees (clockwise); positive arm angles swing the hand backwards.
 // Arm angles past 180 mean the arm went over the top (a slash), not back down.
-function poseFor({time, moving, phase, attacking, pose}) {
+function poseFor({time, moving, phase, attacking, pose, swing}) {
   const P = {};
   const set = (b, r = 0, x = 0, y = 0) => {P[b] = {r, x, y};};
   if (moving) {
@@ -109,9 +118,25 @@ function poseFor({time, moving, phase, attacking, pose}) {
   } else if (kind === 'throw') {
     if (q < .5) {set('armF', 150);set('hand', 160);lean(-6);} else {set('armF', 260);set('hand', 120);lean(10, 4);}
   } else if (attacking) {
-    // Basic attack: the follow-through of a slash, with a small shake.
-    set('armF', 262 + Math.sin(time * 60) * 3);set('hand', 145);set('armB', 35);lean(12, 6);
-    set('legF', -24);set('legB', 18);
+    const s = swingState(time, swing);
+    if (s.variant === 0) {
+      // Overhead chop: cock the blade back, then whip it over the top and lunge in.
+      const w = ease(Math.min(1, s.q / .2)), k = s.k;
+      set('armF', lerp(lerp(-10, 120, w), 282, k));set('hand', lerp(lerp(0, 150, w), 138, k));
+      set('armB', lerp(lerp(10, -35, w), 45, k));
+      lean(lerp(-9 * w, 18, k), lerp(-3 * w, 8, k));P.hips.y += lerp(1.5 * w, -1.5, k);
+      set('legF', lerp(-4 * w, -30, k), lerp(0, 4, k));set('legB', lerp(4 * w, 24, k));
+      P.smear = {from: 120, to: P.armF.r, k, q: s.q};
+    } else {
+      // Rising cut: crouch with the blade low behind, then rip it up through the front.
+      const w = ease(Math.min(1, s.q / .2)), k = s.k;
+      set('armF', lerp(lerp(-10, 45, w), -150, k));set('hand', lerp(lerp(0, 75, w), 80, k));
+      set('armB', lerp(lerp(10, 40, w), -40, k));
+      lean(lerp(12 * w, -12, k), lerp(-2 * w, 6, k));P.hips.y += lerp(3 * w, -3.5, k);
+      set('legF', lerp(-6 * w, -26, k), lerp(0, 4, k));set('legB', lerp(8 * w, 18, k));
+      set('head', lerp(4 * w, -8, k));
+      P.smear = {from: 45, to: P.armF.r, k, q: s.q};
+    }
   }
   return P;
 }
@@ -121,9 +146,26 @@ function face({pose, attacking, time, back}) {
   const kind = pose?.kind;
   if (kind === 'recoil') return {eyes: 'wince', mouth: 'open'};
   if (kind === 'raise') return {eyes: 'happy', mouth: 'open'};
-  if (kind || attacking) return {eyes: 'focus', mouth: 'flat'};
+  if (kind || attacking) return {eyes: 'focus', mouth: attacking && !kind ? 'open' : 'flat'};
   // Blink for a moment every few seconds.
   return {eyes: (time % 3.4) > 3.28 ? 'closed' : 'round', mouth: 'smile'};
+}
+
+// Blade trail: a crescent swept by the sword tip from where the strike began to where the arm is
+// now, thickest at the leading edge, fading out over the follow-through.
+function smear(c, at, {from, to, k, q}, tint) {
+  if (k <= 0 || q > .85) return;
+  const fade = q < .55 ? 1 : 1 - (q - .55) / .3, R = 64, n = 16;
+  const shape = (outer, inner) => {
+    c.beginPath();
+    for (let i = 0; i <= n; i++) {const a = (90 + lerp(from, to, i / n)) * D;c.lineTo(at.x + Math.cos(a) * R * outer, at.y + Math.sin(a) * R * outer);}
+    for (let i = n; i >= 0; i--) {const t = i / n, a = (90 + lerp(from, to, t)) * D, r = R * (outer - inner * t);c.lineTo(at.x + Math.cos(a) * r, at.y + Math.sin(a) * r);}
+    c.closePath();c.fill();
+  };
+  c.save();
+  c.globalAlpha *= .55 * fade;c.fillStyle = tint || '#9fd8ff';shape(1.06, .62);
+  c.globalAlpha /= .55;c.globalAlpha *= .9;c.fillStyle = '#ffffff';shape(1, .3);
+  c.restore();
 }
 
 // Draw the knight with its feet at (0,0) in the caller's space, `size` px per rig unit.
@@ -171,6 +213,8 @@ export function drawCutoutKnight(c, o) {
     if (hw.front) part(hw.front, 'head');
     if (hw.trim) part(hw.trim, 'head');
   }
+  // The trail follows the arm in world space, so it stays on the blade while the body leans.
+  if (P.smear) {const lean = world.armF.r - P.armF.r;smear(c, world.armF, {...P.smear, from: P.smear.from + lean, to: P.smear.to + lean}, colours.scarf);}
   if (!back) weapon();
   part('sleeve', 'armF');part('hand', 'armF');
   c.restore();

@@ -73,7 +73,7 @@ const HEAD_SCALE = 1.3, NECK_Y = -32;
 const CUTOUT_SIZE = .82;
 
 export function drawToonHero(c, x, y, o = {}) {
-  const {time = 0, moving = false, job = 'novice', appearance = 'a', inv = 0, direction = 'se', distance, attacking = false, tier = 0, plus = 0, pose = null, armor = -1, helmet = -1} = o;
+  const {time = 0, moving = false, job = 'novice', appearance = 'a', inv = 0, direction = 'se', distance, attacking = false, tier = 0, plus = 0, pose = null, armor = -1, helmet = -1, swing = null} = o;
   const left = ['sw', 'w', 'nw'].includes(direction), back = ['n', 'ne', 'nw'].includes(direction);
   const phase = moving ? (distance !== undefined ? distance / RUN_STRIDE * Math.PI * 2 : time * 13) : 0;
   const sw = moving ? Math.sin(phase) : 0, bob = moving ? -Math.abs(Math.cos(phase)) * 3 : Math.sin(time * 3) * 1.1;
@@ -88,7 +88,7 @@ export function drawToonHero(c, x, y, o = {}) {
   if (job === 'knight' && cutoutReady()) {
     c.save();c.scale(S, S);if (auraLv >= 1) auraBack(c, auraLv, auraCol, time);c.restore();
     if (inv > 0 && Math.floor(inv * 15) % 2) c.globalAlpha *= .45;
-    drawCutoutKnight(c, {time, moving, phase, attacking, pose, left, back, tier, plus, size: CUTOUT_SIZE,
+    drawCutoutKnight(c, {time, moving, phase, attacking, swing, pose, left, back, tier, plus, size: CUTOUT_SIZE,
       colours: {hair: (HAIR[appearance] || HAIR.a)[0], cloth: OUTFIT.knight.top, scarf: accent, eyes: EYE.other[0]}});
     if (auraLv >= 3) {c.save();c.scale(S, S);auraMotes(c, auraLv, auraCol, time);c.restore();}
     c.restore();LW = 1.4;SHADE = false;return;
