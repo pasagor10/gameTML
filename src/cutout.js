@@ -181,10 +181,26 @@ const MOVES = {
 // Elbows: poses set the arm (shoulder) and blade (hand) angles as if the arm were straight, plus an
 // elbow flex in degrees (P.flex, front and back). The forearm bends forward by the flex and the hand
 // is turned back by the same amount, so the blade keeps its angle while the elbow moves the fist.
+// Legs work the same way: P.knee bends each shin back, P.toe tilts each foot (positive lifts the
+// heel), and the feet otherwise stay flat. The hips then sit at whatever height puts the lowest
+// heel or toe on the ground, so spread or bent legs crouch the body instead of sinking into the floor.
+const THIGH = 17, SHIN = 15, SOLE = 4, HEEL = -7, TOE = 15, KNEE = 6;
+const reach = (leg, k, t) => (leg.y || 0) + THIGH * Math.cos(leg.r * D) + SHIN * Math.cos((leg.r + k) * D) +
+  Math.max(HEEL * Math.sin(t * D), TOE * Math.sin(t * D)) + SOLE * Math.cos(t * D);
+const STAND = reach({r: 0}, KNEE, 0);
 function poseFor(o) {
   const P = poseRaw(o), [ff, fb] = P.flex || [20, 20];
   P.foreF = {r: -ff, x: 0, y: 0};P.foreB = {r: -fb, x: 0, y: 0};
   P.hand = {...(P.hand || {r: 0, x: 0, y: 0})};P.hand.r += ff;
+  P.legF = P.legF || {r: 0, x: 0, y: 0};P.legB = P.legB || {r: 0, x: 0, y: 0};
+  // Without explicit knees, a leg stepped forward bends its knee over the foot like a lunge.
+  const lunge = (leg) => KNEE + Math.max(0, -leg.r - 8) * .9;
+  const [kF, kB] = P.knee || [lunge(P.legF), lunge(P.legB)], [tF, tB] = P.toe || [0, 0];
+  P.hips = {...(P.hips || {r: 0, x: 0, y: 0})};
+  const hr = P.hips.r || 0;
+  P.shinF = {r: kF, x: 0, y: 0};P.footF = {r: tF - hr - P.legF.r - kF, x: 0, y: 0};
+  P.shinB = {r: kB, x: 0, y: 0};P.footB = {r: tB - hr - P.legB.r - kB, x: 0, y: 0};
+  P.hips.y = (P.hips.y || 0) + STAND - Math.max(reach(P.legF, kF, tF), reach(P.legB, kB, tB));
   return P;
 }
 
@@ -193,22 +209,26 @@ function poseRaw({time, moving, phase, attacking, pose, swing}) {
   const set = (b, r = 0, x = 0, y = 0) => {P[b] = {r, x, y};};
   const flex = (f, b = f) => {P.flex = [f, b];};
   if (moving) {
-    // Chibi patter: twice the cadence of the old sprites (a cycle per 48 world units, about six
-    // quick steps a second at run speed) so the short legs nearly keep pace with the ground instead
-    // of sliding. Each foot swings forward lifted and sweeps back planted; the body bounces on each
-    // passing step, squashes a little as a foot lands, and waddles side to side.
-    const p = phase * 2, s = Math.sin(p), bounce = Math.abs(Math.cos(p));
-    const step = (name, a) => {
-      const fwd = Math.sin(a), lift = Math.max(0, Math.cos(a));
-      set(name, -fwd * 16 - lift * 10, fwd * 4, -lift * 6);
+    // Human gait: each thigh sweeps back through stance with the foot planted (heel strike, flat,
+    // push-off onto the toe) and swings forward with the knee folded so the foot clears the ground.
+    // A cycle covers about 60 world units, so the planted foot keeps pace with the ground. The hips
+    // dip at double support and rise over the passing leg (from the leg geometry in poseFor), and
+    // the arms swing against the legs, elbows bending more on the forward swing.
+    const p = phase * 1.6, A = 26, TAU = Math.PI * 2;
+    const leg = (a) => {
+      const u = ((a % TAU) + TAU) % TAU, swing = u > Math.PI;
+      const knee = KNEE + (swing ? 54 * Math.pow(Math.sin(u - Math.PI), 1.3) : 5 * Math.sin(u));
+      const toe = swing ? lerp(28, -12, ease((u - Math.PI) / Math.PI)) :
+        u < .25 * Math.PI ? -12 * (1 - u / (.25 * Math.PI)) : 30 * seg(u / Math.PI, .62, 1);
+      return {r: -A * Math.cos(u), knee, toe};
     };
-    step('legF', p);step('legB', p + Math.PI);
-    set('hips', 0, 0, -bounce * 3.2);
-    set('torso', 6 + s * 3);set('head', -3 - s * 2.5 - bounce * 1.5);
-    set('armF', -8 + s * 5);set('armB', -s * 34 + 4);
-    set('tail', 40 + Math.sin(p * 2) * 12);
-    P.squash = (1 - bounce) * .9;
-    flex(28, 18 + Math.max(0, -s) * 30);
+    const F = leg(p), B = leg(p + Math.PI), c = Math.cos(p), s = Math.sin(p);
+    set('legF', F.r);set('legB', B.r);P.knee = [F.knee, B.knee];P.toe = [F.toe, B.toe];
+    set('hips');
+    set('torso', 5 + Math.abs(s) * 1.5);set('head', -2 - Math.abs(s) * 1.5);
+    set('armF', 2 + 14 * c);set('armB', 4 - 26 * c);
+    set('tail', 36 + Math.sin(p * 2) * 10);
+    flex(24 + 14 * Math.max(0, -c), 16 + 30 * Math.max(0, c));
   } else {
     const s = Math.sin(time * 2.6);
     set('hips', 0, 0, s * 0.9);set('torso', s * .6);set('head', -s * 1.2);
@@ -332,9 +352,12 @@ export function drawCutoutKnight(c, o) {
   if (behindHead) weapon();
   if (!back) part(hw.back, 'head');
   part('upper', 'armB', 0, .78);part('fore', 'foreB', 0, .78);part('fist', 'foreB', 0, .86);
-  part('leg', 'legB', 0, .78);part('boot', 'legB', 0, .8);
+  const leg = (side, shade = 1) => {
+    part('foot', 'foot' + side, 0, shade < 1 ? .8 : 1);part('shin', 'shin' + side, 0, shade < 1 ? .8 : 1);part('thigh', 'leg' + side, 0, shade);
+  };
+  leg('B', .78);
   if (!back) part('scarf-tail', 'tail');
-  part('leg', 'legF');part('boot', 'legF');
+  leg('F');
   part('torso', 'torso');part('belt', 'torso');part('scarf', 'torso');
   part('face', 'head');
   // From behind the hood's back covers its face rim and only the ears stick out.

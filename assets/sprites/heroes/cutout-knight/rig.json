@@ -84,10 +84,34 @@
       0
     ],
     [
+      "shinB",
+      "legB",
+      0,
+      17
+    ],
+    [
+      "footB",
+      "shinB",
+      0,
+      15
+    ],
+    [
       "legF",
       "hips",
       6,
       0
+    ],
+    [
+      "shinF",
+      "legF",
+      0,
+      17
+    ],
+    [
+      "footF",
+      "shinF",
+      0,
+      15
     ],
     [
       "torso",
@@ -295,6 +319,19 @@
     "fist": {
       "file": "fist.svg",
       "frame": "arm"
+    },
+    "thigh": {
+      "file": "thigh.svg",
+      "frame": "leg",
+      "tint": "cloth"
+    },
+    "shin": {
+      "file": "shin.svg",
+      "frame": "leg"
+    },
+    "foot": {
+      "file": "foot.svg",
+      "frame": "leg"
     }
   },
   "parts": [
