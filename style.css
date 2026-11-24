@@ -682,3 +682,6 @@ body:not([data-screen=playing]) #gameChat{display:none}
 @media(max-width:760px){#game footer .hint{display:none}}
 @media(max-width:600px){.raid-board{bottom:186px}}
 #game .skill-hud #next{transform-origin:100% 50%;max-width:calc(100vw - 30px)}
+/* Phone: boss damage board sits under the right-hand chips, clear of a full (two-row) skill column */
+@media(max-width:600px){.raid-board{top:262px;bottom:auto;right:8px;left:auto;width:150px}}
+@media(max-width:600px){#toast{top:40%;font-size:17px}}
