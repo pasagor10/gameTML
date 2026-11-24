@@ -701,3 +701,47 @@ body:not([data-screen=playing]) #gameChat{display:none}
 @media(max-width:600px){body:has(#raidBoard:not([hidden])) #toast{top:58%}}
 /* No zoom: double-tap zoom off everywhere, no text auto-resize on rotate */
 html,body{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+/* Skill page v2: tier-coloured cards, level pips, MAX, lock overlay, themed badges and section headers */
+#game .sk-tile{--ac:#7fd6ff;--ac2:#2c6f9a;background:linear-gradient(170deg,#183552,#0e1d30 70%);border:1px solid color-mix(in srgb,var(--ac) 35%,transparent);border-radius:12px;gap:3px;padding:7px 4px 6px;box-shadow:inset 0 1px 0 #ffffff14,0 2px 6px #0006;transition:transform .12s,box-shadow .12s;opacity:1}
+#game .sk-tile.tier-god{--ac:#ffd36e;--ac2:#a8741f;background:linear-gradient(170deg,#3b2c14,#1b1630 72%);border-color:#ffd36e88;box-shadow:inset 0 1px 0 #fff3c41f,0 0 12px #ffc65a2e,0 2px 6px #0006}
+#game .sk-tile.tier-passive{--ac:#8fe3a8;--ac2:#2d7a52;background:linear-gradient(170deg,#173c33,#0d2220 72%)}
+#game .sk-tile.learnt{border-color:color-mix(in srgb,var(--ac) 65%,transparent)}
+#game .sk-tile.slotted{border:1px solid #ffd56a;box-shadow:inset 0 0 0 1px #ffd56a55,0 0 10px #ffd56a40}
+#game .sk-tile[aria-pressed=true]{outline:2px solid #fff;outline-offset:1px;box-shadow:0 0 14px color-mix(in srgb,var(--ac) 70%,transparent)}
+#game .sk-tile:active{transform:scale(.96)}
+#game .sk-tile b{font-size:11px;line-height:1.2;color:#f4f8ff;text-shadow:0 1px 2px #000a;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#game .sk-tile.tier-god b{color:#ffe9b0}
+#game .sk-art{position:relative;display:grid;place-items:center;width:46px;height:46px;flex:none}
+#game .sk-art>.sk-icon,#game .sk-tile .sk-art .ai-skill{width:100%;height:100%;margin:0;border-radius:11px;border:1.5px solid color-mix(in srgb,var(--ac) 75%,#fff 10%);box-shadow:0 0 0 1px #0008,0 3px 8px #0008}
+#game .sk-tile.tier-god .sk-art>.sk-icon,#game .sk-tile.tier-god .sk-art .ai-skill{box-shadow:0 0 0 1px #0008,0 0 10px #ffd36e80}
+#game .sk-tile:not(.learnt):not(.locked) .sk-art>*:first-child{filter:saturate(.65) brightness(.85)}
+#game .sk-tile.locked .sk-art>*:first-child{filter:grayscale(1) brightness(.45)}
+#game .sk-tile.locked b{color:#9fb0bf}
+.sk-lock{position:absolute;inset:0;display:grid;place-items:center;align-content:center;font-style:normal;border-radius:11px;color:#e8eef5;line-height:1}
+.sk-lock::before{content:'';width:12px;height:9px;margin-top:6px;border-radius:2px;background:#dfe7ef;box-shadow:0 -6px 0 -2px transparent;position:relative}
+.sk-lock::after{content:'';position:absolute;top:calc(50% - 13px);width:8px;height:8px;border:2px solid #dfe7ef;border-bottom:0;border-radius:6px 6px 0 0}
+.sk-lock small{font:700 9.5px 'Chakra Petch',sans-serif;margin-top:3px;letter-spacing:.3px;color:#fff;text-shadow:0 1px 2px #000}
+#game .sk-badge{position:absolute;left:auto;top:auto;right:-6px;bottom:-5px;width:17px;height:17px;padding:0;display:grid;place-items:center;font-size:0;border-radius:50%;background:linear-gradient(#ffe7a0,#e7b347);box-shadow:0 1px 3px #0009;border:1px solid #fff4c8}
+#game .sk-badge::before{content:'';width:7px;height:4px;margin-top:-2px;border:2px solid #3a2604;border-top:0;border-right:0;transform:rotate(-45deg)}
+.sk-pips{display:flex;gap:3px;justify-content:center;flex-wrap:wrap;max-width:60px;min-height:8px;margin-top:1px}
+.sk-pips i{width:6px;height:6px;border-radius:50%;background:#0b1522;border:1px solid color-mix(in srgb,var(--ac) 45%,transparent)}
+.sk-pips i.on{background:var(--ac);border-color:var(--ac);box-shadow:0 0 4px var(--ac)}
+.sk-pips.ten{gap:2px;max-width:56px}.sk-pips.ten i{width:4.5px;height:4.5px}
+#game .sk-tile small.sk-max{font:800 10px/1 'Chakra Petch',sans-serif;letter-spacing:1.5px;padding:2px 6px;border-radius:5px;color:#3a2604;background:linear-gradient(#fff0b8,#e8b54b);box-shadow:0 0 6px #ffd56a66}
+#game .sk-plus{right:3px;top:3px;width:19px;height:19px;line-height:17px;font-size:15px;font-weight:900;color:#3a2604;background:radial-gradient(circle at 35% 30%,#fff6cf,#f0bf4f 60%,#b77d1c);border:1px solid #fff2c2;box-shadow:0 0 8px #ffd56a99;animation:skPlus 1.6s ease-in-out infinite}
+@keyframes skPlus{50%{box-shadow:0 0 2px #ffd56a55;transform:scale(.9)}}
+@media(prefers-reduced-motion:reduce){#game .sk-plus{animation:none}}
+#game .sk-groups h3.sk-h{display:flex;align-items:center;gap:6px;font-size:11.5px;letter-spacing:.6px;color:#9fd8e8;margin:6px 0 0}
+#game .sk-groups h3.sk-h::before{content:'⚔';font-size:12px;width:18px;height:18px;display:grid;place-items:center;border-radius:5px;background:#1a3550;border:1px solid #7fd6ff66}
+#game .sk-groups h3.sk-h::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,#7fd6ff66,transparent)}
+#game .sk-groups h3.sk-h.tier-god{color:#ffd98a}
+#game .sk-groups h3.sk-h.tier-god::before{content:'♛';color:#3a2604;background:linear-gradient(#fff0b8,#e8b54b);border-color:#fff4c8}
+#game .sk-groups h3.sk-h.tier-god::after{background:linear-gradient(90deg,#ffd36e88,transparent)}
+#game .sk-groups h3.sk-h.tier-passive{color:#a6eec0}
+#game .sk-groups h3.sk-h.tier-passive::before{content:'✦';background:#173c33;border-color:#8fe3a866;color:#a6eec0}
+#game .sk-groups h3.sk-h.tier-passive::after{background:linear-gradient(90deg,#8fe3a866,transparent)}
+@media(max-width:760px){
+  #game .sk-tile{padding:5px 2px 6px;border-radius:10px;gap:2px}
+  #game .sk-art{width:40px;height:40px}
+  #game .sk-tile b{font-size:10px}
+}
