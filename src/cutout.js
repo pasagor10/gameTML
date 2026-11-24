@@ -67,11 +67,19 @@ function poseFor({time, moving, phase, attacking, pose}) {
   const P = {};
   const set = (b, r = 0, x = 0, y = 0) => {P[b] = {r, x, y};};
   if (moving) {
-    const s = Math.sin(phase);
-    set('hips', 0, 0, -Math.abs(Math.cos(phase)) * 3.4);
-    set('legF', -s * 34);set('legB', s * 34);
-    set('armF', s * 24 - 12);set('armB', -s * 26 + 6);
-    set('torso', 6);set('head', -3 + Math.sin(phase * 2) * 1.2);set('tail', 42 + Math.sin(phase * 2) * 9);
+    // Chibi stepping walk: each foot slides forward and back and lifts on the way forward, staying
+    // nearly flat instead of swinging like a stick; the body bounces twice a cycle and the sword
+    // arm stays steady while the free arm swings.
+    const s = Math.sin(phase), bounce = Math.abs(Math.cos(phase));
+    const step = (name, p) => {
+      const fwd = Math.sin(p), lift = Math.max(0, Math.cos(p));
+      set(name, -fwd * 10 - lift * 8, fwd * 5, -lift * 5);
+    };
+    step('legF', phase);step('legB', phase + Math.PI);
+    set('hips', 0, 0, -bounce * 2.6);
+    set('torso', 5 + bounce * 2);set('head', -2 - bounce * 2);
+    set('armF', -6 + s * 6);set('armB', -s * 30 + 4);
+    set('tail', 38 + Math.sin(phase * 2) * 10);
   } else {
     const s = Math.sin(time * 2.6);
     set('hips', 0, 0, s * 0.9);set('torso', s * .6);set('head', -s * 1.2);
