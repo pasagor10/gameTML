@@ -685,3 +685,17 @@ body:not([data-screen=playing]) #gameChat{display:none}
 /* Phone: boss damage board sits under the right-hand chips, clear of a full (two-row) skill column */
 @media(max-width:600px){.raid-board{top:262px;bottom:auto;right:8px;left:auto;width:150px}}
 @media(max-width:600px){#toast{top:40%;font-size:17px}}
+/* Phone home-indicator (safe area): the bottom bar rises with env(safe-area-inset-bottom), so everything stacked above it rises by the same amount */
+@media(max-width:600px){
+  :root{--sab:max(0px,calc(env(safe-area-inset-bottom) - 10px))}
+  #game .skill-hud{bottom:calc(78px + var(--sab))}
+  #game footer{bottom:calc(70px + var(--sab))}
+  #joystick{bottom:calc(95px + var(--sab))}
+  #gameChat{bottom:calc(95px + 114px + 8px + var(--sab))}
+  #partyHud{bottom:calc(258px + var(--sab))}
+  .refuge-dock{bottom:calc(89px + var(--sab))}
+  .refuge-interact{bottom:calc(169px + var(--sab))}
+  /* World boss: board keeps top 3 plus your own row; toasts drop below it */
+  .raid-board .rb-row:nth-of-type(n+4):not(.me){display:none}
+}
+@media(max-width:600px){body:has(#raidBoard:not([hidden])) #toast{top:58%}}
