@@ -3,3 +3,37 @@
 .gold-packages{margin:20px 0;padding:16px;background:#f4efdc;border:1px solid #dccb9c;border-radius:12px}.gold-packages h3{margin:0;color:#97783a}.gold-packages select{display:block;width:100%;margin-top:8px;background:white;padding:10px;border:1px solid #d0c5aa;border-radius:7px;font:inherit}#goldPackList{display:grid;grid-template-columns:1fr 1fr;gap:7px}.gold-pack{font-size:10px;padding:10px 6px;background:#fff9e8;color:#8c692b;border-color:#dbc68b}#exchangeStatus{color:#8c692b;font-size:11px}.gold-packs-entry{padding:6px 9px;border-radius:9px;background:#493921;color:#ffe29c;border:1px solid #d3b36a;text-decoration:none;font-size:10px}.topup-entry{border-color:#80d5fa!important}.topup-entry small{color:#b3eaff}
 .back-gold-packs{display:block;text-align:center;margin:20px 0;padding:12px;border:1px solid #c9b579;border-radius:10px;background:#f2ecd5;color:#927433;text-decoration:none;font-size:12px}
 .embedded-topup main{padding:18px;max-width:100%}.embedded-topup main>header{display:none}.embedded-topup .title{margin:8px 0 20px}.embedded-topup .title h1{font-size:23px}.embedded-topup .panel{padding:20px}.embedded-topup .qr img{max-width:200px}.embedded-topup footer{font-size:9px}
+
+/* Phone: steps instead of one long scrolling page */
+.topup-steps{display:none}
+@media(max-width:760px){
+  html,body{height:100%;overflow:hidden}
+  main{padding:10px 12px}
+  main>header{margin-bottom:4px}
+  .title{margin:0 0 6px}.title .eyebrow,.title p{display:none}.title h1{font-size:20px;margin:0}
+  .topup-steps{display:flex;gap:6px;margin:0 0 8px}
+  .topup-steps button{flex:1;padding:7px 4px;border-radius:9px;border:1px solid #c9cdb9;background:#fff;color:#34483e;font:600 12px inherit}
+  .topup-steps button[aria-pressed=true]{background:#34483e;color:#fff;border-color:#34483e}
+  .pay-grid{display:block;margin:0}
+  main[data-step=pay] .step-slip,main[data-step=pay] .step-history,main[data-step=slip] .step-pay,main[data-step=slip] .step-history,main[data-step=history] .pay-grid{display:none}
+  .panel{padding:12px!important;margin:0}
+  .panel h2{margin:2px 0;font-size:22px}
+  .step-pay .muted,.step-slip>.eyebrow{display:none}
+  .step-pay .price{font-size:26px}
+  .qr{padding:8px;gap:4px}.qr img{max-width:min(170px,30dvh)!important}
+  .notice{font-size:11.5px;line-height:1.5;margin:6px 0 0}
+  .step-slip form label{margin:4px 0}
+  .slip-preview{max-height:80px;margin:4px auto}
+  footer{display:none}
+  #orders{max-height:calc(100dvh - 230px);overflow:hidden}
+}
+@media(max-width:760px){
+  .step-slip #account{margin:0;font-size:11px}
+  .step-slip .back-gold-packs{display:inline-block;margin:4px 0;padding:4px 10px;font-size:12px}
+  .step-slip form label{display:block;line-height:1.4}
+  .step-slip form input{padding:8px;margin-top:2px}
+  .step-slip form .muted{margin:2px 0;font-size:11px}
+  .step-slip #submit{padding:10px;margin-top:4px}
+  .step-slip #result{margin:4px 0}
+  .step-slip details{margin-top:6px}
+}

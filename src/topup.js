@@ -9,3 +9,7 @@ $('restore').onsubmit=async e=>{e.preventDefault();try{const code=$('recoveryCod
 load();setInterval(()=>{if(!document.hidden)load();},15000);
 
 if(new URLSearchParams(location.search).has('embedded')&&window.parent!==window){document.body.classList.add('embedded-topup');const go=document.querySelector('.back-gold-packs');if(go){go.textContent='เลือกแพ็กทอง →';go.onclick=event=>{event.preventDefault();window.parent.postMessage({type:'tilmo:gold-packs'},location.origin);};}}
+
+// Phone: one step at a time so the page never needs scrolling.
+const stepMain=document.querySelector('main[data-step]');
+document.querySelectorAll('[data-step]:not(main)').forEach(b=>b.addEventListener('click',()=>{stepMain.dataset.step=b.dataset.step;document.querySelectorAll('[data-step]:not(main)').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));}));
