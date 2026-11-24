@@ -171,19 +171,21 @@ function poseFor({time, moving, phase, attacking, pose, swing}) {
   const P = {};
   const set = (b, r = 0, x = 0, y = 0) => {P[b] = {r, x, y};};
   if (moving) {
-    // Chibi stepping walk: each foot slides forward and back and lifts on the way forward, staying
-    // nearly flat instead of swinging like a stick; the body bounces twice a cycle and the sword
-    // arm stays steady while the free arm swings.
-    const s = Math.sin(phase), bounce = Math.abs(Math.cos(phase));
-    const step = (name, p) => {
-      const fwd = Math.sin(p), lift = Math.max(0, Math.cos(p));
-      set(name, -fwd * 10 - lift * 8, fwd * 5, -lift * 5);
+    // Chibi patter: twice the cadence of the old sprites (a cycle per 48 world units, about six
+    // quick steps a second at run speed) so the short legs nearly keep pace with the ground instead
+    // of sliding. Each foot swings forward lifted and sweeps back planted; the body bounces on each
+    // passing step, squashes a little as a foot lands, and waddles side to side.
+    const p = phase * 2, s = Math.sin(p), bounce = Math.abs(Math.cos(p));
+    const step = (name, a) => {
+      const fwd = Math.sin(a), lift = Math.max(0, Math.cos(a));
+      set(name, -fwd * 16 - lift * 10, fwd * 4, -lift * 6);
     };
-    step('legF', phase);step('legB', phase + Math.PI);
-    set('hips', 0, 0, -bounce * 2.6);
-    set('torso', 5 + bounce * 2);set('head', -2 - bounce * 2);
-    set('armF', -6 + s * 6);set('armB', -s * 30 + 4);
-    set('tail', 38 + Math.sin(phase * 2) * 10);
+    step('legF', p);step('legB', p + Math.PI);
+    set('hips', 0, 0, -bounce * 3.2);
+    set('torso', 6 + s * 3);set('head', -3 - s * 2.5 - bounce * 1.5);
+    set('armF', -8 + s * 5);set('armB', -s * 34 + 4);
+    set('tail', 40 + Math.sin(p * 2) * 12);
+    P.squash = (1 - bounce) * .9;
   } else {
     const s = Math.sin(time * 2.6);
     set('hips', 0, 0, s * 0.9);set('torso', s * .6);set('head', -s * 1.2);
@@ -282,6 +284,8 @@ export function drawCutoutKnight(c, o) {
   }
   const looks = {headwear: 'hood', eyes: f.eyes, mouth: f.mouth, weapon: 'sword'};
   c.save();c.scale(left ? -size : size, size);
+  // Landing squash: wider and shorter, feet stay on the ground.
+  if (P.squash) c.scale(1 + P.squash * .035, 1 - P.squash * .035);
   const part = (name, bone, rot = 0, shade = 1) => {
     const art = rig.arts[name], fr = rig.frames[art.frame], b = world[bone];
     c.save();c.translate(b.x, b.y);c.rotate((b.r + rot) * D);
