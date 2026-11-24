@@ -467,3 +467,10 @@ body[data-screen=intro] #raidBoard,body[data-screen=intro] #skillHud,body[data-s
 
 /* Restore-code box on the pause screen. */
 .restore-box{margin-top:12px;text-align:left;font-size:13px}.restore-box summary{cursor:pointer;opacity:.8;text-align:center}.restore-box .party-code-in{margin-top:8px}
+@media(max-width:600px){
+  #game{--chip-col:104px}
+  #game .party-chip,#game .rank-chip,#game .raid-chip{width:var(--chip-col);padding:3px 6px 3px 4px;gap:4px}
+  #game .party-chip small,#game .rank-chip small,#game .raid-chip small{white-space:normal;font-size:9.5px;line-height:1.25}
+  #game .party-chip .rc-ico,#game .rank-chip .rc-ico,#game .raid-chip .rc-ico{font-size:16px}
+  #game .stage-plate,#game .objective,#game #bossbar{left:8px;transform:none;width:calc(100% - 22px - var(--chip-col));max-width:none}
+}
