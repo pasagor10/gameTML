@@ -676,3 +676,8 @@ body:not([data-screen=playing]) #gameChat{display:none}
   .panel.armory>.armory-rows{margin:8px 0}
   .panel.armory>.primary{margin:6px auto 2px;padding:12px 22px}
 }
+/* Skill-point reminder sits above the skill slots; the keyboard hint drops out where the bottom row is full */
+#game .skill-hud #next{text-align:right;max-width:min(320px,calc(100vw - 24px));white-space:normal;line-height:1.35}
+#game .skill-hud #next:empty{display:none}
+@media(max-width:760px){#game footer .hint{display:none}}
+@media(max-width:600px){.raid-board{bottom:186px}}
