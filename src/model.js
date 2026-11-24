@@ -578,7 +578,7 @@ castSkills(area,ids=this.slots,mult=1){
   const p=this.p,s={},sp=this.skillPower()*mult;for(const id of ids)if(this.skills[id])s[id]=this.skills[id];
   // The hero strikes a pose for the grandest skill in the volley (class skills first).
   let lead=null;for(const id of Object.keys(s))if(SKILL_POSE[id]&&(!lead||(SKILLS.find(k=>k.id===id).job?10:0)+s[id]>(SKILLS.find(k=>k.id===lead).job?10:0)+s[lead]))lead=id;
-  if(lead)this.pose={kind:SKILL_POSE[lead],life:.5,max:.5};
+  if(lead)this.pose={kind:SKILL_POSE[lead],skill:lead,life:.5,max:.5};
   if(s.ice){const target=this.nearest(9999);if(target){const angle=Math.atan2(target.y-p.y,target.x-p.x),count=this.evolved.blizzard?5:s.ice;for(let i=0;i<count;i++)this.fire(p.x,p.y,angle+(i-(count-1)/2)*.18,340,{life:2,style:'ice',slows:true,damage:(this.evolved.blizzard?42:24)*sp});}}
   if(s.spark){let from=p;for(const e of this.closestList(300*area,2+s.spark)){this.effects.push({kind:'lightning',x:from.x,y:from.y,tx:e.x,ty:e.y,life:.3,max:.3});this.hit(e,(27+s.spark*9)*sp);from=e;}}
   if(s.gust){const r=160*area;this.effects.push({kind:'gust',x:p.x,y:p.y,r,life:.5,max:.5});for(const e of this.within(r)){this.hit(e,(18+s.gust*8)*sp);const a=Math.atan2(e.y-p.y,e.x-p.x);e.x+=Math.cos(a)*65;e.y+=Math.sin(a)*65;}}
