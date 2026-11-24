@@ -10,6 +10,9 @@ import {drawWeapon} from './weapons.js';
 import {resolveLook} from './hero-look.js';
 
 const DIR = '/assets/sprites/heroes/cutout-knight/';
+// A release stamps this module's URL (?v=...); the rig and its pictures reuse that stamp so a new
+// release never pairs fresh code with a cached old rig.
+const V = new URL(import.meta.url).search;
 const D = Math.PI / 180;
 let rig = null, ready = false, resolveReady;
 // Resolves once every part picture is in, so one-shot drawings (class cards, lobby) can redraw.
@@ -19,7 +22,7 @@ const tinted = new Map(); // `${art}|${colour}|${shade}` -> canvas
 
 function load() {
   if (typeof Image === 'undefined' || typeof document === 'undefined' || typeof fetch === 'undefined') return;
-  fetch(`${DIR}rig.json`).then(r => r.json()).then(data => {
+  fetch(`${DIR}rig.json${V}`).then(r => r.json()).then(data => {
     rig = data;
     const names = Object.keys(rig.arts);
     let left = names.length;
@@ -33,7 +36,7 @@ function load() {
         if (--left === 0) {ready = true;resolveReady();}
       };
       img.onerror = () => {left = -1;};
-      img.src = `${DIR}${art.file}`;
+      img.src = `${DIR}${art.file}${V}`;
     }
   }).catch(() => {});
 }
