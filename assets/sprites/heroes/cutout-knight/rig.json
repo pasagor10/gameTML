@@ -437,6 +437,15 @@
     "tunic-trim": {
       "file": "tunic-trim.svg",
       "frame": "torso"
+    },
+    "torso-shirt": {
+      "file": "torso-shirt.svg",
+      "frame": "torso"
+    },
+    "vest": {
+      "file": "vest.svg",
+      "frame": "torso",
+      "tint": "cloth"
     }
   },
   "parts": [
@@ -622,8 +631,8 @@
       }
     },
     "outfit": {
-      "hood": {
-        "headwear": "hood",
+      "onesie": {
+        "headwear": "hair",
         "torso": [
           "torso"
         ],
@@ -637,12 +646,13 @@
         ],
         "pants": "#3e4466"
       },
-      "cat": {
-        "headwear": "cat",
+      "vest": {
+        "headwear": "hair",
         "torso": [
-          "torso"
+          "torso-shirt",
+          "vest"
         ],
-        "pants": null
+        "pants": "#5a4434"
       }
     }
   },

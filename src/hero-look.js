@@ -27,10 +27,12 @@ export const LOOK = {
     {id: 'grin', name: 'ยิ้มกว้าง'}
   ],
   skin: ['#ffffff', '#f7e2cf', '#e8c09c', '#bd8a66'],
+  // Hats and hoods come later as their own slot; for now every outfit leaves the hair showing.
+  // Positions kept from the first release: 0 was the bear hood (same body, now hatless), 2 the cat hood.
   outfit: [
-    {id: 'hood', name: 'ฮู้ดหมีอัศวิน'},
+    {id: 'onesie', name: 'ชุดวันพีซ'},
     {id: 'tunic', name: 'ชุดนักผจญภัย'},
-    {id: 'cat', name: 'ฮู้ดแมวส้ม'}
+    {id: 'vest', name: 'เสื้อกั๊ก'}
   ],
   outfitColour: ['#3f74d0', '#d65b5b', '#4fae6e', '#e0a040', '#8a6ad6', '#f0eee6', '#4a4a5a', '#e87aa8']
 };

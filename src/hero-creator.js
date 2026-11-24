@@ -36,7 +36,7 @@ export function openHeroCreator(root, opts) {
       `<button class="hc-swatch" data-key="${k}" data-i="${i}" aria-label="${label} ${i + 1}" style="--c:${v}"></button>`).join('');
     return `<h3>${label}<small>${LOOK[k].length} แบบ</small></h3><div class="hc-${kind}">${items}</div>`;
   };
-  const panel = id => `<section class="hc-panel" data-panel="${id}">${GROUPS[id].map(g => group(g[0])).join('')}${id === 'outfit' ? '<p class="hc-hint" id="hcHoodHint">ฮู้ดคลุมผมด้านหลังไว้ · เลือกชุดนักผจญภัยเพื่อโชว์ทรงผมเต็มๆ</p>' : ''}</section>`;
+  const panel = id => `<section class="hc-panel" data-panel="${id}">${GROUPS[id].map(g => group(g[0])).join('')}</section>`;
   root.innerHTML = `<div class="panel hero-creator">
     <div class="hc-head"><div class="eyebrow">CHARACTER CREATOR</div><h2>${esc(opts.title)}</h2></div>
     <div class="hc-body">
@@ -59,8 +59,6 @@ export function openHeroCreator(root, opts) {
     all('.hc-tile').forEach(b => {
       const c = b.querySelector('canvas').getContext('2d'), [cy, z] = FRAMES[b.querySelector('canvas').dataset.frame];
       const sel = {...state.sel, [b.dataset.key]: +b.dataset.i};
-      // Hair thumbnails leave the hood off so the whole style shows.
-      if (b.dataset.key === 'hair') sel.outfit = LOOK.outfit.findIndex(o => o.id === 'tunic');
       c.setTransform(1, 0, 0, 1, 0, 0);c.clearRect(0, 0, 144, 144);
       c.translate(72, 72 - cy * z);c.scale(z, z);
       drawToonHero(c, 0, 0, {job: 'novice', appearance: state.app, look: encodeLook(sel), time: 0, direction: 'se'});
@@ -72,7 +70,6 @@ export function openHeroCreator(root, opts) {
     all('[data-tab]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tab === state.tab)));
     all('[data-panel]').forEach(p => p.classList.toggle('hc-active', p.dataset.panel === state.tab));
     $('#hcPose').textContent = `ท่าทาง · ${POSES[state.pose].name}`;
-    $('#hcHoodHint').hidden = LOOK.outfit[state.sel.outfit].id === 'tunic';
     paintThumbs();
   };
   all('[data-key]').forEach(b => b.onclick = () => {state.sel[b.dataset.key] = +b.dataset.i;sync();});

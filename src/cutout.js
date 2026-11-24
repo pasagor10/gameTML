@@ -325,7 +325,7 @@ function smear(c, at, {from, to, k, q, R = 64}, tint) {
 export function drawCutoutHero(c, o) {
   const {size, tier = 0, plus = 0, time = 0, attacking = false, job = 'knight'} = o;
   const look = typeof o.look === 'object' && o.look ? o.look : resolveLook(o.look, o.appearance);
-  const outfit = rig.slots.outfit[look.outfit] || rig.slots.outfit.hood, hair = rig.slots.hair[look.hair] || rig.slots.hair.tousled;
+  const outfit = rig.slots.outfit[look.outfit] || rig.slots.outfit.onesie, hair = rig.slots.hair[look.hair] || rig.slots.hair.tousled;
   const colours = {hair: look.hairColour, eyes: look.eyeColour, cloth: look.outfitColour, skin: look.skin,
     pants: outfit.pants || look.outfitColour, scarf: o.scarf || '#e0574a'};
   const P = poseFor(o), f = face(o, look);
